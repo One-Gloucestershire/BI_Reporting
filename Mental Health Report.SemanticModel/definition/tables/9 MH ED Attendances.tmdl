@@ -1,0 +1,1459 @@
+table '9 MH ED Attendances'
+	lineageTag: f0e5e5da-5208-421a-89be-aaea729eed46
+
+	measure MH_Graph_Header_3_Text = ```
+			MAX('9 MH_ED_Metric_Parameter'[Parameter]) & " by " & MAX('9 MH_ED_Parameter_Dimensions'[Parameter])
+			
+			
+			```
+		lineageTag: 13ef0b4e-1964-4dcc-863c-02cc8a5dcc95
+
+	measure MH_ED_Attendances_Rate_Per_1000_Population_Crude_Rate = ```
+			
+			
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			
+			VAR total_mh_ed_attendances = sum('9 MH ED Attendances'[counter])
+			
+			Var total_reg_population = calculate(DISTINCTCOUNT('REF_GP Practice Populations'[nhs_number])
+			,'REF_GP Practice Populations'[CensusDate_as_date] = start_of_latest_month,
+			 ALL(REF_GP_Reference_Table)
+			)
+			
+			RETURN
+			
+			 (total_mh_ed_attendances/total_reg_population)*1000
+			
+			
+			
+			```
+		lineageTag: e7f8e3b8-6774-4312-af0b-5b7c1a8ff200
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total_MH_ED_Attendances = sum('9 MH ED Attendances'[counter])
+		formatString: 0
+		lineageTag: 2ab2f27d-5029-4e84-8323-c7407eae152f
+
+	measure Only_Relevant_MH_ED_Attendances_in_filter =
+			
+			
+			var MH_ED_row_count = countrows('9 MH ED Attendances')
+			
+			RETURN
+			
+			MH_ED_row_count
+		formatString: 0
+		lineageTag: 4087ac56-1383-420d-b14f-6d55a394f9d0
+
+	measure Number_of_MH_ED_Att_current_FY_in_reporting =
+			
+			
+			var latest_reporting_month = calculate(max(REF_Date_Ref[financial_month]),REF_Date_Ref[Reporting_Month_Flag] = 1,all(REF_Date_Ref))
+			var latest_financial_year_order_in_range = calculate(max(REF_Date_Ref[Date_Order_Financial_Year]),all(REF_Date_Ref))
+			Var final_calc = calculate([Total_MH_ED_Attendances],REF_Date_Ref[financial_month] <= latest_reporting_month,REF_Date_Ref[Date_Order_Financial_Year] = latest_financial_year_order_in_range,all(REF_Date_Ref)
+			)
+			
+			return
+			
+			if(isblank(final_calc),0,final_calc)
+		formatString: 0
+		lineageTag: 913df7ca-9cd7-4719-9962-7ac58aade9e7
+
+	measure Number_of_MH_ED_Att_previous_FY_in_reporting =
+			
+			
+			var latest_reporting_month = calculate(max(REF_Date_Ref[financial_month]),REF_Date_Ref[Reporting_Month_Flag] = 1,all(REF_Date_Ref))
+			var latest_financial_year_order_in_range = calculate(max(REF_Date_Ref[Date_Order_Financial_Year]),all(REF_Date_Ref))
+			
+			return
+			
+			calculate([Total_MH_ED_Attendances],REF_Date_Ref[financial_month] <= latest_reporting_month,REF_Date_Ref[Date_Order_Financial_Year] = latest_financial_year_order_in_range -1,all(REF_Date_Ref)
+			)
+		formatString: 0
+		lineageTag: dbca6e3d-d976-4557-835b-664a91d9a0fd
+
+	measure Number_of_MH_ED_Att_%_variance_current_reporting_period_current_FY_Vs_Previous = ([Number_of_MH_ED_Att_current_FY_in_reporting] - [Number_of_MH_ED_Att_previous_FY_in_reporting])/[Number_of_MH_ED_Att_previous_FY_in_reporting]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 6eff9323-8f74-4e55-95f2-8036b62a6ee2
+
+	measure MH_Graph_time_series_Header_4_Text = ```
+			MAX('9 MH_ED_Metric_Parameter'[Parameter]) 
+			```
+		lineageTag: 20a8e8f0-57b3-4f27-b986-54b579e5d8da
+
+	measure MH_Graph_time_series_Header_5_Text = MAX('9 MH_ED_Metric_Parameter'[Parameter]) & " (YTD)"
+		lineageTag: eba1aad3-a1b5-47ad-9b30-37da8b840327
+
+	measure MH_ED_Reattendances_within_30_days =
+			
+			
+			calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			,'9 MH ED Attendances'[ECDS_MH_ED_Reattendance_within_30_days_flag] = 1
+			)
+		formatString: 0
+		lineageTag: 6c514919-ea3f-4e05-a234-7efce226e70d
+
+	measure MH_ED_reattendance_within_30_days_Rate_Per_1000_MH_ED_Attendances_Crude_Rate = ```
+			
+			
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			
+			VAR total_mh_ed_reattendances = calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			,'9 MH ED Attendances'[ECDS_MH_ED_Reattendance_within_30_days_flag] = 1) 
+			
+			Var total_mh_ed_attendances =  calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			)
+			RETURN
+			
+			 (total_mh_ed_reattendances/total_mh_ed_attendances)*1000
+			
+			```
+		lineageTag: 01eeeaad-dafe-4679-b00c-cbfcce0da463
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure MH_ED_Reattendances_within_6_months =
+			
+			
+			calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			,'9 MH ED Attendances'[ECDS_MH_ED_Reattendance_within_6_months_flag] = 1
+			)
+		formatString: 0
+		lineageTag: 6d3c189a-6c3d-4ead-9e6b-214b9ca9a37b
+
+	measure MH_ED_reattendance_within_6_months_Rate_Per_1000_MH_ED_Attendances_Crude_Rate = ```
+			
+			
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			
+			VAR total_mh_ed_reattendances = calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			,'9 MH ED Attendances'[ECDS_MH_ED_Reattendance_within_6_months_flag] = 1) 
+			
+			Var total_mh_ed_attendances =  calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			)
+			RETURN
+			
+			 (total_mh_ed_reattendances/total_mh_ed_attendances)*1000
+			
+			```
+		lineageTag: d25b4c62-670c-48c6-a84c-13b2c74828b7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure MH_ED_Reattendances_within_12_months =
+			
+			
+			calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			,'9 MH ED Attendances'[ECDS_MH_ED_Reattendance_within_12_months_flag] = 1
+			)
+		formatString: 0
+		lineageTag: 924772f7-ccd2-47c7-bd99-0a273d41e064
+
+	measure MH_ED_reattendance_within_12_months_Rate_Per_1000_MH_ED_Attendances_Crude_Rate = ```
+			
+			
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			
+			VAR total_mh_ed_reattendances = calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			,'9 MH ED Attendances'[ECDS_MH_ED_Reattendance_within_12_months_flag] = 1) 
+			
+			Var total_mh_ed_attendances =  calculate(sum('9 MH ED Attendances'[counter])
+			,'9 MH ED Attendances'[MH_Att_Flag] = 1
+			)
+			RETURN
+			
+			 (total_mh_ed_reattendances/total_mh_ed_attendances)*1000
+			
+			```
+		lineageTag: 925939d3-9ff4-457b-a3c7-8a02c095f384
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Parameter_Trendline = ```
+			
+			
+			VAR SelectedMetric =
+			    // ← your existing slicer-backed parameter measure
+			    
+			    SELECTEDVALUE(
+			        '9 MH_ED_Metric_Parameter'[Parameter Fields],
+			        BLANK()
+			    )
+			
+			 
+			VAR Temp_Table=
+			    FILTER(
+			        SELECTCOLUMNS(
+			            ALLSELECTED( 'REF_Date_Ref'[financial_year], 'REF_Date_Ref'[financial_month],
+			                         'REF_Date_Ref'[month_name], 'REF_Date_Ref'[month_number] ),
+			            "Value_x", 'REF_Date_Ref'[month_number],
+			            "Value_y", SelectedMetric
+			        ),
+			        AND(
+			            NOT ( ISBLANK( "Value_x") ),
+			            NOT ( ISBLANK( "Value_y") )
+			        )
+			    )
+			 
+			VAR LINESTX_Table=
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope=
+			    MAXX( LINESTX_Table, [Slope1] )
+			VAR Intercept=
+			    MAXX( LINESTX_Table, [Intercept] )
+			 
+			RETURN
+			    SUMX(
+			        DISTINCT( 'REF_Date_Ref'[month_number] ),
+			        Intercept+ Slope* 'REF_Date_Ref'[month_number]
+			    )
+			
+			```
+		lineageTag: 9f0395e7-0109-4c9a-acfc-6bcc77e12aa3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column id
+		dataType: string
+		lineageTag: e9ff42d1-f2e3-4f0e-9c30-7231813a98e0
+		summarizeBy: none
+		sourceColumn: id
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_source
+		dataType: string
+		lineageTag: 573ec7d2-d733-4e56-b0be-10e526943365
+		summarizeBy: none
+		sourceColumn: data_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b726f04-46ff-4d94-b3f0-58c49652eb21
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_number
+		dataType: string
+		lineageTag: 008846e5-c72a-40ab-a69d-e109009b735b
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column CDS_Unique_Identifier
+		dataType: string
+		lineageTag: 0ff09831-830d-4580-ba39-47b344e7fc54
+		summarizeBy: none
+		sourceColumn: CDS_Unique_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a2f0c99d-8fe6-4874-868f-2442f532fe54
+		summarizeBy: none
+		sourceColumn: arrival_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 20571e2a-b446-4389-9659-5d4f66eb16be
+		summarizeBy: none
+		sourceColumn: arrival_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column arrival_hour
+		dataType: int64
+		formatString: 0
+		lineageTag: 2a5fe6c7-ae28-42e9-8db1-0f41702bc95d
+		summarizeBy: sum
+		sourceColumn: arrival_hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_mode_code
+		dataType: string
+		lineageTag: 9ab0828c-814d-4499-892c-b110aa2315b6
+		summarizeBy: none
+		sourceColumn: arrival_mode_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_mode
+		dataType: string
+		lineageTag: bb312f94-614b-4827-bb05-464d6495ed2f
+		summarizeBy: none
+		sourceColumn: arrival_mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_mode_grouped
+		dataType: string
+		lineageTag: f1e7df57-9d2d-48ba-9474-b78041eff45b
+		summarizeBy: none
+		sourceColumn: arrival_mode_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_category_code
+		dataType: string
+		lineageTag: 111e281c-9c90-4159-bd84-22433e4455ad
+		summarizeBy: none
+		sourceColumn: attendance_category_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_category
+		dataType: string
+		lineageTag: 58f13f30-be32-4217-85eb-a2c3c13ca18d
+		summarizeBy: none
+		sourceColumn: attendance_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_source_code
+		dataType: string
+		lineageTag: f4e00674-9f7a-41b3-9169-d365598d3ea3
+		summarizeBy: none
+		sourceColumn: attendance_source_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_source
+		dataType: string
+		lineageTag: af884121-6100-4240-9b51-cfff8dc26e10
+		summarizeBy: none
+		sourceColumn: attendance_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column acuity_code
+		dataType: string
+		lineageTag: 9d9e1c9f-acd5-4510-975f-7a09516c6145
+		summarizeBy: none
+		sourceColumn: acuity_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column acuity
+		dataType: string
+		lineageTag: a31bf9cb-67ed-4044-8477-c6183791939a
+		summarizeBy: none
+		sourceColumn: acuity
+
+		annotation SummarizationSetBy = Automatic
+
+	column major_minor_flag
+		dataType: string
+		lineageTag: 80d3cfd4-328d-4132-b238-d28d61a4097a
+		summarizeBy: none
+		sourceColumn: major_minor_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column departure_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3cdd23f4-69e4-4179-ae2b-7ed5fd43b936
+		summarizeBy: none
+		sourceColumn: departure_date
+
+		variation Variation
+			isDefault
+			relationship: 24a4e450-1a5d-4e7d-a9e6-2591e703f1bb
+			defaultHierarchy: LocalDateTable_dac578a6-91d7-41b7-bfe7-53202f3be1e2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column departure_time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: bde32b62-730f-4c53-ab35-40ecd324d87b
+		summarizeBy: none
+		sourceColumn: departure_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column minutes_in_ed
+		dataType: int64
+		formatString: 0
+		lineageTag: cd65df62-64d2-47da-8f25-46784684e76a
+		summarizeBy: sum
+		sourceColumn: minutes_in_ed
+
+		annotation SummarizationSetBy = Automatic
+
+	column hours_in_ed
+		dataType: double
+		lineageTag: d5c2d2bf-71f2-4193-977c-07eb51cc02a9
+		summarizeBy: sum
+		sourceColumn: hours_in_ed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column decision_to_admit_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 559e8b7c-1564-46b6-a604-07c8d79ee539
+		summarizeBy: none
+		sourceColumn: decision_to_admit_date
+
+		variation Variation
+			isDefault
+			relationship: d6bc3e4a-534d-49a6-b10a-5882824128b8
+			defaultHierarchy: LocalDateTable_bded6ab6-3f91-4446-822b-9911d8da4c16.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column breach_reason
+		dataType: string
+		lineageTag: c8f2294c-fca3-450b-b622-649e711fa818
+		summarizeBy: none
+		sourceColumn: breach_reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitted_flag
+		dataType: string
+		lineageTag: a9acde4e-a459-4ee2-9aa0-a09b2b56de2c
+		summarizeBy: none
+		sourceColumn: admitted_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_status_code
+		dataType: string
+		lineageTag: 47a261e3-1399-45a1-b168-c25a33d00369
+		summarizeBy: none
+		sourceColumn: discharge_status_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_status
+		dataType: string
+		lineageTag: fd850981-d93b-40b8-b784-8ebb778f7410
+		summarizeBy: none
+		sourceColumn: discharge_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_code
+		dataType: string
+		lineageTag: 7137e935-c6e2-4c2b-adb3-30a9286d0f68
+		summarizeBy: none
+		sourceColumn: discharge_destination_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination
+		dataType: string
+		lineageTag: 3283b7c4-6bbc-4dab-8cc5-3533c4e12179
+		summarizeBy: none
+		sourceColumn: discharge_destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_follow_up_code
+		dataType: string
+		lineageTag: 747efde4-65c1-441a-867f-beeeea4eb677
+		summarizeBy: none
+		sourceColumn: discharge_follow_up_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_follow_up
+		dataType: string
+		lineageTag: 3aecc455-cd64-4bbd-b034-2d4911a4b8b2
+		summarizeBy: none
+		sourceColumn: discharge_follow_up
+
+		annotation SummarizationSetBy = Automatic
+
+	column disposal_method_code
+		dataType: string
+		lineageTag: 5010a8af-0bee-4855-93bb-233f18cc196e
+		summarizeBy: none
+		sourceColumn: disposal_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column disposal_method
+		dataType: string
+		lineageTag: e74423c4-91f5-45cf-976d-8e3a3df6afde
+		summarizeBy: none
+		sourceColumn: disposal_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column referred_service_code
+		dataType: string
+		lineageTag: 16c06673-31e6-4b65-b19b-8044699ec6c1
+		summarizeBy: none
+		sourceColumn: referred_service_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column referred_service
+		dataType: string
+		lineageTag: 70b5b160-f104-41ed-bd33-9e7ab1cb26ec
+		summarizeBy: none
+		sourceColumn: referred_service
+
+		annotation SummarizationSetBy = Automatic
+
+	column commissioner_group
+		dataType: string
+		lineageTag: afd3ad49-6ec7-4722-928e-3f381acacea7
+		summarizeBy: none
+		sourceColumn: commissioner_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column code_of_commissioner
+		dataType: string
+		lineageTag: ccd08c33-bf37-4277-87d7-d500bc314262
+		summarizeBy: none
+		sourceColumn: code_of_commissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_group_derived
+		dataType: string
+		lineageTag: b50c2a25-bf9a-4888-b9e5-e58cc385c573
+		summarizeBy: none
+		sourceColumn: provider_group_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_group
+		dataType: string
+		lineageTag: 3e963313-d513-4bba-bfed-c5c848b13c38
+		summarizeBy: none
+		sourceColumn: provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_code
+		dataType: string
+		lineageTag: ccb52045-df60-45eb-8391-a8a53f9b6fc8
+		summarizeBy: none
+		sourceColumn: provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_name
+		dataType: string
+		lineageTag: c8a72fc7-ec46-43cc-8375-820240cf0650
+		summarizeBy: none
+		sourceColumn: provider_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_code
+		dataType: string
+		lineageTag: 0de224e9-f9c3-4ea2-a936-805c96c6181a
+		summarizeBy: none
+		sourceColumn: site_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_name
+		dataType: string
+		lineageTag: b5b19af5-ee79-442b-a16c-4db826aebd29
+		summarizeBy: none
+		sourceColumn: site_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_type_code
+		dataType: int64
+		formatString: 0
+		lineageTag: 383edd83-202d-450c-8347-78062e954a3f
+		summarizeBy: none
+		sourceColumn: department_type_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_type
+		dataType: string
+		lineageTag: 6f14c317-adb1-4093-bd60-abb75a49a2c4
+		summarizeBy: none
+		sourceColumn: department_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column chief_complaint_code
+		dataType: string
+		lineageTag: 12b09b38-a962-4c94-8df3-9f1b0830042d
+		summarizeBy: none
+		sourceColumn: chief_complaint_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column chief_complaint
+		dataType: string
+		lineageTag: 8315c219-821e-4aa7-a27b-5e11f06f8ab5
+		summarizeBy: none
+		sourceColumn: chief_complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column presenting_complaint
+		dataType: string
+		lineageTag: eaa25d77-377a-4328-859d-7157be245a84
+		summarizeBy: none
+		sourceColumn: presenting_complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column diagnosis_code
+		dataType: string
+		lineageTag: 8a86ebcd-9bde-4cd5-bce9-fa198028ffab
+		summarizeBy: none
+		sourceColumn: diagnosis_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column diagnosis_code_1
+		dataType: string
+		lineageTag: 8cf129fe-30ef-4819-b0a3-be27ea45fe83
+		summarizeBy: none
+		sourceColumn: diagnosis_code_1
+
+		annotation SummarizationSetBy = Automatic
+
+	column diagnosis_code_1_description
+		dataType: string
+		lineageTag: 9e2c831b-cf66-4de3-8359-8e6b1f93cd5a
+		summarizeBy: none
+		sourceColumn: diagnosis_code_1_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Group1
+		dataType: string
+		lineageTag: 4d6c781a-c0f7-4926-9ad8-73dc14c7fb65
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Group1
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Group2
+		dataType: string
+		lineageTag: c8be4ff4-f8b4-460f-9482-e4e5b656e33f
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Group2
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Group3
+		dataType: string
+		lineageTag: 39ac3427-d962-48e8-b615-3ab9ff44ebdc
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Group3
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Description
+		dataType: string
+		lineageTag: b41afc83-34b3-45a4-8735-1ed444bea94a
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent
+		dataType: string
+		lineageTag: 17f89609-952c-4bc4-bd8e-0e0dc6ca25fc
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent_Description
+		dataType: string
+		lineageTag: afe71c41-9182-4fc6-8135-1a61b99c5ebb
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent_Chapter
+		dataType: string
+		lineageTag: 01484d77-d2a3-4b8b-ad7c-c62616823e29
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent_Chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent_SubChapter
+		dataType: string
+		lineageTag: 9e38593b-7e39-492e-91d5-9d2168adaeb3
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent_SubChapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_mechanism_code
+		dataType: string
+		lineageTag: 1dc06b74-a247-4488-b06b-a0bb16d7f3ca
+		summarizeBy: none
+		sourceColumn: injury_mechanism_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_mechanism
+		dataType: string
+		lineageTag: 4bbbd384-2d3e-4d43-bcb7-14385f020d9f
+		summarizeBy: none
+		sourceColumn: injury_mechanism
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_intent_code
+		dataType: string
+		lineageTag: a6c56765-b4d1-4eda-b0a4-015625d7e7b8
+		summarizeBy: none
+		sourceColumn: injury_intent_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_intent
+		dataType: string
+		lineageTag: b13344a3-a9a3-472a-9144-90571dc564d8
+		summarizeBy: none
+		sourceColumn: injury_intent
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_place_code
+		dataType: string
+		lineageTag: ae702c09-eda9-466d-a7db-f996c273162e
+		summarizeBy: none
+		sourceColumn: injury_place_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_place
+		dataType: string
+		lineageTag: 23006c3d-a804-4dc8-a8d0-558c2eeb6f18
+		summarizeBy: none
+		sourceColumn: injury_place
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_activity_type_code
+		dataType: string
+		lineageTag: a5eaf1ed-812a-41f3-bbf2-19db02003089
+		summarizeBy: none
+		sourceColumn: injury_activity_type_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_activity_type
+		dataType: string
+		lineageTag: 868feedc-fc4c-4306-b6d7-a06fe572226e
+		summarizeBy: none
+		sourceColumn: injury_activity_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_illness_flag
+		dataType: string
+		lineageTag: 9ad0589a-a164-45a0-9f3a-bbe7ff4d87ac
+		summarizeBy: none
+		sourceColumn: injury_illness_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column mental_health_classification_code
+		dataType: string
+		lineageTag: 93423647-e0e4-4141-a03d-c82482c49a75
+		summarizeBy: none
+		sourceColumn: mental_health_classification_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column mental_health_classification
+		dataType: string
+		lineageTag: 43c70067-88ab-495d-bf34-ef07588d82e7
+		summarizeBy: none
+		sourceColumn: mental_health_classification
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_Att_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: e19f38cb-a4ff-4438-a2e0-03835e5edcae
+		summarizeBy: sum
+		sourceColumn: MH_Att_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_code
+		dataType: string
+		lineageTag: dd345e70-1fd0-4ce0-b3b8-8cc5a1d95d08
+		summarizeBy: none
+		sourceColumn: hrg_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_description
+		dataType: string
+		lineageTag: dd48d7f5-c4a4-4662-96b9-ff8c2aea55c5
+		summarizeBy: none
+		sourceColumn: hrg_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_sub_chapter_description
+		dataType: string
+		lineageTag: b20621b5-810b-4d19-9a4c-4122df46fc90
+		summarizeBy: none
+		sourceColumn: hrg_sub_chapter_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column tariff
+		dataType: double
+		lineageTag: 4948f0f7-1a25-481d-9234-83848811df0c
+		summarizeBy: sum
+		sourceColumn: tariff
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MFF
+		dataType: double
+		lineageTag: b104e258-bc38-437f-ac83-4248e8e6e1c5
+		summarizeBy: sum
+		sourceColumn: MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_tariff_plus_MFF
+		dataType: double
+		lineageTag: 37ac43ea-6010-48b2-bb75-a8bbf94b7933
+		summarizeBy: sum
+		sourceColumn: total_tariff_plus_MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column tariff_applied
+		dataType: string
+		lineageTag: c277244f-153e-4e8b-9ad4-6ed60a20846b
+		summarizeBy: none
+		sourceColumn: tariff_applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 3cfdb269-0985-4d55-917e-9c9c640ab43f
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 0e9a7e5f-4e75-4d30-8ce9-08193afb95ed
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 9cfc1131-88f9-48d5-8582-9ee79b0c9ba1
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 01b37069-036e-4acd-9833-5134e9a395fc
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column census_date
+		dataType: string
+		lineageTag: 9a271f7a-e244-4cbb-8474-187a888f148e
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday_name
+		dataType: string
+		lineageTag: 22fbfdbc-21f7-492b-8424-e9ee2851bb5b
+		summarizeBy: none
+		sourceColumn: weekday_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 19c1b7a1-8605-42f8-a369-3019d954d402
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender_code
+		dataType: string
+		lineageTag: 23937523-5f44-4922-973a-aafe21232413
+		summarizeBy: none
+		sourceColumn: gender_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_activity_date
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f2569f0-884b-4fa8-a81b-7059283844bc
+		summarizeBy: none
+		sourceColumn: age_at_activity_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: ea28f879-5f71-4815-a858-78bb4e9197c9
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 0a692256-2fb7-411a-a836-9732a78b6b58
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: ea969d07-b7b0-4ddb-816d-d6defaa88df0
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 25813fb1-0776-4ac7-b724-3cdff31fecb0
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa
+		dataType: string
+		lineageTag: 9ad0e916-a9b6-4380-8375-b786895fbcd9
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column postcode_key
+		dataType: string
+		lineageTag: 2f190cab-a41f-4956-9b32-9a71ea05b3fc
+		summarizeBy: none
+		sourceColumn: postcode_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column postcode_ecds
+		dataType: string
+		lineageTag: 66daf22e-0c19-4393-a0b3-43b0136f2a77
+		summarizeBy: none
+		sourceColumn: postcode_ecds
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprivation_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: c2675fdf-723a-49f1-a110-16a030b85ce4
+		summarizeBy: sum
+		sourceColumn: deprivation_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column core_20
+		dataType: int64
+		formatString: 0
+		lineageTag: 52a6e171-d762-43d1-a048-901da9cb69ba
+		summarizeBy: sum
+		sourceColumn: core_20
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5yr_age_band
+		dataType: string
+		lineageTag: 2714a531-678f-4b92-aa54-90397fe3942f
+		summarizeBy: none
+		sourceColumn: 5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10yr_age_band
+		dataType: string
+		lineageTag: 77a637b0-20db-4ebd-83ca-29dde11c1284
+		summarizeBy: none
+		sourceColumn: 10yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column working_age_band
+		dataType: string
+		lineageTag: e50af9fc-764d-43fb-ad0b-b0374ba77744
+		summarizeBy: none
+		sourceColumn: working_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_code
+		dataType: string
+		lineageTag: 2f2b0d72-2426-49ba-980c-4c1067c19b82
+		summarizeBy: none
+		sourceColumn: ethnic_origin_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin
+		dataType: string
+		lineageTag: 72191cf7-625f-4bf4-a76f-e941301dffd5
+		summarizeBy: none
+		sourceColumn: ethnic_origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_group
+		dataType: string
+		lineageTag: c79defbe-8d55-4cea-968e-8769468372f9
+		summarizeBy: none
+		sourceColumn: ethnic_origin_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column living_in_a_care_home
+		dataType: int64
+		formatString: 0
+		lineageTag: 422d5c64-ca92-492e-ba54-9676c73fbc92
+		summarizeBy: sum
+		sourceColumn: living_in_a_care_home
+
+		annotation SummarizationSetBy = Automatic
+
+	column living_alone
+		dataType: int64
+		formatString: 0
+		lineageTag: b1b4163c-8f6c-401e-8d41-9b522eee861e
+		summarizeBy: sum
+		sourceColumn: living_alone
+
+		annotation SummarizationSetBy = Automatic
+
+	column mild_frailty
+		dataType: string
+		lineageTag: 3c7b6839-681a-4003-a40e-82417d8ad221
+		summarizeBy: none
+		sourceColumn: mild_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column moderate_frailty
+		dataType: string
+		lineageTag: 8a6331d5-725a-43d7-b88a-f9cad5adfd46
+		summarizeBy: none
+		sourceColumn: moderate_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column severe_frailty
+		dataType: string
+		lineageTag: 563d55df-d8f6-4ffa-bf9b-b509f2c0e4d3
+		summarizeBy: none
+		sourceColumn: severe_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		lineageTag: 01432552-4a86-43ae-9347-cb16507d3981
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column atrialfib_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: ec670595-dc1c-45c8-89c3-0f0dd70afeb7
+		summarizeBy: sum
+		sourceColumn: atrialfib_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column asthma_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 259c7b55-ecca-4d54-98e2-a276934aaa53
+		summarizeBy: sum
+		sourceColumn: asthma_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancer_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 195fd996-ded0-47e9-910a-d5384f1b1717
+		summarizeBy: sum
+		sourceColumn: cancer_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column coronaryheart_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 3c9339c2-8ecd-487b-a02a-f3611d82ec8b
+		summarizeBy: sum
+		sourceColumn: coronaryheart_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column chronickidney_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 9e96406e-9dc7-4de3-ab5e-008c4d674fa3
+		summarizeBy: sum
+		sourceColumn: chronickidney_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column copd_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 33b7a4d5-7181-4d97-b962-0eb8899c7699
+		summarizeBy: sum
+		sourceColumn: copd_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 7a289761-d05d-4a33-a047-cd19215ce89b
+		summarizeBy: sum
+		sourceColumn: dementia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column depression_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b276659-09f9-451e-9581-a7376b66dd6b
+		summarizeBy: sum
+		sourceColumn: depression_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column diabetes_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 15b80cc0-7855-4c36-adcd-2d0c0b8f2b1e
+		summarizeBy: sum
+		sourceColumn: diabetes_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column epilepsy_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 67175fa1-f1b3-43f6-bd5e-19034dd15057
+		summarizeBy: sum
+		sourceColumn: epilepsy_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column heartfailure_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 092c95f5-ed96-4d49-89a5-34b95f194416
+		summarizeBy: sum
+		sourceColumn: heartfailure_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column hypertension_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 27a32910-925b-479d-ba04-5a3cf53f7a7e
+		summarizeBy: sum
+		sourceColumn: hypertension_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column learningdisability_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: c2dca7b4-79b7-4259-82c7-2438343a9882
+		summarizeBy: sum
+		sourceColumn: learningdisability_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column mentalhealth_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 2fd96bb2-14c6-44ae-80b9-6f2891981d0c
+		summarizeBy: sum
+		sourceColumn: mentalhealth_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column obesity_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 44b5f8fc-45bd-484a-bf49-41472e15629d
+		summarizeBy: sum
+		sourceColumn: obesity_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column peripheralarterialdisease_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 31cf5013-3bbc-49c8-b212-beff3818480a
+		summarizeBy: sum
+		sourceColumn: peripheralarterialdisease_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliativecare_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 03d5756c-4a07-46be-bb83-73d4cee76946
+		summarizeBy: sum
+		sourceColumn: palliativecare_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column stroke_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 873dcb02-2822-40a7-a661-52442872b1f9
+		summarizeBy: sum
+		sourceColumn: stroke_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column tia_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 6bb326de-f311-44c3-9689-332b1b806d01
+		summarizeBy: sum
+		sourceColumn: tia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 06306c77-5e0b-4a9b-893a-b7a5764b678e
+		summarizeBy: sum
+		sourceColumn: SPC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YTD Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f21330c-9152-489f-a2b0-e2d717d83c9c
+		summarizeBy: sum
+		sourceColumn: YTD Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weekday Sorter'
+		dataType: int64
+		formatString: 0
+		lineageTag: a1ff25b0-b6c8-44b1-96d0-090ae6f4683f
+		summarizeBy: sum
+		sourceColumn: Weekday Sorter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 3aa9dd37-3d65-4bd8-8dc5-06e3fbe53394
+		summarizeBy: sum
+		sourceColumn: Latest_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 1920_Latest_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 51620c6a-1178-4129-bce1-1f34059dc6a4
+		summarizeBy: sum
+		sourceColumn: 1920_Latest_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column BlankLegend = "All"
+		lineageTag: 60feb0a0-a198-4625-a7cc-29c099840202
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_MH_ED_Reattendance_within_30_days_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 92b4409a-9116-428f-ad9b-f99af8cef032
+		summarizeBy: sum
+		sourceColumn: ECDS_MH_ED_Reattendance_within_30_days_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_MH_ED_Reattendance_within_6_months_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 113a0680-901e-4f77-8762-df5eac8d1815
+		summarizeBy: sum
+		sourceColumn: ECDS_MH_ED_Reattendance_within_6_months_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_MH_ED_Reattendance_within_12_months_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 8f5ba8b4-c52b-49af-a753-43c1774371d3
+		summarizeBy: sum
+		sourceColumn: ECDS_MH_ED_Reattendance_within_12_months_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_HIU_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 202fcf75-76fb-4ea3-9762-5b4af0a66c22
+		summarizeBy: none
+		sourceColumn: Current_HIU_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_HIU_flag_identified_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 185ab378-e338-4a32-8479-37087ff3490e
+		summarizeBy: none
+		sourceColumn: Current_HIU_flag_identified_date
+
+		variation Variation
+			isDefault
+			relationship: 2bb80ce2-3f5c-4a80-830f-bbf334fb0fc8
+			defaultHierarchy: LocalDateTable_308dd56c-2f90-4b0c-ac0b-3960aeab5783.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 12hour_flag_in_ED_MH_Reasons
+		dataType: int64
+		formatString: 0
+		lineageTag: 3286ba9b-348c-44cc-86be-581d15b5f473
+		summarizeBy: sum
+		sourceColumn: 12hour_flag_in_ED_MH_Reasons
+
+		annotation SummarizationSetBy = Automatic
+
+	column Responsible_CCG_From_General_Practice
+		dataType: string
+		lineageTag: 202154ba-ab2d-4a89-970f-bad3f7337aa3
+		summarizeBy: none
+		sourceColumn: Responsible_CCG_From_General_Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ef307c74-96aa-436e-9e91-68a0820b82ef
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 75a122bd-ad1d-4cc5-a6ee-a43880dd6a04
+			defaultHierarchy: LocalDateTable_36143124-9c0b-4fa7-9051-fc806e841be6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_commissioner_based_on_postcode
+		dataType: string
+		lineageTag: 1fdd0f3d-2b19-4b4e-96fc-26321a18e65e
+		summarizeBy: none
+		sourceColumn: Derived_commissioner_based_on_postcode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '9 MH ED Attendances' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)select *#(lf)#(lf)from PowerBI_Reporting.UrgentCare.tbl01_ECDS#(lf)where MH_Att_Flag = 1#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each true)
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

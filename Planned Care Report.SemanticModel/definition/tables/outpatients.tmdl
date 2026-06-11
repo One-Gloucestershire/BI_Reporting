@@ -1,0 +1,469 @@
+table outpatients
+	lineageTag: d4d7e24c-29c8-41e5-a11b-aee5bed0cdc4
+
+	measure follow_up_attendances = CALCULATE(COUNT('outpatients'[counter]),FILTER('outpatients','outpatients'[First_or_Follow_up]="Follow-up"),FILTER('outpatients','outpatients'[Attended_Flag]="Attended"))
+		formatString: 0
+		lineageTag: a508961f-f46e-4c92-8dd6-0c1e19252049
+
+	measure first_attendances = CALCULATE(COUNT('outpatients'[counter]),FILTER('outpatients','outpatients'[first_or_follow_up]="First"),FILTER('outpatients','outpatients'[attended_flag]="Attended"))
+		formatString: 0
+		lineageTag: bd515102-adf6-4a50-b071-78d3c6ce5e73
+
+	measure first_to_follow_up_ratio = [follow_up_attendances]/[first_attendances]
+		lineageTag: 43d77e53-72ab-4ed7-8a10-7b00bab4ceb4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure non_f2f_target = 0.25
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 86d7d7ba-afc8-40ab-9865-655bb1059906
+
+	measure total_attendances = CALCULATE(SUM('outpatients'[counter]),FILTER('outpatients','outpatients'[attended_flag]="Attended"))
+		formatString: 0
+		lineageTag: dd332ef9-cdfb-4953-a341-69abb7043c92
+
+	measure non_f2f_attendances = CALCULATE(COUNT('outpatients'[counter]),FILTER('outpatients','outpatients'[AppointmentMode]="Non Face-to-Face"),FILTER('outpatients','outpatients'[Attended_Flag]="Attended"))
+		formatString: 0
+		lineageTag: e95b3bce-6e58-4afa-a592-f70d92b98064
+
+	measure non_f2f_attendances_% = IFERROR(DIVIDE([non_f2f_attendances],[total_attendances]),0)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 6fce8aae-7433-4806-b66a-654036ffa53d
+
+	measure did_not_attend = CALCULATE(SUM('outpatients'[counter]),FILTER('outpatients','outpatients'[Attended_Flag]="Did Not Attend"))
+		formatString: 0
+		lineageTag: 6df75685-9502-4135-a11f-242325ee985c
+
+	measure dna_rate_% = [did_not_attend]/([total_attendances]+[did_not_attend])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c5bfd063-9e80-46f3-bb36-ccc54c435df5
+
+	measure 'average outpatient' =
+			AVERAGEX(KEEPFILTERS(VALUES('date'[year_month])),
+				CALCULATE(SUM('outpatients'[counter])
+			))
+		lineageTag: 911decc6-d1c2-4c08-8ee8-7c8de0108208
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Mean2 = CALCULATE(AVERAGEX('outpatients',[counter]), ALLSELECTED('outpatients'))
+		lineageTag: 0494bfb1-428b-4b50-a755-386959f60a1f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Outpatient_Parameter = "Total Outpatient Attendances"
+		lineageTag: af20f9af-b27a-4f3a-90ce-f3bcee4a8689
+
+	measure First_Attended_Appointments =
+			
+			CALCULATE(
+			    SUM(outpatients[counter]),
+			    CONTAINSSTRING(outpatients[First_or_Follow_up], "First"),
+			    outpatients[Attended_Flag] = "Attended"
+			)
+		formatString: 0
+		lineageTag: bffd15b3-5e61-4607-b523-61809b682e91
+
+	measure Conversion = electives[Elective_Activity]/outpatients[First_Attended_Appointments]
+		lineageTag: b34c325b-462c-4593-bdf8-a9e428993ef5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 10yr_age_band
+		dataType: string
+		lineageTag: 57a09e63-d179-4039-880e-63612e6acd47
+		summarizeBy: none
+		sourceColumn: 10yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core_HRG
+		dataType: string
+		lineageTag: 4327ccc7-dd25-4c92-956e-ebc3c7dfa016
+		summarizeBy: none
+		sourceColumn: Core_HRG
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core_HRG_Description
+		dataType: string
+		lineageTag: f688c762-f889-49f9-b766-3a34ee5835ab
+		summarizeBy: none
+		sourceColumn: Core_HRG_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_code&description = outpatients[Core_HRG] & " - " & outpatients[Core_HRG_Description]
+		lineageTag: 2d39dc22-6392-4f0e-9406-a5fa2d257a25
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: double
+		lineageTag: ac8b085b-45f2-4a39-b870-2e8c21550292
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Rate
+		dataType: double
+		formatString: 0.0
+		lineageTag: 0552b73d-fcdd-488a-9290-6ac6120415f0
+		summarizeBy: sum
+		sourceColumn: Rate
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 24f6370b-c53e-4754-9eac-b4b855e1afc3
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: 1b5ae2ce-f3df-4ef7-ba9a-3a7add73c2ed
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5yr_Age_Band
+		dataType: string
+		lineageTag: 0d257b2b-879b-4484-8082-39713e2a5c85
+		summarizeBy: none
+		sourceColumn: 5yr_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppointmentDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0870811f-d727-48a6-b573-1bec35c9f386
+		summarizeBy: none
+		sourceColumn: AppointmentDate
+
+		variation Variation
+			isDefault
+			relationship: e5546111-0c60-441c-a0fa-fc44a087407f
+			defaultHierarchy: LocalDateTable_6731039f-94f8-4286-b45c-4a43e97e55ce.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 21ab2db4-48d0-485d-81b6-b45ebd66492f
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Name
+		dataType: string
+		lineageTag: 105f7dcd-7d29-480b-aa13-4c9ca6a09de0
+		summarizeBy: none
+		sourceColumn: Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: f5a4f277-2285-4f08-9c6a-ff4bef5b57c0
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 6966f8ac-e8a3-42b2-bc9e-1256f334d638
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code
+		dataType: string
+		lineageTag: c62ae841-18f2-4e49-8ab4-ed5d2278f8cc
+		summarizeBy: none
+		sourceColumn: Provider_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Site_Code
+		dataType: string
+		lineageTag: 82d698e2-41fb-4917-afd6-6cb8b60427a6
+		summarizeBy: none
+		sourceColumn: Site_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Site_Name
+		dataType: string
+		lineageTag: 7dc26726-5c0c-4996-aa72-df66b3448936
+		summarizeBy: none
+		sourceColumn: Site_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attended_Code
+		dataType: string
+		lineageTag: ce4e1a21-bdb7-4109-a4d3-797b55ed3a2e
+		summarizeBy: none
+		sourceColumn: Attended_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_Of_Referral_Code
+		dataType: string
+		lineageTag: 6569e570-030f-42de-ab81-4e5ba2234105
+		summarizeBy: none
+		sourceColumn: Source_Of_Referral_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority_Code
+		dataType: string
+		lineageTag: bfa77416-150f-4c91-8a16-dc69ba31a034
+		summarizeBy: none
+		sourceColumn: Priority_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority
+		dataType: string
+		lineageTag: cac1eaac-bd01-4e30-96f7-8125da70c4fe
+		summarizeBy: none
+		sourceColumn: Priority
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f94cfec-6c42-4562-a9ab-0f8baff03817
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Financial_Year
+		dataType: string
+		lineageTag: e477be2e-1043-40e5-a6ba-422c38039078
+		summarizeBy: none
+		sourceColumn: Financial_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Name
+		dataType: string
+		lineageTag: a4fe8192-afbe-4381-8701-fdf163f86519
+		summarizeBy: none
+		sourceColumn: Month_Name
+		sortByColumn: Financial_Month
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Financial_Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 56779ced-ccfd-4153-97da-4999d127b3fe
+		summarizeBy: sum
+		sourceColumn: Financial_Month
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: d97792eb-40bf-4af8-98ac-992e83e9ad48
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Postcode
+		dataType: int64
+		formatString: 0
+		lineageTag: d572b748-6922-4ecb-af21-43c9624ed82e
+		summarizeBy: sum
+		sourceColumn: Postcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareHomeFlag
+		dataType: int64
+		formatString: 0
+		lineageTag: 43d67235-3f75-44a6-a887-252570180106
+		summarizeBy: sum
+		sourceColumn: CareHomeFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LivingAloneFlag
+		dataType: int64
+		formatString: 0
+		lineageTag: 266d0486-5288-4c93-bcd4-d4baa12ba323
+		summarizeBy: sum
+		sourceColumn: LivingAloneFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column EFI_Category
+		dataType: string
+		lineageTag: 0223cf82-70dd-4e9d-b07f-b0804dc3364e
+		summarizeBy: none
+		sourceColumn: EFI_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Name
+		dataType: string
+		lineageTag: 38f42b8c-9c17-4db3-a5e9-9c36873e79d4
+		summarizeBy: none
+		sourceColumn: Provider_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Group
+		dataType: string
+		lineageTag: 2524ecc4-aa7c-48c7-97c1-5a11b5974660
+		summarizeBy: none
+		sourceColumn: Provider_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attended_Flag
+		dataType: string
+		lineageTag: 8e422189-639a-4198-a610-ced8979b104c
+		summarizeBy: none
+		sourceColumn: Attended_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppointmentMode
+		dataType: string
+		lineageTag: f82d0547-98a2-4ec5-8b9a-d18d88db8f2c
+		summarizeBy: none
+		sourceColumn: AppointmentMode
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_or_Follow_up
+		dataType: string
+		lineageTag: 9c20d0d6-613d-4c7a-a99a-372ee8db74c2
+		summarizeBy: none
+		sourceColumn: First_or_Follow_up
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppointmentType
+		dataType: string
+		lineageTag: 229c7130-15ee-4dea-9238-bb241894a93c
+		summarizeBy: none
+		sourceColumn: AppointmentType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralSource
+		dataType: string
+		lineageTag: e138ccc3-e421-4991-8b01-0577ff29f2cb
+		summarizeBy: none
+		sourceColumn: ReferralSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attendance_Or_Procedure
+		dataType: string
+		lineageTag: 6b7cb268-9d67-4256-ac90-b58c3f729269
+		summarizeBy: none
+		sourceColumn: Attendance_Or_Procedure
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: f302791b-e2d5-47da-8337-8e7a06dd4b7b
+		summarizeBy: sum
+		sourceColumn: ReportingMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Treatment_Function_Code
+		dataType: string
+		lineageTag: 342b5ee8-cd6f-4c35-abd1-374444918550
+		summarizeBy: none
+		sourceColumn: Treatment_Function_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Treatment_Function_Description
+		dataType: string
+		lineageTag: 70363dcd-afb3-4ac9-9d0b-8b133cf91912
+		summarizeBy: none
+		sourceColumn: Treatment_Function_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA
+		dataType: string
+		lineageTag: 190a09ec-d54b-478a-b10f-37152a34d358
+		summarizeBy: none
+		sourceColumn: LSOA
+
+		annotation SummarizationSetBy = Automatic
+
+	column NationalDeprivation
+		dataType: string
+		lineageTag: 081ba83f-9d32-465f-9c90-fab1b8f2a95e
+		summarizeBy: none
+		sourceColumn: NationalDeprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountyDeprivation
+		dataType: string
+		lineageTag: 466526c7-2ec3-46bc-bffc-3fc037379833
+		summarizeBy: none
+		sourceColumn: CountyDeprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginDescription
+		dataType: string
+		lineageTag: 17f41c1d-b7e1-4b81-8e7b-d04d0809ed4c
+		summarizeBy: none
+		sourceColumn: EthnicOriginDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedEthnicityGroup
+		dataType: string
+		lineageTag: dc92170a-fe80-4d42-bf3a-726b4c6798dc
+		summarizeBy: none
+		sourceColumn: DerivedEthnicityGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	partition outpatients-eee3e8ec-935f-47c9-8ede-f1bf1cbb78c0 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="select * from [powerbi_reporting].[PlannedCare].[tbl02_Outpatients]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

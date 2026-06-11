@@ -1,0 +1,90 @@
+table 'GP Reference'
+	lineageTag: 2f0a865d-a82f-4f2d-bec2-8213a9f79637
+
+	measure 'Number of Practices' = DISTINCTCOUNT([ReportingOrganisationName])
+		formatString: 0
+		lineageTag: a89c0a44-58d0-4f98-a2c7-a89634dd4efe
+
+	column Locality
+		dataType: string
+		lineageTag: 0eea99b8-4bca-4c8a-b65c-afefaa064cd3
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 2f414ae9-5183-4ec3-83cc-196cf408155f
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 44e6e2ac-0e1d-429e-936d-030db633ebf3
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hierachy_slicer_top
+		dataType: string
+		lineageTag: 0c2bc01a-1719-4ae3-8d6a-ba6dc3ff1a53
+		summarizeBy: none
+		sourceColumn: Hierachy_slicer_top
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork_2
+		dataType: string
+		lineageTag: 69a4601c-cee9-4208-be95-005b888af32e
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork_2
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: ff705e87-282a-4ba5-9e87-12e32f2ae85c
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 927e40d9-dcf1-4a15-98b1-9c3e56f1430f
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Locality Hierarchy'
+		lineageTag: 53637824-2e5f-4ee9-a3e8-97926d785f3a
+
+		level Locality
+			lineageTag: c9802d49-a744-4ca4-875a-a3bb2a94e6a7
+			column: Locality
+
+		level PrimaryCareNetwork_2
+			lineageTag: bc91eb29-726a-4258-99b6-4792fff579e4
+			column: PrimaryCareNetwork_2
+
+		level ReportingOrganisationName
+			lineageTag: 73a0f9d8-0d4a-42e5-8952-4d108afb1953
+			column: ReportingOrganisationName
+
+	partition 'GP Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)SELECT [Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)#(lf)                         WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Locality] LIKE 'Tewkesbury Newent and Staunton' THEN 'Tewkesbury'#(lf)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'Tewkesbury'#(lf)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)#(lf)      ,[PrimaryCareNetwork] = CASE WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'TWNS'#(lf)#(lf)#(tab)                               WHEN [PrimaryCareNetwork] LIKE 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS'#(lf)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   ELSE [PrimaryCareNetwork] END#(lf)#(lf)#(lf)#(tab)  ,[ReportingOrganisationCode] = CASE WHEN [ReportingOrganisationCode] LIKE 'L84073' THEN 'L84075' /*Acorn Practice*/#(lf)#(lf)#(tab)                                      WHEN [ReportingOrganisationCode] LIKE 'L84017' THEN 'L84018' /*Cirencester Health Group*/#(lf)#(lf)#(tab)                                      ELSE [ReportingOrganisationCode] END #(lf)#(lf)#(tab)  ,[ReportingOrganisationName] = CASE WHEN [ReportingOrganisationName] LIKE 'Acorn Practice' THEN 'May Lane Surgery' #(lf)#(lf)#(tab)                                      WHEN [ReportingOrganisationName] LIKE 'Regent Street Surgery' THEN 'The Willow Tree Practice'#(lf)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [ReportingOrganisationName] LIKE 'Coleford Family Doctors' THEN 'Coleford Medical Practice'#(lf)#(lf)#(tab)                                      ELSE [ReportingOrganisationName] END#(lf)#(lf)#(lf)#(tab)#(tab),OrganisationName#(lf)#(tab)#(tab),OrganisationCode#(lf)#(lf)INTO #TEMP#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf) #(lf)WHERE [Commissioner] = '11M'#(lf)#(lf)AND [Locality] IS NOT NULL#(lf)#(lf);#(lf) #(lf)SELECT distinct [GP].Locality#(lf),ReportingOrganisationCode#(lf),ReportingOrganisationName#(lf),OrganisationCode#(lf),OrganisationName#(lf)#(lf)#(tab) --,[COORD].[GPLatitude]#(lf)#(lf)#(tab)  ,PrimaryCareNetwork_2 = case when ReportingOrganisationName like 'Culverhay Surgery' then 'Berkeley Vale' else PrimaryCareNetwork end#(lf)#(lf)#(tab)  --,[COORD].[GPLongitude]#(lf)#(tab)  ,[Hierachy_slicer_top] = 'Localities'#(lf) #(lf)FROM #TEMP AS [GP]#(lf) #(lf)--LEFT JOIN (SELECT DISTINCT [GP_Practice_Code], [GPLatitude], [GPLongitude]#(lf)#(lf)--           FROM [PowerBI_Reporting].[dbo].[tbl_Demographics_Population_Overview]) [COORD] ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]#(lf)#(lf)where reportingorganisationname not like 'St.Luke''s Medical Centre'#(lf)#(lf)#(tab)#(tab)   order by ReportingOrganisationCode, ReportingOrganisationName"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

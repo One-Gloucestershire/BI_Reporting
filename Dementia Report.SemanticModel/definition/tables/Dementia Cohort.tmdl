@@ -1,0 +1,1025 @@
+table 'Dementia Cohort'
+	lineageTag: a77aa5cf-cb89-4c77-b663-9c5aaa59bc30
+
+	measure 'All patients with recorded place of death' = ```
+			CALCULATE ( COUNT ( 'Dementia Cohort'[pseudo_nhs_number] ) , 'Dementia Cohort'[preferred_place_of_death] IN { "Did not die in preferred place" , "Died in preferred place" }, USERELATIONSHIP('Dementia Cohort'[death_date],'Date Reference'[date]))
+			
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 2502177a-b9bd-4f01-90c7-b3efa8545bc8
+
+	measure 'Patients who died in preferred place of death' = ```
+			CALCULATE ( COUNT ( 'Dementia Cohort'[preferred_place_of_death] ) , 'Dementia Cohort'[preferred_place_of_death] IN { "Died in preferred place" }, USERELATIONSHIP('Dementia Cohort'[death_date],'Date Reference'[date]))
+			
+			```
+		formatString: 0
+		lineageTag: 10d34159-a110-4ee2-a031-4ad82b55aef8
+
+	measure '% Died in preferred place' = CALCULATE([Patients who died in preferred place of death] / [All patients with recorded place of death], USERELATIONSHIP('Dementia Cohort'[death_date],'Date Reference'[date]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ea853652-bdea-4f6e-a9a4-20782110e5b7
+
+	measure '% Did not die in preferred place' = 1 - CALCULATE([% Died in preferred place], USERELATIONSHIP('Dementia Cohort'[death_date],'Date Reference'[date]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a7481af4-fc46-4326-97e7-9311e00c4cae
+
+	measure '% with a Respect Form' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[Has_respect_form_flag] = 1)/count('Dementia Cohort'[pseudo_nhs_number])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e2c828af-290a-43bf-a88b-7e7d6ff620ea
+
+	measure 'Local Current Dementia Patients' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+		formatString: #,0
+		lineageTag: 91b06e82-6c86-4d18-8a06-caeb6c2d3bf1
+
+	measure 'Local latest DDR' = ```
+			
+			[Local Current Dementia Patients]
+			/ 
+			CALCULATE(sum('Practice Population'[Estimated Total Dementia Population]),'Date Reference'[Local data latest month flag] = 1)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bb1e29c4-cb1b-4693-bea3-dda32dba6661
+
+	measure 'Local Diagnosis needed' = CALCULATE(sum('Practice Population'[Required Number of Diagnosed Dementia Patients for DDR]),'Date Reference'[Local data latest month flag] = 1) - [Local Current Dementia Patients]
+		lineageTag: 16d0068c-7892-465d-9c1f-012d5c108f6b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Female Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female",'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN female/total
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f61a5bf4-5d26-407f-809c-d0160b917728
+
+	measure 'Male Dementia Cohort' =
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male",'Dementia Cohort'[death_flag] <> "Dead")
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN male/total
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 749ba6a9-72d5-47a9-9ed0-56a159913b16
+
+	measure 'Average PC Appointments' = CALCULATE(AVERAGE('Dementia Cohort'[PrimaryCareAppointments]),'Dementia Cohort'[death_flag] <> "Dead")
+		lineageTag: aa8b6e5e-8a35-4392-836c-45f8f7b1a656
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths in past 12 months' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_date] >= 'Dementia Cohort'[12 months prior from max death date])
+		formatString: 0
+		lineageTag: 38c8bf34-d291-40cd-bcf1-3fe301767109
+
+	measure 'Emergency Admission %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[EmergencyAdmissions] > 0) / [Local Current Dementia Patients]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 772a3a1f-dfca-4118-982c-da3dfa50c403
+
+	measure 'Care Home %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[Care_home_flag] = 1) / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 04f26848-f0a4-4c7d-b566-ef220f88d261
+
+	measure 'Emergency Attendance %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[EDAttendances] > 0) / [Local Current Dementia Patients]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0794660b-db29-4e7f-b5b6-2757f5ce518e
+
+	measure 'FALL A&E Attendance %' = CALCULATE(sum('Dementia Cohort'[number_of_falls_last_12_months]),'Dementia Cohort'[death_flag] <> "Dead") / CALCULATE(sum('Dementia Cohort'[EDAttendances]),'Dementia Cohort'[death_flag] <> "Dead")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 66c81d5c-7ca8-4f42-877b-6cdc631f52eb
+
+	measure 'Patients under 65 %' = IF(CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[age] < 65) / [Local Current Dementia Patients] = BLANK(),0,CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[age] < 65) / [Local Current Dementia Patients])
+		formatString: 0%;-0%;0%
+		lineageTag: b1c16506-876e-406d-9f33-d5efaeb59ff1
+
+	measure 'Patients 65 and over %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[age] >= 65) / [Local Current Dementia Patients]
+		formatString: 0%;-0%;0%
+		lineageTag: 97c9589f-ef86-47d0-a7f5-c0b2af674b81
+
+	measure 'Patient average age' = CALCULATE(AVERAGE('Dementia Cohort'[age]), 'Dementia Cohort'[death_flag] <> "Dead")
+		lineageTag: e115621c-9ee7-42d9-aa37-dfc7550e2082
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'White Patient %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "White") / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1500f9bf-e447-4a7f-afbd-f40938c9687a
+
+	measure 'Black Patient %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Black or Black British") / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 71cb8aec-02f6-41d6-a171-5721d9f2c50b
+
+	measure 'Asian Patient %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Asian or Asian British") / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 00a093ad-5005-46b7-91a7-27dffaefabc8
+
+	measure 'Mixed Ethnicity Patient %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Mixed") / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d0fbeb5b-5e81-4a88-8486-ec61a0765cb5
+
+	measure 'Unknown Ethnicity Patient %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = BLANK()) / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 66fc2ecc-f712-409d-b7df-09848656d4fb
+
+	measure 'Other Ethnicity Patient %' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Other Ethnic Groups") / [Local Current Dementia Patients]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7f6edad7-d105-4648-bf9d-b33cd8cac9a7
+
+	measure 'Current vs prior month preferred place of death' = ```
+			
+			
+			VAR current_month   = CALCULATE([% Died in preferred place],'Month reference'[Month flag] = "Current Month")  
+			VAR prior_month     = CALCULATE([% Died in preferred place],'Month reference'[Month flag] = "Prior Month")
+			
+			RETURN current_month - prior_month
+			```
+		lineageTag: e4c84b05-733b-47d5-9dc4-6013934451b7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Preferred place of death comparison arrow' = IF([Current vs prior month preferred place of death] > 0, UNICHAR(9650), UNICHAR(9660))
+		lineageTag: 6b1e2e7b-c928-4408-8c29-8e39baa19a66
+
+	measure 'Gloucestershire ICB % Died in preferred place' = CALCULATE([Patients who died in preferred place of death] / [All patients with recorded place of death], ALL('GP Reference'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 82f0a84f-9847-404d-9cc9-4c1ac366bbd0
+
+	measure 'Gloucestershire ICB % with a Respect Form' = CALCULATE(CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[Has_respect_form_flag] = 1)/count('Dementia Cohort'[pseudo_nhs_number]),ALL(('GP Reference')))
+		lineageTag: 1ffc887f-2c68-4f03-9d68-4127e3781de1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Female Under 65 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age] < 65) 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age] < 65) 
+			
+			RETURN female/total
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 2d7b7136-ecbb-4328-9bb5-05f73e6df839
+
+	measure 'Male Under 65 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age] < 65) 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age] < 65)
+			
+			RETURN male/total
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0ff60d0e-b7a1-4299-8f59-598c43c5e4d7
+
+	measure 'Female Under 30-39 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "30-39") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "30-39") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: ba1e1461-75f0-438c-bc87-2b2d0c955e85
+
+	measure 'Female Under 40-49 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "40-49") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "40-49") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 13f01303-3192-430a-8444-df06759b529d
+
+	measure 'Female Under 50-59 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "50-59") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "50-59") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: c95dd4e9-162f-4790-8351-a0d741fdaccf
+
+	measure 'Female Under 60-69 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "60-69") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "60-69") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 06678809-ec14-4c4b-93ec-aa31990a3c2a
+
+	measure 'Female Under 70-79 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "70-79") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "70-79") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: a09270db-7c42-4be3-97a0-c372235c846f
+
+	measure 'Female Under 90+ Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "90+") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "90+") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 2edf0795-6a1a-4a42-aa3f-382a0eebe248
+
+	measure 'Male 30-39 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "30-39") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "30-39")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 91c7037a-752f-4d9c-bdb6-70a88227359f
+
+	measure 'Male 40-49 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "40-49") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "40-49")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: c5900427-f384-4cbb-9be5-9c9763aa72d1
+
+	measure 'Male Under 50-59 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "50-59") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "50-59")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 51b4bf8c-49a9-4bc1-ad15-13dfe1001e85
+
+	measure 'Male Under 60-69 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "60-69") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "60-69")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 3f777c74-d93a-42f6-b1c8-fd407ea353df
+
+	measure 'Male Under 70-79 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "70-79") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "70-79")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 913e51dc-314a-431b-81f3-eeab37c38db4
+
+	measure 'Male Under 80-89 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "80-89") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "80-89")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 5cad5f62-4df6-4648-b92c-ceeecc0979d2
+
+	measure 'Male Under 90+ Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age_banding_10_year] = "90+") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "90+")
+			
+			RETURN male/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: e317683e-1868-41ec-991a-6f5c866d1b44
+
+	measure 'Female Under 80-89 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age_banding_10_year] = "80-89") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age_banding_10_year] = "80-89") 
+			
+			RETURN female/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: b66cf210-0f27-4c51-a62b-b3b7469f836a
+
+	measure '% of total cohort' = ```
+			
+			
+			VAR selection = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number])) 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]))
+			
+			RETURN selection/total
+			```
+		lineageTag: 052428a6-8e3a-445b-9eb5-e1077921c0f4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fit Frailty Dementia Cohort' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Fit",'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN frailty/total
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 862362be-56bf-48fc-8631-d0c26dda3ffe
+
+	measure 'Mild Frailty Dementia Cohort' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Mild Frailty",'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN frailty/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 00c97faa-f48b-4b3f-9997-2468405b04db
+
+	measure 'Moderate Frailty Dementia Cohort' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Moderate Frailty",'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN frailty/total
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7279ff3e-872f-452d-8f2b-935bd7fcb445
+
+	measure 'Severe Frailty Dementia Cohort' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Severe Frailty",'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN frailty/total
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 67c2df6c-98f7-4aeb-8437-1330d95954ae
+
+	measure 'Living Alone Dementia Cohort' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[living_alone_status] = 1,'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN cohort/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 8bf09cc0-7e77-476f-880e-05e8c13bb47d
+
+	measure 'Not Living Alone Dementia Cohort' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[living_alone_status] = 0,'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN cohort/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 5fd1c818-6634-4b19-8397-ea0c774f662d
+
+	measure 'Care Home Dementia Cohort' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[Care_home_flag] = 1,'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN cohort/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: f4d15a22-0844-4dda-9c5c-270a64c82bf9
+
+	measure 'Not in Care Home Dementia Cohort' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[Care_home_flag] = 0,'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN cohort/total
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 0c12fa3e-3fdf-4f4c-bd15-2d9ee200d468
+
+	measure 'Female Total Dementia Patients' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN female
+			```
+		formatString: 0
+		lineageTag: 4d0f7000-9dc2-4a03-9840-885b42a4e15e
+
+	measure 'Male Total Dementia Patients' = ```
+			
+			
+			VAR Male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN Male
+			```
+		formatString: 0
+		lineageTag: bb13f7ca-9f22-4df5-8715-6b64ad73de82
+
+	measure 'Care Home Dementia Patients' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[Care_home_flag] = 1,'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN cohort
+			```
+		formatString: 0
+		lineageTag: 6a4f537d-4e74-444a-9700-1d385ccbbb18
+
+	measure 'Non-Care Home Dementia Patients' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[Care_home_flag] = 0,'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN cohort
+			```
+		formatString: 0
+		lineageTag: 2fed2a7d-ae90-49a7-a951-5e7766dbc5c9
+
+	measure 'Mild Frailty Dementia Patients' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Mild Frailty",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN frailty
+			```
+		formatString: 0
+		lineageTag: f93183f7-7bfd-4214-ba55-5641e43e0a77
+
+	measure 'Fit Frailty Dementia Patients' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Fit",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN frailty
+			```
+		formatString: 0
+		lineageTag: 6c1b2686-7182-41d2-b947-f6891a3e2af9
+
+	measure 'Moderate Frailty Dementia Patients' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Moderate Frailty",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN frailty
+			```
+		formatString: 0
+		lineageTag: 8219486f-40ea-49a0-84ea-00c5decd341a
+
+	measure 'Severe Frailty Dementia Patients' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = "Severe Frailty",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN frailty
+			```
+		formatString: 0
+		lineageTag: ada89371-3f94-45da-8d8e-d141acfe7911
+
+	measure 'Asian Patients' = ```
+			CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Asian or Asian British") 
+			```
+		formatString: 0
+		lineageTag: c7216277-4a65-4ee4-bc6d-f0abbcc846bd
+
+	measure 'Black Patients' = ```
+			CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Black or Black British") 
+			```
+		formatString: 0
+		lineageTag: 3f43ed45-1212-462a-8266-bb92a7791077
+
+	measure 'Mixed Ethnicity Patients' = ```
+			CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Mixed") 
+			```
+		formatString: 0
+		lineageTag: 24ec5444-091e-422b-a5c9-882700f0f22d
+
+	measure 'No Recorded Ethnicity Patients' = ```
+			CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = BLANK()) 
+			```
+		formatString: 0
+		lineageTag: 624abe89-8d70-4729-9927-a1722025b078
+
+	measure 'Other Ethnicity Patients' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "Other Ethnic Groups")
+		formatString: 0
+		lineageTag: c089e39b-194a-44c1-bdb2-6f3a3a6f0cb6
+
+	measure 'White Patients' = ```
+			CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[ethnicity] = "White") 
+			```
+		formatString: 0
+		lineageTag: 79ac5326-d9d5-4ce0-b4cb-5aaf8b7a4337
+
+	measure 'Living Alone Dementia Patients' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[living_alone_status] = "1",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			RETURN cohort
+			```
+		formatString: 0
+		lineageTag: bd38af30-9c99-45a0-a790-9095377e84b0
+
+	measure 'Not Living Alone Dementia Patients' = ```
+			
+			
+			VAR cohort = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[living_alone_status] = "0",'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			RETURN cohort
+			```
+		formatString: 0
+		lineageTag: 1214c5be-9c46-4071-bfb2-84ef6cfa6a9e
+
+	measure 'Unknown Frailty Dementia Patients' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = BLANK(),'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN frailty
+			```
+		formatString: 0
+		lineageTag: 4ef5d4f5-0a22-40b3-8b44-212eb199dfd0
+
+	measure 'Unknown Frailty Dementia Cohort' = ```
+			
+			
+			VAR frailty = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[frailty_efi] = BLANK(),'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN frailty/total
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 701539af-0d57-49bb-b170-fea9f93f1495
+
+	measure 'Unknown Sex Total Dementia Patients' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = BLANK(),'Dementia Cohort'[death_flag] <> "Dead") 
+			
+			
+			RETURN female
+			```
+		formatString: 0
+		lineageTag: bd3af7c2-abbe-42be-8b39-d22444323443
+
+	measure 'Unknown Sex Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = BLANK(),'Dementia Cohort'[death_flag] <> "Dead") 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead")
+			
+			RETURN female/total
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ad2d68a6-1f1f-4714-b375-d3248bc9c4db
+
+	measure 'Patients under 65' = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[age] < 65)
+		formatString: 0
+		lineageTag: 9ce2377f-a3fa-46e7-b812-5194ed15dd99
+
+	measure 'Patients 65 and over' = ```
+			CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[death_flag] <> "Dead", 'Dementia Cohort'[age] >= 65) 
+			```
+		formatString: 0
+		lineageTag: 4d5afb4e-240f-42c1-8ae4-6010fb4e1d1a
+
+	measure '% of patients with recorded place of death' = CALCULATE ( COUNT ( 'Dementia Cohort'[pseudo_nhs_number] ) , 'Dementia Cohort'[preferred_place_of_death] IN { "Did not die in preferred place" , "Died in preferred place" } ) / CALCULATE ( COUNT ( 'Dementia Cohort'[pseudo_nhs_number] ))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 54730596-dd42-4efb-aeb9-046e088df988
+
+	measure 'Gloucestershire ICB % of patients with preferred place of death' = CALCULATE([% of patients with recorded place of death], ALL('GP Reference'))
+		lineageTag: 86e44f41-4d53-4036-9d68-c8774fc994aa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Female Over 65 Dementia Cohort' = ```
+			
+			
+			VAR female = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Female", 'Dementia Cohort'[age] >= 65) 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age] >= 65) 
+			
+			RETURN female/total
+			```
+		lineageTag: 822b2531-1261-4fc7-9fa8-e2c3fb9da334
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Male Over 65 Dementia Cohort' = ```
+			
+			
+			VAR male = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]),'Dementia Cohort'[gender] = "Male", 'Dementia Cohort'[age] >= 65) 
+			Var total = CALCULATE(COUNT('Dementia Cohort'[pseudo_nhs_number]), 'Dementia Cohort'[age] >= 65) 
+			
+			RETURN male/total
+			```
+		lineageTag: fbfbd46d-a402-4d36-ab4b-9b4734fa6a44
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column pseudo_nhs_number
+		dataType: string
+		lineageTag: 7e32780b-9097-4575-9bf8-5b287315b913
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column age
+		dataType: int64
+		formatString: 0
+		lineageTag: 94e2cbe1-2d68-4c36-91c5-53dad1782823
+		summarizeBy: sum
+		sourceColumn: age
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_banding_5_year
+		dataType: string
+		lineageTag: 4099b5bf-a7ef-4d2b-aefc-84b8977d6e21
+		summarizeBy: none
+		sourceColumn: age_banding_5_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_banding_10_year
+		dataType: string
+		lineageTag: 9d63d041-bece-4365-8f43-88e22df4cbd6
+		summarizeBy: none
+		sourceColumn: age_banding_10_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: a840ce65-6925-46f7-9f63-31558e900ade
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: 95a2da5a-9ce4-4c77-aedc-a37bebc042d7
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprivation
+		dataType: string
+		lineageTag: 3660130b-cb2e-484b-9e2c-6b569b808ade
+		summarizeBy: none
+		sourceColumn: deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: c064e1e3-427e-4586-861f-f066debb5470
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: cbe237e6-a42f-4d1e-a851-d3cb8b31e599
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice
+		dataType: string
+		lineageTag: ac11e238-94b5-4d14-a2da-f0a3665ea5e7
+		summarizeBy: none
+		sourceColumn: practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_diagnosis_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4182ef13-677f-4328-bbd2-eeaf2e923b66
+		summarizeBy: none
+		sourceColumn: dementia_diagnosis_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_flag
+		dataType: string
+		lineageTag: 7a3229b7-4bed-4e18-9dfa-a2213d740e53
+		summarizeBy: none
+		sourceColumn: dementia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column death_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 14aa191f-e052-423f-a6a2-918a202bdfc0
+		summarizeBy: none
+		sourceColumn: death_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column death_flag
+		dataType: string
+		lineageTag: 12f2a9c4-4a64-4c33-b238-df0bd480c4d1
+		summarizeBy: none
+		sourceColumn: death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_diagnosis
+		dataType: int64
+		formatString: 0
+		lineageTag: 2acdb59a-9098-4aa6-8232-c261eacb51e6
+		summarizeBy: sum
+		sourceColumn: age_at_diagnosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column Has_respect_form
+		dataType: string
+		lineageTag: 3a491bc7-0e19-4789-9e5a-957ffd7ab8d1
+		summarizeBy: none
+		sourceColumn: Has_respect_form
+
+		annotation SummarizationSetBy = Automatic
+
+	column Has_respect_form_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 93cc8149-446a-4475-98d6-e83882bae809
+		summarizeBy: sum
+		sourceColumn: Has_respect_form_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column preferred_place_of_death
+		dataType: string
+		lineageTag: 7bbd5816-ae49-4f37-8756-e5ed31cd189b
+		summarizeBy: none
+		sourceColumn: preferred_place_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 8c7f07be-b19c-4098-bdfc-9783dccace3d
+		summarizeBy: sum
+		sourceColumn: Care_home_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column '12 months prior from max death date' = ```
+			EDATE(max('Dementia Cohort'[death_date]),-12) 
+			```
+		formatString: General Date
+		lineageTag: 6dee498d-9c76-47ff-b2a8-3bd426649f9d
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 2e5235e5-12c3-4ba9-b278-586e6842975d
+			defaultHierarchy: LocalDateTable_7b131bf0-6fa1-46d7-b459-aa7996d0d2e0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column number_of_falls_last_12_months
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a76d556-7e4d-4843-a185-d96bc3765056
+		summarizeBy: sum
+		sourceColumn: number_of_falls_last_12_months
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Preferred Place of Death Current month flag' =
+			
+			VAR year_month = CONCATENATE(YEAR(MAX('Dementia Cohort'[death_date])),MONTH(MAX('Dementia Cohort'[death_date])))
+			var Date_year_month = CONCATENATE(YEAR('Dementia Cohort'[death_date]),MONTH('Dementia Cohort'[death_date]))
+			var prior_month = EOMONTH(max('Dementia Cohort'[death_date]), -1)
+			var date_prior_month = CONCATENATE(YEAR(prior_month),MONTH(prior_month))
+			RETURN IF(year_month = Date_year_month,"Current Month",if(date_prior_month= Date_year_month, "Prior Month", "Other Month"))
+		lineageTag: 1a01e77b-8f77-4a61-b3b4-6a272f9e7ceb
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Death Date YTD' =
+			
+			VAR current_month = MONTH('Dementia Cohort'[death_date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Dementia Cohort'[death_date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 07a973e2-0610-4cd0-8ad2-fc72db20c496
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dementia Diagnosis Date YTD' =
+			
+			VAR current_month = MONTH('Dementia Cohort'[dementia_diagnosis_date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Dementia Cohort'[dementia_diagnosis_date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 2a59580e-9d34-44f9-9ac6-07ff01e22c83
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 9eeea9f9-acb6-4951-9b2d-b6b9a1274ce8
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 3b2f66f1-1751-46cc-9090-920c441f35c2
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Has_personalised_care_support_plan
+		dataType: string
+		lineageTag: e03e72f4-8330-45ee-9c06-4563d74e3c9b
+		summarizeBy: none
+		sourceColumn: Has_personalised_care_support_plan
+
+		annotation SummarizationSetBy = Automatic
+
+	column Has_personalised_care_support_plan_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: b3ab6f91-98a3-44fa-bd40-3f07498389ff
+		summarizeBy: sum
+		sourceColumn: Has_personalised_care_support_plan_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column living_alone_status
+		dataType: int64
+		formatString: 0
+		lineageTag: 14872f38-693a-4cb8-9d29-36a94638f53f
+		summarizeBy: sum
+		sourceColumn: living_alone_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column frailty_efi
+		dataType: string
+		lineageTag: f474faaa-8dfe-41e7-afe2-6701017d57fb
+		summarizeBy: none
+		sourceColumn: frailty_efi
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 242fea44-b11b-46b3-ba54-716d529fb90e
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareAppointments
+		dataType: int64
+		formatString: 0
+		lineageTag: 9f327eef-8eff-437a-b964-e955a416ad90
+		summarizeBy: sum
+		sourceColumn: PrimaryCareAppointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmergencyAdmissions
+		dataType: int64
+		formatString: 0
+		lineageTag: 464fa862-3b7d-4c45-a95f-3b638dae36c3
+		summarizeBy: sum
+		sourceColumn: EmergencyAdmissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column EDAttendances
+		dataType: int64
+		formatString: 0
+		lineageTag: 3484a7c0-3db3-4eb6-87a0-beefb45ec129
+		summarizeBy: sum
+		sourceColumn: EDAttendances
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dementia Cohort' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [powerbi_reporting].[Dementia].[tbl04_Dementia_Cohort]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

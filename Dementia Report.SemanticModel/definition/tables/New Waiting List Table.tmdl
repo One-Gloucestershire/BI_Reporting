@@ -1,0 +1,604 @@
+table 'New Waiting List Table'
+	lineageTag: 7b705096-ab33-496d-9432-e2a82c50d5c2
+
+	measure 'MAS Waiting List Per Month' = ```
+			
+			 
+			VAR CurrentDate = max('Date Reference'[date])
+			
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			        'New Waiting List Table'[ReferralRequestReceivedDate] <= CurrentDate
+			        && 
+			        //'New Waiting List Table'[End Date] > CurrentDate )
+			        'New Waiting List Table'[New End Date] > CurrentDate )
+			    
+			```
+		lineageTag: edc38179-f034-4420-9f2d-3c291b4598fa
+
+	measure 'Monthly Average Waiting Time' =
+			
+			VAR MaxMonthDate = MAX('Date Reference'[date])
+			RETURN
+			    CALCULATE(
+			        AVERAGEX(
+			            'New Waiting List Table',
+			            DATEDIFF(
+			                'New Waiting List Table'[ReferralRequestReceivedDate],
+			                MaxMonthDate,
+			                WEEK
+			            )
+			        ),
+			        -- Removes all filters from the Date Reference table, allowing you to manually apply a new filter.
+			        ALL('Date Reference'),
+			        -- The visual's filter context is now gone. We must manually filter the waiting list table.
+			        -- This correctly includes all referrals up to the snapshot date.
+			        FILTER(
+			            'New Waiting List Table',
+			            'New Waiting List Table'[ReferralRequestReceivedDate] <= MaxMonthDate &&
+			            'New Waiting List Table'[New End Date] > MaxMonthDate
+			        )
+			    )
+		lineageTag: d50cc5ef-1f09-418a-a581-3a1a4cec00b2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Average Waiting Time' = ```
+			
+			
+			
+			VAR MaxMonthDate =
+			    MAX ( 'Date Reference'[date] )
+			RETURN
+			CALCULATE (
+			    AVERAGE ( 'New Waiting List Table'[Total Waiting Time]  ), 'New Waiting List Table'[ReferralRequestReceivedDate] <= MaxMonthDate
+			        && 
+			        'New Waiting List Table'[New End Date] > MaxMonthDate  ,
+			    USERELATIONSHIP (
+			        'New Waiting List Table'[ReferralRequestReceivedDate],
+			        'Date Reference'[date]
+			    ),
+			    FILTER (
+			        ALL ( 'Date Reference' ),
+			        'Date Reference'[date] <= MaxMonthDate
+			    )
+			)
+			```
+		lineageTag: f7509010-0464-4acc-aefb-2cbe7df458d7
+
+	measure 'Average Length of Stay' = CALCULATE(MEDIAN('New Waiting List Table'[Length of Stay (excluding current non-discharged patients)]),USERELATIONSHIP('New Waiting List Table'[Actual Discharge Date],'Date Reference'[date]))
+		lineageTag: 587a2fa4-b1f1-4c9b-ba6e-90a7bad6056a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Time to First Contact' = CALCULATE(AVERAGE([Time to Care Contact]),USERELATIONSHIP('New Waiting List Table'[CareContDate],'Date Reference'[date]))
+		lineageTag: 8e9c0d25-e52f-475d-83e8-323d9db91333
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly Median Waiting Time' =
+			
+			VAR MaxMonthDate = MAX('Date Reference'[date])
+			RETURN
+			    CALCULATE(
+			        MEDIANX(
+			            'New Waiting List Table',
+			            DATEDIFF(
+			                'New Waiting List Table'[ReferralRequestReceivedDate],
+			                MaxMonthDate,
+			                WEEK
+			            )
+			        ),
+			        -- Removes all filters from the Date Reference table, allowing you to manually apply a new filter.
+			        ALL('Date Reference'),
+			        -- The visual's filter context is now gone. We must manually filter the waiting list table.
+			        -- This correctly includes all referrals up to the snapshot date.
+			        FILTER(
+			            'New Waiting List Table',
+			            'New Waiting List Table'[ReferralRequestReceivedDate] <= MaxMonthDate &&
+			            'New Waiting List Table'[New End Date] > MaxMonthDate
+			        )
+			    )
+		lineageTag: b261f0f6-34c9-498b-911f-f61682b87eae
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Ends Per Month' = ```
+			
+			 
+			VAR Max_Month_Date = max('Date Reference'[date])
+			VAR Min_Month_Date = min('Date Reference'[date])
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			        'New Waiting List Table'[New End Date] <= Max_Month_Date
+			        && 
+			        'New Waiting List Table'[New End Date] >= Min_Month_Date)
+			     
+			    
+			```
+		formatString: 0
+		lineageTag: 0ea65232-4564-41da-848f-28b9fa91563e
+
+	measure 'Time between referral and end date' = ```
+			
+			 
+			VAR Max_Month_Date = max('Date Reference'[date])
+			VAR Min_Month_Date = min('Date Reference'[date])
+			
+			
+			RETURN
+			    CALCULATE(
+			                AVERAGE('New Waiting List Table'[Time to End Date]),
+			        'New Waiting List Table'[New End Date] <= Max_Month_Date
+			        && 
+			        'New Waiting List Table'[New End Date] >= Min_Month_Date)
+			     
+			    
+			```
+		lineageTag: f7d8efe5-1c02-4f7e-aa16-a6c8492d4950
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Referrals per month' = ```
+			
+			 
+			    CALCULATE(DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			    USERELATIONSHIP('New Waiting List Table'[ReferralRequestReceivedDate],'Date Reference'[date]))
+			
+			```
+		formatString: 0
+		lineageTag: 0c337aa5-ccb9-46d9-9c43-7a2584c014ad
+
+	measure 'First Care Contacts per month' = ```
+			
+			 
+			    CALCULATE(DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			    USERELATIONSHIP('New Waiting List Table'[CareContDate],'Date Reference'[date]))
+			
+			```
+		formatString: 0
+		lineageTag: 3d1c158c-ef01-4fc2-a77f-aac81bd292a6
+
+	measure 'Service Discharges per month' = ```
+			
+			 
+			    CALCULATE(DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			    USERELATIONSHIP('New Waiting List Table'[ServDischDate],'Date Reference'[date]))
+			
+			```
+		formatString: 0
+		lineageTag: a8e39b43-7bf9-41b3-99ef-7174bbd6b9ac
+
+	measure 'Removals per month' = ```
+			
+			 
+			    CALCULATE(DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			    USERELATIONSHIP('New Waiting List Table'[pds_removal_date],'Date Reference'[date]))
+			
+			```
+		lineageTag: 4bd2f00d-d7e2-4c41-937e-3ddded0fdf1b
+
+	measure 'Waiting List' = ```
+			
+			 
+			VAR CurrentDate = 
+			MAX('Date Reference'[date])
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			        'New Waiting List Table'[ReferralRequestReceivedDate] <= CurrentDate
+			        && 
+			        'New Waiting List Table'[New End Date] > CurrentDate )
+			    
+			```
+		formatString: 0
+		lineageTag: 6eca67e6-c4ec-4024-9ff3-25937a64249d
+
+	measure 'Waiting List Proportion' = ```
+			
+			 
+			VAR CurrentDate = 
+			MAX('Date Reference'[date])
+			
+			VAR total_wl =     CALCULATE(
+			        DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			        'New Waiting List Table'[ReferralRequestReceivedDate] <= CurrentDate
+			        && 
+			        'New Waiting List Table'[New End Date] > CurrentDate
+			         ,ALL('New Waiting List Table'[Referral Date Yearmonth]))
+			
+			
+			VAR wl_per_yearmonth =
+			    CALCULATE(
+			        DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			        'New Waiting List Table'[ReferralRequestReceivedDate] <= CurrentDate
+			        && 
+			        'New Waiting List Table'[New End Date] > CurrentDate )
+			
+			RETURN wl_per_yearmonth / total_wl
+			    
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f4f1516a-5876-4ac7-a096-03cfa6ac7917
+
+	measure Measure
+		lineageTag: e4ce89cd-d770-4d49-9560-50462e54f0d3
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure 'MAS patients in service per month' = ```
+			
+			 
+			VAR CurrentDate = max('Date Reference'[date])
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('New Waiting List Table'[UniqServReqID]),
+			        'New Waiting List Table'[ReferralRequestReceivedDate] <= CurrentDate
+			        && 
+			        'New Waiting List Table'[Removed from service date] > CurrentDate )
+			```
+		lineageTag: 29db7774-2c6f-467b-9569-09d67b328551
+
+	measure 'Average Time to Being off Waiting List' = CALCULATE(AVERAGE([Time to End Date]),USERELATIONSHIP('New Waiting List Table'[New End Date],'Date Reference'[date]))
+		lineageTag: 20296bd7-de5f-4a1c-8d04-f2ba8a298057
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: a880fd12-54f2-4d6f-979f-b49b2adacf3f
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHSNumber
+		dataType: string
+		lineageTag: 80abc8d2-b900-4fe9-8281-16703c22133a
+		summarizeBy: none
+		sourceColumn: NHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqServReqID
+		dataType: string
+		lineageTag: e0b4fde8-f77d-4daa-aa13-89405a2e25d3
+		summarizeBy: none
+		sourceColumn: UniqServReqID
+
+		annotation SummarizationSetBy = Automatic
+
+	column SourceOfReferralMHDescription
+		dataType: string
+		lineageTag: 0b4e98e2-47af-4eee-9ebe-ffc26f33759a
+		summarizeBy: none
+		sourceColumn: SourceOfReferralMHDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRequestReceivedDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c0006386-0ede-4694-8bd8-1213663c3ac5
+		summarizeBy: none
+		sourceColumn: ReferralRequestReceivedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column CareProfTeamLocalID
+		dataType: string
+		lineageTag: 150a0bde-39df-4e67-b30b-933b9d161305
+		summarizeBy: none
+		sourceColumn: CareProfTeamLocalID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareProfTeamLocalIDDescription
+		dataType: string
+		lineageTag: 3b466305-5277-4b70-927b-22f82bc31b35
+		summarizeBy: none
+		sourceColumn: CareProfTeamLocalIDDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column EarliestCareProfTeamLocalID
+		dataType: string
+		lineageTag: ea2fe3fb-249c-4354-b4ee-e567c65ecb4e
+		summarizeBy: none
+		sourceColumn: EarliestCareProfTeamLocalID
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestCareProfTeamLocalID
+		dataType: string
+		lineageTag: a8c9e46d-efb2-4dd3-a0f5-956b80384418
+		summarizeBy: none
+		sourceColumn: LatestCareProfTeamLocalID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Team
+		dataType: string
+		lineageTag: 4e44fa97-ade9-4410-bc50-f64e26f8b252
+		summarizeBy: none
+		sourceColumn: Team
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServDischDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 6ef1f6e8-b266-4473-8361-08028babf8ef
+		summarizeBy: none
+		sourceColumn: ServDischDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Service_team
+		dataType: string
+		lineageTag: 0ee0bfa3-721e-4718-9b12-cf90aa1c47b7
+		summarizeBy: none
+		sourceColumn: Service_team
+
+		annotation SummarizationSetBy = Automatic
+
+	column AllCareProfTeamLocalID
+		dataType: string
+		lineageTag: 8198ca70-9f21-4c88-8f12-394efb353ab2
+		summarizeBy: none
+		sourceColumn: AllCareProfTeamLocalID
+
+		annotation SummarizationSetBy = Automatic
+
+	column All_teams
+		dataType: string
+		lineageTag: 6f46d9ec-1429-4d96-8b93-597172fe1054
+		summarizeBy: none
+		sourceColumn: All_teams
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareContDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 8d4bfb42-4738-46de-bd92-874705ec2670
+		summarizeBy: none
+		sourceColumn: CareContDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column gp_code
+		dataType: string
+		lineageTag: d7ea505e-8a52-499e-9eb1-688b624c76da
+		summarizeBy: none
+		sourceColumn: gp_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column pds_removal_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 49725ebd-02fc-4b30-b1c8-631543d9e0df
+		summarizeBy: none
+		sourceColumn: pds_removal_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column pds_reason_for_removal
+		dataType: string
+		lineageTag: 469a2459-54ee-4f46-b169-5c051d445364
+		summarizeBy: none
+		sourceColumn: pds_reason_for_removal
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'New End Date' = ```
+			
+			
+			VAR end_date =  MAX('Date Reference'[date])
+			
+			
+			
+			RETURN
+			SWITCH(TRUE(),
+			[CareContDate] <> BLANK(), [CareContDate]
+			,[ServDischDate] <> BLANK(), [ServDischDate]
+			,[pds_removal_date] <> BLANK(), [pds_removal_date]
+			,end_date
+			)
+			
+			
+			```
+		formatString: General Date
+		lineageTag: 1b12581e-1a7a-4e6f-99fb-013ab647889b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Waiting Time' = DATEDIFF('New Waiting List Table'[ReferralRequestReceivedDate],'New Waiting List Table'[New End Date],WEEK)
+		formatString: 0
+		lineageTag: 36886990-0527-4289-98ba-380f2f8970c7
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Length of Stay (including current non-discharged patients)' =
+			
+			
+			DATEDIFF('New Waiting List Table'[CareContDate],'New Waiting List Table'[New Discharge Date],WEEK)
+		formatString: 0
+		lineageTag: 1ef55fca-ef2e-4dc8-9f8e-9770e3909827
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time to Care Contact' =
+			
+			
+			VAR cont_date = IF('New Waiting List Table'[CareContDate] = BLANK(), BLANK(), 'New Waiting List Table'[CareContDate])
+			
+			RETURN DATEDIFF('New Waiting List Table'[ReferralRequestReceivedDate],cont_date,WEEK)
+		formatString: 0
+		lineageTag: 2214e200-d9b1-43cf-bd35-9dcf1c2af17e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Referral Date Yearmonth' = LOOKUPVALUE('Date Reference'[year_month],'Date Reference'[date], 'New Waiting List Table'[ReferralRequestReceivedDate])
+		lineageTag: 4ada2d6e-0ef4-4620-a5c6-942f5603bb31
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time to End Date' = DATEDIFF('New Waiting List Table'[ReferralRequestReceivedDate],[New End Date],WEEK)
+		formatString: 0
+		lineageTag: 2eaeb377-02ff-4c92-8941-b9a02a3da8c5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Still in Service' = ```
+			
+			IF(
+			[CareContDate] = BLANK() &&
+			[ServDischDate] = BLANK() &&
+			[pds_removal_date] =BLANK()
+			,TRUE()
+			,FALSE()
+			)
+			
+			
+			```
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 5031c4bd-2294-4a01-bd10-68db93cc47aa
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Removed from service date' =
+			
+			
+			VAR end_date =  MAX('Date Reference'[date])
+			
+			RETURN
+			SWITCH(TRUE(),
+			[ServDischDate] <> BLANK(), [ServDischDate]
+			,[pds_removal_date] <> BLANK(), [pds_removal_date]
+			,end_date
+			)
+		formatString: General Date
+		lineageTag: 95793c36-4a7d-4d90-a890-ee4af4c0b4df
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 1f2348e1-9f59-40ef-aee9-3d89b7b7faa8
+			defaultHierarchy: LocalDateTable_71327d40-2daf-4614-9a15-493d237e3304.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'New Discharge Date' = ```
+			
+			
+			VAR end_date =  MAX('Date Reference'[date])
+			
+			
+			
+			RETURN
+			SWITCH(TRUE(),
+			[ServDischDate] <> BLANK(), [ServDischDate]
+			,[pds_removal_date] <> BLANK(), [pds_removal_date]
+			,end_date
+			)
+			
+			
+			```
+		formatString: General Date
+		lineageTag: 2ac35df2-6b0b-417b-ba4a-48adedfc2cc2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Team (Abbreviated Name)' =
+			
+			
+			SWITCH(TRUE(),
+			[Team] = "MEM - Memory Assessment Chelt","MAS Chelt",
+			[Team] = "MEM - Memory Assessment Forest","MAS Forest",
+			[Team] = "MEM - Memory Assessment Gloucs","MAS Glos",
+			[Team] = "MEM - Memory Assessment Stroud","MAS Stroud",
+			[Team] = "MEM - Mild Cog. Impairment Chelt","MCI Chelt",
+			[Team] = "MEM - Mild Cog. Impairment Forest","MCI Forest",
+			[Team] = "MEM - Mild Cog. Impairment Gloucs","MCI Glos",
+			[Team] = "MEM - Mild Cog. Impairment Stroud","MCI Stroud",
+			[Team]
+			)
+		lineageTag: 1e4f484e-5dd1-4cbf-9166-45b89b62a056
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Actual Discharge Date' = ```
+			
+			
+			SWITCH(TRUE(),
+			[ServDischDate] <> BLANK(), [ServDischDate]
+			,[pds_removal_date] <> BLANK(), [pds_removal_date]
+			,BLANK()
+			)
+			
+			
+			```
+		formatString: General Date
+		lineageTag: 745c30f4-0625-43af-8b6f-55c84fe38c40
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Length of Stay (excluding current non-discharged patients)' =
+			
+			
+			DATEDIFF('New Waiting List Table'[CareContDate],'New Waiting List Table'[Actual Discharge Date],WEEK)
+		formatString: 0
+		lineageTag: 5949a824-a35c-4967-adeb-012db684e932
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Service_team Hierarchy'
+		lineageTag: a3cbf428-7e45-4857-b413-cfcac2a6abe5
+
+		level Service_team
+			lineageTag: a8b268d8-0ef4-41e5-a869-f018fe43da32
+			column: Service_team
+
+		level Team
+			lineageTag: 0fe6dbdf-8e23-47c5-a3dc-54a86181c86c
+			column: Team
+
+	partition 'New Waiting List Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)  FROM [PowerBI_Reporting].[Dementia].[tbl11_Waiting_Lists]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"ReferralRequestReceivedDate", type date}, {"ServDischDate", type date}, {"CareContDate", type date}, {"pds_removal_date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

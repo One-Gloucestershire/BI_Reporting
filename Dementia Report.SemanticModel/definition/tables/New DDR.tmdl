@@ -1,0 +1,208 @@
+table 'New DDR'
+	lineageTag: d68381c1-4964-4d03-b40f-a6c93f7c2f0f
+
+	measure 'Gloucestershire ICB DDR' = ```
+			CALCULATE(SUM('New DDR'[ddr]),'New DDR'[Name] = "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD",REMOVEFILTERS('List of Areas'))
+			
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b8ed50a3-381a-41cc-8dcc-3602a21ad80b
+
+	measure 'Dash Line' = REPT("|"&UNICHAR(10),40)
+		lineageTag: ce1f70c3-c691-476e-bbf1-cb15c75407c8
+
+	measure 'Latest month local new DDR' = CALCULATE(SUM('New DDR'[ddr]), 'New DDR'[Current month flag] = "Current Month")
+		formatString: 0.00
+		lineageTag: 6cb62f17-4017-4b41-abb3-be147f0d6dac
+
+	measure 'Prior month local new DDR' = CALCULATE(SUM('New DDR'[ddr]), 'New DDR'[Current month flag] = "Prior Month")
+		lineageTag: 19de0715-6bf4-4819-94bc-15947fc25059
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New DDR change from last month' = [Latest month local new DDR] - [Prior month local new DDR]
+		formatString: 0.0000
+		lineageTag: df370450-fd64-43b4-96a9-2234c8d91e05
+
+	measure 'New Comparison arrow' = if([New DDR change from last month] > 0.00000, UNICHAR(9650), if([New DDR change from last month] < 0.00000, UNICHAR(9660), UNICHAR(61)))
+		lineageTag: f18c7757-3f68-4a9e-80e7-e482dbf87d7a
+
+	measure 'Current estimated dementia patients in Gloucestershire' = CALCULATE(SUM('New DDR'[Estimated Total Dementia Population]),'New DDR'[Name] = "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD", 'New DDR'[Current month flag] = "Current Month")
+		formatString: 0
+		lineageTag: f9ce5484-c0a3-4dee-9c35-4c836bb132b1
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '% away from DDR target' = 0.667 - [DDR current month]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8afe0310-7f34-4c45-b453-c1e35dac1432
+
+	measure 'DDR current month' = CALCULATE([Calculated DDR], 'New DDR'[Current month flag] = "Current Month")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ed4cb452-7442-4ba9-9951-8f02bb00fe6d
+
+	measure 'Calculated DDR' = ```
+			CALCULATE(SUM('New DDR'[Diagnosed Dementia Population]),'New DDR'[Current month flag] = "Current Month") / CALCULATE(SUM('New DDR'[Estimated Total Dementia Population]),'New DDR'[Current month flag] = "Current Month") 
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 97642b05-85aa-4a9e-8b7f-cb353bf66d2c
+
+	measure 'Latest national Gloucestershire DDR' = ```
+			CALCULATE(SUM('New DDR'[ddr]),'New DDR'[Name] = "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD",'New DDR'[Current month flag] = "Current Month",REMOVEFILTERS('List of Areas'))
+			
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 97e2a6db-669b-4525-bbe7-744e0cb3a249
+
+	column ddr
+		dataType: double
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d668b8c4-3bcc-434f-8df2-65c0f87ed1b6
+		summarizeBy: sum
+		sourceColumn: ddr
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Estimated Total Dementia Population'
+		dataType: double
+		lineageTag: c5b8d6c1-1182-4538-9e13-388bf0e586ab
+		summarizeBy: sum
+		sourceColumn: Estimated Total Dementia Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Diagnosed Dementia Population'
+		dataType: double
+		lineageTag: e04f047b-3404-4f04-bef0-17afce2c21c3
+		summarizeBy: sum
+		sourceColumn: Diagnosed Dementia Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Name
+		dataType: string
+		lineageTag: 779e8bde-7084-4704-aff8-9f7dab235a18
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ACH_DATE
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fd59514c-8f02-4b14-bb36-9f8b80569cd5
+		summarizeBy: none
+		sourceColumn: ACH_DATE
+
+		annotation SummarizationSetBy = Automatic
+
+	column area
+		dataType: string
+		lineageTag: da93137d-e0fc-4b73-bb2d-f9c3a32507ca
+		summarizeBy: none
+		sourceColumn: area
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Target Dementia Population' = 'New DDR'[Estimated Total Dementia Population] * 0.667
+		lineageTag: 5c5d82f7-bf73-4079-9126-fcf3ab267808
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Current month flag' =
+			
+			VAR year_month = CONCATENATE(YEAR(MAX('New DDR'[ACH_DATE])),MONTH(MAX('New DDR'[ACH_DATE])))
+			var Date_year_month = CONCATENATE(YEAR('New DDR'[ACH_DATE]),MONTH('New DDR'[ACH_DATE]))
+			var prior_month = EOMONTH(max('New DDR'[ACH_DATE]), -1)
+			var date_prior_month = CONCATENATE(YEAR(prior_month),MONTH(prior_month))
+			RETURN IF(year_month = Date_year_month,"Current Month",if(date_prior_month= Date_year_month, "Prior Month", "Other Month"))
+		lineageTag: 3781aed1-5b6d-4dda-886a-be9c39a5c4e6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diagnosis Required' = 'New DDR'[Target Dementia Population] - 'New DDR'[Diagnosed Dementia Population]
+		formatString: 0
+		lineageTag: 6ee94cba-b538-4ab5-bdcc-8f9f25b46579
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column 'DDR Target Flag' = IF('New DDR'[ddr] >= 0.667, 1, 0)
+		formatString: 0
+		lineageTag: a1064942-a967-4f8c-b7b1-829595e7532e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'DDR Target Descriptor' = IF('New DDR'[ddr] >= 0.667, "Achieving Target", "Below Target")
+		lineageTag: 9fe9837a-6471-44d9-a32f-6ef48f9340ed
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'DDR Current Target Descriptor' = IF('New DDR'[DDR Target Descriptor] = "Achieving Target" && 'New DDR'[Current month flag] = "Current Month", "Currently Achieving Target", "Currently Below Target")
+		lineageTag: 4e3695c5-ccd1-4e00-ac6c-7bc93b317576
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Areas currently meeting DDR target' = ```
+			
+			VAR CurrentPCN = [Name]  -- Get the current PCN
+			VAR CheckFlag = 
+			    CALCULATE(
+			        MAX([Month flag]),   -- Look for the maximum value of month flag (1 if present, 0 otherwise)
+			        FILTER(
+			            ALL('New DDR'),    -- Replace 'Table' with your actual table name
+			            'New DDR'[Name] = CurrentPCN && 
+			            'New DDR'[month flag] = 1 && 
+			            'New DDR'[DDR Target Flag] = 1  -- Check if both flags are 1 for this PCN
+			        )
+			    )
+			RETURN IF(CheckFlag = 1, "Achieving Target", "Below Target")  -- Return 1 if conditions are met, 0 otherwise
+			```
+		lineageTag: 2973b840-8d01-49d2-b946-e8754f364eed
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month flag' = IF('New DDR'[Current month flag] = "Current Month", 1, 0)
+		formatString: 0
+		lineageTag: 027ffb60-032c-47c2-84fd-7c7e4e0d8a6f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Code
+		dataType: string
+		lineageTag: 6affcd1f-bc4c-4380-b3cf-0e3577b17710
+		summarizeBy: none
+		sourceColumn: Code
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'New DDR' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [powerbi_reporting].[Dementia].[tbl05_Dementia_DDR]"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each true)
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

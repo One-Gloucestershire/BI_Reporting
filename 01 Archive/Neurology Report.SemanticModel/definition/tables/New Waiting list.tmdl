@@ -1,0 +1,291 @@
+table 'New Waiting list'
+	lineageTag: f435985c-ff1b-4674-9972-02214f5d5af8
+
+	measure 'Referrals Per Month' = ```
+			
+			 
+			VAR CurrentDate = MAX('Date Waiting List'[Date])
+			 
+			RETURN
+			    CALCULATE(
+			        count('New Waiting list'[UniqueServiceRequestID]),
+			        'New Waiting list'[ReferralRequestReceivedDate] <= CurrentDate
+			        && 'New Waiting list'[Correct_date_to_use] > CurrentDate )
+			    
+			```
+		formatString: 0
+		lineageTag: 55ec4e99-0233-47cf-b9af-64be38ce8ce7
+
+	measure 'If waiting days' = ```
+			
+			 
+			VAR CurrentDate = MAX('Date Waiting List'[Date])
+			 
+			VAR days_waiting = if(max('New Waiting list'[ReferralRequestReceivedDate]) <= CurrentDate
+			                    && max('New Waiting list'[Correct_date_to_use]) > CurrentDate, 
+			                    DATEDIFF(max('New Waiting list'[ReferralRequestReceivedDate]),CurrentDate,DAY),BLANK())
+			
+			
+			RETURN days_waiting
+			```
+		formatString: 0
+		lineageTag: b42e050f-6d20-4238-a70f-3fa43d3a5562
+
+	measure 'If waiting week_banding' = ```
+			
+			
+			SWITCH(TRUE(),
+			[If waiting days] < 15, "0-2 Weeks",
+			[If waiting days] < 29 && [If waiting days] > 14, "2-4 Weeks",
+			[If waiting days] < 43 && [If waiting days] > 28, "4-6 Weeks", 
+			[If waiting days] < 57 && [If waiting days] > 42, "6-8 Weeks", 
+			[If waiting days] < 71 && [If waiting days] > 56, "8-10 Weeks", 
+			[If waiting days] < 85 && [If waiting days] > 70, "10-12 Weeks", 
+			[If waiting days] < 99 && [If waiting days] > 84, "12-14 Weeks", 
+			[If waiting days] < 113 && [If waiting days] > 98, "14-16 Weeks", 
+			[If waiting days] < 127 && [If waiting days] > 112, "16-18 Weeks", 
+			[If waiting days] > 126, "18+ Weeks",
+			BLANK())
+			
+			
+			
+			```
+		lineageTag: 9e9abc32-cc42-4648-b228-96fbca6c97f2
+
+	measure 'Dynamic Measure for Week Waiting Band' = ```
+			
+			var _0_2_Weeks =
+			CALCULATE(
+			    COUNTROWS('New Waiting list'),
+			    FILTER('New Waiting list',[If waiting week_banding] = "0-2 Weeks"),FILTER('New Waiting list',[If waiting days] > 0)
+			)
+			
+			var _test =
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "0-2 Weeks")
+			)
+			
+			VAR _2_4_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "2-4 Weeks")
+			)
+			
+			VAR _4_6_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "4-6 Weeks")
+			)
+			
+			VAR _6_8_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "6-8 Weeks")
+			)
+			
+			VAR _8_10_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "8-10 Weeks")
+			)
+			
+			VAR _10_12_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "10-12 Weeks")
+			)
+			
+			VAR _12_14_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "12-14 Weeks")
+			)
+			
+			VAR _14_16_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "14-16 Weeks")
+			)
+			
+			VAR _16_18_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "16-18 Weeks")
+			)
+			
+			VAR _18_Weeks = 
+			COUNTROWS(
+			    FILTER('New Waiting list',[If waiting week_banding] = "18+ Weeks")
+			)
+			
+			
+			RETURN
+			SWITCH(
+			    SELECTEDVALUE('Week Waiting Reference'[Type]),
+			    "0-2 Weeks", _0_2_Weeks,
+			    "2-4 Weeks", _2_4_Weeks,
+			    "4-6 Weeks", _4_6_Weeks,
+			    "6-8 Weeks", _6_8_Weeks,
+			    "8-10 Weeks", _8_10_Weeks,
+			    "10-12 Weeks", _10_12_Weeks,
+			    "12-14 Weeks", _12_14_Weeks,
+			    "14-16 Weeks", _14_16_Weeks,
+			    "16-18 Weeks", _16_18_Weeks,
+			    "18+ Weeks", _18_Weeks
+			)
+			```
+		formatString: 0
+		lineageTag: e9adc319-8321-4c23-944f-46f704aaf73c
+
+	column UniqueServiceRequestID
+		dataType: string
+		lineageTag: cf09b4df-47ff-4023-a9a4-df3fa5befd7d
+		summarizeBy: none
+		sourceColumn: UniqueServiceRequestID
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedPseudoNHS
+		dataType: string
+		lineageTag: db5accc8-d9f3-4e91-8ae3-c3a65b2360e0
+		summarizeBy: none
+		sourceColumn: DerivedPseudoNHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: b5818266-d0d6-43f9-b6ae-6f573807dfe5
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRequestReceivedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c5942e17-5ea1-40b4-8234-be07e2d99c48
+		summarizeBy: none
+		sourceColumn: ReferralRequestReceivedDate
+
+		variation Variation
+			isDefault
+			relationship: 69a5a949-4b92-4617-9327-8e521f2b131a
+			defaultHierarchy: LocalDateTable_7ada023f-6f8c-4655-88b3-e536690eeb21.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8e8bcdbc-58bd-426e-86fc-7d5bf5bda3e9
+		summarizeBy: none
+		sourceColumn: ContactDate
+
+		variation Variation
+			isDefault
+			relationship: 98348923-978b-45bb-b9e9-8ed44319361a
+			defaultHierarchy: LocalDateTable_257d55d1-de05-4160-8869-146a9b00bf12.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsultationTypeDescription
+		dataType: string
+		lineageTag: 56a94574-c96c-47c7-9b4d-f54b90cb647c
+		summarizeBy: none
+		sourceColumn: ConsultationTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column AttendOrNotDescription
+		dataType: string
+		lineageTag: 5fbc4e73-bc4f-4b8d-b0e3-0838ee3eacb8
+		summarizeBy: none
+		sourceColumn: AttendOrNotDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column DischargeDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b8d26517-9679-4f31-b16d-c93bcd40a157
+		summarizeBy: none
+		sourceColumn: DischargeDate
+
+		variation Variation
+			isDefault
+			relationship: 8e0c0948-8c5c-4895-add1-e842d97068cf
+			defaultHierarchy: LocalDateTable_755e7bce-2dbe-4a40-86ef-7f1c7c7faf29.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Date' = MAX('New Waiting list'[Date_to_use])
+		formatString: General Date
+		lineageTag: b8052af5-83c0-4188-bf6a-21a8b1e24b28
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: d0b0ebe1-68f5-42ab-925f-a14652cef467
+			defaultHierarchy: LocalDateTable_23b9785c-83cc-4abf-b8ca-9581dcae6795.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weeks Waiting' =
+			
+			
+			IF('New Waiting list'[Date_to_use] = BLANK(), DATEDIFF('New Waiting list'[ReferralRequestReceivedDate],'New Waiting list'[Max Date],WEEK), DATEDIFF('New Waiting list'[ReferralRequestReceivedDate],'New Waiting list'[Date_to_use],WEEK))
+		formatString: 0
+		lineageTag: ebc3acad-e939-49fc-aebd-8b91188bd257
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days Waiting' =
+			
+			
+			IF('New Waiting list'[Date_to_use] = BLANK(), DATEDIFF('New Waiting list'[ReferralRequestReceivedDate],'New Waiting list'[Max Date],DAY), DATEDIFF('New Waiting list'[ReferralRequestReceivedDate],'New Waiting list'[Date_to_use],DAY))
+		formatString: 0
+		lineageTag: 151335a0-412f-44a9-9d52-326b9c2b8361
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date_to_use
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 86e602f5-41ad-4326-8de9-19a0f80d9ddd
+		summarizeBy: none
+		sourceColumn: Date_to_use
+
+		variation Variation
+			isDefault
+			relationship: 70eb3e94-d4cf-4022-87a2-9429c61e63ae
+			defaultHierarchy: LocalDateTable_a6d0a933-210f-44e6-aaca-a63725841f90.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Correct_date_to_use =
+			
+			
+			VAR max_date = MAX('New Waiting list'[Date_to_use])
+			
+			VAR correct_max_date = EOMONTH(max_date,0) + 1
+			
+			RETURN IF('New Waiting list'[Date_to_use] = BLANK(), correct_max_date, 'New Waiting list'[Date_to_use])
+		formatString: General Date
+		lineageTag: cbc2338e-b4fe-4b29-a1f7-67ea3a786fd8
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 9d0af49b-a9fe-4852-9d0d-93bffd64f9a8
+			defaultHierarchy: LocalDateTable_11ecc960-6978-4aec-bd66-6ba058222ec7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'New Waiting list' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [powerbi_reporting].[Neurology].[tbl08_CNS_Waiting_List]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

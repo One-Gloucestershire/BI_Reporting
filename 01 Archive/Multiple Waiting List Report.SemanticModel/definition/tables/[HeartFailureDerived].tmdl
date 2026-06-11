@@ -1,0 +1,29 @@
+table [HeartFailureDerived]
+	lineageTag: 673d8c2b-a7c4-4d71-b22f-b6fb13f92fc5
+
+	column [HeartFailureDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 100cd954-fac3-42fb-bb85-7d05869dec6f
+		summarizeBy: none
+		sourceColumn: [HeartFailureDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Heart Failure desc' = if('[HeartFailureDerived]'[[HeartFailureDerived]]] = 1, "Has Heart Failure", "Does not have Heart Failure")
+		lineageTag: 9c22aa34-59fc-4d22-bcc0-3d1e697f7421
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [HeartFailureDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[HeartFailureDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[HeartFailureDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

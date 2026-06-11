@@ -1,0 +1,113 @@
+table 'Unique ID'
+	lineageTag: 2d563742-0839-42f1-bb43-4d1b66ce211c
+
+	column clientid
+		dataType: string
+		lineageTag: 7a1f19bf-19c7-41d9-8a29-4a9332c175da
+		summarizeBy: none
+		sourceColumn: clientid
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhsnumber
+		dataType: string
+		lineageTag: ff666f7a-780d-4581-9851-6ba815e961dc
+		summarizeBy: none
+		sourceColumn: nhsnumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column dateofdeath
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f0b66a28-a85b-4946-9643-41a97ee6afa4
+		summarizeBy: none
+		sourceColumn: dateofdeath
+
+		variation Variation
+			isDefault
+			relationship: ce0fe9ee-3019-480e-bd70-dba4cdb06864
+			defaultHierarchy: LocalDateTable_b0f4b985-8a1a-4393-8633-e2e09b07e0a5.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column dateofbirth
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 01289a92-5fce-40f2-b458-94a3965dfc91
+		summarizeBy: none
+		sourceColumn: dateofbirth
+
+		variation Variation
+			isDefault
+			relationship: 4e1b7283-c32d-4f12-95ba-6017d1a3f0a8
+			defaultHierarchy: LocalDateTable_488f9df8-f37d-412a-ba7c-be5e0d754fd3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Age =
+			
+			
+			VAR end_date = IF('Unique ID'[dateofdeath] = BLANK(), TODAY(), 'Unique ID'[dateofdeath])
+			
+			VAR age =
+			    DATEDIFF (
+			        'Unique ID'[dateofbirth],
+			        end_date,
+			        YEAR
+			    )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( 'Unique ID'[dateofbirth]), "",
+			        age < 18, "0-17",
+			        age >= 65, "65+",
+			        "18-64"
+			    )
+		lineageTag: 9a8ce09e-59e5-45a3-818a-361e29da9bd8
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Full Age Age' = ```
+			
+			
+			VAR end_date = IF('Unique ID'[dateofdeath] = BLANK(), TODAY(), 'Unique ID'[dateofdeath])
+			
+			return 
+			    DATEDIFF (
+			        'Unique ID'[dateofbirth],
+			        end_date,
+			        YEAR
+			    )
+			```
+		formatString: 0
+		lineageTag: 7bfb849a-b5bc-499c-9011-3a1ead5c15e5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender = LOOKUPVALUE('Front_page'[gender],'Front_page'[clientid],'Unique ID'[clientid])
+		lineageTag: af6ffd9b-1a25-41e5-bc3e-8b616fb6bef3
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Unique ID' = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select distinct#(lf)t.clientid#(lf),t.nhsnumber#(lf),t.dateofdeath#(lf),t.dateofbirth#(lf)#(lf)from data_mart_l011_chs_continuinghealthcare.tbl_patientfrontpage_201_load t", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

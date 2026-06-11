@@ -1,0 +1,51 @@
+table '10 year age band order'
+	lineageTag: ff3732bb-d533-481c-9eb5-51e7d1a5da7d
+
+	measure Overall_average_attendnaces = 'ED Falls (GHFT Only)'[Average_attendance_falls_per_day]
+		lineageTag: ba544adb-4407-48cc-a3ef-d2f0d6bbfa9e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Age Band'
+		dataType: string
+		lineageTag: d1c5213d-92a4-4527-bf3c-480f9ad7f804
+		summarizeBy: none
+		sourceColumn: Age Band
+		sortByColumn: Column2
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column2
+		dataType: double
+		formatString: 0
+		lineageTag: fe63c53e-a62a-4e4b-a229-3b08a5bc7b6b
+		summarizeBy: sum
+		sourceColumn: Column2
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '10 year age band order-e0f14fc3-6717-44b6-9edc-d66c26d83a35' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMjNVKMlXMDdR0lEyVIrViVYyBwtYgASMwAIWYAFLkIAxWMDSVBvINlGKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t, Column2 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", Int64.Type}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type",1,1.1,Replacer.ReplaceValue,{"Column2"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value",4,1,Replacer.ReplaceValue,{"Column2"}),
+				    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1",3,3.3,Replacer.ReplaceValue,{"Column2"}),
+				    #"Replaced Value3" = Table.ReplaceValue(#"Replaced Value2",2,2.2,Replacer.ReplaceValue,{"Column2"}),
+				    #"Replaced Value4" = Table.ReplaceValue(#"Replaced Value3",3.3,2,Replacer.ReplaceValue,{"Column2"}),
+				    #"Replaced Value5" = Table.ReplaceValue(#"Replaced Value4",2.2,3,Replacer.ReplaceValue,{"Column2"}),
+				    #"Replaced Value6" = Table.ReplaceValue(#"Replaced Value5",1.1,4,Replacer.ReplaceValue,{"Column2"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Replaced Value6",{{"Column1", "Age Band"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

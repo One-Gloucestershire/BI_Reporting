@@ -1,0 +1,69 @@
+table Whiteboard
+	lineageTag: c1d0462b-39ed-42a7-afbc-7252d10b7360
+
+	measure 'PCSP %' = CALCULATE(SUM('Whiteboard'[PCSP_Completed_Flag])) / CALCULATE(COUNT('Whiteboard'[pseudo_nhs_number]))
+		lineageTag: d4142c49-d1d6-4149-bda7-00d35e8aab44
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Respect %' = CALCULATE(SUM('Whiteboard'[ReSPECT_Completed_Flag])) / CALCULATE(COUNT('Whiteboard'[pseudo_nhs_number]))
+		lineageTag: f9407865-c0aa-490c-a8e4-24046861a0aa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column pseudo_nhs_number
+		dataType: string
+		lineageTag: 4e12bcc5-2c26-4b02-b82d-83ad413b98f1
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCSP_Completed_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 188c0519-ac05-4287-9fc5-fd9cf8a61882
+		summarizeBy: sum
+		sourceColumn: PCSP_Completed_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReSPECT_Completed_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 884ee99c-3648-4bfe-8049-f7d5967e2040
+		summarizeBy: sum
+		sourceColumn: ReSPECT_Completed_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Census_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2ba11cdb-cb15-4fa5-86d1-04203b5af3cd
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 5802f395-6e61-4f9e-bf6d-1582ee7e83e7
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Whiteboard = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select distinct#(lf)pseudo_nhs_number#(lf),PCSP_Completed_Flag#(lf),ReSPECT_Completed_Flag#(lf),w.Census_Date#(lf),[counter] = 1#(lf)#(lf)from PowerBI_Reporting.dementia.tbl01_Population d#(lf)#(lf)left join [PowerBI_Reporting].[AgeingWell].[tbl02_Proactive_Whiteboard_Registered_Population_Over_Time] w on w.Derived_NHS_Number = d.pseudo_nhs_number#(lf)and Census_Date >= d.dementia_diagnosis_date"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,669 @@
+table 'Hospital Admissions'
+	lineageTag: a4bcbafa-9570-4471-80c3-07c3fac0a880
+
+	measure '% of admissions from CH patients' = IFERROR(CALCULATE(sum('Hospital Admissions'[Care Home Hospital Admissions])/sum('Hospital Admissions'[counter])), blank())
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 42960698-0513-4d98-8889-34f5781b2b47
+
+	measure 'Last FY YTD Admissions' = ```
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[Care Home Hospital Admissions]),
+				'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions previous year] && 'Hospital Admissions'[Admissions YTD] = "Year to Date")
+			
+			```
+		formatString: 0
+		lineageTag: 3927a9a8-e9a7-4229-b704-7afeef5c4ad8
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Current FY YTD Admissions' =
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[Care Home Hospital Admissions]),
+				'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year]
+			)
+		formatString: 0
+		lineageTag: 8c01e3e2-c402-4d13-8167-fbaf18dbf07f
+
+	measure 'LAST FY Total Admissions' =
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[Care Home Hospital Admissions]),
+			    'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions previous year]
+			)
+		formatString: 0
+		lineageTag: 598832f5-8515-4de8-97a3-d741680b131e
+
+	measure 'Admissions % Difference YTD' =
+			CALCULATE(('Hospital Admissions'[Current FY YTD Admissions]
+			- 'Hospital Admissions'[Last FY YTD Admissions]))
+			/'Hospital Admissions'[Last FY YTD Admissions]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d77daab9-db19-4fcb-b598-87ec881152cd
+
+	measure 'Top 3' = CALCULATE([Care Home Patient Admissions],TOPN(3,ALLSELECTED('Hospital Admissions'[Derived_SEM_SpellPDiag_Description]),[Care Home Patient Admissions],DESC),VALUES('Hospital Admissions'[Derived_SEM_SpellPDiag_Description]))
+		formatString: 0
+		lineageTag: 547b8b9f-ff8c-4ea2-8cfc-0aa861667d4d
+
+	measure 'Care Home Patient Admissions' = sum('Hospital Admissions'[Care Home Hospital Admissions])
+		formatString: 0
+		lineageTag: fb647c8a-b9c5-4447-867b-c06048d0be5f
+
+	measure 'Top 3 comparison' = ```
+			calculate([Top 3], OR('Date Table'[Current_FY_Flag] in { 1 },'Date Table'[Last_FY_Flag] in { 1 }))
+			
+			
+			 
+			```
+		lineageTag: c26e6cff-282c-4cb3-9cbe-1f568e23f358
+
+	measure 'Current FY Care Home Patient Admissions' = CALCULATE(sum('Hospital Admissions'[Care Home Hospital Admissions]), 'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year])
+		formatString: 0
+		lineageTag: a63e3395-7f60-4e8f-b20e-fe4af4c76419
+
+	measure 'Top 3 values for admission reasons this FY' =
+			CALCULATE(
+			    CONCATENATEX(
+			        TOPN(
+			            3,
+			            VALUES('Hospital Admissions'[Derived_SEM_SpellPDiag_Description]),
+			            CALCULATE('Hospital Admissions'[Current FY YTD Admissions]),
+			            DESC
+			        ),
+			        'Hospital Admissions'[Derived_SEM_SpellPDiag_Description],
+			        "/ "
+			    )
+			)
+		lineageTag: 3948ed87-4433-4ae7-a149-f1da2d77d8b3
+
+	measure measure = ```
+			
+			CALCULATE(
+			    'Hospital Admissions'[Current FY Care Home Patient Admissions],
+			    FILTER(
+			        'Hospital Admissions',
+			        CONTAINSSTRING(
+			            
+			            'Hospital Admissions'[Derived_SEM_SpellPDiag_Description],
+			            "Tendency to fall, not elsewhere classified"
+			        )
+			    )
+			)
+			```
+		formatString: 0
+		lineageTag: f3c930db-353c-43dc-b460-bf4286cac606
+
+	measure 'Current FY top 3 admission code rank' =
+			
+			CALCULATE (
+			SUM ( 'Hospital Admissions'[Care Home Hospital Admissions] ),
+			ALLEXCEPT ( 'Hospital Admissions', 'Hospital Admissions'[Derived_SEM_SpellPDiag_Description] ),
+			'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year]
+			)
+		formatString: 0
+		lineageTag: 2f9462f5-c531-4a50-b85e-83af1363a95b
+
+	measure 'Last FY rank for Current FY top 3 admission codes' =
+			
+			CALCULATE (
+			SUM ( 'Hospital Admissions'[Care Home Hospital Admissions] ),
+			ALLEXCEPT ( 'Hospital Admissions', 'Hospital Admissions'[Derived_SEM_SpellPDiag_Description] ),
+			'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions previous year], 'Hospital Admissions'[Admissions YTD] = "Year to Date"
+			)
+		formatString: 0
+		lineageTag: abeb1e11-6d80-4214-a5a7-dc708d5066cc
+
+	measure 'CH Last FY YTD Admissions' =
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[Care Home Hospital Admissions]),
+			'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions previous year], 'Hospital Admissions'[Admissions YTD] = "Year to Date"
+			)
+		formatString: 0
+		lineageTag: 2adddc31-2f90-4076-8f15-2129bc5cc929
+
+	measure 'CH Current FY YTD Admissions' =
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[Care Home Hospital Admissions]),
+			'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year]
+			)
+		formatString: 0
+		lineageTag: 83bd722e-2b8a-4cae-a0ea-2ef4e9a8c42f
+
+	measure '% of admissions from CH year on year comparison' =
+			CALCULATE(
+			    (('Hospital Admissions'[CH Current FY YTD Admissions]/'Hospital Admissions'[All Current FY YTD Admissions]))
+			    -
+			    ('Hospital admissions'[CH Last FY YTD admissions]/('Hospital Admissions'[All Last FY YTD Admissions])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 197897ae-703f-49fb-b263-5b8c10b128ea
+
+	measure 'Admissions rate per 1000' = IFERROR(CALCULATE((sum('Hospital Admissions'[Care Home Hospital Admissions])/'Current Care Home Population'[Current Care Home Patients])*1000),blank())
+		formatString: 0
+		lineageTag: 191ad2cf-5a0a-4f45-ac1a-bba1e295af2e
+
+	measure 'Hospital Length of Stay (Days) Care Home Patients' = CALCULATE(AVERAGE('Hospital Admissions'[Length_of_stay]), 'Hospital Admissions'[Care Home Hospital Admissions] = 1)
+		formatString: 0.0
+		lineageTag: 060c95a4-2fd5-439c-b228-dd0ce1e7d619
+
+	measure 'Hospital Length of Stay (Days) Non-Care Home' = CALCULATE(AVERAGE('Hospital Admissions'[Length_of_stay]), 'Hospital Admissions'[Care Home Hospital Admissions] = 0)
+		lineageTag: 68b7f0a5-a9ac-4dda-b82b-084ce69a53e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LY Reasons Admission Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = [Last FY rank for Current FY top 3 admission codes]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"}, 'Date table (pop over time)'[Financial year adjusted] = 'Date table (pop over time)'[Care home patient previous year])
+			
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: ca12a19a-9fab-451a-8b6a-df19fd31c5f0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CY Reasons Admission Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = [Current FY top 3 admission code rank]
+			VAR POP = CALCULATE ([Care Home Population Per Month] , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"}, 'Date table (pop over time)'[Financial year adjusted] = 'Date table (pop over time)'[Care home patient current year])
+			
+			
+			RETURN (SWAST/POP*1000)
+		formatString: 0.0
+		lineageTag: 81b45faa-0c9d-488d-8a6a-138894a59ffa
+
+	measure 'Admission Rate per 1000 Yearly' = ```
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('Hospital Admissions'[Care Home Hospital Admissions] ))
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (SWAST/POP*1000)
+			
+			```
+		lineageTag: 32a830ff-3434-490f-a613-108086b756fb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Admission Rate per 1000 monthly' = ```
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('Hospital Admissions'[Care Home Hospital Admissions] ))
+			VAR POP = [Care Home Population Per Month] 
+			
+			RETURN (SWAST/POP*1000)
+			
+			```
+		lineageTag: 773d1db1-a3e5-4cf3-b058-12ed0176486c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'All Current FY YTD Admissions' =
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[counter]),
+			'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year]
+			)
+		formatString: 0
+		lineageTag: d5797d80-390e-4e93-bc30-b0fe8fe91a1d
+
+	measure 'All Last FY YTD Admissions' =
+			
+			CALCULATE(
+				SUM('Hospital Admissions'[counter]),
+			'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions previous year], 'Hospital Admissions'[Admissions YTD] = "Year to Date"
+			)
+		formatString: 0
+		lineageTag: 7e5e2c1d-93b8-4a5a-9698-cf40308aff80
+
+	measure 'Admission Rate per 1000 Yearly CY' = ```
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('Hospital Admissions'[Care Home Hospital Admissions] ), 'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year])
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , 'date table'[month_name] IN {"Apr"}, 'Date Table'[Current_FY_Flag] = 1 )
+			
+			RETURN (SWAST/POP*1000)
+			
+			```
+		lineageTag: 36107ff6-d45d-4092-bf29-38b90812a7c0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Admission Rate per 1000 Yearly LY YTD' = ```
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('Hospital Admissions'[Care Home Hospital Admissions] ), 'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions previous year], 'Hospital Admissions'[Admissions YTD] = "Year to Date")
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , 'date table'[month_name] IN {"Apr"}, 'Date Table'[Last_FY_Flag] = 1 )
+			
+			RETURN (SWAST/POP*1000)
+			
+			```
+		lineageTag: d85b5237-5b4c-47d5-9aa9-996478d70d4d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Hospital Rate per 1000 Comparison CY v LY YTD' = [Admission Rate per 1000 Yearly CY] - [Admission Rate per 1000 Yearly LY YTD]
+		lineageTag: 8a67aaf4-97df-44a8-b2a4-975494efb7b0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Admission activity y-axis' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate" && x_axis = "Yearly", 'Hospital Admissions'[Admission Rate per 1000 Yearly]
+			
+			        ,if(rate_or_actual = "Rate" && x_axis = "Monthly", 'Hospital Admissions'[Admission Rate per 1000 monthly]
+			        
+			        ,if(rate_or_actual = "Actual", CALCULATE(sum('Hospital Admissions'[Care Home Hospital Admissions])))))
+			```
+		lineageTag: b772f253-4797-420f-babb-4121999cee9b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Admission activity title' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate", "Hospital Admissions for Care Home Residents - Rate per 1000"
+			    ,if(rate_or_actual = "Actual", "Hospital Admissions for Care Home Residents - Actual Number of Admissions"))
+			```
+		lineageTag: a6d5959b-b32a-43e0-a24e-3f052f9ec381
+
+	measure POP = CALCULATE ([Care Home Population Per Month] , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'Hospital Admissions'[Admission year adjusted] = 'Hospital Admissions'[Admissions current year], 'date table'[month_name] IN {"Apr"} )
+		formatString: 0
+		lineageTag: 20da0639-2737-4a96-951b-00eb3bc80ec3
+
+	measure 'Fractured Neck of Femur Admissions' = CALCULATE(sum('Hospital Admissions'[Care Home Hospital Admissions]),'Hospital Admissions'[Derived_SEM_SpellPDiag_Description] = "S720 Fracture of neck of femur")
+		formatString: 0
+		lineageTag: 82be6571-b2cc-446a-8f9d-f96007595362
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 286140b3-7723-4f0a-9d06-b1181d83324e
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: b20f4ea6-b824-4380-bb16-4cdf2b8e4972
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqueCDSidentifier
+		dataType: int64
+		formatString: 0
+		lineageTag: 006be586-70b0-4c13-ac81-5ea5f967d10a
+		summarizeBy: sum
+		sourceColumn: UniqueCDSidentifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column DischargeDate_FromHospitalProviderSpell
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7f0d74ca-82c3-46bc-8d6e-380aa2210b9b
+		summarizeBy: none
+		sourceColumn: DischargeDate_FromHospitalProviderSpell
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care Home Hospital Admissions'
+		dataType: int64
+		formatString: 0
+		lineageTag: 41e78efa-fefe-44bd-8de2-f8430b04ec07
+		summarizeBy: sum
+		sourceColumn: Care Home Hospital Admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_SEM_SpellPDiag_Description
+		dataType: string
+		lineageTag: 64f13118-fa76-4fb6-9898-a74c2417a88c
+		summarizeBy: none
+		sourceColumn: Derived_SEM_SpellPDiag_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_patient_description
+		dataType: string
+		lineageTag: 58925715-9150-4a88-9153-1ad8475ca300
+		summarizeBy: none
+		sourceColumn: Care_home_patient_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPPractice_Derived
+		dataType: string
+		lineageTag: 270c3a84-25d8-43cf-82cc-bdd615a94c90
+		summarizeBy: none
+		sourceColumn: GPPractice_Derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPPractice_Derived_Name
+		dataType: string
+		lineageTag: 6a325689-8696-4599-9658-2a9d2c5f9de1
+		summarizeBy: none
+		sourceColumn: GPPractice_Derived_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 6db5ec4f-85cc-4b99-b766-e9beefd68b64
+		summarizeBy: sum
+		sourceColumn: Current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_stay
+		dataType: int64
+		formatString: 0
+		lineageTag: 766b6b8b-8cc2-49a8-b43e-aea55a81b881
+		summarizeBy: sum
+		sourceColumn: Length_of_stay
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_date_diff
+		dataType: int64
+		formatString: 0
+		lineageTag: 98ce3239-634f-4921-ab80-aa86f5bf9ddb
+		summarizeBy: sum
+		sourceColumn: Death_date_diff
+
+		annotation SummarizationSetBy = Automatic
+
+	column 48_hour_date_diff
+		dataType: int64
+		formatString: 0
+		lineageTag: dc76b3e7-f55f-4a5a-badf-b3149db06f73
+		summarizeBy: sum
+		sourceColumn: 48_hour_date_diff
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateOfDeath
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3b86bb72-dda0-4d03-adc9-f863b3e01bc3
+		summarizeBy: none
+		sourceColumn: DateOfDeath
+
+		variation Variation
+			isDefault
+			relationship: 93652a84-6241-450f-9665-3c7d4eb9a9b5
+			defaultHierarchy: LocalDateTable_0d473d8b-f876-43c4-9a31-5b389226e131.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date_of_incident
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 84eb40d9-bc02-43db-9df8-37ce7843424e
+		summarizeBy: none
+		sourceColumn: Date_of_incident
+
+		variation Variation
+			isDefault
+			relationship: c3c1a44b-1f80-4105-85e4-587958908116
+			defaultHierarchy: LocalDateTable_53351ee9-a97b-434c-aabb-5e577703ee3f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_status
+		dataType: string
+		lineageTag: f199856c-bdce-4c3c-9557-d8daa13f0e60
+		summarizeBy: none
+		sourceColumn: Care_home_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admissions max financial month' = ```
+			
+			VAR currmonth = MONTH(MAX('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]))
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+			
+			```
+		formatString: 0
+		lineageTag: 5b60f2f7-c8b7-4804-a4dc-632bc0a0d3d9
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admissions financial month' = ```
+			
+			VAR currmonth = MONTH('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]
+			)
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+			
+			```
+		formatString: 0
+		lineageTag: 1a92dcd3-5ffc-4703-90ee-f69dcf41cf49
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admissions YTD' = ```
+			if('Hospital Admissions'[Admissions financial month] <= 'Hospital Admissions'[Admissions max financial month], "Year to Date", "Not Year to Date")
+			
+			```
+		lineageTag: 31c10050-6fea-4be8-b061-8920baa51549
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admissions current year' = ```
+			
+			VAR max_year = YEAR(MAX('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]))
+			VAR max_month = MONTH(MAX('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR adjust_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			return adjust_year
+			
+			```
+		formatString: 0
+		lineageTag: 0a81d5d0-cf11-4b03-8fa8-eb64a337add5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission year adjusted' = ```
+			if(
+			    [Admissions financial month] = 10, YEAR('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]
+			) -1, 
+			    if([Admissions financial month] = 11, YEAR('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]
+			) -1, 
+			    if([Admissions financial month] = 12, YEAR('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]
+			) -1, year('Hospital Admissions'[DischargeDate_FromHospitalProviderSpell]
+			))))
+			
+			```
+		formatString: 0
+		lineageTag: 6e681f35-7933-4ab2-80dc-68fe50ffe29b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admissions previous year' = ```
+			'Hospital Admissions'[Admissions current year] - 1
+			
+			```
+		formatString: 0
+		lineageTag: b2d69329-0489-4885-8280-a80bbc6bf1d5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_SEM_SpellSDiag_Description
+		dataType: string
+		lineageTag: d2ee74d1-6a0d-40c9-afd0-ad8cc34c6a6d
+		summarizeBy: none
+		sourceColumn: Derived_SEM_SpellSDiag_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column HospitalProviderSpellNumber
+		dataType: int64
+		formatString: 0
+		lineageTag: e8704599-9456-4bdd-9ff3-4eec2ac4d046
+		summarizeBy: sum
+		sourceColumn: HospitalProviderSpellNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1e76202e-a620-4273-a2c3-cb4a513606b1
+		summarizeBy: none
+		sourceColumn: Care_home_date
+
+		variation Variation
+			isDefault
+			relationship: 1658d3c2-b45d-40a0-9988-44c33ceefdab
+			defaultHierarchy: LocalDateTable_512e292a-11b6-4b4f-8eae-41340a5eda61.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 7d9a6793-ec1e-4921-ab17-e1899f7fd408
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeasonAdmission
+		dataType: int64
+		formatString: 0
+		lineageTag: 701b435e-0bb3-4bec-acfa-295b765c8c23
+		summarizeBy: none
+		sourceColumn: AgeasonAdmission
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 772c871e-a6d5-4e94-9f63-15513d397cbd
+		summarizeBy: none
+		sourceColumn: End_date
+
+		variation Variation
+			isDefault
+			relationship: bc6b1146-5d08-4633-a87c-078b2739d85d
+			defaultHierarchy: LocalDateTable_75e86add-e0b4-4655-a014-f074a97312bd.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fall_flag
+		dataType: string
+		lineageTag: 64ef16f9-7364-487a-9973-76f7a01979ab
+		summarizeBy: none
+		sourceColumn: Fall_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Hospital Admissions' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[CareHomes].[tbl07_CareHomeHospitalAdmissions]#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Care_home_patient_flag", "Care Home Hospital Admissions"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

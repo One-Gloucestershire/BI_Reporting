@@ -1,0 +1,65 @@
+table 'Occupancy grouped'
+	lineageTag: 54c4d6e4-5d83-4dc8-84e6-2020bc5e2756
+
+	measure 'Total % Occupied' = calculate(sum('Occupancy grouped'[Occupied])/sum('Occupancy grouped'[Care homes beds]))
+		formatString: 0%;-0%;0%
+		lineageTag: 75e7fb5f-edde-4244-bdc7-e6c92e86a548
+
+	measure 'Total Vacant Beds' = calculate(sum('Occupancy grouped'[Care homes beds]) - sum('Occupancy grouped'[Occupied]))
+		formatString: 0
+		lineageTag: f0294148-5deb-4aea-b5d5-7dbdd531bf72
+
+	column Occupied
+		dataType: int64
+		formatString: 0
+		lineageTag: a00038f4-81ba-4152-a62f-8461452e3b2e
+		summarizeBy: sum
+		sourceColumn: Occupied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care homes beds'
+		dataType: int64
+		formatString: 0
+		lineageTag: ba85c4ab-b62b-44c3-b7b4-d391496e94ff
+		summarizeBy: sum
+		sourceColumn: Care homes beds
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Name'
+		dataType: string
+		lineageTag: 0077275e-130b-45f2-920d-2f292970a249
+		summarizeBy: none
+		sourceColumn: Location Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column CqcId
+		dataType: string
+		lineageTag: 2dbe519f-7532-42c5-ace5-4f6ac666d7ca
+		summarizeBy: none
+		sourceColumn: CqcId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location ID'
+		dataType: string
+		lineageTag: e6e8f601-d8f3-41a1-a772-e898e3b4f425
+		summarizeBy: none
+		sourceColumn: Location ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Occupancy grouped' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[CareHomes].[tbl05_CareHomeCurrentOccupancy]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

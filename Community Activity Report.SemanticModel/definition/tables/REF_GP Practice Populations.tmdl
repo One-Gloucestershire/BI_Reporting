@@ -1,0 +1,176 @@
+table 'REF_GP Practice Populations'
+	lineageTag: 1cb7e4e0-d48c-4747-9940-abf21e52b2fa
+
+	measure Current_Total_Population = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			        MAX('REF_GP Practice Populations'[Census_Date])
+			
+			VAR number_of_ghc_discharges = 
+			    CALCULATE(
+			        [Number_of_GHC_Discharges], 
+			        FILTER('REF_GP_Reference_Table', 'REF_GP_Reference_Table'[PrimaryCareNetwork] <> BLANK())
+			    )
+			
+			VAR population = 
+			    CALCULATE(
+			        SUM('REF_GP Practice Populations'[Total Population]), 
+			        FILTER('REF_GP_Reference_Table', 'REF_GP_Reference_Table'[PrimaryCareNetwork] <> BLANK())
+			        , Filter( 'REF_GP Practice Populations','REF_GP Practice Populations'[Census_Date] = Latest_GP_Population_date)
+			    )
+			
+			
+			RETURN
+			
+			  population
+			
+			```
+		formatString: #,0
+		lineageTag: b359a0f4-450b-4544-a4c2-f865564e1bef
+
+	measure Current_Countywide_Total_Population = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    MAX('REF_GP Practice Populations'[Census_Date])
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('REF_GP Practice Populations'[Total Population]),
+			    ALL('REF_GP_Reference_Table'),  -- Ignores all filters on REF_GP_Reference_Table
+			    NOT(ISBLANK('REF_GP_Reference_Table'[PrimaryCareNetwork])),  -- Keeps the PrimaryCareNetwork filter where it's not blank
+			    'REF_GP Practice Populations'[Census_Date] = Latest_GP_Population_date  -- Applies the latest census date filter
+			)
+			```
+		formatString: #,0
+		lineageTag: 39bd5144-e1af-494c-a208-ea3e649b7ed2
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 600d05d4-fa14-4a93-94a1-06030fc99671
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 392bcb9d-7ba4-4e72-b797-20ea92c4f584
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Primary Care Network'
+		dataType: string
+		lineageTag: b9b6b92a-7e05-4e9e-b9a6-2802e92c4874
+		summarizeBy: none
+		sourceColumn: Primary Care Network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Census_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 07cec913-322f-46ab-b392-6092a95d3198
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		variation Variation
+			isDefault
+			relationship: 4b7027d9-f4eb-4505-b756-d643e37cb344
+			defaultHierarchy: LocalDateTable_dec059e1-f883-4ded-bbd1-df50f9c532b2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column CensusDate_as_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ef8ce11b-c335-4c7b-8201-90b20ac8d00a
+		summarizeBy: none
+		sourceColumn: CensusDate_as_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 28715743-8367-462c-ba21-c6a2fbfc3503
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Population'
+		dataType: int64
+		formatString: 0
+		lineageTag: f3d00c85-4563-45e5-9e69-c9df0d5e8a7e
+		summarizeBy: sum
+		sourceColumn: Total Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_number
+		dataType: string
+		lineageTag: 4e04199f-016b-4057-b599-4c77b8216c98
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 08d2ca3f-3f56-49ad-8c74-53fb79fa7c16
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Code
+		dataType: string
+		lineageTag: a4bfebbd-cba1-4f97-bc3e-2dd042843f36
+		summarizeBy: none
+		sourceColumn: Ethnicity_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA
+		dataType: string
+		lineageTag: ad756c4a-e548-4233-b4ab-f07a095935e5
+		summarizeBy: none
+		sourceColumn: LSOA
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_frailty
+		dataType: string
+		lineageTag: 04fb90df-36aa-4d22-8f92-8ef23e32b825
+		summarizeBy: none
+		sourceColumn: efi_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: 93a0a421-21f6-48b0-a314-c1628fa5374f
+		summarizeBy: none
+		sourceColumn: Gender_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'REF_GP Practice Populations' = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="----------------------------------#(lf)-------- POPULATION TABLE --------#(lf)----------------------------------#(lf)#(lf)SELECT #(lf)[nhs_number] = P.Derived_NHS_Number ,#(lf)[Practice_Code] = [P].[PrimaryCareProvider],#(lf)[Locality] = CASE WHEN [P].Locality IN ('South Cotswolds','North Cotswolds') THEN 'Cotswolds' ELSE [P].[Locality] END ,#(lf)[Primary Care Network] = CASE WHEN [P].PrimaryCareNetwork = 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS' ELSE [P].PrimaryCareNetwork END,#(lf)[Census_Date] = [P].Census_Date,#(lf)[CensusDate_as_date] = Census_Date,#(lf)[Age] =P.Age_at_census,#(lf)[Gender_Code] = case when P.Gender = 'Male' then 1 #(lf)when P.Gender = 'Female' then 2 #(lf)When P.Gender IS null then 9 end ,#(lf)[Gender] = [p].Gender,#(lf)[Ethnicity_Code] = [p].Ethnicity_code,#(lf)[LSOA] =[p].LSOA ,#(lf)[efi_frailty] = [p].efi_category, #(lf)[Total Population] = 1#(lf)#(lf)#(lf)FROM PowerBI_Reporting.AgeingWell.tbl02_Proactive_Whiteboard_Registered_Population_Over_Time [P]#(lf)#(lf)where Census_Date >='20220401'#(lf)#(lf)and Derived_Registered_CCG like '11M%'#(lf)#(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

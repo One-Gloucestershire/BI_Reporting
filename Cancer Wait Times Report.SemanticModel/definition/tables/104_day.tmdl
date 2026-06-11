@@ -1,0 +1,369 @@
+table 104_day
+	lineageTag: ea080d2a-1c9f-4d01-8aff-42d2cc342e93
+
+	measure 104_day_performance_current_month = CALCULATE([104_day_waits],'Month Flag Reference'[Month Flag] = "Current Month")
+		formatString: 0
+		lineageTag: 64d1ccba-af7c-470a-820d-8c6a58916a0a
+
+	measure 104_day_waits = CALCULATE(sum('104_day'[counter]))
+		formatString: 0
+		lineageTag: 6b2fae33-8c01-4fbd-b4da-8c9caf09a733
+
+	measure 104_day_performance_prior_month = CALCULATE([104_day_waits],'Month Flag Reference'[Month Flag] = "Prior Month")
+		formatString: 0
+		lineageTag: 4a9a689a-e275-46b1-a734-fb8e7899dbca
+
+	measure 104_day_performance_month_improvement =
+			IF([104_day_performance_current_month] > [104_day_performance_prior_month], "increased",
+			                                        IF([104_day_performance_current_month] < [104_day_performance_prior_month], "decreased",
+			                                        IF([104_day_performance_current_month] = [104_day_performance_prior_month], "remained the same",
+			                                        "error")))
+		lineageTag: 6376138b-a2bb-4de3-9574-b42af18bc0a6
+
+	measure 'Top Tumour Type for 104 Day Waits' =
+			
+			VAR RankedPosition = 1
+			VAR _RankTable =
+			    ADDCOLUMNS (
+			        VALUES ( '104_day'[tumour_type] ),
+			        "@Breaches",
+			            CALCULATE (
+			                SUM ( '104_day'[counter] ),
+			                KEEPFILTERS ( 'Month Flag Reference'[Month Flag] = "Current Month" )
+			            ),
+			        "@Rank",
+			            RANKX (
+			                ALLSELECTED ( '104_day'[tumour_type] ),
+			                CALCULATE (
+			                    SUM ( '104_day'[counter] ),
+			                    KEEPFILTERS ( 'Month Flag Reference'[Month Flag] = "Current Month" )
+			                ),
+			                ,
+			                DESC,
+			                DENSE
+			            )
+			    )
+			RETURN
+			CONCATENATEX (
+			    FILTER ( _RankTable, [@Rank] = RankedPosition ),
+			    '104_day'[tumour_type],
+			    ", "
+			)
+		lineageTag: a77ad50b-f4e5-42bd-996a-f5879c3eab3f
+
+	measure Rank =
+			RANKX(
+			                ALL('104_day'[tumour_type]),
+			                [104_day_performance_current_month],
+			                ,
+			                DESC
+			            )
+		formatString: 0
+		lineageTag: c9709742-91c8-4157-ab8f-2b7aa803f9ca
+
+	measure TumourTypeWithHighestCounter_CurrentMonth =
+			
+			VAR MaxCounter =
+			    CALCULATE(
+			        MAX('104_day'[counter]),
+			        '104_day'[Month flag] = "Current Month"
+			    )
+			RETURN
+			    CALCULATE(
+			        FIRSTNONBLANK('104_day'[tumour_type], 1),
+			        '104_day'[counter] = MaxCounter,
+			        '104_day'[Month flag] = "Current Month"
+			    )
+		lineageTag: 3a3545a9-066a-4a81-8d4c-893fc35b65e8
+
+	measure 104_day_breaches_for_ranking = CALCULATE(SUM('104_day'[counter]),'Month Flag Reference'[Month Flag] = "Current Month")
+		formatString: 0
+		lineageTag: cd2db379-ef13-40df-bced-943169192880
+
+	measure 'Ranking tumour type gp referred breach 104 days' = ```
+			
+			
+			
+			
+			    CALCULATE(
+			
+			            RANKX(
+			                ALL('104_day'),
+			                [104_day_breaches_for_ranking],
+			                ,
+			                DESC
+			            ) ) -1
+			```
+		formatString: 0
+		lineageTag: ef6badb1-9d74-4c75-afe6-4d52728e1730
+
+	measure 'Ranking tumour type gp referred breach 104 days 2' =
+			
+			
+			RANKX('104_day',CALCULATE(SUM('104_day'[counter]),'Month Flag Reference'[Month Flag] = "Current Month"))
+		formatString: 0
+		lineageTag: 8c83671b-efbc-4208-8936-c65fd601d73d
+
+	measure '104 Day Top Tumour Type Breaches (Current Month)' =
+			
+			VAR RankedPosition = 1
+			VAR _RankTable =
+			    ADDCOLUMNS (
+			        VALUES ( '104_day'[tumour_type] ),
+			        "@Breaches",
+			            CALCULATE (
+			                SUM ( '104_day'[counter] ),
+			                KEEPFILTERS ( 'Month Flag Reference'[Month Flag] = "Current Month" )
+			            ),
+			        "@Rank",
+			            RANKX (
+			                ALLSELECTED ( '104_day'[tumour_type] ),
+			                CALCULATE (
+			                    SUM ( '104_day'[counter] ),
+			                    KEEPFILTERS ( 'Month Flag Reference'[Month Flag] = "Current Month" )
+			                ),
+			                ,
+			                DESC,
+			                DENSE
+			            )
+			    )
+			RETURN
+			SUMX ( FILTER ( _RankTable, [@Rank] = RankedPosition ), [@Breaches] )
+		formatString: 0
+		lineageTag: 3f098a94-1ece-450a-9463-f920134f1d3f
+
+	measure '104 Day Top Tumour Type Breach % (Current Month)' =
+			
+			VAR _TopBreaches = [104 Day Top Tumour Type Breaches (Current Month)]
+			VAR _TotalBreaches =
+			    CALCULATE (
+			        SUM ( '104_day'[counter] ),
+			        KEEPFILTERS ( 'Month Flag Reference'[Month Flag] = "Current Month" )
+			    )
+			RETURN
+			DIVIDE ( _TopBreaches, _TotalBreaches )
+		lineageTag: 26aeb879-cc98-40a1-a9a5-313c18a82fd3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column id
+		dataType: string
+		lineageTag: 4583b0e8-9f49-4577-928e-2d5c20dbafda
+		summarizeBy: none
+		sourceColumn: id
+
+		annotation SummarizationSetBy = Automatic
+
+	column care
+		dataType: string
+		lineageTag: 19c0a34b-d1f6-4cb6-b5af-eb1517739db5
+		summarizeBy: none
+		sourceColumn: care
+
+		annotation SummarizationSetBy = Automatic
+
+	column tumour_type
+		dataType: string
+		lineageTag: f88f91d9-20b8-447f-8a13-af894d95f9b8
+		summarizeBy: none
+		sourceColumn: tumour_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_seen_provider_code
+		dataType: string
+		lineageTag: 3c470b38-cc4d-4c22-b774-5e6da84556bf
+		summarizeBy: none
+		sourceColumn: first_seen_provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_seen_provider
+		dataType: string
+		lineageTag: b73b022b-c1db-4eb2-b7ff-b0381e214766
+		summarizeBy: none
+		sourceColumn: first_seen_provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_seen_provider_group
+		dataType: string
+		lineageTag: 9db496b3-5d23-4fab-81f4-0c2167865fcb
+		summarizeBy: none
+		sourceColumn: first_seen_provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_treatment_provider_code
+		dataType: string
+		lineageTag: a35087a7-51b1-4ab3-ad13-21844152db38
+		summarizeBy: none
+		sourceColumn: first_treatment_provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_treatment_provider
+		dataType: string
+		lineageTag: ce62eb90-ff2d-412c-b308-0f38f4531613
+		summarizeBy: none
+		sourceColumn: first_treatment_provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_treatment_provider_group
+		dataType: string
+		lineageTag: 41d67f83-aebd-47e3-a759-c99fe30df7ed
+		summarizeBy: none
+		sourceColumn: first_treatment_provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_cwt_ref
+		dataType: string
+		lineageTag: be3bfd0b-13a5-40df-bb27-4f1615a054c5
+		summarizeBy: none
+		sourceColumn: patient_cwt_ref
+
+		annotation SummarizationSetBy = Automatic
+
+	column wait_days
+		dataType: int64
+		formatString: 0
+		lineageTag: d02e783b-0c8f-4b2f-ac22-5f1ca728b907
+		summarizeBy: sum
+		sourceColumn: wait_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column delay_reason_code
+		dataType: string
+		lineageTag: d29c3fed-bc40-4bc9-8c68-0367cc030894
+		summarizeBy: none
+		sourceColumn: delay_reason_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column delay_reason
+		dataType: string
+		lineageTag: 8e51e71b-49de-444e-8751-ba7855b6625d
+		summarizeBy: none
+		sourceColumn: delay_reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column report_number
+		dataType: string
+		lineageTag: b12b6513-1561-480e-8a92-e86f9eac04d6
+		summarizeBy: none
+		sourceColumn: report_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column report_year
+		dataType: string
+		lineageTag: 6171bf58-375b-4f0b-82f8-9813cc82b34d
+		summarizeBy: none
+		sourceColumn: report_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 675f7f5a-d179-4327-a38e-f61618f5dfc0
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_status
+		dataType: string
+		lineageTag: 8f9ae8b2-aa5c-4ae6-ba3d-5c3c41ae552e
+		summarizeBy: none
+		sourceColumn: current_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column report_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8a76ab5d-2fcf-4f7d-9f99-cdded683a3cc
+		summarizeBy: none
+		sourceColumn: report_date
+
+		variation Variation
+			isDefault
+			relationship: 3e53cd7e-f403-4ccb-84ff-9136a944a8bd
+			defaultHierarchy: LocalDateTable_bf940907-1deb-411b-8c15-3118974efec7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: cd3be866-e25e-4498-b512-2eb42e8b0b9e
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: ab9f7e3d-6e01-4bbd-9ca9-0d280b99c357
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: cf9ec65b-58ed-461c-8744-d4ff7390cced
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month flag' = ```
+			
+			
+			VAR max_month = MAX('104_day'[FirstDateofMonth])
+			VAR current_month = '104_day'[FirstDateofMonth]
+			
+			VAR prior_month = EDATE(max_month, -1)
+			
+			RETURN IF(max_month = current_month,"Current Month",if(prior_month = current_month, "Prior Month", "Other Month"))
+			
+			```
+		lineageTag: 9f67f179-3093-4ec6-9293-924a2ebfe401
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5125f46e-143e-4749-a747-d1f585ecb55e
+		summarizeBy: none
+		sourceColumn: FirstDateofMonth
+
+		variation Variation
+			isDefault
+			relationship: bd221226-85f9-4349-8891-3015f4d458c0
+			defaultHierarchy: LocalDateTable_3919a938-6e57-4b37-a18e-1f80d10703e7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 104_day-c436e880-d445-443e-ab47-c6290484e6da = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [powerbi_reporting].[Performance].[tbl11_CancerWaitTimes104Days]  "]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"financial_month", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

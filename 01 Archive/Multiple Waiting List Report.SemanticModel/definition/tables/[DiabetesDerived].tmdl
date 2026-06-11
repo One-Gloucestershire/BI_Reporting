@@ -1,0 +1,29 @@
+table [DiabetesDerived]
+	lineageTag: 8ef5cf51-26c7-4ac5-954a-90219b142693
+
+	column [DiabetesDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 167139c7-2111-4eba-9493-9a3851ed5c61
+		summarizeBy: none
+		sourceColumn: [DiabetesDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diabetes desc' = if('[DiabetesDerived]'[[DiabetesDerived]]] = 1, "Has Diabetes", "Does not have Diabetes")
+		lineageTag: c9ae943c-03e7-44a9-830f-d03cdc36cc04
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [DiabetesDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[DiabetesDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[DiabetesDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

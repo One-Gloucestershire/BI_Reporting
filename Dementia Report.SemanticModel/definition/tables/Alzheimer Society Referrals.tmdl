@@ -1,0 +1,519 @@
+table 'Alzheimer Society Referrals'
+	lineageTag: 3a605165-6665-4975-9de0-9da17f78e11d
+
+	measure 'Alzheimer society graph title' = ```
+			
+			
+			VAR activity = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual]
+			    )
+			
+			VAR activity_type = "Alzheimer Society - Dementia Advisor Referrals"
+			
+			//IF ( COUNTROWS ( activity ) = 1, CONCATENATE(activity & " - ", reason ))
+			
+			VAR final = 
+			IF ( activity = "Actual Activity", CONCATENATE(activity_type & " ", activity),
+			IF ( activity = "Rate per 1000", CONCATENATE(activity_type & " ", activity)))
+			
+			RETURN final
+			```
+		lineageTag: 13854025-e213-481c-bc09-7c0de6873e31
+
+	measure '% of Referrals Accepted' = CALCULATE(SUM('Alzheimer Society Referrals'[counter]),'Alzheimer Society Referrals'[Referral_accepted] = "Yes") / CALCULATE(SUM('Alzheimer Society Referrals'[counter]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b6693b6c-3c14-44d0-a043-a014cc98a011
+
+	measure 'Referrals rate per 1000 and actual activity' = ```
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Alzheimer Society Referrals'[counter] ))
+			VAR POP_month = [Average Gloucestershire Diagnosed Population]
+			
+			VAR rate_or_actual =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual])
+			
+			
+			RETURN IFERROR(if(rate_or_actual = "Rate per 1000"
+			        ,Activity/POP_month*1000, 
+			
+			        if(rate_or_actual = "Actual Activity"
+			        ,Activity,
+			         0
+			
+			        )),BLANK())
+			```
+		lineageTag: 350761ca-5105-4dd5-b983-36c5dd73be3b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Accepted Referrals' = CALCULATE(SUM('Alzheimer Society Referrals'[counter]),'Alzheimer Society Referrals'[Referral_accepted] = "Yes")
+		formatString: 0
+		lineageTag: c2083156-8ba8-4515-a280-1d9549aa60b2
+
+	measure 'Rejected Referrals' = CALCULATE(SUM('Alzheimer Society Referrals'[counter]),'Alzheimer Society Referrals'[Referral_accepted] = "No")
+		formatString: 0
+		lineageTag: 2120dbf2-4437-40f2-b1bb-2209e56bfac2
+
+	measure 'Average Referrals' = CALCULATE(SUM([counter])) / SUM('Date Reference'[Day Counter])
+		lineageTag: d7934141-7b9e-4e13-a9ff-6a2da8476b0a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Locality
+		dataType: string
+		lineageTag: 7cfe485f-f73c-4882-94a9-362d9e6f1016
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Alzheimer Society YTD' =
+			
+			VAR current_month = MONTH('Alzheimer Society Referrals'[Referral_date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Alzheimer Society Referrals'[Referral_date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: fcd39024-ffd0-43ec-ac88-f4db1f2fb9dc
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Locality Amended' = IF('Alzheimer Society Referrals'[Locality] = "Gloucester", "Gloucester City", 'Alzheimer Society Referrals'[Locality])
+		lineageTag: 8d067607-0107-47a7-ad9d-cddf285fe2ee
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 8e0fb7af-ac66-470a-9656-429c924e5488
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 91d18a7f-adfc-43db-a051-46bab2ebb720
+		summarizeBy: none
+		sourceColumn: Referral_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Referral_Source
+		dataType: string
+		lineageTag: 18867cb5-5233-454f-92d2-3d24061bf8aa
+		summarizeBy: none
+		sourceColumn: Referral_Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_accepted
+		dataType: string
+		lineageTag: 05110856-332b-4693-a6a3-4c5913c79176
+		summarizeBy: none
+		sourceColumn: Referral_accepted
+
+		annotation SummarizationSetBy = Automatic
+
+	column Out_of_County
+		dataType: string
+		lineageTag: ca84638b-a67f-40a0-925c-102b9a4b1257
+		summarizeBy: none
+		sourceColumn: Out_of_County
+
+		annotation SummarizationSetBy = Automatic
+
+	column Is_this_a_re_referral
+		dataType: string
+		lineageTag: cb9d76a4-cd83-4bd0-8177-b0f3f270cc92
+		summarizeBy: none
+		sourceColumn: Is_this_a_re_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Is_person_carer
+		dataType: string
+		lineageTag: 7da32d23-81a1-422d-9857-7f728c1e89d6
+		summarizeBy: none
+		sourceColumn: Is_person_carer
+
+		annotation SummarizationSetBy = Automatic
+
+	column What_is_carer_relation_with_user
+		dataType: string
+		lineageTag: fdd14187-62d2-4251-aa02-2c0584a813b4
+		summarizeBy: none
+		sourceColumn: What_is_carer_relation_with_user
+
+		annotation SummarizationSetBy = Automatic
+
+	column Initial_assessment_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c66b5593-b5f5-4086-993b-59a652b2b591
+		summarizeBy: none
+		sourceColumn: Initial_assessment_date
+
+		variation Variation
+			isDefault
+			relationship: cf6975da-16b2-4df5-be79-b1f18d33aa97
+			defaultHierarchy: LocalDateTable_87cdc308-1636-4f56-a22f-2b7bff147c33.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Full_assessment_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1fbb9641-4dfb-4035-af09-cc4a6ffcf18e
+		summarizeBy: none
+		sourceColumn: Full_assessment_date
+
+		variation Variation
+			isDefault
+			relationship: 1fa05913-d06a-4ad7-a6d0-7706a1c89f16
+			defaultHierarchy: LocalDateTable_7a17708d-568e-4488-9e1b-e0b886d184e6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Support_service_offered_internal
+		dataType: string
+		lineageTag: a51bee55-ccd5-4865-9b83-0f48d4288e51
+		summarizeBy: none
+		sourceColumn: Support_service_offered_internal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Support_service_offered_internal_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b886e3da-9c26-475c-89d1-63af02e25b41
+		summarizeBy: none
+		sourceColumn: Support_service_offered_internal_date
+
+		variation Variation
+			isDefault
+			relationship: be2d1798-8979-4cc2-9cc7-b2e5a1594295
+			defaultHierarchy: LocalDateTable_8ed97a7b-da2c-461a-b0d5-add35290385e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Support_service_offered_External
+		dataType: string
+		lineageTag: 550d1117-5997-458a-a032-c7b3ad0d06df
+		summarizeBy: none
+		sourceColumn: Support_service_offered_External
+
+		annotation SummarizationSetBy = Automatic
+
+	column Support_service_offered_external_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7f49450e-9175-47cc-8f44-47d1ba053026
+		summarizeBy: none
+		sourceColumn: Support_service_offered_external_date
+
+		variation Variation
+			isDefault
+			relationship: 4a781018-3965-4863-b4eb-b07be550548c
+			defaultHierarchy: LocalDateTable_b760d717-9ac2-4518-b4ea-a19e398c9728.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_referral
+		dataType: string
+		lineageTag: 565da089-cb50-46ce-b9e5-e292f3078ace
+		summarizeBy: none
+		sourceColumn: Age_at_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: 302d0e6b-d24a-46f6-bdad-21ecaa0eb0bf
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 2a989680-2839-4a39-90fd-100c0209d68e
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Do_they_live_alone
+		dataType: string
+		lineageTag: cde2725f-2e4d-4374-9d2d-36d1ebb878c6
+		summarizeBy: none
+		sourceColumn: Do_they_live_alone
+
+		annotation SummarizationSetBy = Automatic
+
+	column Marital_Status_at_referral
+		dataType: string
+		lineageTag: 50368bf6-97b7-47ec-9b2b-713b37b3f44d
+		summarizeBy: none
+		sourceColumn: Marital_Status_at_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Registered_Practice_at_time_of_referral
+		dataType: string
+		lineageTag: 74624849-d315-4f4c-9103-9634b356e89a
+		summarizeBy: none
+		sourceColumn: Registered_Practice_at_time_of_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Outcome
+		dataType: string
+		lineageTag: 837bbf63-edb3-4e7d-96d6-e70ee21c9a53
+		summarizeBy: none
+		sourceColumn: Outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column Closure_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1613c6d8-1e11-46c3-bd18-a9038754eb68
+		summarizeBy: none
+		sourceColumn: Closure_date
+
+		variation Variation
+			isDefault
+			relationship: 67ded506-4c5d-4f78-976e-ad9333375faa
+			defaultHierarchy: LocalDateTable_a5ffcbe3-8387-4603-a753-f76dcb0ddacb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Closure_Reason
+		dataType: string
+		lineageTag: 8d5fabde-da92-4c37-af65-fbec7c4de9a0
+		summarizeBy: none
+		sourceColumn: Closure_Reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column FINANCIAL_MONTH
+		dataType: string
+		lineageTag: 24f96718-26c7-4c6e-83fa-79a2f5caaf44
+		summarizeBy: none
+		sourceColumn: FINANCIAL_MONTH
+
+		annotation SummarizationSetBy = Automatic
+
+	column FINANCIAL_YEAR
+		dataType: string
+		lineageTag: 3a703d2e-0483-4bb2-a2bb-bf75494b62e7
+		summarizeBy: none
+		sourceColumn: FINANCIAL_YEAR
+
+		annotation SummarizationSetBy = Automatic
+
+	column ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER
+		dataType: string
+		lineageTag: 05d5e492-0982-4390-b8eb-c5c0a22db514
+		summarizeBy: none
+		sourceColumn: ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER
+
+		annotation SummarizationSetBy = Automatic
+
+	column ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER
+		dataType: string
+		lineageTag: 9b357db8-59d4-4675-ad1a-b231ce4af377
+		summarizeBy: none
+		sourceColumn: ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER
+
+		annotation SummarizationSetBy = Automatic
+
+	column FileName
+		dataType: string
+		lineageTag: 99f307c7-8294-4994-a363-49e02ce18fcc
+		summarizeBy: none
+		sourceColumn: FileName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a8f8ac9e-c79c-44ba-989e-80c53c4d3dbe
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: 757eb64c-6c37-40be-b765-641e7e8b2929
+			defaultHierarchy: LocalDateTable_1ab7d443-c033-4aba-9ae9-72530eb87c59.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: c9755d6c-5886-409e-8f60-8f8ee53542eb
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5yr_age_band
+		dataType: string
+		lineageTag: b91ec175-721d-4958-bd45-694bbd7a044e
+		summarizeBy: none
+		sourceColumn: 5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column carer_or_patient
+		dataType: string
+		lineageTag: 2d62c1a2-7ad5-4a87-b828-9a81f6181b48
+		summarizeBy: none
+		sourceColumn: carer_or_patient
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: cb4d0e49-3b7d-43ab-bb01-6a127b60c818
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_number_included
+		dataType: int64
+		formatString: 0
+		lineageTag: dd599e30-80ac-4b4a-9297-4a9985232be4
+		summarizeBy: sum
+		sourceColumn: NHS_number_included
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice' = IF([ReportingOrganisationName] = BLANK(), 'Alzheimer Society Referrals'[Registered_Practice_at_time_of_referral], [ReportingOrganisationName])
+		lineageTag: b0358570-3e53-40b6-aa31-858f79ba9e9b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Usage_ID
+		dataType: string
+		lineageTag: 0a293904-2a0a-4e65-b199-75e3967a833d
+		summarizeBy: none
+		sourceColumn: Service_Usage_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Evaluation Period' =
+			IF('Alzheimer Society Referrals'[Referral_date] >= date(2024,11,1)
+			&& 'Alzheimer Society Referrals'[Referral_date] <= date(2025,11,1)
+			,TRUE(),FALSE())
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: beeac402-6af0-4cb2-a9e3-45ce2c9f98a5
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Close Reason Blank as Open' = IF(ISBLANK('Alzheimer Society Referrals'[Closure_Reason]),"Service not Closed", [Closure_Reason])
+		lineageTag: 74b0c586-fb03-4b3e-8a1b-255f8f73a3c2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate_d
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8670ca31-2abe-45bf-8710-4602df82d61e
+		summarizeBy: none
+		sourceColumn: ProcessedDate_d
+
+		variation Variation
+			isDefault
+			relationship: d2e9520c-963d-4597-a709-afe32db3a4e7
+			defaultHierarchy: LocalDateTable_74334c8d-50ce-4854-ac42-2c6c954a84d7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: ead70acd-219d-40cc-8c24-fea2eb2ffa48
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: bef817c8-5802-4836-a4e2-ab3167f3d129
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: dcf9039c-3d78-4336-91ba-fda83dd30ddc
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Potential_duplicates
+		dataType: string
+		lineageTag: 1cd3f568-38cc-4bb2-87d5-432646dd79ce
+		summarizeBy: none
+		sourceColumn: Potential_duplicates
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Alzheimer Society Referrals' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from PowerBI_Reporting.Dementia.tbl10_Alzheimer_Society_Referrals"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Referral_date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,376 @@
+table 'Primary Care Coding'
+	lineageTag: 76831260-6301-41ca-b4b0-9bb3e76c1da8
+
+	measure 'Coding Rate per 1000 Monthly' =
+			
+			VAR Activity = CALCULATE ( COUNT('Primary Care Coding'[PseudoNHSNumber]))
+			VAR POP = [Current Population]
+			RETURN (Activity/POP*1000)
+		lineageTag: e7b97dd9-b2b8-4a9a-961e-663f23dc4631
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Proportion of code used by Locality' =
+			
+			
+			VAR numerator = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]))
+			
+			VAR denominator = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]),ALL('GP Reference'[Locality]))
+			
+			RETURN IF(numerator/denominator = BLANK(), 0, numerator/denominator)
+		formatString: 0%;-0%;0%
+		lineageTag: e12e43d0-3ba4-480f-9cd9-630f8c92c5d6
+
+	measure 'Times Code Used' = IF(CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber])) = BLANK(), 0, CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber])))
+		formatString: 0
+		lineageTag: 6cc3001c-2b65-4250-a796-57d03c748d39
+
+	measure 'SWAST activity by Locality' =
+			
+			
+			VAR numerator = CALCULATE(COUNT('SWAST All Years Falls'[counter_column]))
+			
+			VAR denominator = CALCULATE(COUNT('SWAST All Years Falls'[counter_column]),ALL('GP Reference'[Locality]))
+			
+			RETURN numerator/denominator
+		formatString: 0%;-0%;0%
+		lineageTag: a8cf5d4f-d61b-4256-8a79-13145f48db63
+
+	measure 'Admissions activity by Locality' =
+			
+			
+			VAR numerator = CALCULATE(COUNT('Admissions Falls'[Number of Admissions]))
+			
+			VAR denominator = CALCULATE(COUNT('Admissions Falls'[Number of Admissions]),ALL('GP Reference'[Locality]))
+			
+			RETURN numerator/denominator
+		formatString: 0%;-0%;0%
+		lineageTag: d82c2bb1-ce9f-4376-a8ba-065081eacf00
+
+	measure 'ED activity by Locality' =
+			
+			
+			VAR numerator = CALCULATE(COUNT('ED Falls (GHFT & SWAST)'[counter]))
+			
+			VAR denominator = CALCULATE(COUNT('ED Falls (GHFT & SWAST)'[counter]),ALL('GP Reference'[Locality]))
+			
+			RETURN numerator/denominator
+		formatString: 0%;-0%;0%
+		lineageTag: b220aaea-b0c1-4318-8d85-7cc7512ee770
+
+	measure 'Proportion of template code used by Locality' =
+			
+			
+			VAR numerator = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]), 'Primary Care Coding'[Template Related Code] = "Template Code")
+			
+			VAR denominator = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]), 'Primary Care Coding'[Template Related Code] = "Template Code",ALL('GP Reference'[Locality]))
+			
+			RETURN IF(numerator/denominator = BLANK(), 0, numerator/denominator)
+		lineageTag: cb4039e0-74b9-403d-82ce-0a714cb8f3ca
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Proportion of non-template code used by Locality' =
+			
+			
+			VAR numerator = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]), 'Primary Care Coding'[Template Related Code] = "Non-Template Code")
+			
+			VAR denominator = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]), 'Primary Care Coding'[Template Related Code] = "Non-Template Code",ALL('GP Reference'[Locality]))
+			
+			RETURN IF(numerator/denominator = BLANK(), 0, numerator/denominator)
+		lineageTag: 78feb0cb-530c-4978-b0ae-6a91b1299328
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Proportion of code used with Stroud Locality' = ```
+			
+			
+			CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber])) / [Stroud codes]
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a1fbfa70-55fc-4f39-b310-a7ff09e94a28
+
+	measure 'Stroud codes' = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]),'GP Reference'[Locality] = "Stroud and Berkeley Vale", REMOVEFILTERS('GP Reference'[ReportingOrganisationName]))
+		formatString: 0
+		lineageTag: c75baf26-3869-47d6-96e9-b66bca17c142
+
+	measure 'Codes recorded' = CALCULATE(COUNT('Primary Care Coding'[PseudoNHSNumber]))
+		formatString: 0
+		lineageTag: 669b478f-8a6a-4137-988f-19fbf60c1421
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 56aaaf0c-b282-4fd6-80db-310d517df643
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 8e4a6698-c693-4c12-b2c2-35bca8d13eb6
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 4dc832a1-646a-4a0a-963f-0c38f6649456
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 0fbc8c42-0ad8-428a-9d82-3c35f2ee78c7
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 580005b5-cd1c-4b3d-abc3-93a1b8989ae0
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column EventDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fb16bbbb-fe0f-4fab-b26f-63d5ba1e0e0b
+		summarizeBy: none
+		sourceColumn: EventDate
+
+		variation Variation
+			isDefault
+			relationship: 7bb1ed8a-e202-4c1b-acfb-6a59abb51fec
+			defaultHierarchy: LocalDateTable_70252220-ae29-437d-9aa9-688ec99a76c3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column EventCode
+		dataType: string
+		lineageTag: 9236cbfd-1368-4635-9fde-dd4484b41629
+		summarizeBy: none
+		sourceColumn: EventCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column SnomedCode
+		dataType: string
+		lineageTag: 4970a85f-baf6-4ba8-a27b-525f35090d15
+		summarizeBy: none
+		sourceColumn: SnomedCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column SnomedCodeDescription
+		dataType: string
+		lineageTag: 207c02a9-76b7-43e2-b73b-2aa29a51f0af
+		summarizeBy: none
+		sourceColumn: SnomedCodeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value1
+		dataType: string
+		lineageTag: 1d1464c0-b58a-4824-a879-3f5c35301cca
+		summarizeBy: none
+		sourceColumn: Value1
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Frailty Template Related Code' =
+			SWITCH(TRUE(),
+			[SnomedCodeDescription] = "Low risk of falls", "Frailty Template Code",
+			[SnomedCodeDescription] = "At risk of falls", "Frailty Template Code",
+			[SnomedCodeDescription] = "At high risk of falls", "Frailty Template Code",
+			[SnomedCodeDescription] = "Does not fall", "Frailty Template Code",
+			[SnomedCodeDescription] = "Falls", "Frailty Template Code",
+			[SnomedCodeDescription] = "Falls infrequently", "Frailty Template Code",
+			[SnomedCodeDescription] = "Recurrent falls", "Frailty Template Code",
+			[SnomedCodeDescription] = "Falls risk assessment complete", "Frailty Template Code",
+			[SnomedCodeDescription] = "Falls risk assessment referral", "Frailty Template Code",
+			[SnomedCodeDescription] = "Falls risk assessment refused", "Frailty Template Code",
+			"Non-Frailty Template Code")
+		lineageTag: c3820bb7-fbce-4163-87ff-e43c09f7a02e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care Home Template Related Code' =
+			SWITCH(TRUE(),
+			[SnomedCodeDescription] = "Assessment using home falls and accidents screening tool", "Care Home Template Code",
+			[SnomedCodeDescription] = "Falls assessment", "Care Home Template Code",
+			[SnomedCodeDescription] = "Falls risk assessment complete", "Care Home Template Code",
+			[SnomedCodeDescription] = "Morse Fall Scale", "Care Home Template Code",
+			[SnomedCodeDescription] = "Multidisciplinary team falls assessment", "Care Home Template Code",
+			[SnomedCodeDescription] = "Multidisciplinary team falls assessment declined", "Care Home Template Code",
+			[SnomedCodeDescription] = "Primary health care team falls assessment", "Care Home Template Code",
+			[SnomedCodeDescription] = "Primary health care team falls assessment declined", "Care Home Template Code",
+			"Non-Frailty Template Code")
+		lineageTag: ee423607-7c40-49c5-bad2-2f81076e5e59
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Template Related Code' = ```
+			IF(
+			    [Frailty Template Related Code] = "Frailty Template Code" || 
+			    [Falls Assessment Template Related Code] = "Falls Assessment Template Code" || 
+			    [Care Home Template Related Code] = "Care Home Template Code" || 
+			    [Other Template Related Code] = "Other Template Code"
+			    , "Template Code", "Non-Template Code")
+			```
+		lineageTag: 5ccd137b-42a3-45e7-8496-f18664ec84ba
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Falls Assessment Template Related Code'
+		dataType: string
+		lineageTag: 468dc37b-7ec2-45fa-8ceb-df60e0e615dc
+		summarizeBy: none
+		sourceColumn: Falls Assessment Template Related Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Other Template Related Code' =
+			IF('Primary Care Coding'[SnomedCodeDescription] IN{
+			"Fall in home"
+			,"Fall  - Help summoned"
+			,"Fall -[X]Unspecif fall occurrnce school oth instit/pub admin area"
+			,"Fall [X]Unspecified fall, occurrence at other specified place"
+			,"Finding related to falls"
+			,"Referral to falls service declined"
+			,"Morse Falls Risk Assessment score"
+			,"Discussion about falls"
+			,"Discussion about falls declined"
+			,"Discussion about falls not appropriate"
+			,"Refer for falls assessment"
+			,"At increased risk for falls"
+			,"Fear of falling"
+			,"Referral for falls risk assessment"
+			,"Fall risk assessment declined"
+			,"Referral to falls service"
+			,"At low risk for fall"
+			,"No fear of falls"
+			,"Falls risk assessment tool"}
+			, "Other Template Code", "Non-Template Code")
+		lineageTag: 6cd37a38-e670-4caf-86e2-c14403cc3a84
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fall Related Incident Code' = ```
+			IF('Primary Care Coding'[SnomedCodeDescription] IN {
+			"BP fall"
+			,"Elderly fall"
+			,"Fall"
+			,"Fall down stairs of motor bus whilst boarding or alighting"
+			,"Fall due to defective pavement"
+			,"Fall due to failure of support"
+			,"Fall due to impact against supermarket trolley"
+			,"Fall due to loss of equilibrium"
+			,"Fall due to roller skates or skateboard"
+			,"Fall due to slipping on ice or snow"
+			,"Fall due to trip on loose carpet"
+			,"Fall due to uneven surface indoors"
+			,"Fall due to wet surface"
+			,"Fall from aircraft, not due to an accident to aircraft, occupant of spacecraft injured"
+			,"Fall from animal being ridden"
+			,"Fall from balcony"
+			,"Fall from bed"
+			,"Fall from building"
+			,"Fall from bump against object"
+			,"Fall from car in street whilst boarding or alighting"
+			,"Fall from chair"
+			,"Fall from chair or bed"
+			,"Fall from chimney"
+			,"Fall from cliff"
+			,"Fall from furniture"
+			,"Fall from heavy goods vehicle"
+			,"Fall from high place"
+			,"Fall from ladder"
+			,"Fall from moving motor vehicle on road"
+			,"Fall from off-road land motor vehicle"
+			,"Fall from one level to another"
+			,"Fall from pedal cycle without collision"
+			,"Fall from playground equipment"
+			,"Fall from roof"
+			,"Fall from scaffold"
+			,"Fall from stairs"
+			,"Fall from stationary vehicle"
+			,"Fall from steps"
+			,"Fall from stool"
+			,"Fall from table"
+			,"Fall from toilet seat"
+			,"Fall from train"
+			,"Fall from tree"
+			,"Fall from wall"
+			,"Fall from wheelchair"
+			,"Fall from window"
+			,"Fall in bath or shower"
+			,"Fall in bathtub"
+			,"Fall in home"
+			,"Fall in nursing home"
+			,"Fall in shower"
+			,"Fall into hole"
+			,"Fall into manhole"
+			,"Fall on ice wearing ice-skates"
+			,"Fall on or from escalator"
+			,"Fall on or from ladders or scaffolding"
+			,"Fall on or from stairs"
+			,"Fall on or from stairs or steps"
+			,"Fall on or from steps"
+			,"Fall on public service vehicle"
+			,"Fall on same level"
+			,"Fall on same level due to nature of surface"
+			,"Fall on same level from impact against object"
+			,"Fall on same level from slipping"
+			,"Fall on same level from slipping, tripping or stumbling"
+			,"Fall on same level from sports contact"
+			,"Fall on same level from stumbling"
+			,"Fall on same level from tripping"
+			,"Fall on stairs"
+			,"Fall on steps"
+			,"Fall risk assessment declined"
+			,"Fall through roof"
+			,"Fall whilst being carried"
+			,"Fallen on by unridden horse"
+			,"Falling injury"
+			,"Falls"
+			,"Fell onto outstretched hand"
+			,"Finding related to falls"
+			,"Injury of unknown intent due to fall from height"
+			,"Injury of unknown intent due to fall from high building"
+			,"Pedal cycle accident involving fall from pedal cycle"
+			,"Pedal cycle accident involving fall from pedal cycle, pedal cyclist injured"
+			}, "Incident Related", "Not Incident Related")
+			
+			
+			
+			```
+		lineageTag: 49f7586b-549e-406b-9a67-acfad6bc3a42
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Primary Care Coding' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Falls].[tbl11_PrimaryCareCoding]#(lf)", CommandTimeout=#duration(416, 16, 0, 0)]),
+				    #"Added Conditional Column" = Table.AddColumn(Source, "Falls Assessment Template Related Code", each if [SnomedCodeDescription] = "Falls risk assessment complete" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Falls risk assessment refused" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Does not fall" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Falls infrequently" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Recurrent falls" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Low risk of falls" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "At high risk of falls" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Multidisciplinary team falls assessment" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Multidisciplinary team falls assessment declined" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Multidisciplinary team falls assessment defaulted" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Multidisciplinary team falls assessment done" then "Falls Assessment Template Code" else if [SnomedCodeDescription] = "Number of falls in last year" then "Falls Assessment Template Code" else "Non-Falls Assessment Template Code")
+				in
+				    #"Added Conditional Column"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

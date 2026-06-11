@@ -1,0 +1,85 @@
+table Parameter
+	lineageTag: 1af85dae-b6c5-42b8-af72-8f99ca513fa3
+
+	measure 'Parameter y-value' = ```
+			
+			
+			VAR Investigations = sum('ED Investigations'[counter])
+			VAR Treatments = SUM('ED Treatments'[counter])
+			VAR Diagnosis = SUM('ED Diagnosis'[counter])
+			VAR Chief_complaint = SUM('ED Falls (GHFT & SWAST)'[counter])
+			
+			
+			
+			VAR parameter_selected =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Parameter', 'Parameter'[Parameter], 'Parameter'[Parameter Fields] ),
+			        'Parameter'[Parameter])
+			
+			
+			
+			RETURN IFERROR(
+			        if(parameter_selected = "Investigations"
+			        ,Investigations, 
+			
+			        if(parameter_selected = "Treatments" 
+			        ,Treatments,
+			
+			        if(parameter_selected = "Diagnosis"
+			        ,Diagnosis, 
+			
+			        if(parameter_selected = "Chief Complaint"
+			        ,Chief_complaint
+			        
+			        ,BLANK())))),BLANK())
+			```
+		formatString: 0
+		lineageTag: 8d4f13a0-db50-4880-973a-ad5855ce9e93
+
+	column Parameter
+		lineageTag: fca1c962-9111-42a2-ac25-341b7b07bbfb
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: 3141a11b-c86f-4ac0-a142-3aff5151a096
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 98575bc0-ca97-4846-81f5-6ed81b78738a
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Parameter = calculated
+		mode: import
+		source =
+				{
+				    ("Investigations", NAMEOF('ED Investigations'[Coding]), 0),
+				    ("Treatments", NAMEOF('ED Treatments'[Coding]), 1),
+				    ("Diagnosis", NAMEOF('ED Diagnosis'[Coding]), 2),
+				    ("Chief_Complaint_translated", NAMEOF('ED Falls (GHFT & SWAST)'[Chief_Complaint_translated]), 3)
+				}
+
+	annotation PBI_Id = 4843a3b997e54886bc9d214ab8bc51b2
+

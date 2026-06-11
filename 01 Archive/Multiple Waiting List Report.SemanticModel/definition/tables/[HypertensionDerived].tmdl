@@ -1,0 +1,29 @@
+table [HypertensionDerived]
+	lineageTag: 3dabe0fc-372a-475f-82ec-930b5fa52978
+
+	column [HypertensionDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f8ba2be-a58a-44fd-a8bc-c16b509949ef
+		summarizeBy: none
+		sourceColumn: [HypertensionDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Hypertension desc' = if('[HypertensionDerived]'[[HypertensionDerived]]] = 1, "Has Hypertension", "Does not have Hypertension")
+		lineageTag: e7c8d560-3d3e-4589-890c-047b0f4a4197
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [HypertensionDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[HypertensionDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[HypertensionDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

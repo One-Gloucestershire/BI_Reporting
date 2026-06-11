@@ -1,0 +1,57 @@
+table REF_Commissioner
+	lineageTag: 20f505d3-3ea1-45cb-8f77-08956300aa89
+
+	column Commissioner_Code
+		dataType: string
+		lineageTag: f60d73ef-854b-4d6d-b4de-ab6dff468da5
+		summarizeBy: none
+		sourceColumn: Commissioner_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commissioner_Description
+		dataType: string
+		lineageTag: 4955879a-a19b-4b22-a7ba-3685a08842f4
+		summarizeBy: none
+		sourceColumn: Commissioner_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Type
+		dataType: string
+		lineageTag: 8e384c4f-b78e-4a75-82f0-efea6f0fb5c7
+		summarizeBy: none
+		sourceColumn: Provider_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Group
+		dataType: string
+		lineageTag: 64e529fa-e5c3-4a33-bda3-01d4534ae13f
+		summarizeBy: none
+		sourceColumn: Provider_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commissioner_Group
+		dataType: string
+		lineageTag: a3caf31b-9793-44af-8410-e683d15e83db
+		summarizeBy: none
+		sourceColumn: Commissioner_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Commissioner = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "DSCRO_NATIONAL_LOOKUPS", [Query=" ---Provider_Reference_Script#(lf)#(lf) #(lf)select [Provider_Code] = p.Code#(lf),[Provider_Description] = p.Name#(lf),[Provider_Type] = p.ODS_API_Role_Name#(lf),[Provider_Group] = case when p.Code like 'RTQ%' then p.Name#(lf)WHEN p.ODS_API_Role_Name = 'NHS TRUST' then 'OTHER NHS TRUSTS'#(lf)WHEN p.ODS_API_Role_Name = 'INDEPENDENT SECTOR H/C PROVIDER SITE' then 'INDEPENDENT SECTOR HEALTHCARE PROVIDER'#(lf)else p.ODS_API_Role_Name end #(lf),[Commissioner_Group] = case when p.Code IN ('11M','QR1') then 'NHS GLOUCESTERSHIRE ICB - 11M' #(lf)when p.Code IS null then NULL #(lf)else 'All Other Commissioners' #(lf)end #(lf)#(lf)from [DSCRO_NATIONAL_LOOKUPS].[ODS].[All_Codes] as p#(lf)#(lf)#(lf)#(lf)#(lf) #(lf)-- ---First Identify MH providers found in MHSDS currently. #(lf)-- if object_id ('tempdb..#Distinct_providers_in_MHSDS') is not null drop table #Distinct_providers_in_MHSDS#(lf)#(lf)--select DISTINCT [Provider_Code] =  h.Provider_Code#(lf)#(lf)--into #Distinct_providers_in_MHSDS#(lf)#(lf)--from #(lf)#(lf)--(select distinct Provider_Code#(lf)--from PowerBI_Reporting.dbo.MHSDS_MH_Referrals#(lf)#(lf)--union all #(lf)#(lf)#(lf)--select distinct Provider_Code#(lf)--from PowerBI_Reporting.dbo.MHSDS_MH_Contacts#(lf)#(lf)--union #(lf)#(lf)--select distinct Provider_Code#(lf)--from PowerBI_Reporting.dbo.MHSDS_MH_Inpatients#(lf)-- ) as h#(lf)#(lf)#(lf)-- ---Identify all MH IP Providers found in MHSDS currently. #(lf)#(lf)--  if object_id ('tempdb..#MH_IP_Providers') is not null drop table #MH_IP_Providers#(lf)#(lf)#(lf)-- select distinct  [MH_IP_Providers] = i.provider_code#(lf) #(lf)-- into #MH_IP_Providers#(lf)#(lf)--from PowerBI_processing.dbo.MHSDS_MH_Inpatients as i #(lf) #(lf)#(lf)#(lf)-- ---Identify all MH Community Providerss found in MHSDS currently. #(lf)#(lf)-- if object_id ('tempdb..#MH_Comm_Providers') is not null drop table #MH_Comm_Providers#(lf)#(lf)#(lf)-- select distinct [MH_Comm_Providers] = C.Provider_Code#(lf)#(lf)-- into #MH_Comm_Providers#(lf)#(lf)-- from #(lf)#(lf)-- (select distinct  provider_code#(lf)--from PowerBI_processing.dbo.MHSDS_MH_Contacts#(lf)#(lf)#(lf)--union#(lf)#(lf)--select distinct  provider_code#(lf)--from PowerBI_processing.dbo.MHSDS_MH_Referrals#(lf)#(lf)-- ) as c#(lf)#(lf)-- ----CREATE REFERENCE TABLE FOR PROVIDER DESCRIPTIONS ---- #(lf)#(lf)--  if object_id ('tempdb..#Provider_descriptions') is not null drop table #Provider_descriptions#(lf)#(lf)-- SELECT  p.Code#(lf)-- ,p.Name#(lf)-- ,ODS_API_Role_Name#(lf)#(lf)#(lf)-- INTO #Provider_descriptions#(lf)--  FROM [DSCRO_NATIONAL_LOOKUPS].[ODS].[All_Codes] as p#(lf)#(lf)#(lf)#(lf)------Final Output#(lf)#(lf)--select p.Provider_Code#(lf)--,[Provider_Description] = pd.Name#(lf)--,[Provider_Type] = pd.ODS_API_Role_Name#(lf)--,[MH_IP_Providers_Only] = case when p.Provider_Code in (Select distinct i.MH_IP_Providers  from #MH_IP_Providers as i) then 1 else 0 end #(lf)--,[MH_Comm_Providers_Only] = case when p.Provider_Code in (Select distinct c.MH_Comm_Providers  from #MH_Comm_Providers as c) then 1 else 0 end #(lf)--,[Provider_Group] = case when p.Provider_Code like 'RTQ%' then pd.Name#(lf)--WHEN pd.ODS_API_Role_Name = 'NHS TRUST' then 'OTHER NHS TRUSTS'#(lf)--WHEN pd.ODS_API_Role_Name = 'INDEPENDENT SECTOR H/C PROVIDER SITE' then 'INDEPENDENT SECTOR HEALTHCARE PROVIDER'#(lf)--else ODS_API_Role_Name end #(lf)#(lf)--from #Distinct_providers_in_MHSDS as p#(lf)#(lf)#(lf)--left join #Provider_descriptions as pd on p.Provider_Code COLLATE Latin1_General_CI_AI = pd.Code COLLATE Latin1_General_CI_AI #(lf)#(lf)#(lf)--order by Provider_Code#(lf)#(lf)#(lf)#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Provider_Code", "Commissioner_Code"}, {"Provider_Description", "Commissioner_Description"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

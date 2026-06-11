@@ -1,0 +1,29 @@
+table Combined_NHS
+	lineageTag: b6dbe962-f18b-46a3-a6ae-386f69589c73
+
+	column NHS_Number
+		lineageTag: 3760275c-248a-43c0-9183-3ae33568e538
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [NHS_Number]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Combined_NHS = calculated
+		mode: import
+		source =
+				
+				FILTER(
+				    DISTINCT(
+				        UNION (
+				            SELECTCOLUMNS ( DISTINCT ( 'SWAST Calls'[Derived_Pseudo_NHSNumber] ), "NHS_Number", 'SWAST Calls'[Derived_Pseudo_NHSNumber] ),
+				            SELECTCOLUMNS ( DISTINCT ( 'Rapid Response'[DerivedPseudoNHS] ), "NHS_Number", 'Rapid Response'[DerivedPseudoNHS]  ),
+				            SELECTCOLUMNS ( DISTINCT ( 'Hospital Admissions'[Derived_Pseudo_NHS] ), "NHS_Number", 'Hospital Admissions'[Derived_Pseudo_NHS]   ),
+				            SELECTCOLUMNS ( DISTINCT ( 'ED Attendances'[NHS_Number] ), "NHS_Number", 'ED Attendances'[NHS_Number]   )
+				        )
+				    ),
+				NOT ISBLANK([NHS_Number])
+				)
+
+	annotation PBI_Id = b2931b951a4f4f3a950426dca38e9f7f
+

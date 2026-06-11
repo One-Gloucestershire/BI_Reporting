@@ -1,0 +1,103 @@
+table Screening
+	lineageTag: 6dbb2677-0f4b-472e-845b-e32ab28fb405
+
+	measure 'Bowel Screenings for Targeted Practices' = CALCULATE(DISTINCTCOUNT('Screening'[PseudoNHSNumber]),'Screening'[screening_flag] = "Bowel Screening",'Screening'[PracticeCode] IN {"L84026","L84084","L84060","L84047","Y02519","L84009","L84014","L84081","L84067","L84034","L84617","L84050","L84606"})
+		formatString: 0
+		lineageTag: 4cc06fef-935a-42f3-b34f-3a16aa2ad4e8
+
+	measure 'Bowel 2WW Referrals for Targeted Practices' = CALCULATE(DISTINCTCOUNT('2WW Referrals'[UBRN]),'2WW Referrals'[Combined_TreatmentFunctionDescription] = "Gastroenterology",'2WW Referrals'[Practice_Code] IN {"L84026","L84084","L84060","L84047","Y02519","L84009","L84014","L84081","L84067","L84034","L84617","L84050","L84606"})
+		formatString: 0
+		lineageTag: a47a58c5-f359-4d0b-a41e-74bcd6778720
+
+	measure 'Bowel Screening Targeted Practices' = CALCULATE(DISTINCTCOUNT('Screening'[PseudoNHSNumber]),'Screening'[screening_flag] = "Bowel Screening",'Screening'[PracticeCode] IN {"L84026","L84084","L84060","L84047","Y02519","L84009","L84014","L84081","L84067","L84034","L84617","L84050","L84606"})
+		formatString: 0
+		lineageTag: 2f7701d1-dc64-437a-ae15-fced42c75dc3
+
+	measure 'Bowel Screening Rate per 1000 current year' =
+			
+			VAR bowel_screenings = CALCULATE (DISTINCTCOUNT('Screening'[PseudoNHSNumber]), 'Screening'[screening_flag] = "Bowel Screening", 'Screening'[EventDate] >= DATE(2024,01,01), 'Screening'[EventDate] <= DATE(2024,12,31))
+			VAR pop =  CALCULATE([April_Pop],'New Practice Population'[5yr_age_band] in {"55-59", "60-64", "65-69", "70-74"}, 'Year Ref'[Current Year Flag] = "Current Year")
+			RETURN CALCULATE(bowel_screenings/pop * 1000)
+		lineageTag: 15453e67-3889-4051-ae02-3736c3102b6a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 488c7a75-b1c1-4d93-802a-fe8fccd04b3d
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: ac733aeb-b83e-4791-ab78-b8c79789ba39
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column EventDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a74ce9b9-4dad-4f4b-ab70-5934a43cc509
+		summarizeBy: none
+		sourceColumn: EventDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeAtEvent
+		dataType: int64
+		formatString: 0
+		lineageTag: bdba478d-55c8-4896-84df-f336a579a481
+		summarizeBy: sum
+		sourceColumn: AgeAtEvent
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: f06714e6-acd1-49e6-ba7f-3f53ae4dd291
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column screening_flag
+		dataType: string
+		lineageTag: cee83572-dac9-449d-9a1d-868b9e117797
+		summarizeBy: none
+		sourceColumn: screening_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column SnomedCode
+		dataType: string
+		lineageTag: dde8767f-7ffb-4e05-8fca-4197fd380ab0
+		summarizeBy: none
+		sourceColumn: SnomedCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column SnomedCodeDescription
+		dataType: string
+		lineageTag: 431ee383-c5ee-45db-b7b0-ff44dca6e7ea
+		summarizeBy: none
+		sourceColumn: SnomedCodeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Screening = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Cancer].[tbl05_Screening]#(lf)", CommandTimeout=#duration(4, 4, 0, 0)])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

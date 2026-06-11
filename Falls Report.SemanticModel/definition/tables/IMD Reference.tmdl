@@ -1,0 +1,32 @@
+table 'IMD Reference'
+	lineageTag: c563cbf1-d007-4048-b776-ea55a1c40576
+
+	column LSOACode
+		dataType: string
+		lineageTag: 447858dc-3d7e-4d18-8594-b75feeafd5fd
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Deprivation
+		dataType: string
+		lineageTag: 1ee604de-be27-4bf2-9e47-5e23c2fa5e2d
+		summarizeBy: none
+		sourceColumn: Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'IMD Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT DISTINCT#(lf)[L].[LSOACode]#(lf),[L].[Derived_IMDGloucestershireDecile]#(lf)  FROM [CCG_Reference].[Reference].[vw_Postcode]  [P]#(lf)  #(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_LSOA_IMD] [L] ON [L].[LSOACode] = [P].LSOA_2021#(lf)#(lf)where [l].[lsoacode] is not null#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Derived_IMDGloucestershireDecile", "Deprivation"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

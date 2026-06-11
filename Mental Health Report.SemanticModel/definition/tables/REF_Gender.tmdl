@@ -1,0 +1,41 @@
+table REF_Gender
+	lineageTag: 5e5ecc82-8fc8-44b2-81f0-35861e42a3f9
+
+	column Gender_Code
+		dataType: string
+		lineageTag: 42ac6be0-bd13-41c3-9fdb-b4304e071a56
+		summarizeBy: none
+		sourceColumn: Gender_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Description
+		dataType: string
+		lineageTag: 164855f9-f13c-4cf5-ac27-8e5e62fad170
+		summarizeBy: none
+		sourceColumn: Gender_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_for_GP_Populations
+		dataType: string
+		lineageTag: 7ade132c-8cd8-473c-8380-6a91a69cf313
+		summarizeBy: none
+		sourceColumn: Gender_for_GP_Populations
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Gender = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)select distinct Gender_Code#(lf),Gender_Description#(lf),[Gender_for_GP_Populations] = cast(NULL as varchar (50))#(lf)from PowerBI_Reporting.mentalhealth.tbl02_MHSDS_MH_Inpatients#(lf)where Gender_Code is not null #(lf)#(lf)union #(lf)#(lf)select distinct Gender_Code#(lf),Gender_Description#(lf),[Gender_for_GP_Populations] = cast(NULL as varchar (50))#(lf)from PowerBI_Reporting.mentalhealth.tbl01_MHSDS_MH_Referrals#(lf)where Gender_Code is not null #(lf)#(lf)#(lf)union #(lf)#(lf)select distinct Gender_Code#(lf),Gender_Description#(lf),[Gender_for_GP_Populations] = cast(NULL as varchar (50))#(lf)from  PowerBI_Reporting.mentalhealth.tbl03_MHSDS_MH_Contacts#(lf)where Gender_Code is not null #(lf);#(lf)"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Gender_Description] <> "Female" and [Gender_Description] <> "Male"))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

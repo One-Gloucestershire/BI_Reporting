@@ -1,0 +1,113 @@
+table 'ASR Debug Table'
+	lineageTag: 3664a829-53ca-417d-b60b-0a922ef23da2
+
+	column 5YR_Age_Band
+		lineageTag: a797a892-129d-4e1e-8104-59943d5b2e55
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Age Band Ref[5YR_Age_Band]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_Local_Observed_Events
+		formatString: 0
+		lineageTag: 2dddf0ec-19e7-4b62-8075-804ccc2ede31
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total_Local_Observed_Events]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_Local_Population
+		formatString: 0
+		lineageTag: 57177481-da54-4491-b88a-4fd1b587121e
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total_Local_Population]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reference_Events
+		formatString: 0
+		lineageTag: f78d91cd-7fc0-440d-a2cf-f42fa47f6e28
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Reference_Events]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reference_Population
+		formatString: 0
+		lineageTag: 084ada62-924d-4331-ae8d-63d474cad4d7
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Reference_Population]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reference_Rates
+		lineageTag: 3556b95d-1db3-42d3-9341-406e812975aa
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Reference_Rates]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Local_Expected_Events
+		lineageTag: d00f3434-016f-4427-841b-9de6e10d76d5
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Local_Expected_Events]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'ASR Debug Table' = calculated
+		mode: import
+		source = ```
+				
+				
+				VAR max_date = MAX('New Practice Population'[Census_Date])
+				
+				VAR SummaryTable =
+				    SUMMARIZE(
+				        'Age Band Ref',
+				        'Age Band Ref'[5YR_Age_Band], -- set your age bands 
+				        "Total_Local_Observed_Events", 'Referrals & Treatments'[Number of Treatments], -- set you local observed measure 
+				        "Total_Local_Population", CALCULATE(SUM('New Practice Population'[population]),'New Practice Population'[Census_Date] = max_date), -- set your local population figure
+				        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+				            CALCULATE(
+				                'Referrals & Treatments'[Number of Treatments], 'Referrals & Treatments'[Amended_5yr_age_band] <> BLANK(),
+				                REMOVEFILTERS('GP Reference'),REMOVEFILTERS('Ethnicity Ref'),REMOVEFILTERS('Core20 Ref'),REMOVEFILTERS('LD Ref'),REMOVEFILTERS('Mental Health Ref'),REMOVEFILTERS('IMD') -- remove filters from your GP practice reference table 
+				            ),
+				        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+				            CALCULATE(
+				                CALCULATE(SUM('New Practice Population'[population]),'New Practice Population'[Census_Date] = max_date),
+				                REMOVEFILTERS('GP Reference'),REMOVEFILTERS('Ethnicity Ref'),REMOVEFILTERS('Core20 Ref'),REMOVEFILTERS('LD Ref'),REMOVEFILTERS('Mental Health Ref'),REMOVEFILTERS('IMD')-- remove filters from your GP practice reference table 
+				            )
+				    )
+				    
+				VAR SummaryTable_with_reference_rates =
+				    ADDCOLUMNS(
+				        SummaryTable,
+				        "Reference_Rates",
+				            DIVIDE([Reference_Events], [Reference_Population], 0)
+				    )
+				
+				VAR FinalTable =
+				    ADDCOLUMNS(
+				        SummaryTable_with_reference_rates,
+				        "Local_Expected_Events",
+				            [Reference_Rates] * [Total_Local_Population]
+				    )
+				
+				RETURN
+				FinalTable
+				
+				```
+
+	annotation PBI_Id = 40777072b2844aef841438fc72e36b55
+

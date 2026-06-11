@@ -1,0 +1,39 @@
+table Contacts_per_referral
+	isHidden
+	lineageTag: 8138fd4e-6dd9-42f5-a6de-e3308501f44e
+
+	column UniqServReqID
+		isHidden
+		lineageTag: 385e51d3-d823-4039-9b8e-61a58ee8a456
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 2.Community_Discharges[UniqServReqID]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Contacts_Per_Referral
+		isHidden
+		formatString: 0
+		lineageTag: 8a19a00d-62b7-4e7c-9a2b-5704f799d9d3
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Contacts_Per_Referral]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Contacts_per_referral = calculated
+		mode: import
+		source =
+				
+				VAR Attended_Contacts_Per_Unique_Ref = SUMMARIZE(
+				    '2.Community_Discharges',
+				    '2.Community_Discharges'[UniqServReqID],
+				    "Contacts_Per_Referral", MAX('2.Community_Discharges'[Attended_Contacts_in_Referral])
+				)
+				
+				return
+				
+				Attended_Contacts_Per_Unique_Ref
+
+	annotation PBI_Id = d3d9fa3249a64072ab025a44b8d766d5
+

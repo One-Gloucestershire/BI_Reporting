@@ -1,0 +1,29 @@
+table [CancerDerived]
+	lineageTag: 5adbd2a6-6428-4222-bf06-0427caeab9e0
+
+	column [CancerDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 3cb2abbc-8015-42b3-96d7-0500517226b3
+		summarizeBy: none
+		sourceColumn: [CancerDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cancer desc' = if('[CancerDerived]'[[CancerDerived]]] = 1, "Has Cancer", "Does not have Cancer")
+		lineageTag: 9937a74b-acd0-4e43-8c27-ffe3f0bd9cb2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [CancerDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[CancerDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[CancerDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

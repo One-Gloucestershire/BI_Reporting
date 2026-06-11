@@ -1,0 +1,386 @@
+table Prescribing
+	lineageTag: 18501bf5-7f33-4cf7-b52c-f75a9f271a11
+
+	measure 'Prescribing Rate per 1000 Yearly' =
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Prescribing'[counter] ))
+			VAR POP = CALCULATE ( [Diagnosed Dementia 65+ Population] , ALLEXCEPT ('Date Reference', 'Date Reference'[financial_year] ), 'Date Reference'[month_name] IN {"Apr"} )
+			
+			RETURN IFERROR(Activity/POP*1000,BLANK())
+		lineageTag: 84e0e49a-1d52-4f73-89ce-8a10b503c6e2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prescribing Rate per 1000 Monthly' = ```
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Prescribing'[counter] ))
+			VAR POP =  [Diagnosed Dementia 65+ Population] 
+			
+			RETURN IFERROR(Activity/POP*1000,BLANK())
+			```
+		lineageTag: eb6cc766-7768-4150-b531-67be3213e881
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prescribing graph parameter y-value' = ```
+			
+			
+			VAR prescribing_value = 
+			    if(SELECTEDVALUE('Prescribing Filter'[Prescribing Filter]) = "Costs of Prescriptions", "Cost",
+			    IF(SELECTEDVALUE('Prescribing Filter'[Prescribing Filter]) = "Number of Prescriptions", "Number",
+			    "none"))
+			
+			VAR Activity = IF(prescribing_value = "Number", CALCULATE ( SUM ('Prescribing'[counter] )), CALCULATE(SUM('Prescribing'[Item_cost_in_pounds])))
+			VAR POP_month = [Diagnosed Dementia 65+ Population] 
+			VAR POP_year = CALCULATE ([Diagnosed Dementia 65+ Population] , ALLEXCEPT ('Date Reference', 'Date Reference'[financial_year] ), 'Date Reference'[month_name] IN {"Apr"} )
+			
+			
+			VAR Year_or_month =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly])
+			
+			VAR rate_or_actual =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual])
+			
+			
+			
+			RETURN if(Year_or_month = "monthly"
+			        && rate_or_actual = "Rate per 1000"
+			        && prescribing_value = "Number"
+			        ,Activity/POP_month*1000, 
+			
+			        if(Year_or_month = "yearly" 
+			        && rate_or_actual = "Rate per 1000"
+			        && prescribing_value = "Number"
+			        ,Activity/POP_year*1000,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Actual Activity"
+			        && prescribing_value = "Number"
+			        ,Activity, 
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Actual Activity"
+			        && prescribing_value = "Number"
+			        ,Activity,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Rate per 1000"
+			        && prescribing_value = "Cost"
+			        ,Activity/POP_month*1000, 
+			
+			        if(Year_or_month = "yearly" 
+			        && rate_or_actual = "Rate per 1000"
+			        && prescribing_value = "Cost"
+			        ,Activity/POP_year*1000,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Actual Activity"
+			        && prescribing_value = "Cost"
+			        ,Activity, 
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Actual Activity"
+			        && prescribing_value = "Cost"
+			        ,Activity
+			        
+			        ,BLANK()))))))))
+			```
+		lineageTag: 58ed2efd-036d-4c4c-a7ac-58860a82a133
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prescribing graph title' = ```
+			
+			
+			VAR activity = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual]
+			    )
+			
+			VAR timeframe = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly]
+			    )
+			
+			VAR activity_type = "Anti-Psychotic Prescribing"
+			
+			VAR prescribing_value = 
+			    IF(SELECTEDVALUE('Prescribing Filter'[Prescribing Filter]) = "Costs of Prescriptions", "Costs of Prescriptions (£)", 
+			    IF(SELECTEDVALUE('Prescribing Filter'[Prescribing Filter]) = "Number of Prescriptions", "Number of Prescriptsions", BLANK()))
+			
+			//IF ( COUNTROWS ( activity ) = 1, CONCATENATE(activity & " - ", reason ))
+			
+			RETURN 
+			IF ( activity = "Actual Activity" && timeframe = "Yearly" && prescribing_value <> BLANK(), CONCATENATE(activity_type & " - " & prescribing_value & " - ", activity & " - Yearly"  ),
+			IF ( activity = "Actual Activity" && timeframe = "Monthly" && prescribing_value <> BLANK() , CONCATENATE(activity_type & " - " & prescribing_value & " - ", activity & " - Monthly"  ),
+			IF ( activity = "Rate per 1000" && timeframe = "Yearly" && prescribing_value <> BLANK(), CONCATENATE(activity_type & " - " & prescribing_value & " - ", activity & " - Yearly" ),
+			IF ( activity = "Rate per 1000" && timeframe  = "Monthly" && prescribing_value <> BLANK(), CONCATENATE(activity_type & " - " & prescribing_value & " - ", activity & " - Monthly" ), "Please select slicers from the left to show data"))))
+			
+			```
+		lineageTag: 91d6a041-8807-49c1-93d0-1af497ff4d3f
+
+	measure 'Prescribing graph cost y-value' = ```
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Prescribing'[Item_cost_in_pounds] ))
+			VAR POP_month = [Diagnosed Dementia 65+ Population] 
+			VAR POP_year = CALCULATE ([Diagnosed Dementia 65+ Population] , ALLEXCEPT ('Date Reference', 'Date Reference'[financial_year] ), 'Date Reference'[month_name] IN {"Apr"} )
+			
+			
+			VAR Year_or_month =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly])
+			
+			VAR rate_or_actual =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual])
+			
+			
+			RETURN if(Year_or_month = "monthly"
+			        && rate_or_actual = "Rate per 1000"
+			        ,Activity/POP_month*1000, 
+			
+			        if(Year_or_month = "yearly" 
+			        && rate_or_actual = "Rate per 1000",
+			        Activity/POP_year*1000,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Actual Activity"
+			        ,Activity, 
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Actual Activity"
+			        ,Activity
+			        
+			        ,1000))))
+			```
+		lineageTag: c11ef510-daa4-4f2a-839d-3413f928c1c6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prescribing y axis title' = ```
+			
+			
+			VAR activity = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual]
+			    )
+			
+			VAR timeframe = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly]
+			    )
+			
+			VAR activity_type = "Anti-Psychotic Prescribing"
+			
+			VAR prescribing_value = 
+			    IF(SELECTEDVALUE('Prescribing Filter'[Prescribing Filter]) = "Costs of Prescriptions", "Cost (£)", 
+			    IF(SELECTEDVALUE('Prescribing Filter'[Prescribing Filter]) = "Number of Prescriptions", "Number of Prescriptsions", BLANK()))
+			
+			//IF ( COUNTROWS ( activity ) = 1, CONCATENATE(activity & " - ", reason ))
+			
+			RETURN 
+			IF ( activity = "Actual Activity" && timeframe = "Yearly" && prescribing_value <> BLANK(), "Actual " & prescribing_value,
+			IF ( activity = "Actual Activity" && timeframe = "Monthly" && prescribing_value <> BLANK() , "Actual " & prescribing_value,
+			IF ( activity = "Rate per 1000" && timeframe = "Yearly" && prescribing_value <> BLANK(), "Rate per 1000 " & prescribing_value,
+			IF ( activity = "Rate per 1000" && timeframe  = "Monthly" && prescribing_value <> BLANK(), "Rate per 1000 " & prescribing_value, BLANK()))))
+			
+			```
+		lineageTag: 8d6173e9-1de8-4a7e-8a45-d478926fa2c7
+
+	measure 'Prescribing Gloucestershire ICB Activity' = CALCULATE([Prescribing graph parameter y-value], ALL('GP Reference'))
+		lineageTag: b58cbd45-4089-4d57-a35d-4e3e25359d95
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 43051926-d7b4-48dc-b481-57431e394cc4
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 5d70e344-d368-41c5-accd-dcedd154c62f
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pseudo_NHS_Number
+		dataType: string
+		lineageTag: 50106983-6490-4a4a-a3a9-be045bb16d17
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_diagnosis_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: eaacff13-8f57-4c10-9c56-f7c6d8c2eb5c
+		summarizeBy: none
+		sourceColumn: dementia_diagnosis_date
+
+		variation Variation
+			isDefault
+			relationship: b8c586f7-ad36-427a-a60a-bb71dbc366f8
+			defaultHierarchy: LocalDateTable_c502ebe3-e72d-4e05-be37-4a2fed011529.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 00efced8-c8fc-4e12-a73a-996aaa4094bd
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: f5129751-5f94-4943-a50a-e9f29f752a81
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Item_cost_in_pounds
+		dataType: double
+		lineageTag: effe9f78-18d8-4f47-9b22-8805eb8079ea
+		summarizeBy: sum
+		sourceColumn: Item_cost_in_pounds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BNFChemicalSubstance
+		dataType: string
+		lineageTag: 6fa5ea68-5e99-4acf-b619-a9a93fdb5a7c
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month_prescribed
+		dataType: int64
+		formatString: 0
+		lineageTag: 93562cb2-1e8b-424b-b591-b6122c6f639f
+		summarizeBy: sum
+		sourceColumn: year_month_prescribed
+
+		annotation SummarizationSetBy = Automatic
+
+	column Highlighted_anti-psychotics
+		dataType: int64
+		formatString: 0
+		lineageTag: fb53e29c-d0a0-4612-995a-86e683b35248
+		summarizeBy: sum
+		sourceColumn: Highlighted_anti-psychotics
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b1d9f4f4-1cf9-4bee-b58c-282450af5ca3
+		summarizeBy: none
+		sourceColumn: FirstDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_practice
+		dataType: string
+		lineageTag: 4ed82802-ee91-4837-9bd2-93132bfd17a6
+		summarizeBy: none
+		sourceColumn: current_practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_primary_care_network
+		dataType: string
+		lineageTag: 0d5001f5-948e-48a7-bae3-809676bc7a3a
+		summarizeBy: none
+		sourceColumn: current_primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_locality
+		dataType: string
+		lineageTag: 19177d0a-f850-41f8-9060-675efd29cf46
+		summarizeBy: none
+		sourceColumn: current_locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_GP_ODS
+		dataType: string
+		lineageTag: c0e22206-4011-4618-a3ea-0f5894b8347f
+		summarizeBy: none
+		sourceColumn: Patient_GP_ODS
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Prescribing YTD' =
+			
+			VAR current_month = MONTH('Prescribing'[FirstDateofMonth])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Prescribing'[FirstDateofMonth]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: df560327-2443-4fcf-bbc3-20411727b8e7
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Prescribing = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from PowerBI_Reporting.Dementia.tbl08_Prescribing"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

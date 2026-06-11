@@ -1,0 +1,253 @@
+table 'Practice Dementia'
+	lineageTag: a3958b1e-3f54-43d6-a8b6-4baa086fd2e3
+
+	measure 'Diagnosed Dementia 65+ Population' = CALCULATE(sum('Practice Dementia'[Value]),'Practice Dementia'[Measure] = "DEMENTIA_REGISTER_65_PLUS")
+		lineageTag: 83b35987-0ca2-47fb-addd-0c8fbd5039cd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'DDR %' = IFERROR('Practice Dementia'[Diagnosed Dementia 65+ Population] / CALCULATE(sum('Practice Population'[Estimated Total Dementia Population])) * 100, BLANK())
+		formatString: 0.0
+		lineageTag: 84458497-67ec-4b8f-bb01-5e851bf8aef4
+
+	measure 'Measure max date' = CALCULATE(MAX('Practice Dementia'[ach_date]))
+		formatString: General Date
+		lineageTag: 6a2f09b2-0928-45c7-a4b8-f4250d4bda71
+
+	measure 'Gloucestershire Local DDR' = IFERROR(CALCULATE('Practice Dementia'[Diagnosed Dementia 65+ Population], 'Practice Dementia'[ICB_ODS_CODE] = "QR1") / CALCULATE(sum('Practice Population'[Estimated Total Dementia Population])), BLANK())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1a5cd952-22e9-411f-a707-1e938388dfcf
+
+	measure 'National Diagnosis needed' = CALCULATE(sum('Practice Population'[Required Number of Diagnosed Dementia Patients for DDR]) - [Gloucestershire Dementia 65+ Population] )
+		formatString: 0
+		lineageTag: 90b2e9f4-762a-4298-ba2a-f8a20da6e685
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Gloucestershire Dementia 65+ Population' = CALCULATE(sum('Practice Dementia'[Value]),'Practice Dementia'[Measure] = "DEMENTIA_REGISTER_65_PLUS", 'Practice Dementia'[ICB_ODS_CODE] = "QR1")
+		lineageTag: ece4fe0b-956b-4102-9add-628d86270053
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest month local DDR' = CALCULATE('Practice Dementia'[Gloucestershire Local DDR], 'Date Reference'[Local data latest month flag] = 1)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 26045e7a-ae05-43a7-92fe-55e846306535
+
+	measure 'Prior month local DDR' = CALCULATE('Practice Dementia'[Gloucestershire Local DDR], 'Date Reference'[Local data prior month flag] = 1)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8288ce48-9fd4-4883-8e12-faf5ee039bd7
+
+	measure 'DDR change from last month' = [Latest month local DDR] - [Prior month local DDR]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f338f276-45a4-408f-a525-a9e66e24968b
+
+	measure 'Comparison arrow' = if([DDR change from last month] > 0, UNICHAR(9650), if([DDR change from last month] < 0, UNICHAR(9660)))
+		lineageTag: 9722b6db-7e97-4ad8-998f-e0857dc17d06
+
+	measure 'Area chart Y-axis start' = ```
+			CALCULATE(sum('Practice Dementia'[Value])/1.5,'Practice Dementia'[Measure] = "DEMENTIA_REGISTER_65_PLUS", 'Practice Dementia'[ICB_ODS_CODE] = "QR1") 
+			```
+		lineageTag: 2e45f047-6172-494a-9e0a-c479926dda16
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Data Current Gloucestershire Dementia 65+ Population' = CALCULATE(sum('Practice Dementia'[Value]),'Practice Dementia'[Measure] = "DEMENTIA_REGISTER_65_PLUS", 'Practice Dementia'[ICB_ODS_CODE] = "QR1", 'Date Reference'[Local data latest month flag] = 1)
+		lineageTag: f508156a-1f8e-4a47-8af4-e70864565c9a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Diagnosis needed current month' = CALCULATE([National Diagnosis needed], 'Date Reference'[Local data latest month flag] = 1)
+		lineageTag: 481140c2-42ee-42da-9d1f-283abce4769c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Gloucestershire Diagnosed Population' = CALCULATE(AVERAGEX(VALUES('Date Reference'[year_month]),[Gloucestershire Dementia 65+ Population]))
+		lineageTag: 56056cdc-a806-4ebe-b365-7e263b8071a8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column REGION_ODS_CODE
+		dataType: string
+		lineageTag: f458a274-0c69-4c6a-acf5-c65afd09c25a
+		summarizeBy: none
+		sourceColumn: REGION_ODS_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_ODS_CODE
+		dataType: string
+		lineageTag: 9f48783d-1c88-403e-87f7-c94044df731c
+		summarizeBy: none
+		sourceColumn: ICB_ODS_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column PRACTICE_CODE
+		dataType: string
+		lineageTag: 280552f7-d809-41b5-a2c4-61c3543e5627
+		summarizeBy: none
+		sourceColumn: PRACTICE_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column PRACTICE_NAME
+		dataType: string
+		lineageTag: 86e60858-1eb3-49b8-ad2c-b3b8d9782c9a
+		summarizeBy: none
+		sourceColumn: PRACTICE_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column Measure
+		dataType: string
+		lineageTag: 65c601f3-1908-4fd0-a25e-4efda0fc3405
+		summarizeBy: none
+		sourceColumn: Measure
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: double
+		lineageTag: 65175566-8d88-4488-90b3-40ef84b28d8f
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column practice_dementia_year_month = RELATED('Date Reference'[year_month])
+		lineageTag: f189a8ff-ad4b-493a-8ba1-72a6e71a2857
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_month = if([practice_dementia_year_month] = MAX([practice_dementia_year_month]), 1, 0)
+		formatString: 0
+		lineageTag: fd7a18d9-c1f6-4126-9a75-eb6ef2f52ecb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_prior_ach_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: db274ec6-1a93-4f96-adfc-c76df0d2f8f4
+		summarizeBy: none
+		sourceColumn: month_prior_ach_date
+
+		variation Variation
+			isDefault
+			relationship: 1e60f016-ed9f-439d-bfb4-409b97101118
+			defaultHierarchy: LocalDateTable_ba592526-9aba-4d37-9229-66f30d0fa1a8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_prior_YearMonth
+		dataType: string
+		lineageTag: 292a85ff-b549-4cd2-85be-80c11451610e
+		summarizeBy: none
+		sourceColumn: month_prior_YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column prior_month = if('Practice Dementia'[practice_dementia_year_month] = max('Practice Dementia'[month_prior_YearMonth]), 1, 0)
+		formatString: 0
+		lineageTag: 09296c30-d214-4fe4-bba8-c2970b00057d
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column ACH_DATE
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 96dcbf93-d83f-437c-ab52-026be202ce52
+		summarizeBy: none
+		sourceColumn: ACH_DATE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: c9f44cf7-98c3-49de-87ec-a757a4192876
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column table
+		dataType: string
+		lineageTag: 685e416d-96d5-4634-8ce7-7eb7581e8a1d
+		summarizeBy: none
+		sourceColumn: table
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current month flag' = ```
+			
+			
+			VAR Date_year_month = CONCATENATE(YEAR('Practice Dementia'[month_prior_ach_date]),MONTH('Practice Dementia'[month_prior_ach_date]))
+			
+			VAR current_year_month = CONCATENATE(YEAR(MAX('Practice Dementia'[month_prior_ach_date])),MONTH(MAX('Practice Dementia'[month_prior_ach_date])))
+			
+			VAR prior_year_month_calc = EOMONTH(max('Practice Dementia'[month_prior_ach_date]), -1)
+			
+			VAR prior_year_month = CONCATENATE(YEAR(prior_year_month_calc),MONTH(prior_year_month_calc))
+			
+			RETURN IF(Date_year_month = current_year_month, "Current Month", if(Date_year_month = prior_year_month, "Prior Month", "Other Month")) 
+			```
+		lineageTag: fd1ab835-710c-4b0f-9ebe-9e12af5eaf36
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Dementia YTD' =
+			
+			VAR current_month = MONTH('Practice Dementia'[ACH_DATE])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Practice Dementia'[ACH_DATE]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 4025e760-b7cc-4d95-988b-55a336c4ec9c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Practice Dementia' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Dementia].[tbl07_Dementia_Practice_Data]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,84 @@
+table 'Missing Diagnosis'
+	lineageTag: 58ee6faa-f273-4b4a-821e-27ef1e9ceed1
+
+	column diagnosed_dementia_patients
+		dataType: int64
+		formatString: 0
+		lineageTag: 4d4cf8af-a4fa-4552-a734-130d60c06b5b
+		summarizeBy: sum
+		sourceColumn: diagnosed_dementia_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Estimated Total Dementia Population'
+		dataType: double
+		lineageTag: b7a2705f-2cdb-4840-9389-6f12de80ad65
+		summarizeBy: sum
+		sourceColumn: Estimated Total Dementia Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column diagnosis_missing
+		dataType: double
+		lineageTag: 2be23599-e176-4e83-a895-5ee611f34400
+		summarizeBy: sum
+		sourceColumn: diagnosis_missing
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 8906e725-00ea-4562-8e7b-ba3ac578a1e9
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 31d13e89-58f0-4f00-8292-c1c0e8cd98eb
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column AGE_BAND_5_YEAR
+		dataType: string
+		lineageTag: 8766229e-9d33-4f76-8b1e-bd67a189261d
+		summarizeBy: none
+		sourceColumn: AGE_BAND_5_YEAR
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: d3521c5a-af06-4942-88f1-c056b109d098
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'diagnosis missing' = CALCULATE(SUM('Missing Diagnosis'[diagnosis_missing]))
+		lineageTag: 2f31e4c6-5957-42da-90ba-55c57ccec46e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Missing Diagnosis' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="select * from [powerbi_reporting].[Dementia].[tbl06_Dementia_Missing_Diagnosis]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

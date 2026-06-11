@@ -1,0 +1,35 @@
+table 'Week Waiting Reference'
+	lineageTag: c61811e0-81f6-46dd-bece-634e1afd3d1b
+
+	column Type
+		dataType: string
+		lineageTag: cd701819-a407-4185-be7b-d1921c355d56
+		summarizeBy: none
+		sourceColumn: Type
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: int64
+		formatString: 0
+		lineageTag: e612e900-7623-451f-9d76-1cec67c0a545
+		summarizeBy: sum
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Week Waiting Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("Rc6xCoAwDIThV5Gs9iCJsdYncSgdOzn6/iCkkKzf8N/1TgzdnjnfjwoJjdJJYSHqYqghh0tFCzGXBuGg00kYkvG6TCGZv5YZJAfasgrJiXtZ2/Mq0xg/", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Index = _t, Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Index", type text}, {"Column1", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Order"}, {"Index", "Type"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

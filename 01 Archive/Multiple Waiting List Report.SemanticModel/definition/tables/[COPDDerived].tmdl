@@ -1,0 +1,29 @@
+table [COPDDerived]
+	lineageTag: 8334c12d-e5c3-44c6-a2d1-ca904275c676
+
+	column [COPDDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: af389a00-f0fb-4971-a943-e829ba8249c6
+		summarizeBy: none
+		sourceColumn: [COPDDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'COPD desc' = if('[COPDDerived]'[[COPDDerived]]] = 1, "Has COPD", "Does not have COPD")
+		lineageTag: 32d44635-5e45-428b-9d5e-75a5f01ba351
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [COPDDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[COPDDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[COPDDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

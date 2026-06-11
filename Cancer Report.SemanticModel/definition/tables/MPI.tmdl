@@ -1,0 +1,101 @@
+table MPI
+	lineageTag: cd402e79-bf5a-4ae7-a800-fc4e076a5f92
+
+	column locality
+		dataType: string
+		lineageTag: e5a88576-2e9c-4bdf-afd5-1daa78379815
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 110e6aaf-f312-47fc-b964-07f21e727661
+		summarizeBy: none
+		sourceColumn: MH_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: d6a7d255-d0f5-4a85-b1c8-44ec0615fcc8
+		summarizeBy: none
+		sourceColumn: LD_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 377aad5f-0f9e-4e40-97c6-bc61598ad4b6
+		summarizeBy: none
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnic Origin Grouped'
+		dataType: string
+		lineageTag: 63e829ef-b583-44db-9dfd-277a013245ab
+		summarizeBy: none
+		sourceColumn: Ethnic Origin Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 20004439-9b1f-43f5-a014-553359118497
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: e90d0fec-ddaf-4ccc-8b76-77a9ed0a0d7a
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 72f91bc2-15fc-420f-82ee-8a6cf1efc3c6
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 9f69ae1b-5719-48d6-b493-d580ed10e366
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 46b32d5f-0a89-4002-a95d-2a7860a8b48f
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MPI = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)#(tab)  SELECT#(lf)#(tab)  locality = case when m.Locality like '%cotswold%' then 'Cotswolds' else Locality end#(lf)#(tab)  ,MH_flag = case when m.MentalIllness is null then 0 else m.MentalIllness end#(lf)#(tab)  ,LD_flag = case when m.LearningDisability  is null then 0 else m.LearningDisability end#(lf)#(tab)  ,Core20Flag = case when m.Core20Flag is null then 0 else m.Core20Flag end#(lf)#(tab)  ,[Ethnic Origin Grouped] = case#(tab)when DerivedEthnicityGroup is null then 'Unknown' #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when DerivedEthnicityGroup like 'Not known' then 'Unknown' #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)else DerivedEthnicityGroup #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end #(lf)#(tab)  ,[5YR_Age_Band] = case#(tab)when m.AgeBand5yr like '0-4' then '00-04'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when m.AgeBand5yr like '5-9' then '05-09'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)else m.AgeBand5yr#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end#(lf)#(tab)  ,m.PseudoNHSNumber#(lf)#(tab)  ,counter = 1#(lf),PracticeCode#(lf),PrimaryCareNetwork#(lf)#(lf)#(tab)  from PowerBI_Reporting.PLS.tbl02_Summary m#(lf)#(lf)#(lf)#(lf)#(lf)"]),
+				    #"Replaced Value" = Table.ReplaceValue(Source,"85-89","85+",Replacer.ReplaceText,{"5YR_Age_Band"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","90+","85+",Replacer.ReplaceText,{"5YR_Age_Band"})
+				in
+				    #"Replaced Value1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

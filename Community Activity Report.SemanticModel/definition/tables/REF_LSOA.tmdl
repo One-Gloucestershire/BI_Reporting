@@ -1,0 +1,36 @@
+table REF_LSOA
+	lineageTag: db1f7321-333d-4a91-9f1f-f34fc4c91a2e
+
+	column LSOACode
+		dataType: string
+		lineageTag: 97e28838-f355-4b7c-b3ba-6b9ac03b4f73
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDCountyDecile
+		dataType: int64
+		lineageTag: dc5ffbc6-ebcc-4b01-bb5a-9a60950da4bf
+		summarizeBy: sum
+		sourceColumn: IMDCountyDecile
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition REF_LSOA = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)select DISTINCT  LSOACode#(lf),[IMDCountyDecile] = l.Derived_IMDGloucestershireDecile#(lf)#(lf)from CCG_Reference.Reference.vw_LSOA_IMD as l#(lf)#(lf)where LSOACode is not null#(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,29 @@
+table [DementiaDerived]
+	lineageTag: 74109f57-7452-446b-add0-5a9a058f448b
+
+	column [DementiaDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 04517a2b-4d09-4b1c-989e-631edc6e586d
+		summarizeBy: none
+		sourceColumn: [DementiaDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dementia desc' = if('[DementiaDerived]'[[DementiaDerived]]] = 1, "Has Dementia", "Does not have Dementia")
+		lineageTag: 52c63272-daea-47c4-be14-3b942e640554
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [DementiaDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[DementiaDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[DementiaDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

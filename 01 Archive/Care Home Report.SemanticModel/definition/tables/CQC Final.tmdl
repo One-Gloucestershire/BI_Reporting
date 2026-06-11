@@ -1,0 +1,1498 @@
+table 'CQC Final'
+	lineageTag: 9bec2952-0012-4c8f-ac6e-8ececeb0aed1
+
+	measure 'See & Convey' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome] == "See & Convey")
+		formatString: 0
+		lineageTag: ccfbf0a9-12ea-47eb-86ec-e930c8e6ba1c
+
+	measure 'Total Activity Rate per 100' = IFERROR(sum('SWAST Calls'[Care Home SWAST Calls])/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		lineageTag: a1cf0a12-9086-43d4-8093-97b78e0c8612
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See & Convey Rate per 100' = IFERROR('CQC Final'[See & Convey]/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		formatString: 0.00
+		lineageTag: e48b7985-e99a-46a4-bfb6-0f5c672ea92e
+
+	measure 'See and Convey Rate per 100 Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[See & Convey Rate per 100],,DESC,Skip) )
+		formatString: 0
+		lineageTag: 291b94b7-e4a1-44d1-9b9a-8cd68b7bab5b
+
+	measure 'Count of care homes' = CALCULATE(DISTINCTCOUNT('CQC Alignment'[Assigned_name]),ALLEXCEPT('CQC Alignment','CQC Final'[SWAST_care_home_type],'CQC Final'[Current_CQC_Care_Home_Flag]))
+		formatString: 0
+		lineageTag: 5a3d063d-e8fa-461c-a562-819c14a665d3
+
+	measure '20% of Care Homes' = [Count of care homes] * 0.2
+		lineageTag: 4d43326c-2a6a-45a8-8c59-2db6b53d83cb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Convey Top 20% by Rate' = IF([See and Convey Rate per 100 Rank] <= [20% of Care Homes], "Yes", "No")
+		lineageTag: 2cfe284b-6ab5-4ee9-b2ba-c62c5bc8c013
+
+	measure 'Top call reason' = ```
+			
+			    VAR TopSymptoms = 
+			        SUMMARIZE(
+			            'SWAST Calls',
+			            'SWAST Calls'[Symptom_Group_Chief_Complaint],
+			            "TotalCalls", SUM('SWAST Calls'[Care Home SWAST Calls])
+			        )
+			    VAR TopRanked = 
+			        TOPN(
+			            1,
+			            TopSymptoms,
+			            [TotalCalls], DESC,  -- Sort by TotalCalls in descending order
+			            'SWAST Calls'[Symptom_Group_Chief_Complaint], ASC  -- Break ties alphabetically
+			        )
+			    RETURN
+			        SELECTCOLUMNS(
+			            TopRanked,
+			            "TopSymptom", 'SWAST Calls'[Symptom_Group_Chief_Complaint]
+			        )
+			```
+		lineageTag: ec82b634-d111-4418-ab8c-89e444564de0
+
+	measure 'SWAST Call Reason Rank' = CALCULATE(RANKX(ALL('SWAST Calls'[Symptom_Group_Chief_Complaint]),[SWAST Type Care Home calls],,DESC,Skip))
+		formatString: 0
+		lineageTag: c40359bc-05c1-4a5d-8a9e-0dbed4d5581c
+
+	measure Total_beds = CALCULATE(SUM('CQC Final'[Bed_count]))
+		lineageTag: 5cabee85-f498-4d9f-879e-768f838fc5eb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See & Treat' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome] == "See & Treat")
+		formatString: 0
+		lineageTag: 40e862d4-605e-4c68-918a-5c5bc829da31
+
+	measure 'See & Treat Rate per 100' = IFERROR('CQC Final'[See & Treat]/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		lineageTag: c19b08b3-eaaf-4d83-9285-ea1a5616a32e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Treat Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[See & Treat Rate per 100],,DESC,Skip))
+		formatString: 0
+		lineageTag: eca8732a-6db8-46fd-b60d-3829598cee21
+
+	measure 'Hear & Treat' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome] == "Hear & Treat")
+		formatString: 0
+		lineageTag: 0ef9c45e-d239-46d8-a14e-fef8fac40c19
+
+	measure 'Hear & Treet Rate per 100' = IFERROR('CQC Final'[Hear & Treat]/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		lineageTag: 4357aa6f-18e0-4e62-8e6a-6cf34a5c4059
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Hear and Treat Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[Hear & Treet Rate per 100],,DESC,Skip) -1)
+		formatString: 0
+		lineageTag: 52ef49a8-7519-4b1b-b395-a8ee72011b34
+
+	measure 'Average Falls per Day' =
+			
+			var max_date = ENDOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var diff = DATEDIFF(min_date, max_date, DAY) +1
+			var total_hours = CALCULATE(sum('SWAST Calls'[counter]),'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN total_hours / diff
+		lineageTag: a68ee448-3e44-41cd-aa30-b73277281efc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Falls' = ```
+			
+			CALCULATE(sum('SWAST Calls'[counter]),'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			
+			```
+		formatString: 0
+		lineageTag: 3d6fb95f-7ad3-4d8b-a619-b352fdf6a1dd
+
+	measure 'max date' = ```
+			ENDOFMONTH('SWAST Calls'[SWAST_call_date])
+			
+			```
+		formatString: General Date
+		lineageTag: 93438b18-a234-483b-bba2-665682c1c2d7
+
+	measure 'min date' = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+		formatString: General Date
+		lineageTag: 86f89b69-d754-4479-ba99-6a6896973e71
+
+	measure 'Average Falls per 100 Beds per Day' =
+			
+			var max_date = ENDOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var diff = DATEDIFF(min_date, max_date, DAY) +1
+			var total_hours = CALCULATE(sum('SWAST Calls'[counter]) / SUM('CQC Final'[Bed_count])*100,'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN IFERROR(total_hours / diff, BLANK())
+		lineageTag: 0651b9ba-2d07-42b6-ad44-8ddf32bbc253
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Convey Actual Activity Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[See & Convey],,DESC,Skip))
+		formatString: 0
+		lineageTag: 63e07eda-2870-4936-87f0-ca2acb045f96
+
+	measure 'See & Convey A&E' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome expanded] == "See & Convey A&E")
+		formatString: 0
+		lineageTag: 8c850780-3575-4f65-93cc-2e7d6b013053
+
+	measure 'See & Convey A&E Rate per 100' = IFERROR('CQC Final'[See & Convey A&E]/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		lineageTag: e02d2cc7-8984-432b-946c-e84ca2915f42
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Convey A&E Actual Activity Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[See & Convey A&E],,DESC,Skip) - 1)
+		formatString: 0
+		lineageTag: d43ef240-fbc7-4a8f-8883-101935f0fee3
+
+	measure 'See and Convey A&E Rate per 100 Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[See & Convey A&E Rate per 100],,DESC,Skip) - 1)
+		formatString: 0
+		lineageTag: 73c4ab24-6eb7-4ab0-8e77-84daed8fa310
+
+	measure 'See and Convey Top 20% by Actual' = IF([See and Convey Actual Activity Rank] <= [20% of Care Homes], "Yes", "No")
+		lineageTag: 098c7d5a-2b5b-4eda-9dbc-719ad20367a4
+
+	measure 'Average Calls per Week per Care Home post Training 3-6 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[6 months flag] = 1)
+			
+			var _average = (DIVIDE(SUM([Total Calls post Training 3-6 Months]),13))
+			
+			RETURN DIVIDE(_average,care_homes)
+		lineageTag: 5916d92c-a431-4d34-b368-1a6bbed0cb09
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home post Training 0-3 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[3 months flag] = 1)
+			
+			 RETURN CALCULATE(SUM([Total Calls post Training 0-3 Months]) / 13 / care_homes)
+		lineageTag: 90cfee45-599d-4971-a2df-d65307b7f22a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home post Training 6-9 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[9 months flag] = 1)
+			
+			var _average = (DIVIDE(SUM([Total Calls post Training 6-9 Months]),13))
+			
+			RETURN DIVIDE(_average,care_homes)
+		lineageTag: 02002675-2517-41da-ad59-7100a484a4fc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home post Training 9-12 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[12 months flag] = 1)
+			
+			var _average = (DIVIDE(SUM([Total Calls post Training 9-12 Months]),13))
+			
+			RETURN DIVIDE(_average,care_homes)
+		lineageTag: 2ba31cc3-efb1-4fe6-86fb-faab40cf5556
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home pre Training 0-3 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[Care home training flag] = "Have had training")
+			
+			 RETURN CALCULATE(SUM([Total Calls pre Training 3 Months]) / 13 / care_homes)
+		lineageTag: c17629f7-4998-45d0-95a1-41f0cb8411c4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home pre Training 3-6 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[Care home training flag] = "Have had training")
+			
+			 RETURN CALCULATE(SUM([Total Calls pre Training 6 Months]) / 13 / care_homes)
+		lineageTag: c0727a8a-dec6-419d-a666-f0154f9586be
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home pre Training 6-9 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[Care home training flag] = "Have had training")
+			
+			 RETURN CALCULATE(SUM([Total Calls pre Training 9 Months]) / 13 / care_homes)
+		lineageTag: eb3052d0-73ba-4f20-a398-a573d2bd819c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Calls per Week per Care Home pre Training 9-12 months measure' =
+			
+			
+			var care_homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[Care home training flag] = "Have had training")
+			
+			 RETURN CALCULATE(SUM([Total Calls pre Training 9-12 Months]) / 13 / care_homes)
+		lineageTag: dd3b06fd-1e31-4d16-b4e5-78eeab2295df
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Daily Calls per Care Home with Training' = ```
+			
+			//var max_date = DATE(2024,12,31)
+			//var min_date_1 = DATE(2024,01,01)
+			var calls = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 
+			//'SWAST Calls'[SWAST_call_date] < max_date, 
+			'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls",
+			//'SWAST Calls'[SWAST_call_date] > min_date_1,
+			'CQC Final'[Care home training flag] = "Have had training") / 365
+			var homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[Care home training flag] = "Have had training")
+			RETURN 
+			calls / homes
+			```
+		formatString: 0.0000
+		lineageTag: 9a961810-13a4-4206-874a-4c8394bcd9b3
+
+	measure 'Average Daily Calls per Care Home without Training' = ```
+			
+			//var max_date = DATE(2024,12,31)
+			//var min_date_1 = DATE(2024,01,01)
+			var calls = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 
+			//'SWAST Calls'[SWAST_call_date] < max_date, 
+			'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls",
+			//'SWAST Calls'[SWAST_call_date] > min_date_1,
+			'CQC Final'[Care home training flag] = "Have not had training") / 365
+			var homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]),'CQC Final'[Care home training flag] = "Have not had training", 'Care Home Type'[Care Home Type] <> "Closed")
+			RETURN 
+			calls / homes
+			```
+		formatString: 0.0000
+		lineageTag: c730ec4a-92f1-47cf-959d-3592ae0aab8b
+
+	column Aligned_PCN
+		dataType: string
+		lineageTag: b97d2b81-9350-4702-851a-d450615e5fed
+		summarizeBy: none
+		sourceColumn: Aligned_PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bed_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 3c838fd2-5e60-4fb1-b4aa-f563bc16ae49
+		summarizeBy: sum
+		sourceColumn: Bed_count
+
+		annotation SummarizationSetBy = User
+
+	column Latest_CQC_rating
+		dataType: string
+		lineageTag: 8e543972-9ef3-44a7-a797-c67b0461c615
+		summarizeBy: none
+		sourceColumn: Latest_CQC_rating
+
+		annotation SummarizationSetBy = Automatic
+
+	column Assigned_name
+		dataType: string
+		lineageTag: 1147de7a-8246-4fbc-b5d2-ec6ed420a156
+		summarizeBy: none
+		sourceColumn: Assigned_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Capacity Tracker Beds'
+		dataType: int64
+		lineageTag: c6e6bb5d-a5c2-4936-95e1-83c91b79f679
+		summarizeBy: sum
+		sourceColumn: Capacity Tracker Beds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CQC_beds
+		dataType: int64
+		formatString: 0
+		lineageTag: e8601220-9d56-451a-aa61-5b10a0374c6a
+		summarizeBy: sum
+		sourceColumn: CQC_beds
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location ID'
+		dataType: string
+		lineageTag: 1fceeb9f-d967-4c4b-aef6-2b87038ad435
+		summarizeBy: none
+		sourceColumn: Location ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Training datekey' = ```
+			
+			SWITCH(TRUE(),
+			'CQC Final'[Assigned_name] = "Ambleside", 20240307,
+			'CQC Final'[Assigned_name] = "Ashchurch View", 20250305,
+			'CQC Final'[Assigned_name] = "Astell", 20240723,
+			'CQC Final'[Assigned_name] = "Avalon Residential Home", 20240723,
+			'CQC Final'[Assigned_name] = "Badgeworth Court Care Centre", 20231130,
+			'CQC Final'[Assigned_name] = "Bafford House", 20250212,
+			'CQC Final'[Assigned_name] = "Bay Tree Court Care Centre", 20240823,
+			'CQC Final'[Assigned_name] = "Bramble House", 20231017,
+			'CQC Final'[Assigned_name] = "Bredon View", 20241008,
+			'CQC Final'[Assigned_name] = "Brockworth House Care Centre", 20240723,
+			'CQC Final'[Assigned_name] = "Castleford House Nursing Home", 20231116,
+			'CQC Final'[Assigned_name] = "Cavendish Care Home", 20240124,
+			'CQC Final'[Assigned_name] = "Chargrove Lawn", 20241008,
+			'CQC Final'[Assigned_name] = "Charlton Kings Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Chaxhill Hall", 20240124,
+			'CQC Final'[Assigned_name] = "Cotswold House Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Edwardstow Court Care Centre", 20231121,
+			'CQC Final'[Assigned_name] = "Euroclydon Nursing Home", 20231116,
+			'CQC Final'[Assigned_name] = "Faithful House ", 20250129,
+			'CQC Final'[Assigned_name] = "Four Seasons", 20231121,
+			'CQC Final'[Assigned_name] = "Guild House Residential Home", 20240124,
+			'CQC Final'[Assigned_name] = "Highborder Lodge", 20240207,
+			'CQC Final'[Assigned_name] = "Holly Oak Care Centre", 20240207,
+			'CQC Final'[Assigned_name] = "Horton House Residential Care Home", 20240124,
+			'CQC Final'[Assigned_name] = "Hunters Care Centre", 20231023,
+			'CQC Final'[Assigned_name] = "Hyperion House", 20241211,
+			'CQC Final'[Assigned_name] = "Jubilee Lodge", 20250305,
+			'CQC Final'[Assigned_name] = "Kingsley House", 20231023,
+			'CQC Final'[Assigned_name] = "Lilleybrook Care Home", 20240307,
+			'CQC Final'[Assigned_name] = "Longhope Manor", 20240409,
+			'CQC Final'[Assigned_name] = "Magnolia House", 20231108,
+			'CQC Final'[Assigned_name] = "Mill House", 20240124,
+			'CQC Final'[Assigned_name] = "Minchinhampton Centre for the Elderly - Horsfall House", 20250129,
+			'CQC Final'[Assigned_name] = "Monkscroft Care Centre", 20231108,
+			'CQC Final'[Assigned_name] = "Moreton Hill Care Centre", 20240801,
+			'CQC Final'[Assigned_name] = "Nazareth House - Cheltenham", 20240723,
+			'CQC Final'[Assigned_name] = "Newlands Nursing Care Centre", 20231121,
+			'CQC Final'[Assigned_name] = "Nodens Manor Care Home", 20240409,
+			'CQC Final'[Assigned_name] = "Northfield House", 20240124,
+			'CQC Final'[Assigned_name] = "Northleach Court Care Home with Nursing", 20231213,
+			'CQC Final'[Assigned_name] = "Oak Tree Mews", 20231121,
+			'CQC Final'[Assigned_name] = "Oakhaven Residential Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Oldbury House Care Home", 20241024,
+			'CQC Final'[Assigned_name] = "OSJCT Grevill House", 20250305,
+			'CQC Final'[Assigned_name] = "OSJCT Henlow Court", 20231017,
+			'CQC Final'[Assigned_name] = "OSJCT Rodley House", 20240124,
+			'CQC Final'[Assigned_name] = "Park View Gloucester", 20240823,
+			'CQC Final'[Assigned_name] = "Parton House", 20241008,
+			'CQC Final'[Assigned_name] = "Pine Tree Court Care Home", 20240823,
+			'CQC Final'[Assigned_name] = "Redlands Acre", 20241008,
+			'CQC Final'[Assigned_name] = "Regency Retirement Home", 20240207,
+			'CQC Final'[Assigned_name] = "Resthaven Nursing Home", 20231116,
+			'CQC Final'[Assigned_name] = "Royal Court", 20240312,
+			'CQC Final'[Assigned_name] = "Saintbridge House Nursing and Residential Home", 20231130,
+			'CQC Final'[Assigned_name] = "Scarlet House", 20241008,
+			'CQC Final'[Assigned_name] = "St Faith's Nursing Home", 20240312,
+			'CQC Final'[Assigned_name] = "St Paul's Residential Home", 20250129,
+			'CQC Final'[Assigned_name] = "Stratton Court", 20231130,
+			'CQC Final'[Assigned_name] = "Tewkesbury Fields", 20240307,
+			'CQC Final'[Assigned_name] = "The Elms", 20240409,
+			'CQC Final'[Assigned_name] = "The Hollies Nursing Home", 20240207,
+			'CQC Final'[Assigned_name] = "The Knoll", 20240307,
+			'CQC Final'[Assigned_name] = "The Laurels", 20231116,
+			'CQC Final'[Assigned_name] = "The Old Rectory", 20241211,
+			'CQC Final'[Assigned_name] = "The Old Vicarage Residential Home", 20241024,
+			'CQC Final'[Assigned_name] = "The Steppes Residential Care Home", 20240801,
+			'CQC Final'[Assigned_name] = "Thirlestaine Park Care Home", 20231130,
+			'CQC Final'[Assigned_name] = "Watermoor House", 20240409,
+			'CQC Final'[Assigned_name] = "Wentworth Court Care Home", 20240801,
+			'CQC Final'[Assigned_name] = "Westbourne Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Westgreen House", 20240207,
+			'CQC Final'[Assigned_name] = "Whittington House Nursing Home", 20250129,
+			'CQC Final'[Assigned_name] = "Windsor Street Care Centre", 20231116,
+			'CQC Final'[Assigned_name] = "Winslow House", 20231121,
+			'CQC Final'[Assigned_name] = "Woodstock Nursing Home", 20241024,
+			'CQC Final'[Assigned_name] = "Yercombe (Gloucestershire) Trust", 20231017,
+			'CQC Final'[Assigned_name] = "GCC Daycentre (chelt)", 20231213,
+			'CQC Final'[Assigned_name] = "GCC Daycentre (Tewks)", 20240207,
+			
+			
+			BLANK())
+			
+			
+			```
+		formatString: 0
+		lineageTag: 120c73bf-3247-4d7c-b991-b50c041f71ac
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care home training flag' = IF('CQC Final'[Training datekey] = BLANK(), "Have not had training", "Have had training")
+		lineageTag: c40c6a66-b6c5-4137-8780-ae3a4002f935
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Training date' = ```
+			DATE(LEFT([Training datekey],4),MID([Training datekey],5,2),RIGHT([Training datekey],2))
+			
+			```
+		formatString: Short Date
+		lineageTag: a74fb346-a6b9-4071-9aaa-8ae15bfa0f82
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: da0d994f-8d1b-4c66-a3aa-555a94c8f317
+			defaultHierarchy: LocalDateTable_40a815c9-005c-4ad1-bdb9-9f1f7343422d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Day post Training' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		formatString: 0.000
+		lineageTag: cba4bbe2-7e79-4471-9231-bac7dd486fcb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Day pre Training' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date)
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		formatString: 0.000
+		lineageTag: 645cb350-3983-4a49-8b22-e0adce69346c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '12 months pre training' = ```
+			EDATE('CQC Final'[Training date], -12)
+			
+			```
+		formatString: Short Date
+		lineageTag: 296c5de2-94a1-4cf5-830f-5875abc0aa78
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: ad167a4b-4fc6-4acf-8a1a-5cca9ba016c9
+			defaultHierarchy: LocalDateTable_88a9ad35-2bee-4879-8393-4f8ff38f33b8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Pre & Post-Training Daily Call Comparison' = [Total Average Calls per Day post Training] - [Total Average Calls per Day pre Training]
+		formatString: 0.000
+		lineageTag: f9acae84-6893-41f8-bc64-d80c5cb792d8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days since Training' = ```
+			
+			var max_date = MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			
+			RETURN diff
+			
+			```
+		formatString: 0
+		lineageTag: 99028359-c190-4151-94fb-00c5d6ced06f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weeks since Training (12 months)' = ```
+			
+			var max_date =  MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = IF(DATEDIFF(min_date, max_date, WEEK) > 52, 52, DATEDIFF(min_date, max_date, WEEK))
+			
+			
+			RETURN diff
+			
+			
+			```
+		formatString: 0
+		lineageTag: 9a9272e6-007e-45ed-8401-bc49eb9776d0
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Week pre Training' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, WEEK)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date)
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		formatString: 0.000
+		lineageTag: 03984db5-8807-4419-9998-0f5f2115582f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Week post Training' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) --MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, WEEK)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date]  <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		formatString: 0.000
+		lineageTag: 94f6b0b7-d77d-4a86-b640-4e0519eeea7b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Pre & Post-Training Weekly Call Comparison' = [Total Average Calls per Week post Training] - [Total Average Calls per Week pre Training]
+		lineageTag: 18342bf4-fbdd-4ee2-800b-df5b4c59cecb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Calls pre Training' = ```
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date)
+			
+			```
+		formatString: 0
+		lineageTag: a4e9443c-ec11-4f80-8774-80dc585c7ee1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'fist call date' = ```
+			STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			
+			
+			```
+		formatString: General Date
+		lineageTag: 4b2b33a2-8ed2-4727-8fdf-86b6e32b88e8
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 94042109-3909-4c5f-a76e-f8cb268f0b6e
+			defaultHierarchy: LocalDateTable_ca65db83-fa6b-41bc-9557-b87d860a24dc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column select_min_date = if([fist call date] > [12 months pre training], [fist call date], [12 months pre training])
+		formatString: General Date
+		lineageTag: 7dd5443f-9628-4dbf-b9e3-bbd0741a817b
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 626ef825-c63d-4e81-a1e3-5a3cc9efb64a
+			defaultHierarchy: LocalDateTable_b4f61579-24dc-4fd4-a5e5-2ec72fcdbe3e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column SWAST_care_home_type
+		dataType: string
+		lineageTag: f6fab2a1-6d80-457c-8f10-af9aa53ae8b7
+		summarizeBy: none
+		sourceColumn: SWAST_care_home_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column '3 months since Training' = ```
+			
+			EDATE('CQC Final'[Training date], +3)
+			
+			
+			```
+		formatString: Short Date
+		lineageTag: 9f3ca2da-89dd-47eb-881d-537d85fd4c28
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: b2f5257d-b9a1-49f6-811b-a203e9321aee
+			defaultHierarchy: LocalDateTable_0fdeef5d-2fb0-48be-bc44-c91ce2f1b00a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Day post Training 3 months' =
+			
+			[Total Calls post Training 0-3 Months] / 90
+		lineageTag: 722f33c9-005d-4f4b-896b-524b81fecc27
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Calls post Training 0-3 Months' =
+			
+			
+			var max_date =  [3 months since Training]
+			var min_date = 'CQC Final'[Training date]
+			
+			var calc = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			
+			RETURN
+			
+			SWITCH(TRUE(),
+			[3 months flag] = 1 && calc <> BLANK(), calc,
+			[3 months flag] = 1 && calc = BLANK(), 0,
+			BLANK()
+			)
+		formatString: 0
+		lineageTag: 17ec71c1-1ca1-48c6-b897-9658bce060af
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '6 months since Training' =
+			
+			EDATE('CQC Final'[Training date], +6)
+		formatString: Short Date
+		lineageTag: 91f146a4-3fb3-40dd-9879-81b32786e1c1
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: c80a3754-346f-4764-9281-f4602cad5cf0
+			defaultHierarchy: LocalDateTable_ab6a32b4-1659-41bd-9982-6850bf965f12.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls post Training 3-6 Months' =
+			
+			
+			var max_date =  [6 months since Training]
+			var min_date = 'CQC Final'[3 months since Training]
+			
+			var calc = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			
+			RETURN
+			
+			SWITCH(TRUE(),
+			[6 months flag] = 1 && calc <> BLANK(), calc,
+			[6 months flag] = 1 && calc = BLANK(), 0,
+			BLANK()
+			)
+		formatString: 0
+		lineageTag: 2ee25100-be0a-4607-a409-ffa0183e0686
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Day post Training 6 months' =
+			
+			var max_date =  [6 months since Training]
+			var min_date = 'CQC Final'[3 months since Training]
+			var diff = 90
+			
+			RETURN [Total Calls post Training 3-6 Months] / diff
+		lineageTag: a3f0abeb-32b7-4dba-9613-c8a43b668b52
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '3 months flag' =
+			
+			IF([3 months since Training] <= MAX('SWAST Calls'[SWAST_call_date]) && 'CQC Final'[Care home training flag] = "Have had training",1,0)
+		formatString: 0
+		lineageTag: ff1d5594-3b17-4c60-aaf7-f2a602fd3a24
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '6 months flag' =
+			
+			IF([6 months since Training] <= MAX('SWAST Calls'[SWAST_call_date]) && 'CQC Final'[Care home training flag] = "Have had training",1,0)
+		formatString: 0
+		lineageTag: 84203b61-4df2-4af9-a933-1c6c2efc2027
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '9 months since training' =
+			
+			EDATE('CQC Final'[Training date], +9)
+		formatString: Short Date
+		lineageTag: a6906879-5d60-403c-87c8-323e046ba059
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: f0a074cd-a3bd-47d2-8312-44c29274c153
+			defaultHierarchy: LocalDateTable_e2c98bee-e2a6-483e-8a4a-01e145ae55fc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column '9 months flag' =
+			
+			IF([9 months since Training] <= MAX('SWAST Calls'[SWAST_call_date]) && 'CQC Final'[Care home training flag] = "Have had training",1,0)
+		formatString: 0
+		lineageTag: da7ed4d9-3fd6-4733-a60a-818948d81056
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Day post Training 9 months' =
+			
+			var max_date =  [9 months since Training]
+			var min_date = 'CQC Final'[6 months since Training]
+			var diff = 90
+			
+			 RETURN [Total Calls post Training 6-9 Months] / diff
+		lineageTag: f913076d-0e81-489f-8027-ee598ac4bea9
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Calls post Training 6-9 Months' = ```
+			
+			
+			var max_date =  [9 months since Training]
+			var min_date = 'CQC Final'[6 months since Training]
+			
+			var calc = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			
+			RETURN
+			
+			SWITCH(TRUE(),
+			[9 months flag] = 1 && calc <> BLANK(), calc,
+			[9 months flag] = 1 && calc = BLANK(), 0,
+			BLANK()
+			)
+			
+			
+			```
+		formatString: 0
+		lineageTag: ded41043-e8da-40ea-8afc-395d6cb716db
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Week post Training 6 months' =
+			
+			var max_date =  [6 months since Training]
+			var min_date = 'CQC Final'[3 months since Training]
+			var diff = 13
+			
+			RETURN [Total Calls post Training 3-6 Months] / diff
+		lineageTag: ba040e62-4c72-4a51-937b-7eb7cd863eca
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Week post Training 9 months' =
+			
+			var max_date =  [9 months since Training]
+			var min_date = 'CQC Final'[6 months since Training]
+			var diff = 13
+			
+			RETURN [Total Calls post Training 6-9 Months] / diff
+		lineageTag: f9e02c06-2f22-44f0-8b0d-f7ca8cf9393b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '3 months pre training' = ```
+			EDATE('CQC Final'[Training date], -3)
+			
+			```
+		formatString: General Date
+		lineageTag: c3a64e5a-6432-4258-8ace-0771b592d3e2
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 80afaec4-282d-4d25-a551-9baa5c33f488
+			defaultHierarchy: LocalDateTable_a1f84011-5719-47a1-9b31-184a4346641c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls pre Training 3 Months' = ```
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date = [3 months pre training]
+			
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] >= min_date)
+			
+			```
+		formatString: 0
+		lineageTag: 42493fc5-51df-4dae-b56b-eb38bc452823
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_CQC_Care_Home_Flag
+		dataType: string
+		lineageTag: 392ed55a-7824-4b75-9cf9-feef572293f5
+		summarizeBy: none
+		sourceColumn: Current_CQC_Care_Home_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OSJCT Flag' = CONTAINSSTRING('CQC Final'[Assigned_name], "OSJCT")
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7ccaa162-a336-4955-b03e-13b1adc92e8c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls post Training 9-12 Months' = ```
+			
+			
+			var max_date =  [12 months since Training]
+			var min_date = 'CQC Final'[9 months since Training]
+			
+			var calc = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			
+			RETURN
+			
+			SWITCH(TRUE(),
+			[12 months flag] = 1 && calc <> BLANK(), calc,
+			[12 months flag] = 1 && calc = BLANK(), 0,
+			BLANK()
+			)
+			
+			
+			```
+		formatString: 0
+		lineageTag: 86beeacd-18db-4cbe-8792-89ea3d6dcb68
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '12 months since training' =
+			
+			EDATE('CQC Final'[Training date], +12)
+		formatString: Short Date
+		lineageTag: 9382d175-f8f8-4149-b281-17a0023c7612
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 1c93fad3-b17a-4df4-9000-d7bacfb79b2b
+			defaultHierarchy: LocalDateTable_2e7ed943-6ee5-4334-89cf-56733765ef66.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column '12 months flag' =
+			
+			IF([12 months since training] <= MAX('SWAST Calls'[SWAST_call_date]) && 'CQC Final'[Care home training flag] = "Have had training",1,0)
+		formatString: 0
+		lineageTag: 5fedc9cd-d762-46dc-a4dc-181a32c974fb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Test = ```
+			
+			var max_date = [12 months since training] --MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN total_hours
+			--IF(
+			--total_hours / diff 
+			--= blank(), 0, total_hours / diff)
+			```
+		formatString: 0
+		lineageTag: 41c3e7b6-54ff-4301-9987-65eb9c1e969e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days since Training (12 month)' = ```
+			
+			var max_date = MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = IF(DATEDIFF(min_date, max_date, DAY) > 365, 365, DATEDIFF(min_date, max_date, DAY))
+			
+			RETURN diff
+			
+			```
+		formatString: 0
+		lineageTag: 813e80a2-6b46-491d-bbff-f13db82aadf8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '6 months pre training' = EDATE('CQC Final'[Training date], -6)
+		formatString: General Date
+		lineageTag: b87f06e3-a0ed-402b-8f10-41fcf00aaf13
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: e781ed03-a3d4-46f7-8b50-be83ccbf45c0
+			defaultHierarchy: LocalDateTable_66f30845-b8f8-497b-82bc-336a5350fa3f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column '9 months pre training' = EDATE('CQC Final'[Training date], -9)
+		formatString: General Date
+		lineageTag: 94df5059-1bcc-4f82-aa69-5331e5662adf
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 52180afc-7103-4063-ab26-9754cb7d7b76
+			defaultHierarchy: LocalDateTable_f857195e-55b9-4d8c-b5cb-aedd427bc2d5.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls pre Training 6 Months' = ```
+			
+			var max_date = [3 months pre training]
+			var min_date = [6 months pre training]
+			
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] >= min_date)
+			
+			```
+		formatString: 0
+		lineageTag: 8e2b581e-0d4e-4119-a723-cb1827913957
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls pre Training 9 Months' = ```
+			
+			var max_date = [6 months pre training]
+			var min_date = [9 months pre training]
+			
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] >= min_date)
+			
+			```
+		formatString: 0
+		lineageTag: 29de382c-9dbe-4933-9db6-bda0fb97ec81
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls pre Training 9-12 Months' = ```
+			
+			var max_date = [9 months pre training]
+			var min_date = [12 months pre training]
+			
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] >= min_date)
+			
+			```
+		formatString: 0
+		lineageTag: 41e91455-c3c8-454e-bba1-c88687a1458f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Months since Training' = ```
+			
+			var max_date = MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			return SWITCH(TRUE(),
+			diff < 91 && diff > 0, "0-3 months",
+			diff < 181 && diff > 90, "3-6 months",
+			diff < 271 && diff > 180, "6-9 months",
+			diff < 361 &&diff > 270, "9-12 months",
+			diff > 361, "12 months",
+			"error")
+			
+			```
+		lineageTag: 883d03d3-6a59-4a95-87d8-e4a9f9d3b78e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Calls post Training' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var calls = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN IF(calls = BLANK(),0,calls)
+			
+			```
+		formatString: 0
+		lineageTag: 57f7c83d-745a-4a8d-8a76-bf4772572a0b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Week post Training 3 months' =
+			
+			var diff = 13
+			 return [Total Calls post Training 0-3 Months] / diff
+		lineageTag: 93b5948e-37b4-4944-b3e3-a77052bcea67
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (See & Convey)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Outcome] = "See & Convey")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: bae5ebb5-d418-4a44-8427-57a7725512be
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (See & Convey)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Outcome] = "See & Convey")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 80a10e16-d844-4594-a762-086b69bba8c2
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (See & Convey)' = [Total Average Calls per Day post Training (See & Convey)] - [Total Average Calls per Day pre Training (See & Convey)]
+		lineageTag: 49f5d9c4-8d2f-40d5-8e81-c3a96f95178c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (See & Treat)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Outcome] = "See & Treat")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 82b9ba90-79a9-4e40-8cf5-f7e2e0e2c342
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (See & Treat)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Outcome] = "See & Treat")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: 7d610f62-2de1-4304-9e23-ae0c75f200e5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (See & Treat)' = [Total Average Calls per Day post Training (See & Treat)] - [Total Average Calls per Day pre Training (See & Treat)]
+		lineageTag: 03e7df39-d635-48d8-8583-3a5cc1fa85f5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (Hear & Treat)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Outcome] = "Hear & Treat")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: f896e3a7-c09c-4a8a-942a-c230f7386ffa
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Hear & Treat)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Outcome] = "Hear & Treat")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: e75fa693-2c14-4365-879d-0fcec69404a1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Hear & Treat)' = [Total Average Calls per Day post Training (Hear & Treat)] - [Total Average Calls per Day pre Training (Hear & Treat)]
+		lineageTag: 34b45ee3-c34a-439f-a867-f69c2840b1ed
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (Category 1)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Incident_Colour] = "Category 1")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 7b50761b-e342-469f-92c4-e149275658d4
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Category 1)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Incident_Colour] = "Category 1")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: 9a50a935-043b-4c69-b404-61e6fbfd22b4
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Category 1)' = [Total Average Calls per Day post Training (Category 1)] - [Total Average Calls per Day pre Training (Category 1)]
+		lineageTag: dbb04082-3005-46d5-a4e4-4c6c49c8f64e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (Category 2)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Incident_Colour] = "Category 2")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: ac14d0a2-1df5-4872-98f0-8ad03f685d63
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Category 3)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Incident_Colour] = "Category 3")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: 27fbd5c9-c57f-4a6e-9f58-2800ceae8a44
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Category 2)' = [Total Average Calls per Day post Training (Category 2)] - [Total Average Calls per Day pre Training (Category 2)]
+		lineageTag: dcff75b3-6792-4ffc-ab06-3d80689f85aa
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Average Calls per Day post Training (Category 3)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Incident_Colour] = "Category 3")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 48ab1bfb-44cb-4df1-bb87-cd43b980b0a0
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Category 3)' = [Total Average Calls per Day post Training (Category 3)] - [Total Average Calls per Day pre Training (Category 3)]
+		lineageTag: 0984730f-737f-498d-b225-ee4dbd76b608
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Category 2)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Incident_Colour] = "Category 2")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: a0b887fb-98ab-40fb-b832-2b230fffda20
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Category 4)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Incident_Colour] = "Category 4")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: 7d55c272-8544-4835-800b-565402723729
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (Category 4)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Incident_Colour] = "Category 4")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: ce4a7ec4-ba59-4247-8391-6c16169100f4
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Category 4)' = [Total Average Calls per Day post Training (Category 4)] - [Total Average Calls per Day pre Training (Category 4)]
+		lineageTag: 267eacb1-cfa8-4e1b-aeb9-14989a75dd93
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (Category 5)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Incident_Colour] = "Category 5")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 083e1ae1-6658-4b41-98d5-01a1a05d6707
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Category 5)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Incident_Colour] = "Category 5")
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: 0464fadc-967f-4f7b-ba6d-004327f52232
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Category 5)' = [Total Average Calls per Day post Training (Category 5)] - [Total Average Calls per Day pre Training (Category 5)]
+		lineageTag: b5bf8f89-8df5-4cc3-946b-dcc26f44913d
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day post Training (Other Category Type)' = ```
+			
+			var max_call = MAX('SWAST Calls'[SWAST_call_date])
+			var max_date = IF(DATEDIFF('CQC Final'[Training date], max_call,day) <367, max_call, [12 months since training]) 
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date && 'SWAST Calls'[SWAST_call_date] <= max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[Incident_Colour] IN {"HCP Level 3", "HCP Level 4", "IFT Level 3", "IFT Level 4"})
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 725863bb-cb79-48d8-bb6a-d6ee30826a91
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Average Calls per Day pre Training (Other Category Type)' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date, 'SWAST Calls'[Incident_Colour] IN {"HCP Level 3", "HCP Level 4", "IFT Level 3", "IFT Level 4"})
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		lineageTag: d91cccd1-8412-4bf0-a6b6-84e238f4c38b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Pre & Post-Training Daily Call Comparison (Other Category Type)' = [Total Average Calls per Day post Training (Other Category Type)] - [Total Average Calls per Day pre Training (Other Category Type)]
+		lineageTag: c7c281b4-6e06-4733-a28d-0c04faa48ae8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Average Daily Calls Jan-24 to Dec-24' = ```
+			
+			var max_date = DATE(2024,12,31)
+			var min_date_1 = DATE(2024,01,01)
+			var calls = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > min_date_1) / 365
+			var homes = CALCULATE(DISTINCTCOUNT('CQC Final'[Assigned_name]))
+			RETURN calls / homes
+			
+			```
+		formatString: 0.000
+		lineageTag: 478ac8a7-f498-4133-acf8-b55d60d1013e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Average Daily Calls Jan-23 to Dec-23' = ```
+			
+			var max_date = DATE(2023,12,31)
+			var min_date_1 = DATE(2023,01,01)
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > min_date_1) / 365
+			
+			```
+		lineageTag: 28c3205f-376a-424e-80ba-0b7de8907a56
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Average Daily Calls Difference 2024 vs 2023' = 'CQC Final'[Average Daily Calls Jan-24 to Dec-24] - 'CQC Final'[Average Daily Calls Jan-23 to Dec-23]
+		lineageTag: d702787a-9eb5-4ec8-9d26-7fe062943b81
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'CQC Final' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[CareHomes].[tbl14_CareHomeCQCAlignmentFinal]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

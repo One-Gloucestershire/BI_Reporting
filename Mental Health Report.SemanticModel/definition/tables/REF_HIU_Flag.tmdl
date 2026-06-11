@@ -1,0 +1,33 @@
+table REF_HIU_Flag
+	lineageTag: 2f4c1529-8d32-419c-a9a1-41e1a0ab3a6d
+
+	column Current_HIU_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: b1b1db28-6b78-401c-a304-f459ab2e9ac4
+		summarizeBy: none
+		sourceColumn: Current_HIU_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_HIU_flag_Description
+		dataType: string
+		lineageTag: caa5238d-b202-4828-b3c1-3982586c98c4
+		summarizeBy: none
+		sourceColumn: Current_HIU_flag_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_HIU_Flag = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select distinct Current_HIU_flag ,#(lf)[Current_HIU_flag_Description] = Case when Current_HIU_flag = 1 then 'Yes' else 'No' END#(tab)#(lf)from PowerBI_Reporting.UrgentCare.tbl01_ECDS#(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

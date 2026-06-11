@@ -1,0 +1,439 @@
+table Query1
+	lineageTag: f0020c98-5734-4305-907a-44e85d2bf763
+
+	measure 'Activity Rate per 1000 Yearly' =
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Query1'[counter] ))
+			VAR POP = CALCULATE ([Diagnosed Dementia 65+ Population]  , ALLEXCEPT ('Date Reference', 'Date Reference'[financial_year] ), 'Date Reference'[month_name] IN {"Apr"} )
+			
+			RETURN (Activity/POP*1000)
+		lineageTag: 2caa31a4-8839-446b-8fd8-2c342a4902d4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Activity Rate per 1000 Monthly' = ```
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Query1'[counter] ))
+			VAR POP = [Diagnosed Dementia 65+ Population] 
+			
+			RETURN (Activity/POP*1000)
+			```
+		lineageTag: 5940458e-c4c9-4370-8bb7-a629f0a19853
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Hospital admissions' = CALCULATE(SUM('Query1'[counter]), 'Query1'[activity] = "Hospital Admissions")
+		formatString: 0
+		lineageTag: 8028a0fc-f728-47da-b173-95d6c81dd3ff
+
+	measure 'A&E attendances' = CALCULATE(SUM('Query1'[counter]), 'Query1'[activity] = "A&E Attendances")
+		formatString: 0
+		lineageTag: d980febf-9a5b-452d-8b45-1c571e5d9cde
+
+	measure 'Activity graph parameter y-value' = ```
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Query1'[counter] ))
+			VAR POP_month = [Gloucestershire Dementia 65+ Population]
+			VAR POP_year = CALCULATE ([Gloucestershire Dementia 65+ Population], ALLEXCEPT ('Date Reference', 'Date Reference'[financial_year] ), 'Date Reference'[month_name] IN {"Apr"} )
+			
+			
+			VAR Year_or_month =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly])
+			
+			VAR rate_or_actual =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual])
+			
+			
+			RETURN IFERROR(if(Year_or_month = "monthly"
+			        && rate_or_actual = "Rate per 1000"
+			        ,Activity/POP_month*1000, 
+			
+			        if(Year_or_month = "yearly" 
+			        && rate_or_actual = "Rate per 1000",
+			        Activity/POP_year*1000,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Actual Activity"
+			        ,Activity, 
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Actual Activity"
+			        ,Activity
+			        
+			        ,1000)))),BLANK())
+			```
+		lineageTag: 159ffefa-4121-4629-aad9-247a2196c6b9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Activity reason graph title' = ```
+			
+			VAR reason = if(SELECTEDVALUE('Query1'[activity]) = "Emergency Hospital Admissions", "Emergency Hospital Admissions Reasons",
+			if(SELECTEDVALUE('Query1'[activity]) = "A&E Attendances", "A&E Attendance Reasons",
+			if(SELECTEDVALUE('Query1'[activity]) = "MIU Attendances", "MIU Attendance Reasons",
+			"Admission & Attendance Reasons")))
+			
+			VAR rate_or_actual = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual]
+			    )
+			
+			VAR timeframe = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly]
+			    )
+			
+			VAR yeartodate = IF(SELECTEDVALUE('YTD Reference'[YTD Description]) = "Year to Date", "ytd","not ytd")
+			
+			VAR activity_type = SELECTEDVALUE('Query1'[activity])
+			
+			RETURN 
+			IF ( rate_or_actual = "Actual Activity" && timeframe = "Yearly" && yeartodate = "not ytd", CONCATENATE("Top 5 "& reason & " - Yearly ", rate_or_actual ),
+			IF ( rate_or_actual = "Actual Activity" && timeframe = "Monthly" && yeartodate = "not ytd", CONCATENATE("Top 5 "& reason & " - Yearly ", rate_or_actual ),
+			IF ( rate_or_actual = "Rate per 1000" && timeframe = "Yearly" && yeartodate = "not ytd", CONCATENATE("Top 5 "& reason & " - Yearly ", rate_or_actual ),
+			IF ( rate_or_actual = "Rate per 1000" && timeframe = "Monthly" && yeartodate = "not ytd", CONCATENATE("Top 5 "& reason & " - Average Monthly ", rate_or_actual ),
+			
+			IF ( rate_or_actual = "Actual Activity" && timeframe = "Yearly" && yeartodate = "ytd", CONCATENATE("Top 5 "& reason & " (YTD) - Yearly ", rate_or_actual ),
+			IF ( rate_or_actual = "Actual Activity" && timeframe = "Monthly" && yeartodate = "ytd", CONCATENATE("Top 5 "& reason & " (YTD) - Yearly ", rate_or_actual ),
+			IF ( rate_or_actual = "Rate per 1000" && timeframe = "Yearly" && yeartodate = "ytd", CONCATENATE("Top 5 "& reason & " (YTD) - Yearly ", rate_or_actual ),
+			IF ( rate_or_actual = "Rate per 1000" && timeframe = "Monthly" && yeartodate = "ytd", "This selection does not produce data" ))))))))
+			
+			
+			
+			```
+		lineageTag: 45e27c81-b839-455b-9432-5c31aeb89f32
+
+	measure 'Activity graph title' = ```
+			
+			
+			VAR activity = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual]
+			    )
+			
+			VAR timeframe = SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly]
+			    )
+			
+			VAR activity_type = SELECTEDVALUE('Query1'[activity])
+			
+			//IF ( COUNTROWS ( activity ) = 1, CONCATENATE(activity & " - ", reason ))
+			
+			RETURN 
+			IF ( activity = "Actual Activity" && timeframe = "Yearly", CONCATENATE(activity_type & " ", activity & " - Yearly"  ),
+			IF ( activity = "Actual Activity" && timeframe = "Monthly", CONCATENATE(activity_type & " ", activity & " - Monthly"  ),
+			IF ( activity = "Rate per 1000" && timeframe = "Yearly", CONCATENATE(activity_type & " ", activity & " - Yearly" ),
+			IF ( activity = "Rate per 1000" && timeframe = "Monthly", CONCATENATE(activity_type & " ", activity & " - Monthly" )))))
+			
+			```
+		lineageTag: 160bb877-2448-453f-a997-8d9af77a58b6
+
+	measure 'Activity reason graph parameter y-value' = ```
+			
+			
+			VAR Activity = CALCULATE ( SUM ('Query1'[counter] ))
+			VAR POP_month = [Diagnosed Dementia 65+ Population] 
+			VAR POP_year = CALCULATE ( [Diagnosed Dementia 65+ Population] , ALLEXCEPT ('Date Reference', 'Date Reference'[financial_year] ), 'Date Reference'[month_name] IN {"Apr"} )
+			
+			VAR yeartodate = IF(SELECTEDVALUE('YTD Reference'[YTD Description]) = "Year to Date", "ytd","not ytd")
+			
+			VAR Year_or_month =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Yearly Parameter', 'Month or Yearly Parameter'[Month or Yearly], 'Month or Yearly Parameter'[Month or Yearly Fields] ),
+			        'Month or Yearly Parameter'[Month or Yearly])
+			
+			VAR rate_or_actual =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Rate or Actual Parameter', 'Rate or Actual Parameter'[Rate or Actual], 'Rate or Actual Parameter'[Parameter Fields] ),
+			        'Rate or Actual Parameter'[Rate or Actual])
+			
+			
+			RETURN if(Year_or_month = "monthly"
+			        && rate_or_actual = "Rate per 1000"
+			        && yeartodate = "not ytd"
+			        ,Activity/POP_month*1000, 
+			
+			        if(Year_or_month = "yearly" 
+			        && rate_or_actual = "Rate per 1000"
+			        && yeartodate = "not ytd",
+			        Activity/POP_year*1000,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Actual Activity"
+			        && yeartodate = "not ytd"
+			        ,Activity, 
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Actual Activity"
+			        && yeartodate = "not ytd"
+			        ,Activity,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Rate per 1000"
+			        && yeartodate = "ytd"
+			        ,BLANK(),
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Rate per 1000"
+			        && yeartodate = "ytd",
+			        Activity/POP_year*1000,
+			
+			        if(Year_or_month = "monthly"
+			        && rate_or_actual = "Actual Activity"
+			        && yeartodate = "ytd"
+			        ,Activity, 
+			
+			        if(Year_or_month = "yearly"
+			        && rate_or_actual = "Actual Activity"
+			        && yeartodate = "ytd"
+			        ,Activity
+			
+			        
+			        ,1000))))))))
+			```
+		lineageTag: bbcc8e06-a5e1-41bb-aaba-4c2f57d2b0d5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ytd_m = IF(SELECTEDVALUE('YTD Reference'[YTD Description]) = "Year to Date", "ytd","not ytd")
+		lineageTag: 48590ec3-2803-44dd-b664-74fd484b112c
+
+	measure 'Current vs prior month activity' = ```
+			
+			
+			VAR current_month   = CALCULATE([Activity reason graph parameter y-value],'Month reference'[Month flag] = "Current Month")  
+			VAR prior_month     = CALCULATE([Activity reason graph parameter y-value],'Month reference'[Month flag] = "Prior Month")
+			
+			RETURN current_month - prior_month
+			```
+		lineageTag: 35d7e258-4a99-415a-bc24-cf3fae5f9622
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Activity comparison arrow' = IF([Current vs prior month activity] > 0, UNICHAR(9650), UNICHAR(9660))
+		lineageTag: 436f3f2a-832f-456b-bcac-9ef269687034
+
+	measure 'Most common activity reason title' = ```
+			
+			
+			VAR activity_type = SELECTEDVALUE('Query1'[activity])
+			
+			RETURN 
+			IF ( activity_type = "A&E Attendances", "Most Common A&E Attendance",
+			IF ( activity_type = "Hospital Admissions", "Most Common Hospital Admission","Error")
+			)
+			```
+		lineageTag: e55a4316-2286-4fe6-8b77-acdddb3ef75f
+
+	measure 'Gloucestershire ICB Activity' = CALCULATE([Activity graph parameter y-value], ALL('GP Reference'))
+		lineageTag: 7cb599da-ae90-441b-be30-d9429fa35d9b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Gloucestershire ICB Average LoS' = CALCULATE(AVERAGE(Query1[Length_of_stay]), ALL('GP Reference'))
+		lineageTag: 6f1e5f0f-ac43-47b8-95c7-b9acd63dd83f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average LoS' = CALCULATE(AVERAGE(Query1[Length_of_stay]))
+		lineageTag: 1fd702fa-76e2-494a-b72c-7c7aa542221d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 9f4cf8ea-7e61-4e6a-8fd6-a5e77282449b
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_stay
+		dataType: double
+		lineageTag: 98368297-0f9c-459f-ae44-a099965167bc
+		summarizeBy: sum
+		sourceColumn: Length_of_stay
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column activity_reason
+		dataType: string
+		lineageTag: fb4f98b9-55dd-4fac-91a5-47aee08af0a7
+		summarizeBy: none
+		sourceColumn: activity_reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Code
+		dataType: string
+		lineageTag: 88fa64b5-2445-4c3a-a73a-6941939de44a
+		summarizeBy: none
+		sourceColumn: GP_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column activity
+		dataType: string
+		lineageTag: fede8a9f-4346-4378-adbc-bed7e48ff515
+		summarizeBy: none
+		sourceColumn: activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Activity YTD' =
+			
+			VAR current_month = MONTH('Query1'[activity_date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Query1'[activity_date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 8ce46c97-a04f-4f86-a0a8-0d26da7e8f36
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current year_month' = CONCATENATE(YEAR(MAX('Query1'[activity_date])),MONTH(MAX('Query1'[activity_date])))
+		lineageTag: 0d0f3311-dcec-47ec-b186-f7b2fd25cb12
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Date year_month' = CONCATENATE(YEAR('Query1'[activity_date]),MONTH('Query1'[activity_date]))
+		lineageTag: eab031cf-7c83-4a67-ba55-f59c08c87d56
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current month flag' = IF(Query1[Current year_month] = 'Query1'[Date year_month],"Current Month",if(Query1[Prior year month] = 'Query1'[Date year_month], "Prior Month", "Other Month"))
+		lineageTag: 2595f09c-b76b-4c58-9c02-af028897e242
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Prior year month' =
+			
+			
+			VAR prior_month = EOMONTH(max('Query1'[activity_date]), -1)
+			
+			RETURN CONCATENATE(YEAR(prior_month),MONTH(prior_month))
+		lineageTag: a6adc208-2476-43a3-8ebe-852295f7f163
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Prior month flag' = IF(Query1[Prior year month] = 'Query1'[Date year_month],1,0)
+		formatString: 0
+		lineageTag: 92ad7c1d-f8c6-4b35-94cb-1588fd508d3c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Last 12 Months' = ```
+			
+			
+			VAR max_month = MAX('Query1'[activity_date])
+			VAR min_month = max_month - 365
+			return if(Query1[activity_date] <= max_month && Query1[activity_date] >= min_month, "Last 12 Months", "Older than 1 Year")
+			
+			```
+		lineageTag: 0d997084-3b4c-4b51-b141-0f3837a69931
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_number
+		dataType: string
+		lineageTag: 0f88b0a0-eb4c-4f95-a063-42f80b6b2cd4
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column unique_ID
+		dataType: string
+		lineageTag: 64051223-be5b-42a3-918a-7eb5a7e1923e
+		summarizeBy: none
+		sourceColumn: unique_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column activity_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 14e0c7e4-7bdb-4ed2-8b04-6e35519ba32f
+		summarizeBy: none
+		sourceColumn: activity_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e155f45a-a996-4a6d-86ea-2bcb1ef7336e
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: cc70912b-006f-497f-a912-711fd5661be6
+			defaultHierarchy: LocalDateTable_7f1aa72b-edcf-44f3-92c7-501b9b6d1430.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Activity reason (shortened)' = CONCATENATE(LEFT(Query1[activity_reason],20),"...")
+		lineageTag: 84c240f4-7c39-4e0e-a839-bfc23eb37ac5
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Query1 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="select * from [powerbi_reporting].[Dementia].[tbl02_Dementia_Activity]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

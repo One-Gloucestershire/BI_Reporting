@@ -1,0 +1,29 @@
+table [AsthmaDerived]
+	lineageTag: 0a37f155-9e20-4c30-83d4-35ddb5ec6a42
+
+	column [AsthmaDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: ad350e61-93b5-4950-97a5-29176724ddec
+		summarizeBy: none
+		sourceColumn: [AsthmaDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ashta desc' = if('[AsthmaDerived]'[[AsthmaDerived]]] = 1, "Has Asthma", "Does not have Asthma")
+		lineageTag: 4c102f97-50ad-42d2-98c2-0bd83eeeca6f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [AsthmaDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[AsthmaDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[AsthmaDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

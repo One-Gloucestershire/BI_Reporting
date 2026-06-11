@@ -1,0 +1,24 @@
+table REF_EFI
+	lineageTag: 937299b1-4de3-438a-9823-57ccb0168db1
+
+	column efi_category_current
+		dataType: string
+		lineageTag: 5059a1f5-3a56-463c-b29a-872ff4fcc0cc
+		summarizeBy: none
+		sourceColumn: efi_category_current
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_EFI = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "DSCRO_NATIONAL_LOOKUPS", [Query="select distinct efi_category_current#(lf)from PowerBI_Reporting.Frailty.tbl01_Frail_Patient_Deficits#(lf)where efi_category_current IS NOT NULL #(lf)#(lf)UNION #(lf)#(lf)select distinct efi_category_on_referral#(lf)from PowerBI_Reporting.community.tbl02_CSDS_Referrals#(lf)where efi_category_on_referral is not null #(lf)#(lf)union #(lf)#(lf)select distinct efi_category#(lf)FROM PowerBI_Reporting.AgeingWell.tbl02_Proactive_Whiteboard_Registered_Population_Over_Time#(lf)where efi_category is not null #(lf)#(lf)union #(lf)#(lf)select distinct efi_category_on_contact#(lf)from PowerBI_Reporting.community.tbl03_CSDS_Contacts#(lf)where efi_category_on_contact is not null #(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

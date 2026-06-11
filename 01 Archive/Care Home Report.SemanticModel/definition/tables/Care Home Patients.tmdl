@@ -1,0 +1,136 @@
+table 'Care Home Patients'
+	lineageTag: cf588f37-faa0-488b-9ba5-6dae42293a79
+
+	measure 'Care Home Population Per Month' = ```
+			
+			 
+			VAR CurrentDate = MAX('Date table (pop over time)'[Date])
+			 
+			RETURN
+			    CALCULATE(
+			        COUNT('Care Home Patients'[PseudoNHSNumber]),
+			        'Care Home Patients'[Care_home_date] <= CurrentDate
+			        ,'Care Home Patients'[End_date] >= CurrentDate)
+			    
+			    
+			```
+		formatString: 0
+		lineageTag: 0ec50813-4562-40f1-8861-fd2fcc0decc7
+
+	measure 'Population Trend Line' = ```
+			
+			 
+			VAR Temp_Table =
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Table'[financial_year], 'Date Table'[financial_month],
+			                        
+			                         'Date Table'[month_name], 'Date Table'[month_number] ),
+			            "Value_x", 'Date Table'[month_number],
+			            "Value_y", [Care Home Population Per Month]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			 
+			VAR LINESTX_Table =
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope =
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept =
+			    MAXX ( LINESTX_Table, [Intercept] )
+			 
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Table'[month_number] ),
+			        Intercept + Slope * 'Date Table'[month_number]
+			    )
+			```
+		lineageTag: d78abdc5-54b6-4a08-9c60-9e11ede70b57
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Care Home Population Over Time' = COUNT('Dementia Patients'[pseudo_nhs_number])
+		formatString: 0
+		lineageTag: 0000c581-3053-43fe-80c4-2772babf77ac
+
+	measure CurrentDate = MAX('Date table (pop over time)'[Date])
+		formatString: General Date
+		lineageTag: b0efda40-721a-4f31-999e-a951e2fc2ffc
+
+	column Care_home_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 304b923c-4633-4c54-8a15-e520afd2211c
+		summarizeBy: none
+		sourceColumn: Care_home_date
+
+		variation Variation
+			isDefault
+			relationship: 6eb12f0a-f9e7-493c-97df-64620263fc84
+			defaultHierarchy: LocalDateTable_4f56a979-4754-4128-b786-49905f878a68.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 75a584bb-457b-4118-b408-add5826bf4b5
+		summarizeBy: none
+		sourceColumn: End_date
+
+		variation Variation
+			isDefault
+			relationship: e48b2eb3-de50-436d-be39-0fb6165f4357
+			defaultHierarchy: LocalDateTable_046de3f6-0c68-4ef4-9ba0-3b6b97358ded.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a63a307c-a7f9-4575-923c-937024fcc0c3
+		summarizeBy: sum
+		sourceColumn: Current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 8e2ef967-dea9-4f49-929e-dbaf3f4d13aa
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Age
+		dataType: int64
+		formatString: 0
+		lineageTag: a5552e57-ca9d-44c5-99cd-3106352b1598
+		summarizeBy: none
+		sourceColumn: Derived_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareProvider
+		dataType: string
+		lineageTag: 8253be05-aed2-4556-b5a7-48026f31347d
+		summarizeBy: none
+		sourceColumn: PrimaryCareProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Care Home Patients' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)select distinct#(lf)c.PseudoNHSNumber#(lf),Care_home_date#(lf),End_date#(lf),Current_patient_flag#(lf),[Derived_Age]#(lf),[PrimaryCareProvider]#(lf)#(lf)from PowerBI_Reporting.CareHomes.tbl01_Population [c]#(lf)#(lf)#(lf)left join #(lf)(#(lf)SELECT#(lf)[max_date] #(lf),[Derived_Age]#(lf),[PrimaryCareProvider]#(lf),[A].[Derived_NHS_Number]#(lf)#(lf)FROM#(lf)(#(lf)SELECT#(lf)[max_date] = MAX(changetimestamp)#(lf),[Derived_NHS_Number]#(lf)FROM#(lf)CCG_Reference.Population.vw_PDS_All#(lf)#(lf)WHERE [PrimaryCareProvider] IS NOT NULL#(lf)#(lf)GROUP BY#(lf)[Derived_NHS_Number]#(lf)) [A]#(lf)#(lf)LEFT JOIN CCG_Reference.Population.vw_PDS_All [B] ON [B].[Derived_NHS_Number] = [A].[Derived_NHS_Number] AND [B].[changetimestamp] = [A].[max_date]#(lf)#(lf)) #(lf)[p] on [p].[Derived_NHS_Number] = [c].[PseudoNHSNumber]#(lf)#(lf)where c.PseudoNHSNumber is not null#(lf)#(lf)order by #(lf)c.PseudoNHSNumber#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

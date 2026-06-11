@@ -1,0 +1,678 @@
+table 'SWAST All Years Falls'
+	lineageTag: 66be301b-33be-49d5-85b7-c422b43d4ea0
+
+	measure 'Number of Injury Falls (All Years)' = ```
+			
+			CALCULATE(
+				SUM('SWAST All Years Falls'[counter_column]),
+				'SWAST All Years Falls'[Incident_Colour] IN { "Category 1", "Category 2" } 
+			)
+			```
+		formatString: 0
+		lineageTag: 1f37b24f-1f3f-4676-b554-d6e55698482e
+
+	measure '% Non-Injury Calls (All Years)' =
+			
+			CALCULATE('SWAST All Years Falls'[Number of Injury Falls (All Years)])
+			/
+			SUM('SWAST All Years Falls'[counter_column])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 4df431ea-7ea6-478b-879a-7036d6f79f89
+
+	measure 'Average SWAST Calls per Day (All Years)' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Table'[DayMonthYear])),
+				CALCULATE(SUM('SWAST All Years Falls'[counter_column]))
+			)
+		formatString: 0.0
+		lineageTag: 1d8f5575-3bc8-4953-8298-ebcf9c778cd4
+
+	measure 'Non-injurious SWAST Calls' =
+			
+			CALCULATE(
+				SUM('SWAST All Years Falls'[counter_column]),
+				'SWAST All Years Falls'[Incident_Colour] IN {
+					"Category 4",
+					"Category 4 999",
+					"Category 3",
+					"Category 4 HCP 120",
+					"Category 5",
+					"HCP Level 3",
+					"HCP Level 4",
+					"IFT Level 3"
+				}
+			)
+		formatString: 0
+		lineageTag: 47b09694-e4e4-407e-97be-5f710a414638
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Average Non-Injurious SWAST Calls per Day (All Years)' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Table'[DayMonthYear])),
+				CALCULATE(
+				SUM('SWAST All Years Falls'[counter_column]),
+				'SWAST All Years Falls'[Incident_Colour] IN {
+					"Category 4",
+					"Category 4 999",
+					"Category 3",
+					"Category 4 HCP 120",
+					"Category 5",
+					"HCP Level 3",
+					"HCP Level 4",
+					"IFT Level 3"
+				}
+			)
+			)
+		lineageTag: 33a5b90a-3cf8-4a41-9d40-ffd356c20f3a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Previous year SWAT calls' = CALCULATE(sum('SWAST All Years Falls'[counter_column]),'SWAST All Years Falls'[SWAST year adjusted] = 'SWAST All Years Falls'[SWAST previous year])
+		formatString: 0
+		lineageTag: 4a140a84-4654-49d8-b64f-6f777976435f
+
+	measure 'Comparison Previous YTD all calls comparison' = CALCULATE(sum('SWAST All Years Falls'[counter_column]),'SWAST All Years Falls'[SWAST year adjusted] = 'SWAST All Years Falls'[SWAST previous year] && 'SWAST All Years Falls'[SWAST YTD] = "Year to Date")
+		formatString: 0
+		lineageTag: fd3c5f16-5bcd-4e6e-9d26-4621d51934fd
+
+	measure 'Current Year SWAST calls' = ```
+			CALCULATE(sum('SWAST All Years Falls'[counter_column]),'SWAST All Years Falls'[SWAST year adjusted] = 'SWAST All Years Falls'[SWAST current year])
+			
+			```
+		formatString: 0
+		lineageTag: 5aac9d9e-a4c9-412e-8fc4-077e5e46ba3d
+
+	measure '% Over/Under YTD Comparison SWAST Calls' = ('SWAST All Years Falls'[Current Year SWAST calls] - 'SWAST All Years Falls'[Comparison Previous YTD all calls comparison]) / 'SWAST All Years Falls'[Comparison Previous YTD all calls comparison]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 057d63d8-0a73-47b1-a8a4-8f889b24de6b
+
+	measure 'SWAST Calls Rate per 1000 Yearly' =
+			
+			VAR Activity = CALCULATE ( SUM ('SWAST All Years Falls'[counter_column]))
+			VAR POP = CALCULATE ('Practice Population'[April Population for Yearly Rate])
+			RETURN (Activity/POP*1000)
+		lineageTag: 2f9d268b-0e55-464d-8205-b7530e54adb9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SWAST Calls Rate per 1000 Monthly' =
+			
+			VAR Activity = CALCULATE ( SUM ('SWAST All Years Falls'[counter_column] ))
+			VAR POP = CALCULATE(SUM('Practice Population'[population]))
+			RETURN (Activity/POP*1000)
+		lineageTag: 54dac64f-af18-46df-b080-cfef8a41faaf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column incident_number
+		dataType: string
+		lineageTag: f341ae7e-aa4d-4aa4-9666-c7d53b995e73
+		summarizeBy: none
+		sourceColumn: incident_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column type
+		dataType: string
+		lineageTag: 01ffa92b-01df-49dd-be44-d10c97bdccf7
+		summarizeBy: none
+		sourceColumn: type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Incident_Colour
+		dataType: string
+		lineageTag: e675c822-b9f3-498f-bd05-dfc32c924789
+		summarizeBy: none
+		sourceColumn: Incident_Colour
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_Hospital_Attended
+		dataType: string
+		lineageTag: 75743df4-3e0e-4358-ac0e-567da977c2ed
+		summarizeBy: none
+		sourceColumn: First_Hospital_Attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: babba8bd-51d2-479e-ba96-68d69fd8c672
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_of_incident
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: aacad6f5-91b2-4b09-93b3-ed56237d6445
+		summarizeBy: none
+		sourceColumn: time_of_incident
+
+		variation Variation
+			isDefault
+			relationship: 3ad4fa39-2550-4009-a264-0609adff92e6
+			defaultHierarchy: LocalDateTable_750125b8-712f-4968-8d3a-e92f904681c3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column dateofincident
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1f999b51-8ae7-4151-94f3-bebf3c003895
+		summarizeBy: none
+		sourceColumn: dateofincident
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHSnumber
+		dataType: string
+		lineageTag: 25c99f3e-c557-4381-af84-562f25dae5e6
+		summarizeBy: none
+		sourceColumn: NHSnumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column symptom_group_chief_complaint
+		dataType: string
+		lineageTag: 4f4a40fd-b0a3-4b07-893b-f8253de9de9b
+		summarizeBy: none
+		sourceColumn: symptom_group_chief_complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column pathways_ampds_disposition
+		dataType: string
+		lineageTag: 109ec569-143e-4618-b672-c07e85339856
+		summarizeBy: none
+		sourceColumn: pathways_ampds_disposition
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome
+		dataType: string
+		lineageTag: f41ddb01-ac3d-43b2-be91-6daa6a73536c
+		summarizeBy: none
+		sourceColumn: outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_of_call
+		dataType: string
+		lineageTag: c26251e7-09a3-4de8-a91d-e8b3444066ee
+		summarizeBy: none
+		sourceColumn: month_of_call
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_bracket
+		dataType: string
+		lineageTag: 1b51fa43-04ab-459b-a586-dc7ddb74528a
+		summarizeBy: none
+		sourceColumn: age_bracket
+
+		annotation SummarizationSetBy = Automatic
+
+	column response_time_minutes
+		dataType: int64
+		formatString: 0
+		lineageTag: b7f0352b-a08d-4a0b-b127-63eca15bdbc1
+		summarizeBy: sum
+		sourceColumn: response_time_minutes
+
+		annotation SummarizationSetBy = Automatic
+
+	column response_time_hours
+		dataType: int64
+		formatString: 0
+		lineageTag: f55ee8be-25db-42b2-8b74-ce55410fbeab
+		summarizeBy: sum
+		sourceColumn: response_time_hours
+
+		annotation SummarizationSetBy = Automatic
+
+	column response_time_band
+		dataType: string
+		lineageTag: 29b0e738-e539-427a-abbd-e43f8f359d8a
+		summarizeBy: none
+		sourceColumn: response_time_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column hour_of_incident
+		dataType: string
+		lineageTag: 3006f1a9-cdd4-4c39-b0e7-14d9aaa1afe2
+		summarizeBy: none
+		sourceColumn: hour_of_incident
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day_of_week
+		dataType: string
+		lineageTag: b59212aa-b39d-4fb8-adff-76e098085817
+		summarizeBy: none
+		sourceColumn: Day_of_week
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_status
+		dataType: string
+		lineageTag: 22be3ff4-ac7e-4728-95af-71b865421e9f
+		summarizeBy: none
+		sourceColumn: dementia_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Residential_or_Nursing_home_Location_Name
+		dataType: string
+		lineageTag: fe851e0f-aa57-42e7-bd4c-050f4784a4e2
+		summarizeBy: none
+		sourceColumn: Residential_or_Nursing_home_Location_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWASFT Name'
+		dataType: string
+		lineageTag: 8ae85c7f-3c8b-4d46-b5e1-89d527d03df8
+		summarizeBy: none
+		sourceColumn: SWASFT Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Broad Type (confirmed)'
+		dataType: string
+		lineageTag: 11e7bdd9-d111-43d6-9842-2a155d703afb
+		summarizeBy: none
+		sourceColumn: Broad Type (confirmed)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Broad Type (old)'
+		dataType: string
+		lineageTag: e0e95a55-92cc-49e4-8f70-483f3aef0d84
+		summarizeBy: none
+		sourceColumn: Broad Type (old)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_status
+		dataType: string
+		lineageTag: dc826b15-14c6-493e-9698-aa21301c4486
+		summarizeBy: none
+		sourceColumn: Care_home_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column response_time_sec
+		dataType: int64
+		formatString: 0
+		lineageTag: 9046e882-d968-4460-ac9e-f757727b9206
+		summarizeBy: sum
+		sourceColumn: response_time_sec
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: e453c43c-83ad-4853-8aac-985a2bdc5259
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome_expanded
+		dataType: string
+		lineageTag: 4539feec-b205-4a2c-aa84-2a229595e4f5
+		summarizeBy: none
+		sourceColumn: outcome_expanded
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_Ward_Attended
+		dataType: string
+		lineageTag: c0d9a332-ec6e-4ac3-9834-dc411178abae
+		summarizeBy: none
+		sourceColumn: First_Ward_Attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column Conveyed_To_Ward_Type
+		dataType: string
+		lineageTag: b4990529-390b-411c-9eea-df90bd4b1a0c
+		summarizeBy: none
+		sourceColumn: Conveyed_To_Ward_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column refresh_date_new
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 44b73f6c-28d4-4ae9-9cbd-b94919afb8f8
+		summarizeBy: none
+		sourceColumn: refresh_date_new
+
+		variation Variation
+			isDefault
+			relationship: 38d1b5ce-4747-427c-a759-9985c8b938cd
+			defaultHierarchy: LocalDateTable_956e0c74-834d-49c8-a609-1124b4bc9e80.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter_column
+		dataType: int64
+		formatString: 0
+		lineageTag: f1c9e47a-e368-4404-ae22-1b095db0b4fa
+		summarizeBy: sum
+		sourceColumn: counter_column
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST max financial month' =
+			
+			VAR currmonth = MONTH(MAX('SWAST All Years Falls'[dateofincident]))
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+		formatString: 0
+		lineageTag: e42dda29-482b-4d88-8a70-c12a478b316f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST financial month' =
+			
+			VAR currmonth = MONTH('SWAST All Years Falls'[dateofincident])
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+		formatString: 0
+		lineageTag: 85a8f9fe-5304-4223-aeae-b9589c5e6e57
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST YTD' = IF('SWAST All Years Falls'[SWAST financial month] <= 'SWAST All Years Falls'[SWAST max financial month], "Year to Date", "Not Year to Date")
+		lineageTag: 86a8cc6f-81d4-4634-b0f5-a969fbc42525
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST current year' = ```
+			
+			VAR max_year = YEAR(MAX('SWAST All Years Falls'[dateofincident]))
+			VAR max_month = MONTH(MAX('SWAST All Years Falls'[dateofincident]))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR adjust_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			return adjust_year
+			
+			```
+		formatString: 0
+		lineageTag: b88397ba-5456-44b7-a46a-65346719ea6c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST year adjusted' = ```
+			if(
+			    'SWAST All Years Falls'[SWAST financial month] = 10, YEAR('SWAST All Years Falls'[dateofincident]) -1, 
+			    if('SWAST All Years Falls'[SWAST financial month]  = 11, YEAR('SWAST All Years Falls'[dateofincident]) -1, 
+			    if('SWAST All Years Falls'[SWAST financial month] = 12, YEAR('SWAST All Years Falls'[dateofincident]) -1, year('SWAST All Years Falls'[dateofincident]))))
+			
+			```
+		formatString: 0
+		lineageTag: db399eee-cc5c-4121-b356-de3985e020bb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST previous year' = ```
+			'SWAST All Years Falls'[SWAST current year]- 1
+			
+			```
+		formatString: 0
+		lineageTag: bf8c474e-8984-4dbb-adc5-d4f669f48641
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band_reference
+		dataType: string
+		lineageTag: bd885ec8-a486-4a03-a59b-55bde032ea86
+		summarizeBy: none
+		sourceColumn: age_band_reference
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Response_Target_1_Clock Start'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 13940437-50ba-43cf-b77c-41e74b5711d9
+		summarizeBy: none
+		sourceColumn: Response_Target_1_Clock Start
+
+		variation Variation
+			isDefault
+			relationship: 0d84336a-1599-477f-a0d9-bee704f25747
+			defaultHierarchy: LocalDateTable_51f92ded-f200-4615-9b3b-78813e16a201.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Response_Target_1_Clock Stop'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8603f873-5278-42d1-9284-cc0e03fc3790
+		summarizeBy: none
+		sourceColumn: Response_Target_1_Clock Stop
+
+		variation Variation
+			isDefault
+			relationship: a5431630-817f-4c59-a3b6-d72a648a450f
+			defaultHierarchy: LocalDateTable_11409519-b699-4f62-b7cc-df1dd7649249.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitted_flag_description
+		dataType: string
+		lineageTag: a7675960-7138-4ac1-ba63-1a2ed3a84144
+		summarizeBy: none
+		sourceColumn: admitted_flag_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column CDS_Unique_Identifier
+		dataType: string
+		lineageTag: 50011e80-0272-42c1-a44b-32a7137dcce6
+		summarizeBy: none
+		sourceColumn: CDS_Unique_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitted_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 52e948d1-a0ab-4ec6-81b6-fd5e74c99d72
+		summarizeBy: sum
+		sourceColumn: admitted_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Residential_or_Nursing_home_Location
+		dataType: string
+		lineageTag: da8bd4ef-5f26-4e6e-be1d-beeab0987edd
+		summarizeBy: none
+		sourceColumn: Residential_or_Nursing_home_Location
+
+		annotation SummarizationSetBy = Automatic
+
+	column care_home_status_ranking
+		dataType: int64
+		formatString: 0
+		lineageTag: 8f7ff812-f992-43dd-b9a4-61998b1e1cc7
+		summarizeBy: sum
+		sourceColumn: care_home_status_ranking
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ward
+		dataType: string
+		lineageTag: 4fad7fb3-dadc-4974-a822-78581e58a662
+		summarizeBy: none
+		sourceColumn: Ward
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 925b9e69-aaa3-493c-a8af-1b657a4ce8fa
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 0cbde27e-4f5a-4333-a7f9-e1b7b3d06103
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 4c65dd32-a212-4044-8158-fbf0ab17bb4f
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: ae1d8711-9092-4956-ba10-9269fa229438
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 48446f27-ad89-4690-a2f3-2d8ecbe0b3b7
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedEthnicityGroup
+		dataType: string
+		lineageTag: 1582a3e5-d08c-4886-b6e0-310a067e1105
+		summarizeBy: none
+		sourceColumn: DerivedEthnicityGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: cc058469-6040-4a13-8ed9-7e04f0352073
+		summarizeBy: sum
+		sourceColumn: MH_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_description
+		dataType: string
+		lineageTag: 5dfd3733-1b69-4c51-9b0b-6e4b800df7fc
+		summarizeBy: none
+		sourceColumn: MH_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: dda601c1-2bad-4af0-91dd-73789615e6e6
+		summarizeBy: sum
+		sourceColumn: LD_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_description
+		dataType: string
+		lineageTag: b31717c8-8049-4fd5-aa0a-d069d5790330
+		summarizeBy: none
+		sourceColumn: LD_description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'SWAST All Years Falls' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Falls].[tbl04_Falls_SWAST_All_Years]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,1416 @@
+table Front_page
+	lineageTag: 5e8e79ee-379f-4c3f-b090-a7b9db3110b7
+
+	measure 'Matching decision date columns' = IF(MAX(Front_page[Calculated Decision Date]) = MAX('28_days'[decisiondate]), 1,0)
+		formatString: 0
+		lineageTag: 60463f3b-8fd4-4eea-bea6-521f8c0eb557
+
+	measure 'Distinct count Client ID (FP)' = CALCULATE(DISTINCTCOUNT('Front_page'[clientid]))
+		formatString: 0
+		lineageTag: 221c4b22-d697-41bf-9955-5dd6e2f28616
+
+	measure 'Checklists _ Pos' = ```
+			CALCULATE (
+			    DISTINCTCOUNT ( 'Front_page'[clientid] ),
+			    'Front_page'[fasttrack] = "N",
+			 'Front_page'[carecategory] <> "EOL",
+			   Front_page[checklistdate] <> BLANK(), 
+			    USERELATIONSHIP ( 'Front_page'[checklistdate], 'Date'[Date] ) 
+			)
+			```
+		lineageTag: 67cd9784-9775-4c53-bf45-bf8da5f4d15f
+
+	measure 'Checklist Positive Last Q' = CALCULATE([Checklists _ Pos], 'Date'[FY - Latest Quarter Description] = "Latest Q")
+		formatString: 0
+		lineageTag: d10ae1db-25bd-4baa-8171-a35e9e2984c0
+
+	measure 'Completed in 28 days % (FP)' = ```
+			
+			
+			VAR referrals = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var _28_day = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <= 28 && 'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			RETURN 
+			_28_day 
+			/ 
+			referrals
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e2332882-9e3a-4174-9cd4-a35295e22c72
+
+	measure 'FP Test - referrals' = ```
+			
+			
+			VAR referrals = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var _28_day = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <= 28 && 'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var test = referrals
+			
+			RETURN test
+			
+			```
+		formatString: 0
+		lineageTag: 939b9ab9-637c-46e0-968c-b593cdf42a0e
+
+	measure 'FP Test - 28 day' = ```
+			
+			
+			VAR referrals = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var _28_day = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <= 28 && 'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var test = _28_day
+			
+			RETURN test
+			
+			```
+		formatString: 0
+		lineageTag: 8aad2276-7edd-4dc9-a9e6-0c0969aa24e7
+
+	measure 'FP Test - referrals not blank' = ```
+			
+			
+			VAR referrals = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <> BLANK())
+			
+			var _28_day = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <= 28 && 'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var test = referrals
+			
+			RETURN test
+			
+			```
+		formatString: 0
+		lineageTag: 25202c4e-ac7e-4c98-8232-ab6e23ebf2d9
+
+	measure 'FP Test - referrals not fasttrack' = ```
+			
+			
+			VAR referrals = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[fasttrack] = "N")
+			
+			var _28_day = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <= 28 && 'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var test = referrals
+			
+			RETURN test
+			
+			```
+		formatString: 0
+		lineageTag: 99544352-f38d-4fb3-b838-516985e26443
+
+	measure 'FP Test - referrals care category not cht' = ```
+			
+			
+			VAR referrals = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[carecategory] <> "cht")
+			
+			var _28_day = CALCULATE([Distinct count Client ID (FP)],
+			                'Front_page'[Completed days (FP)] <= 28 && 'Front_page'[Completed days (FP)] <> BLANK(),
+			                'Front_page'[fasttrack] = "N",
+			                'Front_page'[carecategory] <> "cht")
+			
+			var test = referrals
+			
+			RETURN test
+			
+			```
+		formatString: 0
+		lineageTag: df5b2fc4-3f55-403a-ad3e-5556070ec003
+
+	measure 'FNC Funded' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "FNC Funded", USERELATIONSHIP ( Front_page[fundersince], 'Date'[Date] )     )
+			```
+		formatString: 0
+		lineageTag: 0b118f99-edca-4d28-a00f-68c03dfce2a0
+
+	measure 'FNC Funded Over Time' = ```
+			
+			
+			VAR CurrentDate = MAX('Waiting List Date Table'[Date])
+			
+			 
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('Front_page'[clientid]),
+			        'Front_page'[fundername] = "FNC Funded",
+			        'Front_page'[fundersince] <= CurrentDate &&
+			        'Front_page'[fundersince] <> BLANK() &&
+			        IF('Front_page'[funderend] = BLANK(), TODAY(), 'Front_page'[funderend]) > CurrentDate, ALL('Date')
+			    )
+			```
+		formatString: 0
+		lineageTag: 533a188b-d1c9-4564-b0a8-3497805a1420
+
+	measure '12 Week Fast Track Death %' =
+			
+			
+			VAR all_fast_track = CALCULATE(DISTINCTCOUNT('28_days'[ref]), '28_days'[fasttrack] = "Y", '28_days'[monitoringoutcome] = "Eligible", USERELATIONSHIP('28_days'[decisiondate], 'Date'[Date]))
+			
+			VAR _12_week_deaths = CALCULATE(DISTINCTCOUNT('28_days'[ref]), '28_days'[fasttrack] = "Y", '28_days'[monitoringoutcome] = "Eligible", 'Front_page'[Fast Track to Death Date Diff] < 13 && 'Front_page'[Fast Track to Death Date Diff] >= 0, USERELATIONSHIP(Front_page[fasttrackactivationdate], 'Date'[Date]))
+			
+			RETURN CALCULATE(_12_week_deaths / all_fast_track, USERELATIONSHIP('28_days'[fasttrackdate], 'Date'[Date]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: def03324-7b82-440c-9dd1-ffeecb905ea5
+
+	measure 'Fast Track Funded Over Time' = ```
+			
+			
+			VAR CurrentDate = MAX('Waiting List Date Table'[Date])
+			
+			
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('Front_page'[clientid]),
+			        'Front_page'[fasttrack] = "Y",
+			        'Front_page'[monitoringoutcome] = "Eligible",
+			        'Front_page'[decisiondate] <= CurrentDate &&
+			        'Front_page'[decisiondate] <> BLANK() &&
+			        'Front_page'[Fast track end date]  > CurrentDate)
+			
+			```
+		formatString: 0
+		lineageTag: cb62cb2f-6f30-4e1d-8282-f36090b1c2f7
+
+	measure 'FNC funded performance arrow' = ```
+			SWITCH(TRUE(),
+			    CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Latest Q") > CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9650),
+			    CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Latest Q") < CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9660),    
+			    CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Latest Q") == CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(61),
+			    UNICHAR(33)    
+			)
+			```
+		lineageTag: 69e229af-56e5-4b2c-8ed0-aea3b8a7fb44
+
+	measure 'FNC funded % performance change' = ```
+			CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Latest Q") - CALCULATE([FNC Funded], 'Date'[FY - Latest Quarter Description] = "Previous Q")
+			
+			```
+		formatString: 0
+		lineageTag: 84100f0f-0d96-43b8-aca7-8bd220cdd4fe
+
+	measure 'Current FNC Funded Patients' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "FNC Funded", 'Front_page'[status] <> "RIP", 'Front_page'[status] <> "Closed",  'Front_page'[funderend] = BLANK())
+			```
+		formatString: 0
+		lineageTag: 6c585a27-02bb-4e1a-a0b8-1573a895ae18
+
+	measure 'FNC Funded via Negative Checklist' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "FNC Funded", 'Front_page'[negativechecklistdate] <> BLANK(), USERELATIONSHIP ( Front_page[greatest_date], 'Date'[Date] )     )
+			```
+		formatString: 0
+		lineageTag: 58cb2588-43ab-407c-b794-9f75fdcec416
+
+	measure 'FNC Funded via Positive Checklist' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "FNC Funded", 'Front_page'[decisiondate] <> BLANK(), 'Front_page'[negativechecklistdate] = BLANK(), USERELATIONSHIP ( Front_page[greatest_date], 'Date'[Date] )     )
+			```
+		formatString: 0
+		lineageTag: 22d0a8db-ecac-4e67-b715-edc1763d06c5
+
+	measure 'FT Newly Eligible Cases (FP)' = CALCULATE(DISTINCTCOUNT('Front_page'[clientid] ),'Front_page'[monitoringoutcome] = "eligible" , 'Front_page'[fasttrack] = "Y" ,  USERELATIONSHIP ( 'Front_page'[decisiondate], 'Date'[Date] )     )
+		formatString: 0
+		lineageTag: 0a9facb7-d558-471e-88de-c057d273769d
+
+	measure 'Current Number of 3 month reviews outstanding FT' =
+			CALCULATE (
+			    [Current Fast Track Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "3 Months Review"
+			) +0
+		formatString: 0
+		lineageTag: 7320f84b-70a0-481d-b6dc-400d450f81da
+
+	measure 'FT Submitted Cases (FP)' = CALCULATE(DISTINCTCOUNT('Front_page'[clientid] ), 'Front_page'[fasttrack] = "Y" ,  USERELATIONSHIP ( 'Front_page'[decisiondate], 'Date'[Date] )     )
+		formatString: 0
+		lineageTag: c92c2402-e4fa-4b71-b456-3d9265668b03
+
+	measure 'CHC Eligible Over Time' = ```
+			
+			
+			VAR CurrentDate = MAX('Waiting List Date Table'[Date])
+			
+			 
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('Front_page'[clientid]),
+			        'Front_page'[fundername] = "CHC Funded",
+			        'Front_page'[checklistdate] <> BLANK(),
+			        'Front_page'[decisiondate] <> BLANK(),
+			        'Front_page'[fundersince] <= CurrentDate &&
+			        'Front_page'[fundersince] <> BLANK() &&
+			        IF('Front_page'[funderend] = BLANK(), TODAY(), 'Front_page'[funderend]) > CurrentDate, ALL('Date')
+			    )
+			```
+		formatString: 0
+		lineageTag: d9ce0706-74e4-4e58-a75f-89b2ffc255b6
+
+	measure 'Current CHC Funded Patients' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "CHC Funded", 'Front_page'[status] <> "RIP", 'Front_page'[status] <> "Closed", 'Front_page'[checklistdate] <> BLANK(),  'Front_page'[funderend] = BLANK())
+			```
+		formatString: 0
+		lineageTag: 84ebfc92-8eea-40eb-90bb-dac6cde93434
+
+	measure 'Current Number of Fast Track Reviews Outstanding' = ```
+			CALCULATE (
+			    [Current Fast Track Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "12 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-3 Months Review" 
+			) + 0
+			```
+		formatString: 0
+		lineageTag: 4bed52fa-9f98-48eb-921c-7bd4f3b3fc37
+
+	measure 'Current Number of 12 month reviews outstanding CHC' =
+			CALCULATE (
+			    [Current CHC Funded Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "12 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-12 Months Review" || 'Front_page'[typeofreview] = "Panel/Initial Eligibility Decision-12 Months Review"
+			
+			)
+		formatString: 0
+		lineageTag: 57315cff-91cd-4418-ab2a-f390d9c7dcfe
+
+	measure 'Current Number of 3 month reviews outstanding CHC' =
+			CALCULATE (
+			    [Current CHC Funded Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "3 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-3 Months Review" || 'Front_page'[typeofreview] = "Panel/Initial Eligibility Decision-3 Months Review"
+			
+			) +0
+		formatString: 0
+		lineageTag: 303d4997-3e76-4ac4-9934-004061e918ee
+
+	measure 'Waiting list max date' = MAX('Waiting List Date Table'[Date])
+		formatString: General Date
+		lineageTag: 4e381faa-4703-4d31-ab8e-764695554087
+
+	measure 'Fast Track Funded before Q1 24/25' = ```
+			
+			
+			VAR CurrentDate = min('Waiting List Date Table'[Date])
+			
+			
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('Front_page'[clientid]),
+			        'Front_page'[fasttrack] = "Y",
+			        'Front_page'[monitoringoutcome] = "Eligible",
+			        'Front_page'[decisiondate] < CurrentDate &&
+			        'Front_page'[fundername] = "CHC Funded",
+			        'Front_page'[decisiondate] <> BLANK() &&
+			        'Front_page'[Fast track end date]  >= CurrentDate
+			        )
+			
+			```
+		formatString: 0
+		lineageTag: 636e4770-3c51-4b98-9d77-87d91d4d7f1a
+
+	measure 'Minimum waiting list date' = min('Waiting List Date Table'[Date])
+		formatString: General Date
+		lineageTag: bb768ffc-16dd-43a0-b781-48ce0c666569
+
+	measure 'CHC Eligible over time performance arrow' = ```
+			SWITCH(TRUE(),
+			    CALCULATE([CHC Eligible Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") > CALCULATE([CHC Eligible Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9650),
+			    CALCULATE([CHC Eligible Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") < CALCULATE([CHC Eligible Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9660),    
+			    CALCULATE([CHC Eligible Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") == CALCULATE([CHC Eligible Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(61),
+			    UNICHAR(33)    
+			)
+			
+			```
+		lineageTag: 0e517930-fc55-4e86-af6d-e55376175642
+
+	measure 'FNC Eligible over time performance arrow' = ```
+			SWITCH(TRUE(),
+			    CALCULATE([FNC Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") > CALCULATE([FNC Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9650),
+			    CALCULATE([FNC Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") < CALCULATE([FNC Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9660),    
+			    CALCULATE([FNC Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") == CALCULATE([FNC Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(61),
+			    UNICHAR(33)    
+			)
+			
+			```
+		lineageTag: f81be1b3-f74f-4f56-b04f-f3a789a9c240
+
+	measure 'Negative Checklists' = CALCULATE(COUNT('Front_page'[clientid]),Front_page[fundername] = "Negative Checklist", USERELATIONSHIP('Front_page'[negativechecklistdate],'Date'[Date]))
+		formatString: 0
+		lineageTag: c62c1ea6-d5df-4891-919d-4558f557df0c
+
+	measure 'Negative checklist performance arrow' = ```
+			SWITCH(TRUE(),
+			    CALCULATE([Negative Checklists], 'Date'[FY - Latest Quarter Description] = "Latest Q") > CALCULATE([Negative Checklists], 'Date'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9650),
+			    CALCULATE([Negative Checklists], 'Date'[FY - Latest Quarter Description] = "Latest Q") < CALCULATE([Negative Checklists], 'Date'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9660),    
+			    CALCULATE([Negative Checklists], 'Date'[FY - Latest Quarter Description] = "Latest Q") == CALCULATE([Negative Checklists], 'Date'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(61),
+			    UNICHAR(33)    
+			)
+			
+			```
+		lineageTag: 012eff8a-66dc-4188-9470-075150162bcc
+
+	measure 'Current Fast Track Patients' =
+			CALCULATE(
+			        DISTINCTCOUNT('Front_page'[clientid]),
+			        'Front_page'[fasttrack] = "Y",
+			        'Front_page'[monitoringoutcome] = "Eligible",
+			        'Front_page'[dateofdeath] = BLANK(),
+			        'Front_page'[funderend] = BLANK())
+		formatString: 0
+		lineageTag: 6251f9bf-363b-4e85-b82f-8fd179abb542
+
+	measure 'Fast Track eligible patients per month performance arrow' = ```
+			SWITCH(TRUE(),
+			    CALCULATE([Fast Track Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") > CALCULATE([Fast Track Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9650),
+			    CALCULATE([Fast Track Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") < CALCULATE([Fast Track Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(9660),    
+			    CALCULATE([Fast Track Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Latest Q") == CALCULATE([Fast Track Funded Over Time], 'Waiting List Date Table'[FY - Latest Quarter Description] = "Previous Q"), UNICHAR(61),
+			    UNICHAR(33)    
+			)
+			
+			```
+		lineageTag: 9382d1df-8377-4c23-bd7e-dea3fe08cdea
+
+	measure 'Current Number of 3 month reviews outstanding FNC' = ```
+			CALCULATE (
+			    [Current FNC Funded Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "3 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-3 Months Review" || 'Front_page'[typeofreview] = "Panel/Initial Eligibility Decision-3 Months Review"
+			) +0 
+			```
+		formatString: 0
+		lineageTag: 03683693-5cb5-47d4-86dc-ad88c8e5ad90
+
+	measure 'Current Number of 12 month reviews outstanding FNC' =
+			CALCULATE (
+			    [Current FNC Funded Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "12 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-12 Months Review" || 'Front_page'[typeofreview] = "Panel/Initial Eligibility Decision-12 Months Review"
+			) +0
+		formatString: 0
+		lineageTag: 10fdb569-d4b0-4cbc-9a49-909a3165b87c
+
+	measure 'Overall Data Up To Tooltip' =
+			
+			
+			var max_chc = FORMAT(max('28_days'[decisiondate]), "dd/mm/yyyy")
+			
+			
+			RETURN "Data up to - " & max_chc
+		lineageTag: ab3fffd5-604a-4494-b59e-740b5ff86794
+
+	measure 'FNC Data Up To' =
+			
+			
+			VAR max_fnc = FORMAT(max('Front_page'[negativechecklistdate]), "dd/mm/yyyy")
+			
+			RETURN "Data up to - " & max_fnc
+		lineageTag: c7f060f7-55d4-447c-bdaa-94ec9df2e568
+
+	measure 'Overall Data Up To' = ```
+			max('28_days'[decisiondate])
+			
+			
+			
+			```
+		formatString: mmmm yyyy
+		lineageTag: aaf3c985-6afb-4c9f-ad76-f0a8e05630c9
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	measure 'Average Days Between Accepted Fast Track Received and Funder Start' = CALCULATE(AVERAGE('Front_page'[Time Between Fast Track Received and Funder Date]),'Front_page'[fasttrack] = "Y", 'Front_page'[fundername] = "CHC Funded",USERELATIONSHIP('Front_page'[fasttrackactivationdate],'Date'[Date]))
+		lineageTag: 8ef13786-e082-4e6f-9f4b-3321399bf477
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Children''s CHC Funded' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "Gloucester Children’s Continuing Health Care", USERELATIONSHIP ( Front_page[fundersince], 'Date'[Date] )     ) 
+			```
+		formatString: 0
+		lineageTag: 2450fe2c-83ea-4cbe-8e24-78d2d1794027
+
+	measure 'Children''s CHC Funded Over Time' = ```
+			
+			
+			VAR CurrentDate = MAX('Waiting List Date Table'[Date])
+			
+			 
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('Front_page'[clientid]),
+			        'Front_page'[fundername] = "Gloucester Children’s Continuing Health Care",
+			        'Front_page'[fundersince] <= CurrentDate &&
+			        'Front_page'[fundersince] <> BLANK() &&
+			        IF('Front_page'[funderend] = BLANK(), TODAY(), 'Front_page'[funderend]) > CurrentDate, ALL('Date')
+			    )
+			```
+		formatString: 0
+		lineageTag: a9c4356b-539c-4cf0-b849-59731ca2f495
+
+	measure 'Current Children''s CHC Funded Patients' = ```
+			
+			
+			 CALCULATE([Distinct count Client ID (FP)], Front_page[fundername] = "Gloucester Children’s Continuing Health Care", 'Front_page'[status] <> "RIP", 'Front_page'[status] <> "Closed",  'Front_page'[funderend] = BLANK())
+			```
+		formatString: 0
+		lineageTag: eff14dea-6b8d-4942-98ea-378b657befed
+
+	measure 'Current Number of 3 month reviews outstanding Children''s CHC' = ```
+			CALCULATE (
+			    [Current Children's CHC Funded Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "3 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-3 Months Review" || 'Front_page'[typeofreview] = "Panel/Initial Eligibility Decision-3 Months Review"
+			) +0 
+			```
+		formatString: 0
+		lineageTag: fb78a975-3818-43f1-a493-448d021de451
+
+	measure 'Current Number of 12 month reviews outstanding Children''s CHC' =
+			CALCULATE (
+			    [Current Children's CHC Funded Patients],
+			    'Front_page'[review Outstanding] = 1,
+			    'Front_page'[typeofreview] = "12 Months Review" || 'Front_page'[typeofreview] = "Outside Panel-12 Months Review" || 'Front_page'[typeofreview] = "Panel/Initial Eligibility Decision-12 Months Review"
+			) +0
+		formatString: 0
+		lineageTag: c0fd0ea4-d439-4c70-97e6-9492793fbe52
+
+	column clientid
+		dataType: string
+		lineageTag: 1207e599-7451-463c-bc7d-37e2f3cbe117
+		summarizeBy: none
+		sourceColumn: clientid
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column title
+		dataType: string
+		lineageTag: 9da17127-52bd-4cc6-af45-dcb9ac8ac889
+		summarizeBy: none
+		sourceColumn: title
+
+		annotation SummarizationSetBy = Automatic
+
+	column firstname
+		dataType: string
+		lineageTag: 721051d6-1c3a-41dc-891e-4dfa98ca26b8
+		summarizeBy: none
+		sourceColumn: firstname
+
+		annotation SummarizationSetBy = Automatic
+
+	column surname
+		dataType: string
+		lineageTag: 5e8c1835-475a-4dec-a6aa-53a0563f68d7
+		summarizeBy: none
+		sourceColumn: surname
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 6af056e8-82c7-419d-8391-3af51c9f4d49
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column dateofbirth
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: b9b85810-c64a-444b-a463-5443c9975d73
+		summarizeBy: none
+		sourceColumn: dateofbirth
+
+		variation Variation
+			isDefault
+			relationship: dfca1d9e-afe6-4241-84d4-334eab429481
+			defaultHierarchy: LocalDateTable_706c17d1-b3a7-4edc-a700-49f172f0b350.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column nhsnumber
+		dataType: string
+		lineageTag: dadbf0af-380f-40e6-a305-b31383808c5b
+		summarizeBy: none
+		sourceColumn: nhsnumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column referraldate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: fc8a923a-4a1a-4ce8-b3dd-28fcc37a29f4
+		summarizeBy: none
+		sourceColumn: referraldate
+
+		variation Variation
+			isDefault
+			relationship: 3ba992f5-8edb-4739-b193-82e5adc25cf3
+			defaultHierarchy: LocalDateTable_75da9e66-8b23-49c3-8573-e9e75c0b16cc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column address
+		dataType: string
+		lineageTag: 716eebf4-1ae7-41fb-9832-5678223b1791
+		summarizeBy: none
+		sourceColumn: address
+
+		annotation SummarizationSetBy = Automatic
+
+	column town
+		dataType: string
+		lineageTag: 293de20a-094d-45d2-9def-6fb7940d434c
+		summarizeBy: none
+		sourceColumn: town
+
+		annotation SummarizationSetBy = Automatic
+
+	column postcode
+		dataType: string
+		lineageTag: 57632f11-7db0-4548-ad4a-cc74ed8f5b1a
+		summarizeBy: none
+		sourceColumn: postcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column telephone
+		dataType: string
+		lineageTag: 9b8c55df-19ab-41d3-a717-c2c1ba5b7a15
+		summarizeBy: none
+		sourceColumn: telephone
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: 6b18b1a6-e70a-41c3-8419-77f85e99f838
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column religionbelief
+		dataType: string
+		lineageTag: 141499c7-6f9d-4fac-9d87-48d81707dd93
+		summarizeBy: none
+		sourceColumn: religionbelief
+
+		annotation SummarizationSetBy = Automatic
+
+	column sexualorientation
+		dataType: string
+		lineageTag: aa2cd8e2-1de7-46ba-89b2-14081cea96f8
+		summarizeBy: none
+		sourceColumn: sexualorientation
+
+		annotation SummarizationSetBy = Automatic
+
+	column communicationneeds
+		dataType: string
+		lineageTag: f6fb4f75-0962-4b95-8973-6b0db5a2612b
+		summarizeBy: none
+		sourceColumn: communicationneeds
+
+		annotation SummarizationSetBy = Automatic
+
+	column disability
+		dataType: string
+		lineageTag: 40f0e44a-31a7-4da8-8e8f-24010b67b6f6
+		summarizeBy: none
+		sourceColumn: disability
+
+		annotation SummarizationSetBy = Automatic
+
+	column carecategory
+		dataType: string
+		lineageTag: 1f2bcd2c-b210-4b60-842b-1d283390985e
+		summarizeBy: none
+		sourceColumn: carecategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column budgetcode
+		dataType: string
+		lineageTag: f8b68120-b1fe-4a97-b48f-69e1ae93c6d6
+		summarizeBy: none
+		sourceColumn: budgetcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column nurseassessor
+		dataType: string
+		lineageTag: 55c040d5-942a-4c46-8747-df5d3980c6de
+		summarizeBy: none
+		sourceColumn: nurseassessor
+
+		annotation SummarizationSetBy = Automatic
+
+	column casemanager
+		dataType: string
+		lineageTag: 181aca22-1a14-4295-b800-65c0aa631b1c
+		summarizeBy: none
+		sourceColumn: casemanager
+
+		annotation SummarizationSetBy = Automatic
+
+	column currentgp
+		dataType: string
+		lineageTag: c0440563-e8cf-4fce-aee5-0596a4efd6a2
+		summarizeBy: none
+		sourceColumn: currentgp
+
+		annotation SummarizationSetBy = Automatic
+
+	column currentgppracticecode
+		dataType: string
+		lineageTag: adcda51b-11c7-4937-9914-baac1e62f507
+		summarizeBy: none
+		sourceColumn: currentgppracticecode
+
+		annotation SummarizationSetBy = Automatic
+
+	column originatinggp
+		dataType: string
+		lineageTag: 6a017fc5-7100-488c-bdeb-7b5a50fa0143
+		summarizeBy: none
+		sourceColumn: originatinggp
+
+		annotation SummarizationSetBy = Automatic
+
+	column originatinggppracticecode
+		dataType: string
+		lineageTag: 7a0f443e-229f-45ef-943d-57c4397446c1
+		summarizeBy: none
+		sourceColumn: originatinggppracticecode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ccgname
+		dataType: string
+		lineageTag: e03a2424-7632-4a95-a643-edcd38cb7184
+		summarizeBy: none
+		sourceColumn: ccgname
+
+		annotation SummarizationSetBy = Automatic
+
+	column reviewid
+		dataType: int64
+		formatString: 0
+		lineageTag: d87484d7-7d9a-4966-8526-49a8e61ecd78
+		summarizeBy: sum
+		sourceColumn: reviewid
+
+		annotation SummarizationSetBy = Automatic
+
+	column scheduledreviewdate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5b73428b-29fd-470e-99bb-d238fe861ce7
+		summarizeBy: none
+		sourceColumn: scheduledreviewdate
+
+		variation Variation
+			isDefault
+			relationship: 8e6ae4d6-ae34-47c1-b08b-72007c5195bb
+			defaultHierarchy: LocalDateTable_15dbb400-2543-4f37-b803-a148c4787a2a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column typeofreview
+		dataType: string
+		lineageTag: cb80bcad-d77c-432c-929b-33c1c1994de8
+		summarizeBy: none
+		sourceColumn: typeofreview
+
+		annotation SummarizationSetBy = Automatic
+
+	column actualreview
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1bf3a7a7-9c22-438d-9deb-63dafaa1e623
+		summarizeBy: none
+		sourceColumn: actualreview
+
+		variation Variation
+			isDefault
+			relationship: 2444c7b8-4484-4883-8bf7-79773fa652d3
+			defaultHierarchy: LocalDateTable_90a33a17-11b3-43f6-a41c-c31f7bd61f6a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column funderattimeofactualreview
+		dataType: string
+		lineageTag: 6dfd4a98-1e6e-432e-bab3-efdac5dc95ed
+		summarizeBy: none
+		sourceColumn: funderattimeofactualreview
+
+		annotation SummarizationSetBy = Automatic
+
+	column reviewoutcomeofactualreview
+		dataType: string
+		lineageTag: da65c9f2-4d7c-433d-bb25-c3c364c04f87
+		summarizeBy: none
+		sourceColumn: reviewoutcomeofactualreview
+
+		annotation SummarizationSetBy = Automatic
+
+	column paneldate
+		dataType: string
+		lineageTag: c2a6f140-1dbd-4c49-a643-6569d3d96e37
+		summarizeBy: none
+		sourceColumn: paneldate
+
+		annotation SummarizationSetBy = Automatic
+
+	column paneloutcome
+		dataType: string
+		lineageTag: 08c37c4a-1ee3-4bea-8bfb-399fee8ebf6a
+		summarizeBy: none
+		sourceColumn: paneloutcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column panelnotes
+		dataType: string
+		lineageTag: 8c744a4d-53c7-4aca-8c20-1a91d28abc5e
+		summarizeBy: none
+		sourceColumn: panelnotes
+
+		annotation SummarizationSetBy = Automatic
+
+	column fundingalert
+		dataType: string
+		lineageTag: 1160eb93-2d23-4d6b-b740-450f8c2c3ef5
+		summarizeBy: none
+		sourceColumn: fundingalert
+
+		annotation SummarizationSetBy = Automatic
+
+	column fasttrack
+		dataType: string
+		lineageTag: fb92ab8e-d517-485c-967e-e77d927d40f1
+		summarizeBy: none
+		sourceColumn: fasttrack
+
+		annotation SummarizationSetBy = Automatic
+
+	column fasttrackactivationdate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 40f3557c-f608-4184-8a2b-2f7d347fd4bd
+		summarizeBy: none
+		sourceColumn: fasttrackactivationdate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column checklistdate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 0ad4844a-ac24-4a1b-895c-8031926ea752
+		summarizeBy: none
+		sourceColumn: checklistdate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column dstdate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: fe331404-71d4-4e49-9415-ae8487d11c58
+		summarizeBy: none
+		sourceColumn: dstdate
+
+		variation Variation
+			isDefault
+			relationship: c79fca05-ea95-4d87-9215-ec696b224a96
+			defaultHierarchy: LocalDateTable_6c806db8-4caf-446f-946a-0ef38865b949.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column dstsettingname
+		dataType: string
+		lineageTag: ee81122a-3918-45c4-88bf-3133b69ee726
+		summarizeBy: none
+		sourceColumn: dstsettingname
+
+		annotation SummarizationSetBy = Automatic
+
+	column mdtrecommendation
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c9701170-c1ec-4d64-b451-7581f97369f3
+		summarizeBy: none
+		sourceColumn: mdtrecommendation
+
+		variation Variation
+			isDefault
+			relationship: 480cea45-4418-4835-95ff-96ea9bcb8a50
+			defaultHierarchy: LocalDateTable_182c472b-0e0d-4085-b715-ebfedf02cc11.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column decisiondate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 1a21cf9c-79f3-44b7-8103-156b70cb4bc3
+		summarizeBy: none
+		sourceColumn: decisiondate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column monitoringoutcome
+		dataType: string
+		lineageTag: 0c61449f-615f-4b3f-8711-309784ecf16a
+		summarizeBy: none
+		sourceColumn: monitoringoutcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column sourceofreferral
+		dataType: string
+		lineageTag: 94ff3fe5-9f99-43a0-b729-43e055058fad
+		summarizeBy: none
+		sourceColumn: sourceofreferral
+
+		annotation SummarizationSetBy = Automatic
+
+	column sourceofreferralname
+		dataType: string
+		lineageTag: 82ae1b4d-bf25-4c9a-b2d3-9bdad9af7a35
+		summarizeBy: none
+		sourceColumn: sourceofreferralname
+
+		annotation SummarizationSetBy = Automatic
+
+	column negativechecklistdate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f40b8e17-a70a-4025-a7cb-57240183f562
+		summarizeBy: none
+		sourceColumn: negativechecklistdate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column negativesourceofreferral
+		dataType: string
+		lineageTag: ee4a96f8-9623-4f91-9ba4-97f4b2763c00
+		summarizeBy: none
+		sourceColumn: negativesourceofreferral
+
+		annotation SummarizationSetBy = Automatic
+
+	column negativesourceofreferralname
+		dataType: string
+		lineageTag: 3cae133c-5b37-43e9-bff4-2cc3e7f14e17
+		summarizeBy: none
+		sourceColumn: negativesourceofreferralname
+
+		annotation SummarizationSetBy = Automatic
+
+	column responsibleauthority
+		dataType: string
+		lineageTag: 2fd334d5-5e35-4d4a-b258-48868bc805ac
+		summarizeBy: none
+		sourceColumn: responsibleauthority
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 80a74556-72ca-4809-b448-67c529b72ca4
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column statussince
+		dataType: string
+		lineageTag: f84f73a2-1b23-442b-af3f-ec5e95073a94
+		summarizeBy: none
+		sourceColumn: statussince
+
+		annotation SummarizationSetBy = Automatic
+
+	column dateofdeath
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f06e89ee-15d2-4d78-a91b-a0eb0e516abd
+		summarizeBy: none
+		sourceColumn: dateofdeath
+
+		variation Variation
+			isDefault
+			relationship: 1963951e-ac08-4f8a-a3a2-f60a726a1cfc
+			defaultHierarchy: LocalDateTable_1beb189b-3f32-4d12-820a-04d6aa3ec8a4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column legalstatus
+		dataType: string
+		lineageTag: 5419f6f1-8b18-4cf8-81c3-21cff4be3d1d
+		summarizeBy: none
+		sourceColumn: legalstatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column fundername
+		dataType: string
+		lineageTag: a68dcc53-4798-4eb4-908c-7c86a3afdcc1
+		summarizeBy: none
+		sourceColumn: fundername
+
+		annotation SummarizationSetBy = Automatic
+
+	column fundersince
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 41defb2f-1e91-45d1-a0a7-600af1f0b76c
+		summarizeBy: none
+		sourceColumn: fundersince
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column funderend
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 94b5d35f-af52-4e6d-9528-9dd3aa36c496
+		summarizeBy: none
+		sourceColumn: funderend
+
+		variation Variation
+			isDefault
+			relationship: fe02f460-7b4a-4e7c-9e9a-f84c0a54329c
+			defaultHierarchy: LocalDateTable_838bf508-8941-4c06-9f85-33b926d9a499.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column fundersplit
+		dataType: string
+		lineageTag: 13571880-f85d-492c-80c4-0ad64df0a1fa
+		summarizeBy: none
+		sourceColumn: fundersplit
+
+		annotation SummarizationSetBy = Automatic
+
+	column schemeid
+		dataType: int64
+		formatString: 0
+		lineageTag: b8a86f82-9557-49d0-998b-b55431a28463
+		summarizeBy: sum
+		sourceColumn: schemeid
+
+		annotation SummarizationSetBy = Automatic
+
+	column extractdate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 077469b3-e2e6-48b4-adeb-d18789d1fa05
+		summarizeBy: none
+		sourceColumn: extractdate
+
+		variation Variation
+			isDefault
+			relationship: b7fead27-f72b-4826-88f8-52f569ce4583
+			defaultHierarchy: LocalDateTable_72c46a2a-c188-418f-ba50-bd5b66d87d4d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column sourcefilename
+		dataType: string
+		lineageTag: a8a271e3-5e62-4427-982a-3901a70e3e3e
+		summarizeBy: none
+		sourceColumn: sourcefilename
+
+		annotation SummarizationSetBy = Automatic
+
+	column dateingested
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a8344705-9812-40bb-8bdc-56b1ef03d346
+		summarizeBy: none
+		sourceColumn: dateingested
+
+		variation Variation
+			isDefault
+			relationship: a2452a94-edb3-4e70-aa30-40d8a802170a
+			defaultHierarchy: LocalDateTable_06da83ab-9012-4d61-8c2d-2035ab234b92.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calculated Decision Date' = ```
+			
+			SWITCH(TRUE(),
+			Front_page[negativechecklistdate] = BLANK(), Front_page[decisiondate],
+			           Front_page[decisiondate] = BLANK() , Front_page[negativechecklistdate],
+			           Front_page[negativechecklistdate] > Front_page[decisiondate] , Front_page[negativechecklistdate],
+			           Front_page[decisiondate] > Front_page[negativechecklistdate] , Front_page[decisiondate],
+			           BLANK())
+			
+			```
+		formatString: General Date
+		lineageTag: 52b4c183-f3bf-4b15-a042-4cf4fdddcc6a
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 48a2e7e1-6a84-48e5-bb2b-05f6d97e0a4a
+			defaultHierarchy: LocalDateTable_c2228749-ddb1-4e15-80c7-d5a2d198a2d3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Completed days (FP)' =
+			
+			DATEDIFF (
+			    'Front_page'[checklistdate],
+			    'Front_page'[decisiondate],
+			    DAY
+			)
+		formatString: 0
+		lineageTag: de2e8560-fa0d-47d0-b621-393d7e82de07
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column greatest_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5fa27ab5-166b-427b-8e2e-dd100b17f836
+		summarizeBy: none
+		sourceColumn: greatest_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column greatest_date_column
+		dataType: string
+		lineageTag: 923a69fa-5df9-43f9-a9dc-a88083e0f06f
+		summarizeBy: none
+		sourceColumn: greatest_date_column
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2 year filter Front Page greatest date' =
+			
+			
+			VAR max_date = MAX('Front_page'[greatest_date])
+			
+			VAR _2_year_date = EOMONTH(max_date, -24) +1
+			
+			RETURN IF('Front_page'[greatest_date] >= _2_year_date, 1, 0)
+		dataType: int64
+		formatString: 0
+		lineageTag: ebca3994-e658-4ae9-ba33-433e88e4761d
+		summarizeBy: sum
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fast Track to Death Date Diff' = ```
+			IF('Front_page'[fasttrack] = "Y" && 'Front_page'[monitoringoutcome] = "Eligible", DATEDIFF('Front_page'[fasttrackactivationdate],'Front_page'[dateofdeath],WEEK), BLANK())
+			
+			
+			```
+		formatString: 0
+		lineageTag: 6ce04605-c6f1-4604-83c5-9269e9b21149
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2 year filter Front Page fast track activation date' =
+			
+			
+			VAR max_date = MAX('Front_page'[fasttrackactivationdate])
+			
+			VAR _2_year_date = EOMONTH(max_date, -24) +1
+			
+			RETURN IF('Front_page'[fasttrackactivationdate] >= _2_year_date, 1, 0)
+		formatString: 0
+		lineageTag: f6d6e0b5-f130-4542-8032-8c057be02d0c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fast track funded' = IF('Front_page'[fasttrack] = "Y" && 'Front_page'[monitoringoutcome] = "Eligible", "Fast track funded", "Not fast track funded")
+		lineageTag: e25ef76a-208f-4c17-b2bb-af2b5e54751f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fast track end date' = ```
+			
+			
+			VAR death_date = IF('Front_page'[dateofdeath] = BLANK(), TODAY(), 'Front_page'[dateofdeath])
+			
+			RETURN 
+			
+			SWITCH(TRUE(),
+			'Front_page'[Fast track funded] = "Fast track funded" && 'Front_page'[funderend] >= 'Front_page'[decisiondate] && 'Front_page'[funderend] < death_date, 'Front_page'[funderend], 
+			'Front_page'[Fast track funded] = "Fast track funded" && 'Front_page'[funderend] >= 'Front_page'[decisiondate] && 'Front_page'[funderend] >= death_date, Front_page[funderend],
+			'Front_page'[Fast track funded] = "Fast track funded" && 'Front_page'[funderend] = BLANK() && 'Front_page'[dateofdeath] = BLANK(), TODAY(),
+			'Front_page'[Fast track funded] = "Fast track funded" && 'Front_page'[funderend] = BLANK() && 'Front_page'[dateofdeath] <> BLANK(), 'Front_page'[dateofdeath],
+			'Front_page'[Fast track funded] = "Fast track funded" && 'Front_page'[funderend] <> BLANK() && 'Front_page'[dateofdeath] = BLANK(), 'Front_page'[funderend],
+			BLANK())
+			```
+		formatString: General Date
+		lineageTag: f048476d-efff-401d-8215-d57dc268395f
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 9bfd10a7-fe29-4967-b8b7-2741cbbd246c
+			defaultHierarchy: LocalDateTable_fd4bdf2c-3ba5-4f7f-8aaa-642f9238b113.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2 year filter Front Page negative checklist date' =
+			
+			
+			VAR max_date = MAX('Front_page'[negativechecklistdate])
+			
+			VAR _2_year_date = EOMONTH(max_date, -24) +1
+			
+			RETURN IF('Front_page'[negativechecklistdate] >= _2_year_date, 1, 0)
+		formatString: 0
+		lineageTag: 8e7e50aa-c052-4a5f-976a-fa2fa53469c2
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FNC Funded Type' =
+			SWITCH(TRUE(),
+			'Front_page'[fundername] = "FNC Funded" && 'Front_page'[negativechecklistdate] <> BLANK(), "Negative Checklist FNC",
+			'Front_page'[fundername] = "FNC Funded" && 'Front_page'[negativechecklistdate] = BLANK(), "Positive Checklist FNC",
+			BLANK()
+			)
+		lineageTag: b2b6579d-f045-42a8-84b4-3c0741534a1b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age =
+			
+			
+			VAR end_date = IF('Front_page'[dateofdeath] = BLANK(), TODAY(), 'Front_page'[dateofdeath])
+			
+			VAR age =
+			    DATEDIFF (
+			        'Front_page'[dateofbirth],
+			        end_date,
+			        YEAR
+			    )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( 'Front_page'[dateofbirth]), "",
+			        age < 18, "0-17",
+			        age >= 65, "65+",
+			        "18-64"
+			    )
+		lineageTag: 8ebf1258-c965-4d38-9cc7-4da13c1b367b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2 year filter Front Page decision date' =
+			
+			
+			VAR max_date = MAX('Front_page'[decisiondate])
+			
+			VAR _2_year_date = EOMONTH(max_date, -24) +1
+			
+			RETURN IF('Front_page'[decisiondate] >= _2_year_date, 1, 0)
+		formatString: 0
+		lineageTag: ad351318-f198-4b3f-9a37-6e5a8c91470b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'review Outstanding' =
+			
+			IF (
+			    'Front_page'[scheduledreviewdate]
+			        < TODAY (),
+			    1,
+			    0
+			)
+		formatString: 0
+		lineageTag: 6813c34f-00a4-44cb-bde9-e20836983978
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fast Track Eligiblity Status' =
+			SWITCH(TRUE(),
+			'Front_page'[monitoringoutcome] = "eligible" && 'Front_page'[fasttrack] = "Y", "Eligible",
+			'Front_page'[monitoringoutcome] <> "eligible" && 'Front_page'[fasttrack] = "Y", "Not Eligible",
+			"Not FT")
+		lineageTag: 62929cd5-99a7-4db4-97e8-c22599820aae
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2 year filter Front Page funder since date' =
+			
+			
+			VAR max_date = MAX('Front_page'[fundersince])
+			
+			VAR _2_year_date = EOMONTH(max_date, -24) +1
+			
+			RETURN IF('Front_page'[fundersince] >= _2_year_date, 1, 0)
+		formatString: 0
+		lineageTag: 7d0cd7e5-fcf6-4668-a025-a78b9871d22b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time Between Fast Track Received and Funder Date' =
+			
+			
+			VAR _time = DATEDIFF('Front_page'[fasttrackactivationdate],'Front_page'[fundersince],DAY)
+			
+			RETURN IF(_time<0,BLANK(),_time)
+		formatString: 0
+		lineageTag: 97665e6c-fe52-4c5b-bb1d-48bd2e734b3d
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age at FNC Decision' =
+			
+			
+			VAR DOB = LOOKUPVALUE('Unique ID'[dateofbirth],'Unique ID'[clientid],'Front_page'[clientid])
+			
+			RETURN DATEDIFF(DOB,'Front_page'[fundersince],YEAR)
+		formatString: 0
+		lineageTag: c823328e-3e2d-4a19-a95a-56a104709166
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Band at FNC Decision' = ```
+			
+			
+			SWITCH(TRUE(),
+			'Front_page'[Age at FNC Decision]< 5, "0-4", 
+			'Front_page'[Age at FNC Decision]>= 5 && 'Front_page'[Age at FNC Decision]<= 9 , "5-9", 
+			'Front_page'[Age at FNC Decision]>= 10 && 'Front_page'[Age at FNC Decision]<= 14 , "10-14", 
+			'Front_page'[Age at FNC Decision]>= 15 && 'Front_page'[Age at FNC Decision]<= 19 , "15-19", 
+			'Front_page'[Age at FNC Decision]>= 20 && 'Front_page'[Age at FNC Decision]<= 24 , "20-24", 
+			'Front_page'[Age at FNC Decision]>= 25 && 'Front_page'[Age at FNC Decision]<= 29 , "25-29", 
+			'Front_page'[Age at FNC Decision]>= 30 && 'Front_page'[Age at FNC Decision]<= 34 , "30-34", 
+			'Front_page'[Age at FNC Decision]>= 35 && 'Front_page'[Age at FNC Decision]<= 39 , "35-39", 
+			'Front_page'[Age at FNC Decision]>= 40 && 'Front_page'[Age at FNC Decision]<= 44 , "40-44", 
+			'Front_page'[Age at FNC Decision]>= 45 && 'Front_page'[Age at FNC Decision]<= 49 , "45-49", 
+			'Front_page'[Age at FNC Decision]>= 50 && 'Front_page'[Age at FNC Decision]<= 54 , "50-54", 
+			'Front_page'[Age at FNC Decision]>= 55 && 'Front_page'[Age at FNC Decision]<= 59 , "55-59", 
+			'Front_page'[Age at FNC Decision]>= 60 && 'Front_page'[Age at FNC Decision]<= 64 , "60-64", 
+			'Front_page'[Age at FNC Decision]>= 65 && 'Front_page'[Age at FNC Decision]<= 69 , "65-69", 
+			'Front_page'[Age at FNC Decision]>= 70 && 'Front_page'[Age at FNC Decision]<= 74 , "70-74", 
+			'Front_page'[Age at FNC Decision]>= 75 && 'Front_page'[Age at FNC Decision]<= 79 , "75-79", 
+			'Front_page'[Age at FNC Decision]>= 80 && 'Front_page'[Age at FNC Decision]<= 84 , "80-84", 
+			'Front_page'[Age at FNC Decision]>= 85 && 'Front_page'[Age at FNC Decision]<= 89 , "85-89", 
+			'Front_page'[Age at FNC Decision]>= 90 , "90+", 
+			"No age recorded" 
+			)
+			```
+		lineageTag: 1a0b152f-c1fd-4c0b-ba8c-a428e1bfe4cb
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age (Specific)' = ```
+			
+			
+			VAR end_date = IF('Front_page'[dateofdeath] = BLANK(), TODAY(), 'Front_page'[dateofdeath])
+			
+			RETURN 
+			    FLOOR((DATEDIFF (
+			        'Front_page'[dateofbirth],
+			        end_date,
+			        month)/12),1)
+			```
+		formatString: 0
+		lineageTag: acf3008f-187b-4356-9bfd-0005dc879d4c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition Front_page = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "SELECT#(lf)    t.clientid#(lf)    , t.title#(lf)    , t.firstname#(lf)    , t.surname#(lf)    , t.gender#(lf)    , t.dateofbirth#(lf)    , t.nhsnumber#(lf)    , t.referraldate#(lf)    , t.address#(lf)    , t.town#(lf)    , t.postcode#(lf)    , t.telephone#(lf)    , t.ethnicity#(lf)    , t.religionbelief#(lf)    , t.sexualorientation#(lf)    , t.communicationneeds#(lf)    , t.disability#(lf)    , t.carecategory#(lf)    , t.budgetcode#(lf)    , t.nurseassessor#(lf)    , t.casemanager#(lf)    , t.currentgp#(lf)    , t.currentgppracticecode#(lf)    , t.originatinggp#(lf)    , t.originatinggppracticecode#(lf)    , t.ccgname#(lf)    , t.reviewid#(lf)    , t.scheduledreviewdate#(lf)    , t.typeofreview#(lf)    , t.actualreview#(lf)    , t.funderattimeofactualreview#(lf)    , t.reviewoutcomeofactualreview#(lf)    , t.paneldate#(lf)    , t.paneloutcome#(lf)    , t.panelnotes#(lf)    , t.fundingalert#(lf)    , t.fasttrack#(lf)    , t.fasttrackactivationdate#(lf)    , t.checklistdate#(lf)    , t.dstdate#(lf)    , t.dstsettingname#(lf)    , t.mdtrecommendation#(lf)    , t.decisiondate#(lf)    , t.monitoringoutcome#(lf)    , t.sourceofreferral#(lf)    , t.sourceofreferralname#(lf)    , t.negativechecklistdate#(lf)    , t.negativesourceofreferral#(lf)    , t.negativesourceofreferralname#(lf)    , t.responsibleauthority#(lf)    , t.status#(lf)    , t.statussince#(lf)    , t.dateofdeath#(lf)    , t.legalstatus#(lf)    , t.fundername#(lf)    , t.fundersince#(lf)    , t.funderend#(lf)    , t.fundersplit#(lf)    , t.schemeid#(lf)    , t.extractdate#(lf)    , t.sourcefilename#(lf)    , t.dateingested#(lf)    ,GREATEST(checklistdate,negativechecklistdate,decisiondate,dstdate) as greatest_date#(lf)    ,case when GREATEST(checklistdate,negativechecklistdate,decisiondate,dstdate) = checklistdate then 'checklist date'#(lf)          when GREATEST(checklistdate,negativechecklistdate,decisiondate,dstdate) = negativechecklistdate then 'negative checklist date'#(lf)          when GREATEST(checklistdate,negativechecklistdate,decisiondate,dstdate) = decisiondate then 'decision date'#(lf)          when GREATEST(checklistdate,negativechecklistdate,decisiondate,dstdate) = dstdate then 'dst date'#(lf)          end as greatest_date_column#(lf)#(lf)#(lf)FROM#(lf)    data_mart_l011_chs_continuinghealthcare.tbl_patientfrontpage_201_load t", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

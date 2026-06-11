@@ -1,0 +1,122 @@
+table 'First Assessment'
+	lineageTag: afd04957-6cb0-4b53-a623-04bebfaf08fb
+
+	measure 'Average Time to First Assessment' = CALCULATE(AVERAGE([Time to First Assessment]),'First Assessment'[care_contact_assessment_rank] = 1,USERELATIONSHIP('First Assessment'[CareContDate],'Date Reference'[date]))
+		lineageTag: 4d717f85-0283-4b0e-af5d-1f0a972293dc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NHSNumber
+		dataType: string
+		lineageTag: 2c5c49d9-a167-4216-b6c7-09f0bd7400ae
+		summarizeBy: none
+		sourceColumn: NHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqServReqID
+		dataType: string
+		lineageTag: 68be2e58-1825-4715-ab9b-4994bc82f145
+		summarizeBy: none
+		sourceColumn: UniqServReqID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRequestReceivedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f1206ec2-3448-43a0-9d79-9f7ab508b495
+		summarizeBy: none
+		sourceColumn: ReferralRequestReceivedDate
+
+		variation Variation
+			isDefault
+			relationship: b766816d-d645-458b-a514-5dded2b50797
+			defaultHierarchy: LocalDateTable_29cef1fa-c972-465a-be90-89cb2765c142.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column All_teams
+		dataType: string
+		lineageTag: 456eba73-e2a6-4a25-aa25-d8aa6a3542d5
+		summarizeBy: none
+		sourceColumn: All_teams
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqCareContID
+		dataType: string
+		lineageTag: d62670f8-b554-4ac8-9d64-277326da1e62
+		summarizeBy: none
+		sourceColumn: UniqCareContID
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_care_contact_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: c12ba638-67e1-474e-9bda-a7876797ab04
+		summarizeBy: sum
+		sourceColumn: First_care_contact_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareContDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 38c448bc-65bc-47cd-bc63-df8820078411
+		summarizeBy: none
+		sourceColumn: CareContDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Assessment_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a4c562fb-d289-4a85-af83-a6d20359c861
+		summarizeBy: sum
+		sourceColumn: Assessment_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column care_contact_assessment_rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 6602243c-1e11-46e1-9e26-d761edff482d
+		summarizeBy: sum
+		sourceColumn: care_contact_assessment_rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column gp_code
+		dataType: string
+		lineageTag: 65c1c077-32bf-445a-94aa-718bafc115fa
+		summarizeBy: none
+		sourceColumn: gp_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time to First Assessment' =
+			
+			
+			VAR cont_date = IF('First Assessment'[CareContDate] = BLANK(), BLANK(), 'First Assessment'[CareContDate])
+			
+			RETURN DATEDIFF('First Assessment'[ReferralRequestReceivedDate],cont_date,WEEK)
+		formatString: 0
+		lineageTag: c8672c77-1000-4d68-a3b3-2f1c3ab7d0ae
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'First Assessment' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)  FROM [PowerBI_Reporting].[Dementia].[tbl12_First_Assessment]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

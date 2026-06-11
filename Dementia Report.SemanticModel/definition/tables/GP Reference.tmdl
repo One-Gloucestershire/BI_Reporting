@@ -1,0 +1,135 @@
+table 'GP Reference'
+	lineageTag: 55653206-3b11-4369-8948-261cd12484ce
+
+	column Locality
+		dataType: string
+		lineageTag: acf3fd45-886e-4502-8239-43d03fd73eaf
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 8564b66e-437c-47a8-943e-57e0fed3a085
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 7ee3da92-b02b-40ce-b696-20ee588ae151
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 137aa678-c8cc-45a3-b657-240814c45c4f
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 9feb0947-b2a0-4591-b15f-76070709d319
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: f794bb8d-c82e-47e3-a3f7-033cd2ad26f8
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: aaf54516-4ecf-4518-8ad9-37deb3df80b9
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hierachy_slicer_top
+		dataType: string
+		lineageTag: d07c0c9a-2136-49f4-92d1-c10c1153a1d1
+		summarizeBy: none
+		sourceColumn: Hierachy_slicer_top
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 45faf81a-fe38-456a-b546-1083458c3291
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Postcode
+		dataType: string
+		lineageTag: e03668ad-0f7a-4afd-a6c2-1e8618b7795f
+		summarizeBy: none
+		sourceColumn: Postcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB = "Gloucestershire ICB"
+		lineageTag: f2034f8d-ca33-4317-92a9-05054ca292e4
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Locality Hierarchy'
+		lineageTag: e6b740fb-82a7-411a-bc35-46d474758e69
+
+		level Locality
+			lineageTag: 4793337c-a523-441b-9000-a066e019631e
+			column: Locality
+
+		level PrimaryCareNetwork
+			lineageTag: df3b4b00-3e27-4be5-b390-f4189f101c16
+			column: PrimaryCareNetwork
+
+		level ReportingOrganisationName
+			lineageTag: 677dfaf8-633e-4ebe-a519-3e409efd2a4e
+			column: ReportingOrganisationName
+
+	hierarchy 'ICB Hierarchy'
+		lineageTag: 642e2ede-f7d6-41ad-b129-f03985c57a84
+
+		level ICB
+			lineageTag: aec9e59c-bdd3-4ab1-bc73-fba54e74bde4
+			column: ICB
+
+		level Locality
+			lineageTag: 829510be-725b-411e-bb0a-1dd35688458a
+			column: Locality
+
+		level PrimaryCareNetwork
+			lineageTag: 8de0cfea-b9b8-4a70-abe2-b44d97500c46
+			column: PrimaryCareNetwork
+
+		level ReportingOrganisationName
+			lineageTag: 1b36338a-4534-45dd-b222-4a0d7f9a4d30
+			column: ReportingOrganisationName
+
+	partition 'GP Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)IF OBJECT_ID ('TEMPDB..#table1') IS NOT NULL DROP TABLE #table1#(lf);#(lf)#(lf)SELECT [Locality] = CASE WHEN [A].[OrganisationCode] = 'Y05212' THEN 'Tewkesbury Newent and Staunton' ELSE [A].[Locality] END#(lf)#(lf)      ,[A].[PrimaryCareNetwork]#(lf)#(tab)  ,[A].[OrganisationCode]#(lf)#(tab)  ,[A].OrganisationName#(lf)#(tab)  ,[A].[ReportingOrganisationCode]#(lf)#(tab)  ,[A].[ReportingOrganisationName]#(lf)#(tab)  ,[B].[Postcode]#(lf) #(lf)INTO #table1#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice] [A]#(lf)#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] [B] ON [B].[OrganisationCode] = [A].[OrganisationCode]#(lf) #(lf)WHERE #(lf)--[Commissioner] = '11M'#(lf)--AND #(lf)[A].[Locality] IS NOT NULL#(lf)#(lf);#(lf) #(lf)SELECT [GP].*#(lf)#(lf)#(tab)  ,[COORD].[GPLatitude]#(lf)#(tab)  #(lf)#(tab)  ,[COORD].[GPLongitude]#(lf)#(tab)  ,[Hierachy_slicer_top] = 'Localities'#(lf) #(lf)FROM #table1 AS [GP]#(lf) #(lf)LEFT JOIN (SELECT DISTINCT [GP_Practice_Code], [GPLatitude], [GPLongitude]#(lf)#(lf)           FROM [PowerBI_Reporting].[PHM].[tbl02_DemographicsOverview]) [COORD] ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]#(lf)#(lf)ORDER BY OrganisationName"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

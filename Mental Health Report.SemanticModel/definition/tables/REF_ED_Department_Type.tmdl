@@ -1,0 +1,32 @@
+table REF_ED_Department_Type
+	lineageTag: c283529b-6f20-40cf-baf2-4c4ad43be6c6
+
+	column department_type_code
+		dataType: string
+		lineageTag: e1040939-2d44-44f6-a5e8-138538938506
+		summarizeBy: none
+		sourceColumn: department_type_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_type
+		dataType: string
+		lineageTag: d0b4826a-401e-424b-8d7a-63e71bca1fcf
+		summarizeBy: none
+		sourceColumn: department_type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_ED_Department_Type = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "DSCRO_NATIONAL_LOOKUPS", [Query="#(lf)select distinct [department_type_code] = right([Main_Code_Text],1) #(lf),department_type = #(lf)#(lf)case when right([Main_Code_Text],1)  IN (1,2) THEN 'A&E Department'#(lf)when right([Main_Code_Text],1)  = 3 then 'Minor Injury Unit'#(lf)when right([Main_Code_Text],1) = 4 THEN 'NHS Walk In Centre'#(lf)when  right([Main_Code_Text],1) = 5 THEN 'Same Day Emergency Care (no longer used)'#(lf)end #(lf)#(lf)from DSCRO_NATIONAL_LOOKUPS.Data_Dictionary.Emergency_Care_Department_Type_SCD#(lf)where Is_Latest = 1"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

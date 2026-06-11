@@ -1,0 +1,653 @@
+table 'ED Attendances'
+	lineageTag: 9204ff2d-61b8-4d48-8338-992191a11d6e
+
+	measure 'Total Last FY Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[Care Home ED Attendances]),
+			    'Date Table'[financial_year] = 'Date Table'[Last_FY]
+			)
+		formatString: 0
+		lineageTag: 6a1acf68-6eb7-446b-b622-ccdde90ed3ec
+
+	measure 'CH Current FY YTD Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[Care Home ED Attendances]),
+			   'ED Attendances'[ED attendances year adjusted] = 'ED Attendances'[ED attendances current year]
+			)
+		formatString: 0
+		lineageTag: ce90a0e0-993e-4c6d-b3ca-6fc34fcf7add
+
+	measure 'CH Last FY YTD Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[Care Home ED Attendances]),
+			    'ED Attendances'[ED attendances year adjusted] = 'ED Attendances'[ED attendances previous year]
+			)
+		formatString: 0
+		lineageTag: 7ba4013c-597a-49fb-b1ca-0d8c6c0a8cad
+
+	measure '% Over/Under FY YTD Attendances' = CALCULATE(('ED Attendances'[CH Current FY YTD Attendances] - 'ED Attendances'[CH Last FY YTD Attendances]))/'ED Attendances'[CH Last FY YTD Attendances]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8fc9da82-a14b-4c7b-872f-2dc9b3d26881
+
+	measure '% non-injurious' = CALCULATE(sum('ED Attendances'[non_injurious_attendance_flag]),'ED Attendances'[Care Home ED Attendances] == 1) /sum('ED Attendances'[Care Home ED Attendances])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9561619f-7e7d-45a6-9b06-de6b83795bdc
+
+	measure 'Non-CH Current FY YTD Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[counter]),
+			    'Date Table'[ytd_flag] IN { 1 },
+			    'Date Table'[Current_FY_Flag] in { 1 }
+			)
+		formatString: 0
+		lineageTag: c1eae2f1-5c74-4a96-bc0c-5d112189c499
+
+	measure 'Non-CH Last FY YTD Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[counter]),
+			    'Date Table'[ytd_flag] IN { 1 },
+			    'Date Table'[financial_year] = 'Date Table'[Last_FY]
+			)
+		formatString: 0
+		lineageTag: 74169059-b027-4aea-a9ee-f3d982cd4715
+
+	measure '% of attendances from CH year on year comparison' =
+			CALCULATE(
+			    ('ED Attendances'[CH Current FY YTD Attendances]/('ED Attendances'[All FY YTD Attendances]))
+			    -
+			    ('ED Attendances'[CH Last FY YTD Attendances]/('ED Attendances'[All LY YTD Attendances])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 4697cf10-db1e-456c-95a1-1cf981c44eba
+
+	measure 'Current FY top 3 attendances codes' = ```
+			
+			CALCULATE (
+			SUM ( 'ED Attendances'[Care Home ED Attendances] ),
+			ALLEXCEPT ( 'ED Attendances', 'ED Attendances'[chief_complaint], 'Year to Date Reference'[YTD Reference] ),
+			'ED Attendances'[ED attendances year adjusted] = 'ED Attendances'[ED attendances current year]
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 9e2eb1f1-6f9d-4135-adf2-1a897bdbcb44
+
+	measure 'Last FY top 3 attendances codes' = ```
+			
+			CALCULATE (
+			SUM ( 'ED Attendances'[Care Home ED Attendances] ),
+			ALLEXCEPT ( 'ED Attendances', 'ED Attendances'[chief_complaint] ),
+			'ED Attendances'[ED attendances year adjusted] = 'ED Attendances'[ED attendances previous year], 'ED Attendances'[ED attendances YTD] = "Year to Date"
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 1d98d12b-831d-43ab-abe7-cb3d16d7755a
+
+	measure 'Measure 2'
+		lineageTag: 53784072-0d1f-4a5a-9e25-5c8c64d21fa3
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure 'Current FY top 3 treatment codes' = ```
+			
+			CALCULATE (
+			SUM ( 'ED Attendances'[Care Home ED Attendances] ),
+			ALLEXCEPT ( 'ED Attendances', 'ED Attendances'[Treatment_Code] ),
+			'Date Table'[Current_FY_Flag] = 1
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 1a52906f-162f-4217-92b5-3c3f435c07f3
+
+	measure 'Last FY top 3 treatment codes' = ```
+			
+			CALCULATE (
+			SUM ( 'ED Attendances'[Care Home ED Attendances] ),
+			ALLEXCEPT ( 'ED Attendances', 'ED Attendances'[Treatment_Code] ),
+			'Date Table'[Last_FY_Flag] = 1 && 'Date Table'[ytd_flag] = 1
+			)
+			
+			```
+		formatString: 0
+		lineageTag: a7cf4ef5-59c5-48fe-8930-86531c3647ac
+
+	measure 'ED Attendance rate per 1000' = IFERROR(CALCULATE((sum('ED Attendances'[Care Home ED Attendances])/'Current Care Home Population'[Current Care Home Patients])*1000),blank())
+		formatString: 0
+		lineageTag: 15219407-abe7-41ed-a8ae-fcc99fc711ed
+
+	measure 'ED care home patients returned home' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[Care Home ED Attendances]),
+				'ED Attendances'[Patient_returned_home] IN { 1 }
+			)
+		formatString: 0
+		lineageTag: 28b43410-c55b-4185-9e57-572b8d74e00e
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'ED Rate per 1000 Yearly' =
+			
+			
+			VAR ED = CALCULATE ( SUM ('ED Attendances'[Care Home ED Attendances] ))
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (ED/POP*1000)
+		lineageTag: 87698fba-2f87-4599-b543-a82b89b4d90d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ED Rate per 1000 Monthly' =
+			
+			
+			VAR ED = CALCULATE ( SUM ('ED Attendances'[Care Home ED Attendances] ))
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  )
+			RETURN (ED/POP*1000)
+		lineageTag: adfd58ea-fecd-4faa-b562-c6b6b1c1e453
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LY Reasons ED Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = [Last FY top 3 attendances codes]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"}, 'Date table (pop over time)'[Financial year adjusted] = 'Date table (pop over time)'[Care home patient previous year])
+			
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 400ea009-fffe-4e1b-b084-5996e13bceea
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CY Reasons ED Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = [Current FY top 3 attendances codes]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"}, 'Date table (pop over time)'[Financial year adjusted] = 'Date table (pop over time)'[Care home patient previous year])
+			
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 2065dda4-b164-4d26-bbff-2582193fcce0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'All FY YTD Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[counter]),
+			   'ED Attendances'[ED attendances year adjusted] = 'ED Attendances'[ED attendances current year]
+			)
+		formatString: 0
+		lineageTag: ad87eb73-beec-468a-a8af-24f1d558b9f7
+
+	measure 'All LY YTD Attendances' =
+			
+			CALCULATE(
+				SUM('ED Attendances'[counter]),
+			   'ED Attendances'[ED attendances year adjusted] = 'ED Attendances'[ED attendances previous year], 'ED Attendances'[ED attendances YTD] = "Year to Date"
+			)
+		formatString: 0
+		lineageTag: 42bc184d-3f45-4b08-8679-51902df220ad
+
+	measure '% of attendances from CH patients v2' = IFERROR(CALCULATE(sum('ED Attendances'[Care Home ED Attendances])/sum('ED Attendances'[counter])), blank())
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: badf8b4f-9c2c-43a7-8f50-656989ecf6cf
+
+	measure 'Attendance activity y-axis' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate" && x_axis = "Yearly", 'ED Attendances'[ED Rate per 1000 Yearly]
+			
+			        ,if(rate_or_actual = "Rate" && x_axis = "Monthly", 'ED Attendances'[ED Rate per 1000 Monthly]
+			        
+			        ,if(rate_or_actual = "Actual", CALCULATE(sum('ED Attendances'[Care Home ED Attendances])))))
+			```
+		lineageTag: 780aac65-7aca-421e-a4ad-900a0a4757d4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Attendance activity title' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate", "ED Attendances for Care Home Residents - Rate per 1000"
+			        ,if(rate_or_actual = "Actual", "ED Attendances for Care Home Residents - Actual Number of Attendances"))
+			```
+		lineageTag: 827013f4-5ee9-40c8-9d53-010f62bc9343
+
+	measure 'Attendance activity via SWAST title' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate", "ED Attendances via SWAST for Care Home Residents - Rate per 1000"
+			        ,if(rate_or_actual = "Actual", "ED Attendances via SWAST for Care Home Residents - Actual Number of Attendances"))
+			```
+		lineageTag: 3e823af0-bb2f-4142-bd79-7e5e690e0bba
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 6824b848-0d82-405d-b723-db7c5e7c299d
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fcd563b1-4344-48cf-aa99-bcab9394b151
+		summarizeBy: none
+		sourceColumn: arrival_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column CDS_Unique_Identifier
+		dataType: string
+		lineageTag: d0db81a7-9e6f-47c6-bbd4-43e74f07d7d5
+		summarizeBy: none
+		sourceColumn: CDS_Unique_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column chief_complaint
+		dataType: string
+		lineageTag: c7fe262c-67f7-40db-990c-2c6948e4aa71
+		summarizeBy: none
+		sourceColumn: chief_complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care Home ED Attendances'
+		dataType: int64
+		formatString: 0
+		lineageTag: 40e30614-be20-4a7b-95ca-57af079f774d
+		summarizeBy: sum
+		sourceColumn: Care Home ED Attendances
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_patient_description
+		dataType: string
+		lineageTag: 3a16ea50-3f4d-44e2-abfb-3054509c1b1e
+		summarizeBy: none
+		sourceColumn: Care_home_patient_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 12cd9806-10e0-4b6b-8fc0-ee5a8ff63a74
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Treatment_Code
+		dataType: string
+		lineageTag: d6bcfb65-be3b-4fe0-9a4d-96200d7e67cc
+		summarizeBy: none
+		sourceColumn: Treatment_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column non_injurious_attendance_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f05e989-98f4-4c0f-9060-1dab9dc07eb2
+		summarizeBy: sum
+		sourceColumn: non_injurious_attendance_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column non_injurious_attendance
+		dataType: string
+		lineageTag: d1002b79-0081-4e2e-a1ea-b103d76759aa
+		summarizeBy: none
+		sourceColumn: non_injurious_attendance
+
+		annotation SummarizationSetBy = Automatic
+
+	column ch_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a4177750-8222-4274-9823-2f123c6b8757
+		summarizeBy: sum
+		sourceColumn: ch_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column General_Practice
+		dataType: string
+		lineageTag: 284a43bc-e008-48cb-9d22-18f0eebaf4fd
+		summarizeBy: none
+		sourceColumn: General_Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column non-null_treatment_attendances_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: e7bd6f94-48e0-4c98-96c0-e5274121a969
+		summarizeBy: sum
+		sourceColumn: non-null_treatment_attendances_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Status
+		dataType: string
+		lineageTag: 8653622a-9c17-4e38-bc2f-9976bcfaf339
+		summarizeBy: none
+		sourceColumn: Discharge_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column dischargestatus
+		dataType: string
+		lineageTag: 21629b2d-0e60-492a-8a3c-c6b20da07b51
+		summarizeBy: none
+		sourceColumn: dischargestatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination
+		dataType: string
+		lineageTag: a45fa044-86f2-489f-85af-075541cd6c07
+		summarizeBy: none
+		sourceColumn: Destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column destinationstatus
+		dataType: string
+		lineageTag: 288655c6-b85c-4678-9a38-4e13e0b28652
+		summarizeBy: none
+		sourceColumn: destinationstatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 335f9b4e-9875-4742-86c7-e42affc5b20e
+		summarizeBy: sum
+		sourceColumn: Current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_returned_home
+		dataType: int64
+		formatString: 0
+		lineageTag: 89ecb70c-9410-4078-9400-c3ce4c1d0a06
+		summarizeBy: sum
+		sourceColumn: Patient_returned_home
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_date_diff
+		dataType: int64
+		formatString: 0
+		lineageTag: da9eebbf-5273-45ec-a690-48f90ac1d7ae
+		summarizeBy: sum
+		sourceColumn: Death_date_diff
+
+		annotation SummarizationSetBy = Automatic
+
+	column 48_hour_date_diff
+		dataType: int64
+		formatString: 0
+		lineageTag: 276a7c74-fcf6-4fd0-8cc0-cb3a6e08faf4
+		summarizeBy: sum
+		sourceColumn: 48_hour_date_diff
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateOfDeath
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7649cd3e-a42d-4fbf-b0af-6bdee6f8f5fa
+		summarizeBy: none
+		sourceColumn: DateOfDeath
+
+		variation Variation
+			isDefault
+			relationship: 6f46d3b5-d178-464f-8eaa-d2e1a8aaded0
+			defaultHierarchy: LocalDateTable_dc8a7a4d-4351-41cf-906d-f6a8f1260b54.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ED attendances max financial month' = ```
+			
+			VAR currmonth = MONTH(MAX('ED Attendances'[arrival_date]))
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+			
+			```
+		formatString: 0
+		lineageTag: 9d0c3551-2c40-4ab5-956b-40d55ee01e1d
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ED attendances financial month' = ```
+			
+			VAR currmonth = MONTH('ED Attendances'[arrival_date])
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+			
+			```
+		formatString: 0
+		lineageTag: 2af238d5-9be8-4c48-875d-ac62260edd30
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ED attendances YTD' = ```
+			if('ED Attendances'[ED attendances financial month] <= 'ED Attendances'[ED attendances max financial month], "Year to Date", "Not Year to Date")
+			
+			```
+		lineageTag: 4f0475e9-17a5-451d-ad71-58b5ca8e287d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ED attendances current year' = ```
+			
+			VAR max_year = YEAR(MAX('ED Attendances'[arrival_date]
+			))
+			VAR max_month = MONTH(MAX('ED Attendances'[arrival_date]
+			))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR adjust_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			return adjust_year
+			
+			```
+		formatString: 0
+		lineageTag: cd5084a3-7e56-46b2-b638-e1ecb74f933f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ED attendances year adjusted' = ```
+			if(
+			    'ED Attendances'[ED attendances financial month] = 10, YEAR('ED Attendances'[arrival_date]) -1, 
+			    if('ED Attendances'[ED attendances financial month] = 11, YEAR('ED Attendances'[arrival_date]) -1, 
+			    if('ED Attendances'[ED attendances financial month] = 12, YEAR('ED Attendances'[arrival_date]) -1, year('ED Attendances'[arrival_date]))))
+			
+			```
+		formatString: 0
+		lineageTag: 6af5b529-aa2d-4ad9-ba19-7a00bfa50458
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ED attendances previous year' = ```
+			'ED Attendances'[ED attendances current year] - 1
+			
+			```
+		formatString: 0
+		lineageTag: 428e6771-39c9-4130-9ab8-b81cb35b4d92
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_status
+		dataType: string
+		lineageTag: bd714b79-8bf6-4cef-bf88-e6ffa534fcc2
+		summarizeBy: none
+		sourceColumn: Care_home_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: abde9408-cf4e-4844-9431-cd89559784f1
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_At_Arrival
+		dataType: string
+		lineageTag: f81c2975-fcd9-4d31-9735-0aba877d744d
+		summarizeBy: none
+		sourceColumn: Age_At_Arrival
+
+		annotation SummarizationSetBy = Automatic
+
+	column Arrival_Mode
+		dataType: string
+		lineageTag: d08fa4af-bb31-463f-bfb4-718aa853581b
+		summarizeBy: none
+		sourceColumn: Arrival_Mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitted_flag
+		dataType: string
+		lineageTag: 00a8e2bc-11cd-4edd-8bb2-5cd26c697008
+		summarizeBy: none
+		sourceColumn: admitted_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5cc28c8f-f2ad-4db4-8979-1c2188187e39
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: 4fe3863e-517a-4d52-bcad-ad50e32d5e7d
+			defaultHierarchy: LocalDateTable_ec5bafb0-01b6-477c-b760-a21cee1d2b3b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ED Attendances' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[CareHomes].[tbl06_CareHomeEDAttendances]#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Care_home_patient_flag", "Care Home ED Attendances"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Patient_returned_home", Int64.Type}, {"Current_patient_flag", Int64.Type}, {"Care Home ED Attendances", Int64.Type}, {"non_injurious_attendance_flag", Int64.Type}, {"non-null_treatment_attendances_flag", Int64.Type}, {"ch_flag", Int64.Type}, {"48_hour_date_diff", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

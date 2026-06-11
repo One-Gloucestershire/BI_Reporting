@@ -1,0 +1,70 @@
+table 'ED Coding'
+	lineageTag: 5b6b0357-d1be-48f2-9a09-9d706cca5ebd
+
+	measure '% of total activity' = ```
+			
+			
+			VAR type_selected = SELECTEDVALUE('ED Coding'[Type])
+			
+			RETURN
+			
+			    IF(type_selected = "Chief Complaint",
+			    //CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Chief Complaint") / CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Chief Complaint", ALLSELECTED('ED Coding'[Coding])),
+			    CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Chief Complaint") / CALCULATE(SUM('ED Falls (GHFT & SWAST)'[counter]), ALLSELECTED('ED Coding'[Coding])),
+			
+			    IF(type_selected = "Diagnosis",
+			    //CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Diagnosis") / CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Diagnosis", ALLSELECTED('ED Coding'[Coding])),
+			    CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Diagnosis") / CALCULATE(SUM('ED Falls (GHFT & SWAST)'[counter]), ALLSELECTED('ED Coding'[Coding])), 
+			
+			    IF(type_selected = "Investigation",
+			    //CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Investigation") / CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Investigation", ALLSELECTED('ED Coding'[Coding])),
+			    CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Investigation") / CALCULATE(SUM('ED Falls (GHFT & SWAST)'[counter]), ALLSELECTED('ED Coding'[Coding])), 
+			
+			    IF(type_selected = "Treatment",
+			    //CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Treatment") / CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Treatment", ALLSELECTED('ED Coding'[Coding]))))))
+			    CALCULATE(SUM('ED Coding'[counter]), 'ED Coding'[Type] = "Treatment") / CALCULATE(SUM('ED Falls (GHFT & SWAST)'[counter]), ALLSELECTED('ED Coding'[Coding])) 
+			
+			))))
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f4ddd501-dd55-4486-972d-34dbb9923b93
+
+	column cds_unique_identifier
+		lineageTag: e54aff94-f609-4b5b-84d3-3ee67cd0fa79
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: ED Investigations[cds_unique_identifier]
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		formatString: 0
+		lineageTag: c6912cbc-e823-494d-8e85-334431d93438
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: ED Investigations[counter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		lineageTag: 7adf7367-da10-4bf5-93e2-b056b8f9af50
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: ED Investigations[Type]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Coding
+		lineageTag: 43183acc-523a-4e08-ba1d-4cfff2832333
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: ED Investigations[Coding]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ED Coding' = calculated
+		mode: import
+		source = UNION('ED Investigations', 'ED Treatments', 'Chief Complaint')
+
+	annotation PBI_Id = 22e43283836b4399930de1987885ce9f
+

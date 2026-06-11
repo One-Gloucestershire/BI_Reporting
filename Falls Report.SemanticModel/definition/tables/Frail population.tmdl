@@ -1,0 +1,33 @@
+table 'Frail population'
+	lineageTag: 99dfb3be-3fa7-4ffc-825b-27986ea06973
+
+	column COUNTER
+		dataType: int64
+		formatString: 0
+		lineageTag: 16c61dc7-eccb-42e3-ba38-3862dd347b94
+		summarizeBy: sum
+		sourceColumn: COUNTER
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Frailty Category'
+		dataType: string
+		lineageTag: 36c5dc7f-5c51-4ba0-b03c-8bca2316548a
+		summarizeBy: none
+		sourceColumn: Frailty Category
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Frail population-6813feea-a750-48b0-a19d-691be3a9ea02' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SET ANSI_WARNINGS OFF#(lf)SET NOCOUNT ON#(lf)#(lf)#(lf)#(lf)SELECT DISTINCT#(lf)#(lf)#(lf) case when [MPI].eFICategoryDerived  like 'Fit' then 'Fit' #(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'mild frailty' then 'Mild Frailty'#(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'moderate frailty' then 'Moderate Frailty'#(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'severe frailty' then 'Severe Frailty'#(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'unknown' then 'Unknown'#(lf)#(tab)#(tab)else 'Unknown'#(lf)#(tab)#(tab)end as [frailty_category],#(lf)#(lf)[COUNTER] = COUNT([MPI].PseudoNHSNumber)#(lf)--[KEY] = cast([GP].[OrganisationCode]as varchar)+cast([MPI].[DementiaDerived]as varchar)+cast([MPI].[Derived_IsLivingAlone]as varchar)+cast([MPI].[Derived_IsLivingInCareHome]as varchar)+cast([MPI].[eFI_Catgory_derived]as varchar)+cast([AB].[10YR_Age_Band]as varchar)#(lf)FROM [ICB_Products].[Patient].[vw_Summary] [MPI]#(lf)#(lf)#(lf)#(lf)WHERE [MPI].DerivedAge >= '65'#(lf)#(lf)GROUP BY #(lf)#(lf) case when [MPI].eFICategoryDerived  like 'Fit' then 'Fit' #(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'mild frailty' then 'Mild Frailty'#(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'moderate frailty' then 'Moderate Frailty'#(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'severe frailty' then 'Severe Frailty'#(lf)#(tab)#(tab)when [MPI].eFICategoryDerived like 'unknown' then 'Unknown'#(lf)#(tab)#(tab)else 'Unknown'#(lf)#(tab)end#(lf)#(lf)--cast([GP].[OrganisationCode]as varchar)+cast([MPI].[DementiaDerived]as varchar)+cast([MPI].[Derived_IsLivingAlone]as varchar)+cast([MPI].[Derived_IsLivingInCareHome]as varchar)+cast([MPI].[eFI_Catgory_derived]as varchar)+cast([AB].[10YR_Age_Band]as varchar)#(lf)#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"frailty_category", "Frailty Category"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

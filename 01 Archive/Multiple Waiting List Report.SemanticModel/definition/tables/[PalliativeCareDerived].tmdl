@@ -1,0 +1,29 @@
+table [PalliativeCareDerived]
+	lineageTag: 059b6eaf-e5bc-467f-ba59-83c7b89e0107
+
+	column [PalliativeCareDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 58c8b11a-8a5f-41b3-b86d-c97d42684d16
+		summarizeBy: none
+		sourceColumn: [PalliativeCareDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Pallative Care desc' = if('[PalliativeCareDerived]'[[PalliativeCareDerived]]] = 1, "Has Pallative Care", "Does not have Pallative Care")
+		lineageTag: 06f59513-976e-4f54-b730-d93a6a6d2d5b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [PalliativeCareDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[PalliativeCareDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[PalliativeCareDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

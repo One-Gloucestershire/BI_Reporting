@@ -1,0 +1,143 @@
+table 'Primary Care Falls'
+	lineageTag: 06772ef2-9329-49f2-a38d-91e06d624c54
+
+	measure 'Falls per 1000 Current Population' = CALCULATE(SUM('Primary Care Falls'[number_of_falls])) / [Current Population] * 1000
+		lineageTag: aff39273-db47-4ba7-a6ba-e62e64ef35be
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Number of patients with falls coding' = CALCULATE(COUNT('Primary Care Falls'[PseudoNHSNumber])) / [Current Population] * 1000
+		lineageTag: 3d7caf85-cc2c-4ccc-9a66-2da60907635a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 8ec50281-4c12-4a40-a815-24328356b1a8
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: ab9c27a7-af69-437d-8a33-08169a805a36
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 045bd0b6-1e97-407d-b379-914757835741
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 9482e9a3-4352-4b0b-a663-fd9553e08462
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column number_of_falls
+		dataType: double
+		lineageTag: 0dfc15ad-ca3a-4dd1-966b-1f2de8c2e2c4
+		summarizeBy: sum
+		sourceColumn: number_of_falls
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: b915ccb2-50b4-46e6-a180-328223e19e9f
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column falls_behaviour_code
+		dataType: string
+		lineageTag: 25ee59ab-6753-44d4-9246-1d8dd1a62959
+		summarizeBy: none
+		sourceColumn: falls_behaviour_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column falls_behaviour_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 32e6b495-0b2c-4020-921d-7aac40efa648
+		summarizeBy: none
+		sourceColumn: falls_behaviour_date
+
+		variation Variation
+			isDefault
+			relationship: d88aca9c-34fb-4aae-aa31-0224c02464b3
+			defaultHierarchy: LocalDateTable_19762fc4-e6fa-4bfe-af71-7a369c69ab74.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column number_of_falls_max_eventdate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2e5abe82-762b-4cc1-80b8-70865303c3d3
+		summarizeBy: none
+		sourceColumn: number_of_falls_max_eventdate
+
+		variation Variation
+			isDefault
+			relationship: f959bd7c-d55d-4479-a1f7-24aa962fa5e9
+			defaultHierarchy: LocalDateTable_51e3cebe-00d4-46d7-9767-f95159779bc3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column number_of_falls_eventdate_12_months_prior
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 69366b77-a449-4041-a3d2-404dd28c49ad
+		summarizeBy: none
+		sourceColumn: number_of_falls_eventdate_12_months_prior
+
+		variation Variation
+			isDefault
+			relationship: 7d2125ee-7d86-44b5-abc2-bc53a51ce0fb
+			defaultHierarchy: LocalDateTable_d38ad0e1-83f5-466a-b3ac-40bf15588564.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: a7a510b6-ab20-4476-b357-57fe85f62bce
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: afc7f883-61fc-4cb0-8748-9380adec942e
+		summarizeBy: sum
+		sourceColumn: current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Primary Care Falls' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Falls].[tbl10_PrimaryCareFalls]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

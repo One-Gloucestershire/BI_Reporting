@@ -1,0 +1,824 @@
+table '2WW Referrals'
+	lineageTag: 3b2e9274-afcc-4a88-890c-268145209b37
+
+	measure 'Rate per 1000 per year' =
+			
+			VAR total_referrals = [Number_of_referrals]
+			VAR pop =  [April_Pop]
+			RETURN total_referrals/pop * 1000
+		lineageTag: ed197d91-4552-4401-b0b5-bb2a3b40b801
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '19/20 vs Current Year' =
+			
+			VAR base_2019 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2019/20")
+			VAR current_year = CALCULATE([Rate per 1000 per year], 'Date Reference'[Current_FY_Flag] = 1)
+			RETURN IFERROR(CALCULATE((current_year - base_2019) / base_2019,ALLSELECTED('2WW Referrals'[AgeBand])),BLANK())
+		lineageTag: f7e9f5df-289d-48f5-b9f3-9b9c024b8ef0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '19/20 vs 20/21' =
+			
+			VAR base_2019 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2019/20")
+			VAR base_2020 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2020/21")
+			RETURN IFERROR(
+			    (base_2020 - base_2019) / base_2019,BLANK()
+			    )
+		lineageTag: 9323c237-97c5-47f7-a325-408664dd04bb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '20/21 vs 21/22' =
+			
+			VAR base_2020 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2020/21")
+			VAR base_2021 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2021/22")
+			RETURN IFERROR((base_2021 - base_2020) / base_2020,BLANK())
+		lineageTag: 8bde7750-d79e-41af-b162-6ee1f265d144
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '21/22 vs 22/23' =
+			
+			VAR base_2021 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2021/22")
+			VAR base_2022 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2022/23")
+			RETURN IFERROR((base_2022 - base_2021) / base_2021,BLANK())
+		lineageTag: 526a843a-8869-4303-94af-176d216b48e7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '22/23 vs 23/24' =
+			
+			VAR base_2022 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2022/23")
+			VAR base_2023 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2023/24")
+			RETURN IFERROR((base_2023 - base_2022) / base_2022,BLANK())
+		lineageTag: bf1d6a50-c778-48ad-b087-b7e4fc83c086
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '23/24 vs 24/25' =
+			
+			VAR base_2023 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2023/24")
+			VAR base_2024 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2024/25")
+			RETURN IFERROR((base_2024 - base_2023) / base_2023,BLANK())
+		lineageTag: 220c46a8-f909-4c52-a778-3959c30fcbdc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average change per year' =
+			IFERROR(
+			    CALCULATE(
+			    ([19/20 vs 20/21] + [20/21 vs 21/22] + [21/22 vs 22/23] + [22/23 vs 23/24] + [23/24 vs 24/25]) / (DISTINCTCOUNT('2WW Referrals'[InitialReferralFinancialYear]) - 1),
+			    ALLSELECTED('2WW Referrals'[AgeBand])),
+			    BLANK())
+		lineageTag: d19c6ef8-90d5-4518-94e4-8621675ce019
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rank of 19/20 vs Current Year' =
+			
+			
+			
+			RANKX(ALL('GP Reference'[ReportingOrganisationName]),CALCULATE([19/20 vs Current Year],ALLSELECTED('2WW Referrals'[AgeBand])),,ASC)
+		formatString: 0
+		lineageTag: 32ed2dd6-929f-42e3-a33d-33449831742a
+
+	measure 'Rank of Rate per 1000 of Referrals Current Year' = ```
+			
+			 //RANKX( ALLSELECTED( 'GP Reference'[ReportingOrganisationName] ) , CALCULATE( ( 'Referrals'[Rate per 1000 per year]) ),,ASC )
+			
+			 IF(
+			                                    NOT(ISBLANK([Rate per 1000 current year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([Rate per 1000 current year]))),
+			                                        [Rate per 1000 current year],,ASC))
+			```
+		formatString: 0
+		lineageTag: 5ea39633-d00f-4f7d-b7de-5945890fdb77
+
+	measure 'Rank of Average Change per Year' =
+			
+			if(                      NOT(ISBLANK([Average change per year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([Average change per year]))),
+			                                        [Average change per year],,ASC))
+		formatString: 0
+		lineageTag: 3d0778f2-c0bb-46b8-af47-9aed852d1701
+
+	measure 'Top 10 Practice flag' = IF([Rank of 19/20 vs Current Year] < 11 && [Rank of Average Change per Year] < 11 && [Rank of Rate per 1000 of Referrals Current Year] < 11, 1, 0)
+		formatString: 0
+		lineageTag: 280ca038-2308-4e88-9613-cc5d782a1f24
+
+	measure 'Rate per 1000 current year' =
+			
+			VAR total_referrals = CALCULATE ([Number_of_referrals], 'Year Ref'[Current Year Flag] = "Current Year",ALLSELECTED('2WW Referrals'[AgeBand]))
+			VAR pop =  CALCULATE([April_Pop], 'Year Ref'[Current Year Flag] = "Current Year")
+			RETURN CALCULATE(total_referrals/pop * 1000,ALLSELECTED('2WW Referrals'[AgeBand]))
+		formatString: 0.0
+		lineageTag: f60a6b99-6512-4b90-a50d-bfd9d7de9822
+
+	measure 'New FY Top 10 Practice flag Asc' =
+			CALCULATE(IF([New FY Rank of 19/20 vs Current Year Asc] < 11 && [New FY Rank of Average Change per Year] < 11 && [New FY Rank of Rate per 1000 of Referrals Current Year] < 11, 1, 0),ALL('Date Reference'[financial_year])
+			
+			)
+		formatString: 0
+		lineageTag: 35ebe326-b62e-4d10-86d1-88b5e52e90d2
+
+	measure 'New financial year Rank of 19/20 vs Current Year' =
+			
+			
+			
+			RANKX(ALL('GP Reference'[ReportingOrganisationName]),CALCULATE([19/20 vs Current Year],ALLSELECTED('2WW Referrals'[AgeBand])),,ASC)
+		formatString: 0
+		lineageTag: 4d270a5a-acf3-4233-abaf-c2c7b73e8a4d
+
+	measure 'New FY Rate per 1000 current year' =
+			
+			VAR total_referrals = CALCULATE ([Number_of_referrals], 'Year Ref'[Current Year Flag]= "Current Year", ALLSELECTED('2WW Referrals'[AgeBand]),ALLSELECTED('Date Reference'[financial_year]))
+			VAR pop =  CALCULATE([April_Pop], 'Year Ref'[Current Year Flag] = "Current Year")
+			RETURN CALCULATE(total_referrals/pop * 1000,ALLSELECTED('2WW Referrals'[AgeBand]),ALLSELECTED('Date Reference'[financial_year]))
+		lineageTag: 832c70f6-3f56-4f77-8df1-e01d3c1a1af7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New FY Rank of Rate per 1000 of Referrals Current Year' = ```
+			
+			 //RANKX( ALLSELECTED( 'GP Reference'[ReportingOrganisationName] ) , CALCULATE( ( 'Referrals'[Rate per 1000 per year]) ),,ASC )
+			
+			IF(
+			                                    NOT(ISBLANK([New FY Rate per 1000 current year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([New FY Rate per 1000 current year]))),
+			                                        [New FY Rate per 1000 current year],,ASC))
+			
+			```
+		formatString: 0
+		lineageTag: 5bc0c0a3-b572-48af-af62-d457a572907a
+
+	measure 'New FY 19/20 vs Current Year' =
+			
+			VAR base_2019 = CALCULATE([Rate per 1000 per year], 'Date Reference'[financial_year] = "2019/20")
+			VAR current_year = CALCULATE([Rate per 1000 per year], 'Year Ref'[Current Year Flag] = "Current Year")
+			RETURN IFERROR(CALCULATE((current_year - base_2019) / base_2019,ALLSELECTED('2WW Referrals'[AgeBand]), ALLSELECTED('Date Reference'[financial_year])),BLANK())
+		lineageTag: 2234ec9f-91c8-4ebb-b0a7-4905de21a43e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New FY Average change per year' =
+			IFERROR(
+			    CALCULATE(
+			    ([19/20 vs 20/21] + [20/21 vs 21/22] + [21/22 vs 22/23] + [22/23 vs 23/24] + [23/24 vs 24/25]) / (DISTINCTCOUNT('2WW Referrals'[InitialReferralFinancialYear]) - 1),
+			    ALLSELECTED('2WW Referrals'[AgeBand]), ALLSELECTED('Date Reference'[financial_year])),
+			    BLANK())
+		lineageTag: cdc51af0-ca56-4b10-98b2-11558e9b5e66
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New FY Rank of Average Change per Year' = ```
+			
+			 if(                      NOT(ISBLANK([New FY Average change per year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([New FY Average change per year]))),
+			                                        [New FY Average change per year],,ASC)) - 9
+			
+			                     
+			```
+		formatString: 0
+		lineageTag: 90ed44c6-7da3-4194-a447-7ebfeff46a4f
+
+	measure 'New FY Rank of 19/20 vs Current Year Asc' = ```
+			
+			
+			
+			RANKX(ALL('GP Reference'[ReportingOrganisationName]),CALCULATE([New FY 19/20 vs Current Year],ALLSELECTED('2WW Referrals'[AgeBand]), ALLSELECTED('Date Reference'[financial_year])),,ASC)
+			
+			```
+		formatString: 0
+		lineageTag: 23d4702a-4f3c-4404-b812-f2f4477ef1e2
+
+	measure Number_of_referrals = DISTINCTCOUNT([UBRN])
+		formatString: 0
+		lineageTag: 9728e3de-3a80-4008-bb5a-346c41ecf9d8
+
+	measure 'New FY Rank of 19/20 vs Current Year Desc' = ```
+			
+			
+			
+			RANKX(ALL('GP Reference'[ReportingOrganisationName]),CALCULATE([New FY 19/20 vs Current Year],ALLSELECTED('2WW Referrals'[AgeBand]), ALLSELECTED('Date Reference'[financial_year])),,DESC)
+			
+			```
+		formatString: 0
+		lineageTag: e393cbff-65e6-43ea-9ce7-416ac78600a7
+
+	measure 'New FY Rank of Average Change per Year Desd' = ```
+			
+			 if(                      NOT(ISBLANK([New FY Average change per year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([New FY Average change per year]))),
+			                                        [New FY Average change per year],,DESC))
+			
+			                     
+			```
+		formatString: 0
+		lineageTag: 287ce2af-091b-44f7-be4a-0c8540f5f467
+
+	measure 'New FY Rank of Rate per 1000 of Referrals Current Year Desc' = ```
+			
+			 //RANKX( ALLSELECTED( 'GP Reference'[ReportingOrganisationName] ) , CALCULATE( ( 'Referrals'[Rate per 1000 per year]) ),,ASC )
+			
+			IF(
+			                                    NOT(ISBLANK([New FY Rate per 1000 current year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([New FY Rate per 1000 current year]))),
+			                                        [New FY Rate per 1000 current year],,DESC))
+			
+			```
+		formatString: 0
+		lineageTag: b47f349a-65fb-4c18-8e54-5f1c3880c791
+
+	measure 'New FY Top 10 Practice flag Desc' =
+			CALCULATE(IF([New FY Rank of 19/20 vs Current Year Desc] < 11 && [New FY Rank of Average Change per Year Desd] < 11 && [New FY Rank of Rate per 1000 of Referrals Current Year Desc] < 11, 1, 0),ALL('Date Reference'[financial_year])
+			
+			)
+		formatString: 0
+		lineageTag: 59127c06-94ac-4cff-b70e-cdcdd50b8f41
+
+	measure 'referrals this year' = CALCULATE ([Number_of_referrals], '2WW Referrals'[Current Year Flag] = "Current Year")
+		formatString: 0
+		lineageTag: 40f281c5-bd86-45fd-9198-bdf989a2ac7d
+
+	measure 'Rank of Average Change per Year for Visual' = ```
+			
+			 if(                      NOT(ISBLANK([New FY Average change per year]))
+			                                    , RANKX(
+			                                        FILTER(ALLSELECTED('GP Reference'),NOT(ISBLANK([New FY Average change per year]))),
+			                                        [New FY Average change per year],,ASC)) -1
+			```
+		formatString: 0
+		lineageTag: 25091639-1e87-47d4-af7b-30fe50ab1963
+
+	column 'Referrals YTD' =
+			
+			VAR current_month = MONTH('2WW Referrals'[referral_date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('2WW Referrals'[referral_date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: be29e89d-6e70-4e40-89d9-a8f30188c7d7
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column breast_cancer_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 90fa6fef-f0e6-4081-8235-2be11a7275b8
+		summarizeBy: sum
+		sourceColumn: breast_cancer_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column UBRN
+		dataType: string
+		lineageTag: aee087c8-5443-486b-a927-dfb996cb2351
+		summarizeBy: none
+		sourceColumn: UBRN
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNo
+		dataType: string
+		lineageTag: da2be159-54cd-4639-91cc-f07e6fc735bd
+		summarizeBy: none
+		sourceColumn: PseudoNHSNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: a4fc4c35-7799-46d1-be2e-550fae8c13a2
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		lineageTag: 3d4a0639-b761-4d35-a7a7-be8f6aa38a16
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 65f197bd-6ada-436f-97df-85ffad268151
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 7f3471f1-509a-4c7f-9785-001a2cb14781
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Name
+		dataType: string
+		lineageTag: 33e16f92-7296-4ad3-83c6-49b6cf5128d7
+		summarizeBy: none
+		sourceColumn: Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: efc32e99-1b4e-4b3c-845f-4e5af45b6409
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 89353c84-2fe1-4aef-9094-3f27a0cebb5f
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Consultant_Led_Flag
+		dataType: string
+		lineageTag: 8bbd52bc-faa5-4675-91a6-963a854a8d46
+		summarizeBy: none
+		sourceColumn: Consultant_Led_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Priority
+		dataType: string
+		lineageTag: 8c0d6049-d2d2-4293-bdb4-c8066d95a36e
+		summarizeBy: none
+		sourceColumn: Referral_Priority
+
+		annotation SummarizationSetBy = Automatic
+
+	column InitialReferral
+		dataType: int64
+		formatString: 0
+		lineageTag: fee9a0ab-7ccc-4af0-ac33-6f8444af9c0e
+		summarizeBy: sum
+		sourceColumn: InitialReferral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Initial_Reporting_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 0067bd1c-45a1-4005-a194-a1554ce2294d
+		summarizeBy: sum
+		sourceColumn: Initial_Reporting_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column InitialReferralDate
+		dataType: dateTime
+		formatString: dd/mm/yy
+		lineageTag: c8b72f51-eae1-4eae-b585-a499a670adcc
+		summarizeBy: none
+		sourceColumn: InitialReferralDate
+
+		variation Variation
+			isDefault
+			relationship: adc76c34-5a8f-41c4-abaa-dfddb4005e96
+			defaultHierarchy: LocalDateTable_5b5b8baa-d90e-4fa4-819d-0843982dfc7e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column InitialReferralMonth
+		dataType: string
+		lineageTag: b070d070-bb41-4315-bb50-92401ae2db7e
+		summarizeBy: none
+		sourceColumn: InitialReferralMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column InitialReferralFinancialYear
+		dataType: string
+		lineageTag: 276af59f-891a-4e78-a5dc-b7f209eabe23
+		summarizeBy: none
+		sourceColumn: InitialReferralFinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column InitialReferralYearmonth
+		dataType: string
+		lineageTag: 35876d93-5335-4486-90bf-6236a6e55691
+		summarizeBy: none
+		sourceColumn: InitialReferralYearmonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column InitialReferralFinancialMonth
+		dataType: string
+		lineageTag: 3283383b-18c7-4018-bb37-54e6cb6c8084
+		summarizeBy: none
+		sourceColumn: InitialReferralFinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_MainSpecialtyCode
+		dataType: string
+		lineageTag: 047adb61-6a78-4d5d-8e30-1de6ee61889c
+		summarizeBy: none
+		sourceColumn: Derived_MainSpecialtyCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_MainSpecialtyDescription
+		dataType: string
+		lineageTag: 27eb6224-f00f-4db9-979c-330765dccf58
+		summarizeBy: none
+		sourceColumn: Derived_MainSpecialtyDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Location_Code
+		dataType: string
+		lineageTag: acb5214c-0293-4dcd-867d-82dd70b23f26
+		summarizeBy: none
+		sourceColumn: Location_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_TreatmentFunctionCode
+		dataType: string
+		lineageTag: d104df9e-0b1b-4add-bcb4-6b851534a10e
+		summarizeBy: none
+		sourceColumn: Derived_TreatmentFunctionCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_TreatmentFunctionDescription
+		dataType: string
+		lineageTag: e62a4db9-c0a4-47f4-ac9f-88dfb5b567d9
+		summarizeBy: none
+		sourceColumn: Derived_TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceID
+		dataType: string
+		lineageTag: 7a7c0ec9-cdab-4093-8e97-0d8249c0c88b
+		summarizeBy: none
+		sourceColumn: ServiceID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceName
+		dataType: string
+		lineageTag: 51c97442-c9d3-4e99-864c-23790d230dc1
+		summarizeBy: none
+		sourceColumn: ServiceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClinicTypeCode
+		dataType: string
+		lineageTag: 88ba174e-e5f6-45b7-a051-2d6821a69ea9
+		summarizeBy: none
+		sourceColumn: ClinicTypeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClinicType
+		dataType: string
+		lineageTag: 6a7a84fc-15f1-4102-90cf-62f282ef101b
+		summarizeBy: none
+		sourceColumn: ClinicType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code
+		dataType: string
+		lineageTag: 2748329a-a862-479f-934c-5c083f73d15f
+		summarizeBy: none
+		sourceColumn: Provider_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Name
+		dataType: string
+		lineageTag: 6aee8c3a-1059-4793-9cd5-0a4881e30af6
+		summarizeBy: none
+		sourceColumn: Provider_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Group
+		dataType: string
+		lineageTag: 0e1bf6ab-57c7-4a6f-8bef-8df33cf6d01e
+		summarizeBy: none
+		sourceColumn: Provider_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Type
+		dataType: string
+		lineageTag: c10b7f0a-751a-4ed8-8313-b131afd5c543
+		summarizeBy: none
+		sourceColumn: Referral_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column DirectlyBookable
+		dataType: int64
+		formatString: 0
+		lineageTag: 3370c878-e883-4bfb-985a-c92d1ae316d3
+		summarizeBy: sum
+		sourceColumn: DirectlyBookable
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralAccepted
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b086fc2-fd46-4803-8e29-b3ee5d53716e
+		summarizeBy: sum
+		sourceColumn: ReferralAccepted
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRejected
+		dataType: int64
+		formatString: 0
+		lineageTag: 58f4923b-9b06-47b7-a78c-3b922e843e72
+		summarizeBy: sum
+		sourceColumn: ReferralRejected
+
+		annotation SummarizationSetBy = Automatic
+
+	column RAS
+		dataType: int64
+		formatString: 0
+		lineageTag: ae8a0ecc-31eb-4c11-84f9-8568a17e51e9
+		summarizeBy: sum
+		sourceColumn: RAS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rejection
+		dataType: int64
+		formatString: 0
+		lineageTag: 5767ee05-bf39-4466-834c-7183c3e02f72
+		summarizeBy: sum
+		sourceColumn: Rejection
+
+		annotation SummarizationSetBy = Automatic
+
+	column Booking
+		dataType: int64
+		formatString: 0
+		lineageTag: ed73aefe-452f-479f-a46f-0dcdf3faf6bc
+		summarizeBy: sum
+		sourceColumn: Booking
+
+		annotation SummarizationSetBy = Automatic
+
+	column BookingDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d2ed5327-1e10-409e-99ba-b49da910f546
+		summarizeBy: none
+		sourceColumn: BookingDate
+
+		variation Variation
+			isDefault
+			relationship: 6aac9a08-6687-4d74-b634-2e55aa22db78
+			defaultHierarchy: LocalDateTable_5ba2eb5b-a548-4c56-aca8-9ef504e41af0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Booking_Reporting_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: eb5f0895-31d5-435f-9d90-8fb2491542cf
+		summarizeBy: sum
+		sourceColumn: Booking_Reporting_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column BookingMonth
+		dataType: string
+		lineageTag: 9a544eba-c5b5-40ac-8f3e-642d3d332f32
+		summarizeBy: none
+		sourceColumn: BookingMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column BookingFinancialYear
+		dataType: string
+		lineageTag: 1e13b546-a09d-40d9-bd71-c010cba830de
+		summarizeBy: none
+		sourceColumn: BookingFinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column IndicativeWaitTime
+		dataType: int64
+		formatString: 0
+		lineageTag: 3c7b52f4-39e9-46d0-bdf9-58d2bb7de4ce
+		summarizeBy: sum
+		sourceColumn: IndicativeWaitTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column InitialReferralPopulation
+		dataType: double
+		lineageTag: 82635ecd-e8d8-4540-977f-998ed471edb5
+		summarizeBy: sum
+		sourceColumn: InitialReferralPopulation
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BookingReferralPopulation
+		dataType: double
+		lineageTag: ea1a2c9d-050a-401b-b6f2-60b88f3341c1
+		summarizeBy: sum
+		sourceColumn: BookingReferralPopulation
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InitialReferralRate
+		dataType: double
+		lineageTag: 61e4e390-8971-4ab8-9b94-0355a4019c9d
+		summarizeBy: sum
+		sourceColumn: InitialReferralRate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column BookingReferralRate
+		dataType: double
+		lineageTag: f82a3af7-dae2-4d0e-9d3e-2226195165e0
+		summarizeBy: sum
+		sourceColumn: BookingReferralRate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ShortlistCount
+		dataType: string
+		lineageTag: d1150198-1919-49fd-b49c-65d1b8f0173f
+		summarizeBy: none
+		sourceColumn: ShortlistCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column referral_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1d729361-2822-49b2-8413-1e098f66ad8a
+		summarizeBy: none
+		sourceColumn: referral_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column NSS_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: df4a7b69-8011-4080-947b-801c51633b99
+		summarizeBy: sum
+		sourceColumn: NSS_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column match_ID
+		dataType: string
+		lineageTag: 5a90f206-6442-423f-8d02-df8d602c5aca
+		summarizeBy: none
+		sourceColumn: match_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Combined_TreatmentFunctionDescription
+		dataType: string
+		lineageTag: 83cf0d91-f82e-4435-8b7d-33f2d0d4ced7
+		summarizeBy: none
+		sourceColumn: Combined_TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current Year Flag' = ```
+			
+			VAR max_year = YEAR(MAX('2WW Referrals'[InitialReferralDate]
+			))
+			VAR max_month = MONTH(MAX('2WW Referrals'[InitialReferralDate]
+			))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR current_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			
+			)
+			VAR adjusted_year = if(
+			    MONTH('2WW Referrals'[InitialReferralDate])= 1, YEAR('2WW Referrals'[InitialReferralDate]
+			) -1, 
+			    if(MONTH('2WW Referrals'[InitialReferralDate]) = 2, YEAR('2WW Referrals'[InitialReferralDate]
+			) -1, 
+			    if(MONTH('2WW Referrals'[InitialReferralDate]) = 3, YEAR('2WW Referrals'[InitialReferralDate]
+			) -1, year('2WW Referrals'[InitialReferralDate]
+			))))
+			
+			var year_flag = IF(adjusted_year = current_year, "Current Year", IF(adjusted_year = current_year - 1, "Previous Year", "Other Year"))
+			
+			RETURN year_flag
+			```
+		lineageTag: 5e988cc1-b28e-4616-81e7-a64fbd406082
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralCount
+		dataType: int64
+		formatString: 0
+		lineageTag: bc9db4e6-69f2-461a-9093-edf2d309e20d
+		summarizeBy: sum
+		sourceColumn: ReferralCount
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '2WW Referrals' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Cancer].[tbl01_2WW]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

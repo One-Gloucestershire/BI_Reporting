@@ -1,0 +1,161 @@
+table 'Anti-Psychotic Prescribing'
+	lineageTag: b0ce9e75-4177-477a-8b22-5ad5fcaa745a
+
+	measure '% of Gloucestershire with Prescription' =
+			CALCULATE(sum('Anti-Psychotic Prescribing'[Total_Antipsychotic_Prescriptions]),'Anti-Psychotic Prescribing'[Area] = "Gloucestershire")
+			/
+			CALCULATE(SUM('Anti-Psychotic Prescribing'[Total_Dementia_Patients]),'Anti-Psychotic Prescribing'[Area] = "Gloucestershire")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 6dc974b1-8369-4ce1-9443-022a3e6a3092
+
+	measure '% of England with Prescription' =
+			CALCULATE(sum('Anti-Psychotic Prescribing'[Total_Antipsychotic_Prescriptions]),'Anti-Psychotic Prescribing'[Area] = "England")
+			/
+			CALCULATE(SUM('Anti-Psychotic Prescribing'[Total_Dementia_Patients]),'Anti-Psychotic Prescribing'[Area] = "England")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3be2abce-fcff-4349-88e1-54831352a5be
+
+	measure 'Average % of Gloucestershire with prescription' = CALCULATE(AVERAGE('Anti-Psychotic Prescribing'[% with prescription]),'Anti-Psychotic Prescribing'[Area] = "Gloucestershire", ALLSELECTED('Date Reference'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 77879ab5-9500-4923-83f3-9500a7c4e180
+
+	measure 'Anti-psychotic comparison arrow' = IF([Current vs prior month anti-psychotic] > 0, UNICHAR(9650), UNICHAR(9660))
+		lineageTag: 7683fddf-cb1d-40ae-b968-dbc786877218
+
+	measure 'Current vs prior month anti-psychotic' = ```
+			
+			
+			VAR current_month   = CALCULATE([% of Gloucestershire with Prescription],'Month reference'[Month flag] = "Current Month")  
+			VAR prior_month     = CALCULATE([% of Gloucestershire with Prescription],'Month reference'[Month flag] = "Prior Month")
+			
+			RETURN current_month - prior_month
+			```
+		lineageTag: cbe2e570-afbb-4be5-8672-a1f1646bd5a3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: edbe23dd-0167-4739-a734-6b4ff69764c2
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Total_Dementia_Patients
+		dataType: int64
+		formatString: 0
+		lineageTag: 0324f019-1c19-4ca6-90c8-179c55ad1118
+		summarizeBy: sum
+		sourceColumn: Total_Dementia_Patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_Antipsychotic_Prescriptions
+		dataType: int64
+		formatString: 0
+		lineageTag: fdd7162e-6d12-4d5f-9628-adc7bb460c64
+		summarizeBy: sum
+		sourceColumn: Total_Antipsychotic_Prescriptions
+
+		annotation SummarizationSetBy = Automatic
+
+	column Anti_Psychotics_With_Psychosis
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e44e8e7-9644-41b5-bb01-77034d269d4f
+		summarizeBy: sum
+		sourceColumn: Anti_Psychotics_With_Psychosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column Anti_Psychotics_Without_Psychosis
+		dataType: int64
+		formatString: 0
+		lineageTag: 168123d3-fc01-4850-8280-affc8e8c3544
+		summarizeBy: sum
+		sourceColumn: Anti_Psychotics_Without_Psychosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column Area
+		dataType: string
+		lineageTag: 243f83ed-1aaa-42d1-abc7-2322c39b3143
+		summarizeBy: none
+		sourceColumn: Area
+
+		annotation SummarizationSetBy = Automatic
+
+	column '% with prescription' = 'Anti-Psychotic Prescribing'[Total_Antipsychotic_Prescriptions] / 'Anti-Psychotic Prescribing'[Total_Dementia_Patients]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e37d4e56-0ce5-4621-91d9-d688312eea9c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current month flag' =
+			
+			VAR year_month = CONCATENATE(YEAR(MAX('Anti-Psychotic Prescribing'[Date])),MONTH(MAX('Anti-Psychotic Prescribing'[Date])))
+			var Date_year_month = CONCATENATE(YEAR('Anti-Psychotic Prescribing'[Date]),MONTH('Anti-Psychotic Prescribing'[Date]))
+			var prior_month = EOMONTH(max('Anti-Psychotic Prescribing'[Date]), -1)
+			var date_prior_month = CONCATENATE(YEAR(prior_month),MONTH(prior_month))
+			RETURN IF(year_month = Date_year_month,"Current Month",if(date_prior_month= Date_year_month, "Prior Month", "Other Month"))
+		lineageTag: c2949b4f-393f-4bf7-9ca7-fe54dc04daf3
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Anti-Psychotic YTD' =
+			
+			VAR current_month = MONTH('Anti-Psychotic Prescribing'[Date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Anti-Psychotic Prescribing'[Date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 91a0a9ff-ebea-4ab6-954d-8a727a59ebe7
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Anti-Psychotic Prescribing' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from [PowerBI_Reporting].[Dementia].[tbl09_Dementia_antipsychotic_prescribing]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Total_Dementia_Patients", Int64.Type}, {"Total_Antipsychotic_Prescriptions", Int64.Type}, {"Anti_Psychotics_With_Psychosis", Int64.Type}, {"Anti_Psychotics_Without_Psychosis", Int64.Type}, {"Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

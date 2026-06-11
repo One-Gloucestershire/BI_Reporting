@@ -1,0 +1,42 @@
+table 'Cancer Type Ref'
+	lineageTag: 8b0b1181-079b-48e3-b0e2-f57b17dcccd0
+
+	column 'Cancer Type'
+		lineageTag: 63ddbdab-5856-47b5-a993-145fa0a32107
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Cancer Type]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cancer Type (Fixed)' = IF([Cancer Type] = BLANK(), "Error", [Cancer Type])
+		lineageTag: 351e0d09-b31c-4920-b7e8-ce1e310be8d2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Priority Cancer Type' =
+			SWITCH(TRUE(),
+			'Cancer Type Ref'[Cancer Type] = "Breast cancer", "Yes",
+			'Cancer Type Ref'[Cancer Type] = "Lower-Gastrointestinal Cancers", "Yes",
+			'Cancer Type Ref'[Cancer Type] = "Lung cancer", "Yes",
+			'Cancer Type Ref'[Cancer Type] = "Gynaecological cancers", "Yes",
+			'Cancer Type Ref'[Cancer Type] = "Urological cancers (excluding testicular)", "Yes",
+			'Cancer Type Ref'[Cancer Type] = "Skin cancers", "Yes",
+			"No")
+		lineageTag: 50dd38b7-e464-4922-a881-cdd1772e2e7f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Cancer Type Ref' = calculated
+		mode: import
+		source =
+				DISTINCT(
+				UNION(
+				    SELECTCOLUMNS('Referrals & Treatments', "Cancer Type", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type]),
+				    SELECTCOLUMNS('Cancer Deaths', "Cancer Type", 'Cancer Deaths'[cancer_type])
+				    ))
+
+	annotation PBI_Id = 46c21437d14a4d818ae190c4175d7220
+

@@ -1,0 +1,29 @@
+table [StrokeDerived]
+	lineageTag: d815f8aa-0d8f-4da3-9333-6310c0712156
+
+	column [StrokeDerived]
+		dataType: int64
+		formatString: 0
+		lineageTag: 7902c890-535c-434b-8485-bc4341dde1b6
+		summarizeBy: none
+		sourceColumn: [StrokeDerived]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stroke desc' = if('[StrokeDerived]'[[StrokeDerived]]] = 1, "Has Stroke", "Does not have Stroke")
+		lineageTag: 36ed5cd3-c12b-4098-b444-297097f9bc59
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition [StrokeDerived] = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"[StrokeDerived]" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"[StrokeDerived]", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

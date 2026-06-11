@@ -1,0 +1,1130 @@
+table 'Referrals & Treatments'
+	lineageTag: 1e6c1203-5f26-410d-ab27-c849e6041b06
+
+	measure 'Rate per 1000 All Referrrals Current Year' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag] = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 32fd5871-b0f2-40d7-ab4c-16a0632a853e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Number of Referrals' = CALCULATE(SUM('Referrals & Treatments'[Cancer_Referral_Flag]),USERELATIONSHIP ( 'Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date], 'Date Reference'[Date] )     )
+		formatString: 0
+		lineageTag: 32035359-a3ff-4a26-a306-4cff6082365e
+
+	measure 'Number of Treatments' = CALCULATE(SUM('Referrals & Treatments'[Cancer_Treatment_Flag]),USERELATIONSHIP ( 'Referrals & Treatments'[Cancer_Treatment_Period_Start_Date], 'Date Reference'[Date] ) ,USERELATIONSHIP('Referrals & Treatments'[Diagnosed Cancer Type (Unknowns Removed)],'Cancer Type Ref'[Cancer Type (Fixed)])    )
+		formatString: 0
+		lineageTag: a02fb387-5360-4c20-aa82-47d1b4001ac4
+
+	measure 'Rate per 1000 Treatments Current Year' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 6ca4a5af-77b1-4919-9263-95970238f60c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Diagnosed Cancer Type Filter Selected' = SELECTEDVALUE('Referrals & Treatments'[Diagnosed_Cancer_Type])
+		lineageTag: 0ddadccd-37f4-421a-951f-0dbffa2c3f4c
+
+	measure 'Cancer Treatments Title' = CONCATENATE("Number of Cancer Treatments - ", [Diagnosed Cancer Type Filter Selected])
+		lineageTag: 9a41312b-4494-4fe5-97bf-bc2b533c4a33
+
+	measure 'Survivability for 1 Year' = ```
+			
+			
+			var treatments = CALCULATE(COUNT('Referrals & Treatments'[Cancer_Treatment_Flag]),'Referrals & Treatments'[Pseudo_NHS_Number] <> BLANK(),USERELATIONSHIP ( 'Referrals & Treatments'[Cancer_Treatment_Period_Start_Date], 'Date Reference'[Date] )     )
+			
+			var figure = CALCULATE
+			(
+			    (
+			        treatments - (SUM('Referrals & Treatments'[Death_from_treatment_within_one_year])))
+			     / treatments
+			     
+			     ,USERELATIONSHIP('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date],'Date Reference'[date]))
+			
+			RETURN IF(figure < 0, BLANK(), figure)
+			```
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 4730c132-a8fd-4fc6-b25d-e5eb7814ab5c
+
+	measure 'Rate per 1000 All Referrrals Current Year - Breast Cancer' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Breast Cancer")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag] = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 32aa7821-01c8-4d68-8f51-eb9868755fe6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 Treatments Current Year - Breast Cancer' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Breast cancer")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: d041ca2c-a86e-44ed-b258-f2ea9c903a6e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 All Referrrals Current Year - Lower-Gastrointestinal Cancers' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Lower-Gastrointestinal Cancers")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag] = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 478feffe-0086-48d7-8da6-51b01649965f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 All Referrrals Current Year - Lung cancer' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Lung cancer")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: a0c11e8e-4f64-4dc5-846d-9d61dab95ad6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 All Referrrals Current Year - Gynaecological cancers' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Gynaecological cancers")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 700e66cd-1db7-45d4-b38b-328fdad0e326
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 All Referrrals Current Year - Urological cancers (excluding testicular)' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Urological cancers (excluding testicular)")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: d562875e-26c2-4180-8a5a-e0073e5057a9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 All Referrrals Current Year - Skin cancers' =
+			
+			VAR total_referrals = CALCULATE ([Number of Referrals], 'Referrals & Treatments'[Referral Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Skin cancers")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: f20f5ee6-4fe9-476a-a571-c0492a03861b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 Treatments Current Year - Lower-Gastrointestinal Cancers' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Lower-Gastrointestinal Cancers")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 2b60f508-0fd1-4860-9565-9c2efc03193a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 Treatments Current Year - Lung cancer' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Lung cancer")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 04506aff-7dc6-45f3-a9bb-ce09b0769cb7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 Treatments Current Year - Gynaecological cancers' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Gynaecological cancers")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 72b7ff2a-9634-4001-9d38-610d4b9234f4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 Treatments Current Year - Urological cancers (excluding testicular)' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Urological cancers (excluding testicular)")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: b411e2b1-bd31-43bd-b00f-9f3cee8b0947
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1000 Treatments Current Year - Skin cancers' =
+			
+			VAR total_referrals = CALCULATE ([Number of Treatments], 'Referrals & Treatments'[Treatment Current Financial Year Flag Description] = "Current year", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Skin cancers")
+			VAR pop =  CALCULATE([April_Pop], 'New Practice Population'[Current Year Flag]  = "Current year")
+			RETURN CALCULATE(total_referrals/pop * 1000)
+		lineageTag: 1e8b3b37-cc05-4358-a0b4-bd5f1e5e791e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Date' = MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date])
+		formatString: mmmm yyyy
+		lineageTag: 62eb2c22-c28f-47f0-8ce4-4604de398164
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	measure 'Survivability for 4 Weeks' = ```
+			
+			
+			var treatments = CALCULATE(COUNT('Referrals & Treatments'[Cancer_Treatment_Flag]),'Referrals & Treatments'[Pseudo_NHS_Number] <> BLANK(),USERELATIONSHIP ( 'Referrals & Treatments'[Cancer_Treatment_Period_Start_Date], 'Date Reference'[Date] )     )
+			
+			var figure = CALCULATE
+			(
+			    (
+			        treatments - (SUM('Referrals & Treatments'[Death_from_treatment_within_four_weeks])))
+			     / treatments
+			     
+			     ,USERELATIONSHIP('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date],'Date Reference'[date]))
+			
+			RETURN IF(figure < 0, BLANK(), figure)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a42963e1-513d-454a-b2a7-e6cf6475cfcf
+
+	measure 'Survivability for 6 Months' = ```
+			
+			
+			var treatments = CALCULATE(COUNT('Referrals & Treatments'[Cancer_Treatment_Flag]),'Referrals & Treatments'[Pseudo_NHS_Number] <> BLANK(),USERELATIONSHIP ( 'Referrals & Treatments'[Cancer_Treatment_Period_Start_Date], 'Date Reference'[Date] )     )
+			
+			var figure = CALCULATE
+			(
+			    (
+			        treatments - (SUM('Referrals & Treatments'[Death_from_treatment_within_sixth_month])))
+			     / treatments
+			     
+			     ,USERELATIONSHIP('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date],'Date Reference'[date]))
+			
+			RETURN IF(figure < 0, BLANK(), figure)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d9fe1882-7b61-4d2b-80f4-00e4c21e98e2
+
+	measure 'Diagnosis Rate %' = ```
+			CALCULATE([Number of Referrals], 'Referrals & Treatments'[Cancer_Treatment_Flag] = 1) / [Number of Referrals] 
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0b6c35a1-030e-4c6c-bb60-4252aa8912fa
+
+	measure 'Cancer deaths with no treatments' = CALCULATE(SUM([cancer_related_death_no_treatment_flag]),USERELATIONSHIP('Referrals & Treatments'[practice_code_at_death],'GP Reference'[OrganisationCode]))
+		formatString: 0
+		lineageTag: 47929693-aea0-42c6-afce-e0800f067c98
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: a6834d5f-bdbf-4f0e-a9e1-c7c8d575362e
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Record_ID
+		dataType: string
+		lineageTag: 5f0dec55-36da-4d34-a07f-41254c819f4b
+		summarizeBy: none
+		sourceColumn: Record_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pseudo_NHS_Number
+		dataType: string
+		lineageTag: b0ecb3a6-8639-46d5-86ea-875143608907
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10CodeDescription
+		dataType: string
+		lineageTag: 55db65a7-a3b4-4764-82a7-3d0c17e6fbd5
+		summarizeBy: none
+		sourceColumn: ICD10CodeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_Diagnosis_ICD
+		dataType: string
+		lineageTag: 977d5152-8da4-4a46-9321-350300124431
+		summarizeBy: none
+		sourceColumn: Primary_Diagnosis_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Referral_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 000075f8-4ae3-4c67-a834-3901fe63d438
+		summarizeBy: sum
+		sourceColumn: Cancer_Referral_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Referral_Flag_Description
+		dataType: string
+		lineageTag: 1802ac3e-883e-4ebf-a4cd-d9285de3d2ab
+		summarizeBy: none
+		sourceColumn: Cancer_Referral_Flag_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Treatment_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: fba54656-a211-40b8-9c1a-248e767f92ad
+		summarizeBy: sum
+		sourceColumn: Cancer_Treatment_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Treatment_Flag_Description
+		dataType: string
+		lineageTag: e4d5f455-8ecc-49d4-9202-e205448f9c97
+		summarizeBy: none
+		sourceColumn: Cancer_Treatment_Flag_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority_Type_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: 418f0b53-a0e8-44f9-9058-1039698fb30d
+		summarizeBy: count
+		sourceColumn: Priority_Type_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority_Type_Code_Description
+		dataType: string
+		lineageTag: 2a371057-1a8c-4995-af4c-c36dca22ba4b
+		summarizeBy: none
+		sourceColumn: Priority_Type_Code_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 2WW_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 82c4f647-ef6f-4046-8f4f-1a7934d498a8
+		summarizeBy: sum
+		sourceColumn: 2WW_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 2WW_Flag_Descrption
+		dataType: string
+		lineageTag: ba9ecd0d-29ef-43a6-a316-4346cd86513f
+		summarizeBy: none
+		sourceColumn: 2WW_Flag_Descrption
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Treatment_Period_Start_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e1c83f27-d4fe-4eb4-8c5d-4592e6aa86d3
+		summarizeBy: none
+		sourceColumn: Cancer_Treatment_Period_Start_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Referral_To_Treatment_Period_Start_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9d596b13-7436-448e-8087-af7dc1b3245d
+		summarizeBy: none
+		sourceColumn: Cancer_Referral_To_Treatment_Period_Start_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Treatment_Start_Date
+		dataType: string
+		lineageTag: 694eb4d6-0c26-443e-9913-aebe0508d645
+		summarizeBy: none
+		sourceColumn: Cancer_Treatment_Start_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date_First_Seen
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 883f168a-4b4f-48f8-be84-a8e9bb653da2
+		summarizeBy: none
+		sourceColumn: Date_First_Seen
+
+		variation Variation
+			isDefault
+			relationship: cd667bae-5c4d-4680-978c-6912a26d6ff7
+			defaultHierarchy: LocalDateTable_597fbe95-6ddf-4847-97c2-eb817ad890ae.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 064ccba5-dec1-4a5f-bf72-9184d2212cb5
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: eac3291f-0cf8-4bff-b111-7feab9e01720
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 62870eb7-7953-4645-9d23-4c36c9939e5a
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 8e97cc3d-713a-41d6-bc62-58f202fbcfdd
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateOfDeath
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 231cb0c0-59c3-4566-b525-57876ce10eee
+		summarizeBy: none
+		sourceColumn: DateOfDeath
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_from_treatment
+		dataType: int64
+		formatString: 0
+		lineageTag: 95e5f1bd-ffc5-4a34-a74f-bb139833f665
+		summarizeBy: sum
+		sourceColumn: Death_from_treatment
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_from_treatment_within_one_year
+		dataType: int64
+		formatString: 0
+		lineageTag: fffd3d5b-e9ba-4896-9a53-2baec9a8e599
+		summarizeBy: sum
+		sourceColumn: Death_from_treatment_within_one_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_from_treatment_within_sixth_month
+		dataType: int64
+		formatString: 0
+		lineageTag: e0a48b62-d4ae-4679-8e1b-d1692e9491b7
+		summarizeBy: sum
+		sourceColumn: Death_from_treatment_within_sixth_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_from_treatment_within_four_weeks
+		dataType: int64
+		formatString: 0
+		lineageTag: e622883d-3e13-4205-be10-73cf86c0291c
+		summarizeBy: sum
+		sourceColumn: Death_from_treatment_within_four_weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_treatment
+		dataType: int64
+		formatString: 0
+		lineageTag: f3660cc1-a2e6-4526-973e-1927dea0a400
+		summarizeBy: sum
+		sourceColumn: age_at_treatment
+
+		annotation SummarizationSetBy = Automatic
+
+	column sex
+		dataType: string
+		lineageTag: 1942d723-76e5-46e1-b6e2-6bc0b61eb207
+		summarizeBy: none
+		sourceColumn: sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 0bac0a09-e8c9-405a-8f31-10781af044c2
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Referral Current Financial Year Flag Description' = ```
+			
+			
+			VAR currmonth = MONTH('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date])
+			VAR fin_month = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			
+			
+			VAR year_adjusted = if(
+			    fin_month = 10, YEAR('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]) -1, 
+			    if(fin_month = 11, YEAR('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]) -1, 
+			    if(fin_month = 12, YEAR('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]) -1, year('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]))))
+			
+			
+			
+			VAR max_year = YEAR(MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			))
+			VAR max_month = MONTH(MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			))
+			
+			VAR max_adjust_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			
+			RETURN IF(year_adjusted = max_adjust_year, "Current year", "Not current year")
+			
+			
+			```
+		lineageTag: 725e632d-e5ed-4464-bba4-b5f874d2c384
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Treatment Current Financial Year Flag Description' = ```
+			
+			
+			VAR currmonth = MONTH('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date])
+			VAR fin_month = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			
+			
+			VAR year_adjusted = if(
+			    fin_month = 10, YEAR('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]) -1, 
+			    if(fin_month = 11, YEAR('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]) -1, 
+			    if(fin_month = 12, YEAR('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]) -1, year('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]))))
+			
+			
+			
+			VAR max_year = YEAR(MAX('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]
+			))
+			VAR max_month = MONTH(MAX('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]
+			))
+			
+			VAR max_adjust_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			
+			RETURN IF(year_adjusted = max_adjust_year, "Current year", "Not current year")
+			
+			
+			```
+		lineageTag: e96ccc70-5bb9-47b7-b7ea-b6e8afb2b321
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Suspected_Cancer_Type
+		dataType: string
+		lineageTag: f2c5aa88-9f60-4fa5-b046-887f09f7f9bd
+		summarizeBy: none
+		sourceColumn: Referral_Suspected_Cancer_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Treatments YTD' =
+			
+			VAR current_month = MONTH('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Referrals & Treatments'[Cancer_Treatment_Period_Start_Date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 625f2519-a9a2-480a-8a90-7fb776bfc50f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10ParentDescription
+		dataType: string
+		lineageTag: 65cac3a0-365c-4524-bb3f-3065855d69d2
+		summarizeBy: none
+		sourceColumn: ICD10ParentDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosed_Cancer_Type_Specific
+		dataType: string
+		lineageTag: cee978fa-0080-4a45-89be-485525925152
+		summarizeBy: none
+		sourceColumn: Diagnosed_Cancer_Type_Specific
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosed_Cancer_Type
+		dataType: string
+		lineageTag: ebe55bec-9cbb-4299-ba80-9476f66fa63d
+		summarizeBy: none
+		sourceColumn: Diagnosed_Cancer_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Care_Setting_Treatment
+		dataType: string
+		lineageTag: 32c4b32d-ef76-45b5-8557-8449b099d800
+		summarizeBy: none
+		sourceColumn: Cancer_Care_Setting_Treatment
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer_Diagnostic_Referral_Route
+		dataType: string
+		lineageTag: 02cc8e94-3cf6-4048-900e-d244199aaa03
+		summarizeBy: none
+		sourceColumn: Cancer_Diagnostic_Referral_Route
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisation_Site_Identifier_Of_Provider_Cancer_Treatment_At_Start_Date
+		dataType: string
+		lineageTag: 0453bc44-3fbd-4110-922c-8880ec7040ab
+		summarizeBy: none
+		sourceColumn: Organisation_Site_Identifier_Of_Provider_Cancer_Treatment_At_Start_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisation_Site_Identifier_Of_Provider_First_Seen
+		dataType: string
+		lineageTag: 1682954f-5a0f-402b-b628-404b83b73a37
+		summarizeBy: none
+		sourceColumn: Organisation_Site_Identifier_Of_Provider_First_Seen
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnic Origin Grouped'
+		dataType: string
+		lineageTag: 559c56e3-0ac0-4cf1-a73d-9223b8414f23
+		summarizeBy: none
+		sourceColumn: Ethnic Origin Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 201251b9-14db-461f-bc91-fd439775223d
+		summarizeBy: none
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 5531dbb5-819f-4ca1-b81c-7ec92d7ecef0
+		summarizeBy: none
+		sourceColumn: MH_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 8915a402-add2-41a7-89be-c3887992be6b
+		summarizeBy: none
+		sourceColumn: LD_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current Year Flag (Referral)' = ```
+			
+			VAR max_year = YEAR(MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			))
+			VAR max_month = MONTH(MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR current_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			
+			)
+			VAR adjusted_year = if(
+			    MONTH('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date])= 1, YEAR('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			) -1, 
+			    if(MONTH('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]) = 2, YEAR('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			) -1, 
+			    if(MONTH('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]) = 3, YEAR('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			) -1, year('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]
+			))))
+			
+			var year_flag = IF(adjusted_year = current_year, "Current Year", IF(adjusted_year = current_year - 1, "Previous Year", "Other Year"))
+			
+			RETURN year_flag
+			```
+		lineageTag: c30c3e8a-9153-4e5a-9e8e-9c9f44756829
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Last 12 Months Flag' =
+			
+			
+			var max_date = MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date])
+			var year_prior = EDATE(max_date,-12)
+			
+			RETURN IF('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date] > year_prior, 1,0)
+		formatString: 0
+		lineageTag: 9c492221-404f-4283-9a7b-7a3a2cac618a
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Priority Cancer Type (Referral)' =
+			SWITCH(TRUE(),
+			'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Breast cancer", "Yes",
+			'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Lower-Gastrointestinal Cancers", "Yes",
+			'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Lung cancer", "Yes",
+			'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Gynaecological cancers", "Yes",
+			'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Urological cancers (excluding testicular)", "Yes",
+			'Referrals & Treatments'[Referral_Suspected_Cancer_Type] = "Skin cancers", "Yes",
+			"No")
+		lineageTag: 5bb68c2a-824e-49a6-acf1-8dd0b5e58a63
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_Of_Referral_For_Outpatients_description
+		dataType: string
+		lineageTag: 27aae71f-2ad6-4342-9f63-6d4927f21201
+		summarizeBy: none
+		sourceColumn: Source_Of_Referral_For_Outpatients_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_Of_Referral_For_Outpatients_group
+		dataType: string
+		lineageTag: 8f140835-ec47-45f6-bf42-7b61a80fc777
+		summarizeBy: none
+		sourceColumn: Source_Of_Referral_For_Outpatients_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pseudo_Patient_Pathway_Identifier
+		dataType: string
+		lineageTag: 98eb76c4-0682-468e-8516-07931e6ca241
+		summarizeBy: none
+		sourceColumn: Pseudo_Patient_Pathway_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column NSS_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 64c47847-bab6-4806-a9c4-680a8c8ae801
+		summarizeBy: sum
+		sourceColumn: NSS_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_duplicates
+		dataType: string
+		lineageTag: 2dbbddb6-3dc8-4581-afed-8d953ab5c2d4
+		summarizeBy: none
+		sourceColumn: Referral_duplicates
+
+		annotation SummarizationSetBy = Automatic
+
+	column NSS_flag_description
+		dataType: string
+		lineageTag: 3ee4dd86-5b24-4e05-8dec-f9969c21e16f
+		summarizeBy: none
+		sourceColumn: NSS_flag_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Was_Cancer_Diagnosed_Flag_Description = IF([Cancer_Treatment_Flag_Description] = "No Cancer Treatment", "No Cancer Diagnosed", "Cancer Diagnosed")
+		lineageTag: 0c963042-57fa-4ac1-87a1-055d187e32fb
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_referral
+		dataType: int64
+		formatString: 0
+		lineageTag: 52078089-a0e4-465e-9020-83daf8a2ffa6
+		summarizeBy: sum
+		sourceColumn: age_at_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20_Description
+		dataType: string
+		lineageTag: a39aee5f-789c-450f-81c4-d4ddb50a0bc7
+		summarizeBy: none
+		sourceColumn: Core20_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_description
+		dataType: string
+		lineageTag: 46aa9a1f-6d45-4cd6-bcee-ac65715b15a5
+		summarizeBy: none
+		sourceColumn: MH_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_description
+		dataType: string
+		lineageTag: 2382e105-0b7f-42c6-a7a0-3d370e6fa4c4
+		summarizeBy: none
+		sourceColumn: LD_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Referrals YTD' =
+			
+			VAR current_month = MONTH('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			VAR max_month = MONTH(MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: c97e7522-2be0-4313-9de4-cf8946c49a59
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Priority Cancer Type (Confirmed)' =
+			SWITCH(TRUE(),
+			'Referrals & Treatments'[Diagnosed_Cancer_Type] = "Breast cancer", "Yes",
+			'Referrals & Treatments'[Diagnosed_Cancer_Type] = "Lower-Gastrointestinal Cancers", "Yes",
+			'Referrals & Treatments'[Diagnosed_Cancer_Type] = "Lung cancer", "Yes",
+			'Referrals & Treatments'[Diagnosed_Cancer_Type] = "Gynaecological cancers", "Yes",
+			'Referrals & Treatments'[Diagnosed_Cancer_Type] = "Urological cancers (excluding testicular)", "Yes",
+			'Referrals & Treatments'[Diagnosed_Cancer_Type] = "Skin cancers", "Yes",
+			"No")
+		lineageTag: 428d8696-b105-469e-89d7-415eb8b5e720
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_Gloucestershire_Decile
+		dataType: int64
+		formatString: 0
+		lineageTag: e6819301-4ae1-41fa-a684-7d462e14f65e
+		summarizeBy: none
+		sourceColumn: IMD_Gloucestershire_Decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Amended_5yr_age_band
+		dataType: string
+		lineageTag: 93ab6302-77dd-4566-a080-e777d20092a3
+		summarizeBy: none
+		sourceColumn: Amended_5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column number_of_total_treatments
+		dataType: int64
+		formatString: 0
+		lineageTag: 42431dcc-b2fe-4451-9148-00890b509f6e
+		summarizeBy: sum
+		sourceColumn: number_of_total_treatments
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_referral_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ec016721-cdaa-4190-8eb8-4a5e35d429dd
+		summarizeBy: none
+		sourceColumn: max_referral_date
+
+		variation Variation
+			isDefault
+			relationship: 093cae34-522e-4d3a-a81c-33c87437b76d
+			defaultHierarchy: LocalDateTable_f9ebd1e1-d8b1-459a-8d51-0f35a3e417fe.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Underlying_cause_of_death_cancer_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 7642de0d-4075-4c17-94d3-3e6afae3ac70
+		summarizeBy: sum
+		sourceColumn: Underlying_cause_of_death_cancer_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f3ad856-87f5-4109-98bb-cc9dac6ccb0c
+		summarizeBy: sum
+		sourceColumn: Death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Underlying_code_cause_of_death
+		dataType: string
+		lineageTag: fb8f9846-622a-42d5-955a-065c1971f5dc
+		summarizeBy: none
+		sourceColumn: Underlying_code_cause_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column Underlying_chapter_cause_of_death
+		dataType: string
+		lineageTag: 373014ce-4744-4296-b813-96923d83d0bb
+		summarizeBy: none
+		sourceColumn: Underlying_chapter_cause_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gloucestershire_residence_death_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: f8b90777-da4b-4788-a35e-3f58467c0cb3
+		summarizeBy: sum
+		sourceColumn: Gloucestershire_residence_death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gloucestershire_place_of_death_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: ceb48e00-082b-478a-a63f-612318527314
+		summarizeBy: sum
+		sourceColumn: Gloucestershire_place_of_death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column days_from_last_referral_to_death
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c28b707-e07b-4739-b23f-55ad3d026ff9
+		summarizeBy: sum
+		sourceColumn: days_from_last_referral_to_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancer_related_death_no_treatment_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 59925388-b195-4231-8eb6-6dfeadb7c325
+		summarizeBy: sum
+		sourceColumn: cancer_related_death_no_treatment_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code_at_death
+		dataType: string
+		lineageTag: b159d78b-3bd7-441a-9375-333a66a57a02
+		summarizeBy: none
+		sourceColumn: practice_code_at_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Cancer_Type_Amended
+		dataType: string
+		lineageTag: 1d1c9c77-0f33-4b23-aa08-6213d8eb0d0b
+		summarizeBy: none
+		sourceColumn: Referral_Cancer_Type_Amended
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diagnosed Cancer Type (Unknowns Removed)' = IF('Referrals & Treatments'[Diagnosed_Cancer_Type] = "Unknown", 'Referrals & Treatments'[Referral_Suspected_Cancer_Type], 'Referrals & Treatments'[Diagnosed_Cancer_Type])
+		lineageTag: 5dfb3241-6386-4d4f-b7ed-47aeeaea1655
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cancer Type Switch' =
+			
+			
+			var type_ = SELECTEDVALUE('Referral or Treatment'[Referral or Treatment])
+			
+			return
+			IF(type_ = "Treatment", 'Referrals & Treatments'[Diagnosed Cancer Type (Unknowns Removed)], 'Referrals & Treatments'[Referral_Suspected_Cancer_Type])
+		lineageTag: 194475e3-919b-4154-a32b-99791ddaaf9b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column test = max('Referral or Treatment'[Referral or Treatment])
+		lineageTag: 7245cccf-55ec-4e10-9e8b-04ba290fca9f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Site_Name_First_Seen
+		dataType: string
+		lineageTag: 210ef2f4-08c5-4289-b11f-598e44d70792
+		summarizeBy: none
+		sourceColumn: Site_Name_First_Seen
+
+		annotation SummarizationSetBy = Automatic
+
+	column Site_Name_At_Treatment
+		dataType: string
+		lineageTag: 8faac532-13ba-403c-805f-46ffda6ee69c
+		summarizeBy: none
+		sourceColumn: Site_Name_At_Treatment
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Emergency Referral' = IF(CONTAINSSTRING([Source_Of_Referral_For_Outpatients_description], "emergency") = TRUE(), "Emergency Referral", "Non-Emergency Referral")
+		lineageTag: ca6e69a6-2c14-476f-a3a8-f36f30b293a6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total max date' = MAX('Referrals & Treatments'[Cancer_Referral_To_Treatment_Period_Start_Date])
+		formatString: General Date
+		lineageTag: 7d95966f-dd75-4da5-a26f-9e2c7b4ff82b
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: facea123-4677-41bc-af97-2844f4ca0c75
+			defaultHierarchy: LocalDateTable_def28a52-849f-44e3-a373-c83962a72381.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Referrals & Treatments' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Cancer].[tbl02_Referrals&Treatments]#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Amended_5yr_age_band", "Amended_5yr_age_band"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

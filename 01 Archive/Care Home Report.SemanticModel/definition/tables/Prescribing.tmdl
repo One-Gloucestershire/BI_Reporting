@@ -1,0 +1,239 @@
+table Prescribing
+	lineageTag: 08faee75-86a1-42c7-90c4-9dce78fd0a30
+
+	measure 'Cost difference current vs previous year' =
+			
+			
+			var current_year = CALCULATE(SUM('Prescribing'[Item_cost_in_pounds]), Prescribing[Prescribing Financial Year Flag] = "Current Year")
+			var previous_year = CALCULATE(SUM('Prescribing'[Item_cost_in_pounds]), Prescribing[Prescribing Financial Year Flag] = "Previous Year")
+			
+			RETURN current_year - previous_year
+		lineageTag: 77197a3d-5616-4336-8955-a4c6581dadad
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: afe46497-91f0-4cb7-9a98-bff2a37a298b
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 559793a7-bd36-4506-93dc-75bcb708763b
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Item_cost_in_pounds
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 2dbf0e03-9a54-4604-918c-e0ac265f0c76
+		summarizeBy: sum
+		sourceColumn: Item_cost_in_pounds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Item_Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 14879d85-146e-4411-a300-b8c6dc4a9cc6
+		summarizeBy: sum
+		sourceColumn: Item_Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: c07dbbec-f583-4a05-85e9-e7290e43a5e8
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstance
+		dataType: string
+		lineageTag: ae3b95f4-f424-49a5-9ccd-049ba532c150
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column PARTITION_KEY
+		dataType: int64
+		formatString: 0
+		lineageTag: d005599c-121d-4a0a-a259-67b3026ebab0
+		summarizeBy: sum
+		sourceColumn: PARTITION_KEY
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_gp_ods
+		dataType: string
+		lineageTag: a218413a-8315-413a-97e2-0172e19360d9
+		summarizeBy: none
+		sourceColumn: patient_gp_ods
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Assessment_Number
+		dataType: int64
+		formatString: 0
+		lineageTag: 4b3a0262-5ab0-43d8-8dcc-83df65196ff7
+		summarizeBy: sum
+		sourceColumn: Patient_Assessment_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Processing_Period_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2cc74679-4fbf-4bf3-bcfd-fe4e698ba072
+		summarizeBy: none
+		sourceColumn: Processing_Period_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Prescribing Financial Year Flag' = ```
+			
+			VAR max_year = YEAR(MAX('Prescribing'[Processing_Period_Date]
+			))
+			VAR max_month = MONTH(MAX('Prescribing'[Processing_Period_Date]
+			))
+			VAR max_financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR current_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			
+			VAR previous_year = current_year - 1
+			
+			VAR adj_year = YEAR(('Prescribing'[Processing_Period_Date]
+			))
+			VAR adj_month = MONTH(('Prescribing'[Processing_Period_Date]
+			))
+			VAR financial_month = SWITCH(TRUE(),
+			adj_month = 4, 1,
+			adj_month = 5, 2,
+			adj_month = 6, 3,
+			adj_month = 7, 4,
+			adj_month = 8, 5,
+			adj_month = 9, 6,
+			adj_month = 10, 7,
+			adj_month = 11, 8,
+			adj_month = 12, 9,
+			adj_month = 1, 10,
+			adj_month = 2, 11,
+			adj_month = 3, 12
+			)
+			VAR adjusted_year = SWITCH(TRUE(),
+			adj_month = 1, adj_year - 1,
+			adj_month = 2, adj_year - 1,
+			adj_month = 3, adj_year - 1,
+			adj_month = 4, adj_year,
+			adj_month = 5, adj_year,
+			adj_month = 6, adj_year,
+			adj_month = 7, adj_year,
+			adj_month = 8, adj_year,
+			adj_month = 9, adj_year,
+			adj_month = 10, adj_year,
+			adj_month = 11, adj_year,
+			adj_month = 12, adj_year
+			)
+			
+			
+			RETURN IF(adjusted_year = current_year, "Current Year", if(adjusted_year = previous_year, "Previous Year", "Other Year"))
+			
+			```
+		lineageTag: 4c56763b-2247-460e-990a-fa15bf585452
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Prescribing YTD' = ```
+			
+			VAR max_currmonth = MONTH(MAX('Prescribing'[Processing_Period_Date]
+			))
+			VAR max_cal = SWITCH(TRUE(),
+			max_currmonth = 4, 1,
+			max_currmonth = 5, 2,
+			max_currmonth = 6, 3,
+			max_currmonth = 7, 4,
+			max_currmonth = 8, 5,
+			max_currmonth = 9, 6,
+			max_currmonth = 10, 7,
+			max_currmonth = 11, 8,
+			max_currmonth = 12, 9,
+			max_currmonth = 1, 10,
+			max_currmonth = 2, 11,
+			max_currmonth = 3, 12
+			)
+			
+			
+			VAR currmonth = MONTH('Prescribing'[Processing_Period_Date]
+			)
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			
+			RETURN if(cal <= max_cal, "Year to Date", "Not Year to Date")
+			
+			```
+		lineageTag: 790aeb0f-02bb-453f-bef3-2a27c00e981b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Prescribing = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[CareHomes].[tbl15_Prescribing]#(lf)", CommandTimeout=#duration(0, 10, 0, 0)])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

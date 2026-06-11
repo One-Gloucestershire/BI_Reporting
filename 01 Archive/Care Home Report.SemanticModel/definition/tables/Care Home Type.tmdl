@@ -1,0 +1,24 @@
+table 'Care Home Type'
+	lineageTag: d2988768-7602-4dd2-9f33-9dfb09c71c72
+
+	column 'Care Home Type'
+		dataType: string
+		lineageTag: 27066979-2587-4a26-b092-2e9ec66b7665
+		summarizeBy: none
+		sourceColumn: Care Home Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Care Home Type' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="select distinct #(lf)[Care_home_type] = [Broad Type (confirmed)]#(lf)from bireports.dbo.Care_Home_Mapping_May23#(lf)#(lf)union #(lf)#(lf)select 'Unknown care home type' as [Care_home_type]#(lf)from bireports.dbo.Care_Home_Mapping_May23"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Care_home_type", "Care Home Type"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

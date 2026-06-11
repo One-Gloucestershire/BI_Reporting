@@ -1,0 +1,54 @@
+table Button
+	lineageTag: 22b40b99-0359-4259-8200-b9c2fd0cca04
+
+	measure 'Total Activity ICB' = SUM(Diagnostic[Total activity sum 1])
+		formatString: 0
+		lineageTag: 969daf52-508c-438a-aa95-e12f15bd36d3
+
+	measure 'Total Activity GHT' = CALCULATE(SUM(Diagnostic[Total activity sum 1]), 'Diagnostic'[GHT] = "GHT")
+		formatString: 0
+		lineageTag: e0ebfb11-98a9-4ef7-95b1-7660e2e5ec77
+
+	measure 'Total Activity Output' = ```
+			
+			
+			VAR _Selection = max('Button'[Org Selection ])
+			
+			Return 
+			
+			IF(CONTAINSSTRING(_Selection, "ICB"), [Total Activity ICB], [Total Activity GHT])
+			```
+		formatString: 0
+		lineageTag: a099111b-c601-4e9e-b720-d5367882412d
+
+	measure 'Total Activity GHT not CDC' = CALCULATE(SUM(Diagnostic[Total activity sum 1]), 'Diagnostic'[GHT] = "GHT", 'Diagnostic'[CDC] <> "CDC")
+		formatString: 0
+		lineageTag: 76b86ceb-fc5f-43d2-b2a3-6c9caa5d5703
+
+	measure 'Total Activity GHT with CDC' = CALCULATE(SUM(Diagnostic[Total activity sum 1]), 'Diagnostic'[GHT] = "GHT", 'Diagnostic'[CDC] = "CDC")
+		formatString: 0
+		lineageTag: f14149b4-0eaa-4e57-8138-7117281c88c9
+
+	measure 'Total Activity % CDC' = [Total Activity GHT with CDC]/[Total Activity GHT not CDC]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 3db5f6cd-87b2-4da1-b179-a0f0f535edb4
+
+	column 'Org Selection '
+		dataType: string
+		lineageTag: 383db121-8c5f-4a2a-9042-90a8e5bf54a6
+		summarizeBy: none
+		sourceColumn: "Org Selection "
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Button = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WcvcIUYrViVbydHZSio0FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Org Selection " = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Org Selection ", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
