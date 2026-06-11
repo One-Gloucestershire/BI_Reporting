@@ -1,0 +1,46 @@
+table '2022 BMI %'
+	lineageTag: f1ecdf93-a16d-41d8-b618-56861a734359
+
+	column 'Weight Category'
+		dataType: string
+		lineageTag: 0f3370a7-36e3-436d-8a86-13c03b217dbb
+		summarizeBy: none
+		sourceColumn: Weight Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0%;-0%;0%
+		lineageTag: e746f46e-3c9c-4cda-bd4e-23590c113541
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Percentage
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 78605d1c-8ec4-4cfa-b09f-6a184f2beb32
+		summarizeBy: sum
+		sourceColumn: Percentage
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '2022 BMI %' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45W8k9KLU5V0DA20NZU0lEyslSK1QEKlqUWladmpmeUKGgYmSroKhgbgGSNTcGyfvlFuYk5QBkDXSNTsLgJWDw0LwWhLabUwMA42Qisz0gpNhYA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Weight Category" = _t, #"%" = _t]),
+				    #"Replaced Value" = Table.ReplaceValue(Source,"Normal (20-25)","Normal (20 - 25)",Replacer.ReplaceText,{"Weight Category"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Replaced Value",{{"%", "Value"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns1",{{"Value", Int64.Type}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type", "Percentage", each [#"Value"]/100),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"Percentage", Percentage.Type}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

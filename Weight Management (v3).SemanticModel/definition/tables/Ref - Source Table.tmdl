@@ -1,0 +1,98 @@
+table 'Ref - Source Table'
+	lineageTag: 0b0e6d78-8b1f-4e0f-8333-be671911d2e8
+
+	column Gender
+		dataType: string
+		lineageTag: ad910087-c26d-4a0d-a9cf-864b0b4d9613
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 946729ac-aafd-4ad1-962c-24e03917185e
+		summarizeBy: sum
+		sourceColumn: Derived_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand5yr
+		dataType: string
+		lineageTag: 3d71cf67-ae89-49f8-8dc4-60ad12203b8b
+		summarizeBy: none
+		sourceColumn: AgeBand5yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand10yr
+		dataType: string
+		lineageTag: bdd71495-b503-4b5f-9543-03b417979122
+		summarizeBy: none
+		sourceColumn: AgeBand10yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		lineageTag: fb36ac03-3dba-412d-af39-e99145c73c57
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginDescription
+		dataType: string
+		lineageTag: ce27ecd5-010c-4e50-a09f-e34dd83c6fba
+		summarizeBy: none
+		sourceColumn: EthnicOriginDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracNameCurrent
+		dataType: string
+		lineageTag: c527df8d-ea6a-4bef-add5-77274ec21cca
+		summarizeBy: none
+		sourceColumn: PracNameCurrent
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalityName
+		dataType: string
+		lineageTag: 64383d03-fafb-47fe-8f0f-c1a97d1316e9
+		summarizeBy: none
+		sourceColumn: LocalityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		lineageTag: 27848b3c-f412-4258-966a-0cd40e383e7a
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Catgory_derived
+		dataType: string
+		lineageTag: f1fb55d3-6747-4e1a-999d-dd42761eb720
+		summarizeBy: none
+		sourceColumn: eFI_Catgory_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ref - Source Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="SELECT distinct#(lf)#(tab)[Gender] = CASE WHEN [Gender] = 'F' then 'Female' WHEN [Gender] = 'M' then 'Male' else NULL end,#(lf)     [Derived_Age],#(lf)     [AgeBand5yr],#(lf)     [AgeBand10yr],#(lf)     [AgeBand],#(lf)     [EthnicOriginDescription],#(lf)     [PracNameCurrent],#(lf)     [LocalityName],#(lf)     [NetworkName],#(lf)     [eFI_Catgory_derived]#(lf)  FROM [BIReports].[mpi].[MPI_current] [a]#(lf)#(lf)  where [ccg_of_registration] = '11M' and cast(derived_age as int) >= 16"]),
+				    #"Replaced Value" = Table.ReplaceValue(Source,null,"Unknown",Replacer.ReplaceValue,{"Gender"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value",null,"Unknown",Replacer.ReplaceValue,{"EthnicOriginDescription"})
+				in
+				    #"Replaced Value1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

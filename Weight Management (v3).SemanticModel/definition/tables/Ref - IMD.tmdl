@@ -1,0 +1,42 @@
+table 'Ref - IMD'
+	lineageTag: 9cda2cc7-35a3-46f9-9732-19654c2bbe93
+
+	column 'IMD Reference'
+		dataType: string
+		lineageTag: 1c6b3282-32aa-4bd2-a47d-1e571e84deeb
+		summarizeBy: none
+		sourceColumn: IMD Reference
+		sortByColumn: 'IMD Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'IMD Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: 102e57b7-ada8-4506-a9a6-efcb000ab5e2
+		summarizeBy: none
+		sourceColumn: IMD Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ref - IMD' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMgKTxmDSBEyagkkzMGkOJi3ApCWYNDQAU6F52Xn55XlKsbEA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "IMD Reference"}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns","Unknown","Out of County",Replacer.ReplaceText,{"IMD Reference"}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Replaced Value", "IMD Reference", "IMD Reference - Copy"),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Duplicated Column","Out of County","11",Replacer.ReplaceText,{"IMD Reference - Copy"}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Replaced Value1",{{"IMD Reference - Copy", Int64.Type}}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Changed Type1",{{"IMD Reference - Copy", "IMD Order"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

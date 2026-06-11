@@ -1,0 +1,35 @@
+table 'Week Order Table'
+	lineageTag: 87a96d0b-1c75-4f52-979b-41785e2d3bbf
+
+	column Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 33f8a3d6-f57d-4154-9623-2b0ed3248814
+		summarizeBy: sum
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weeks
+		dataType: string
+		lineageTag: cfb7a39e-c052-4c78-ad2c-4e5402937477
+		summarizeBy: none
+		sourceColumn: Weeks
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Week Order Table' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("Tc0hDoAwDAXQqyy17CdrKWOcBLFMTiERXJ9WQGqfeb0TU6YCSeec100jdxITgQZZTRQ1Pb+oSUULspk0cAlUjbiAJdjuJmAN1twUHIPDrYJjwcWxLR+NFw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t, Column2 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", Int64.Type}, {"Column2", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Order"}, {"Column2", "Weeks"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

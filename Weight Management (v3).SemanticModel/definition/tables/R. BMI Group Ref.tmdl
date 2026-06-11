@@ -1,0 +1,38 @@
+table 'R. BMI Group Ref'
+	lineageTag: d686f60a-667b-4bbe-94e8-5ed39d75b0a7
+
+	column 'BMI Group Adjusted'
+		dataType: string
+		lineageTag: 3cee0c6e-379d-4356-890f-d19d22d15b6a
+		summarizeBy: none
+		sourceColumn: BMI Group Adjusted
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: string
+		lineageTag: 1abbb5d5-dd22-429c-9176-6747982efed7
+		summarizeBy: none
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'R. BMI Group Ref' = m
+		mode: import
+		source =
+				let
+				    Source = #"Cohort Analysis",
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"BMI Group Adjusted"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Conditional Column" = Table.AddColumn(#"Removed Duplicates", "Custom", each if Text.Contains([BMI Group Adjusted], "Underweight") then 1 else if Text.Contains([BMI Group Adjusted], "Normal") then 2 else if Text.Contains([BMI Group Adjusted], "Overweight") then 3 else if Text.Contains([BMI Group Adjusted], "Obese") then 4 else 5),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Conditional Column",{{"Custom", "Order"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

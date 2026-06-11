@@ -1,0 +1,99 @@
+table 'Tier 2'
+	lineageTag: b24ef8d3-5907-4e93-9dfa-1eb750bdd7ce
+
+	measure Achieving_WL =
+			
+			CALCULATE(SUM('Tier 2'[Value]),'Tier 2'[Value Definition]="No. Losing 3%+",'Tier 2'[Additional Split] = "Sex")/
+			CALCULATE(SUM('Tier 2'[Value]),'Tier 2'[Value Definition]="Pathways Finished",'Tier 2'[Additional Split] = "Sex")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b5ec325b-79d2-4b17-9b37-d4327ad26cbb
+
+	column Provider
+		dataType: string
+		lineageTag: 78dd2307-7759-4d2e-841c-1b588887e510
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7cd2ac07-b061-4da0-b108-f8a751be1bd5
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Additional Split'
+		dataType: string
+		lineageTag: 8bf96944-023e-401e-bfe7-4f56173726de
+		summarizeBy: none
+		sourceColumn: Additional Split
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Additional Parameter'
+		dataType: string
+		lineageTag: bccd63a1-de91-457c-a237-85aff47b7d27
+		summarizeBy: none
+		sourceColumn: Additional Parameter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Value Definition'
+		dataType: string
+		lineageTag: 9d3c5381-bc3e-4ca3-afa1-8081e44b3c5f
+		summarizeBy: none
+		sourceColumn: Value Definition
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: #,0
+		lineageTag: d66a841f-ffaf-4027-b76e-f3b7b2f542ed
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Value Definition Sort'
+		dataType: string
+		lineageTag: ff677799-d7c7-47fe-896e-f50af99b0bf9
+		summarizeBy: none
+		sourceColumn: Value Definition Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Additional Parameter Clean'
+		dataType: string
+		lineageTag: 5ef5d4ca-dd47-4eae-bf07-2917fcd0bcf3
+		summarizeBy: none
+		sourceColumn: Additional Parameter Clean
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column9
+		dataType: string
+		lineageTag: f55fb47d-5826-40db-831f-be2404fde66e
+		summarizeBy: none
+		sourceColumn: Column9
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Tier 2' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\Weight Management\Tier 2 Weight Management Data.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Provider", type text}, {"Date", type date}, {"Additional Split", type text}, {"Additional Parameter", type text}, {"Value Definition", type text}, {"Value", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

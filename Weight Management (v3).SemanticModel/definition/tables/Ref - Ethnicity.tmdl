@@ -1,0 +1,26 @@
+table 'Ref - Ethnicity'
+	lineageTag: f49f6dab-ad99-4cc5-9803-174c738424a5
+
+	column EthnicOriginDescription
+		dataType: string
+		lineageTag: fbdfa200-3d48-491f-8cb3-0826bc02a609
+		summarizeBy: none
+		sourceColumn: EthnicOriginDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ref - Ethnicity' = m
+		mode: import
+		source =
+				let
+				    Source = #"Ref - Source Table",
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"Gender", "Derived_Age", "AgeBand5yr", "AgeBand10yr", "AgeBand"}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns",{"EthnicOriginDescription"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns")
+				in
+				    #"Removed Duplicates"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

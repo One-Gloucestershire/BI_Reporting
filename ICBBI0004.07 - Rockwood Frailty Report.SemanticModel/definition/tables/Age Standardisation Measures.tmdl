@@ -1,0 +1,101 @@
+table 'Age Standardisation Measures'
+	lineageTag: 0e1c762d-618d-4365-a41f-c4b503d61adf
+
+	measure 'Part A' = SUM('Reference Population'[population])/SUM('GP Population'[population])*SUM('Rockwood Frailty Scores'[Population])
+		lineageTag: 32922a38-3773-46d4-bea7-aa9edbc7ea62
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Part B' = (SUM('Reference Population'[population])/SUM('GP Population'[population]))^2*SUM('Rockwood Frailty Scores'[Population])
+		lineageTag: 5312495e-ed47-4211-bb8d-50bbcd74f677
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DSR = [Sum - Part A]/100000*1000
+		formatString: 0.00
+		lineageTag: b73dcaeb-4401-4b11-be60-f2152f727268
+
+	measure 'Sum - Part A' = SUMX(VALUES('Age Band Reference'[age_banding]), [Part A])
+		lineageTag: 1508109e-6e19-4d42-ad74-2469b4a41f18
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum - Part B' = SUMX(VALUES('Age Band Reference'[age_banding]), [Part B])
+		lineageTag: 341e7143-c2f9-432a-bef5-744b7a0f5a38
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'DSR ICB' = CALCULATE([Sum - Part A]/100000*1000, ALLSELECTED('GP Reference'))
+		lineageTag: 6a0c8ac0-a37f-4f73-8685-b281ffb201ac
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Alpha = 0.05
+		lineageTag: 8cdc0d48-ad88-42fa-8a8d-0a7b3eda3a17
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Z Value' = ABS(NORM.S.INV([Alpha]/2))
+		lineageTag: f359eeea-cbac-499b-abb9-923e0fb81870
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Upper Bound' = EXP(LN([DSR])+[Z Value]*SQRT(1/SUM('Rockwood Frailty Scores'[Population])))
+		formatString: 0.00
+		lineageTag: 2c36a410-d2cf-4aef-a993-4156f67e1e0a
+
+	measure 'Lower Bound' = EXP(LN([DSR])-[Z Value]*SQRT(1/SUM('Rockwood Frailty Scores'[Population])))
+		formatString: 0.00
+		lineageTag: 09e8eb24-c5ba-4678-97ca-390a9f1181c0
+
+	measure 'Bar Colours' =
+			SWITCH(TRUE(),
+			[DSR] > [DSR ICB], "#f4a261", "#20A39E")
+		lineageTag: 726b0f9c-9d60-4890-a059-1e8f35c98b0d
+
+	measure '% Total Frailty' =
+			
+			
+			VAR SUB_COHORT = SUM('Rockwood Frailty Scores'[Population])
+			VAR MAIN_COHORT = CALCULATE(SUM('Rockwood Frailty Scores'[Population]), ALLSELECTED('GP Reference'))
+			
+			RETURN SUB_COHORT/MAIN_COHORT
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 151c502e-1be2-4185-ba95-c3406bd8a83d
+
+	measure '% Total Frailty of 65+' =
+			
+			
+			VAR SUB_COHORT = CALCULATE(SUM('Rockwood Frailty Scores'[Population]), 'Age Band Reference'[age_banding] IN {"65-69", "70-74", "75-79", "80-84", "85+"})
+			
+			RETURN SUB_COHORT/'GP Population'[65 + Population]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5293fec2-53dd-4b0c-af97-9c9c5e5cda6f
+
+	measure 'Average % of 65+ Population' = CALCULATE('Age Standardisation Measures'[% Total Frailty of 65+], ALLSELECTED('GP Reference'), ALLSELECTED('Age Band Reference'), ALLSELECTED('Gender Reference'))
+		lineageTag: 4a2c2b6a-2b85-49c3-8bd5-b6dc09ea1c37
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Bar Colours - 65+ Frailty' =
+			SWITCH(TRUE(),
+			[% Total Frailty of 65+] > [Average % of 65+ Population], "#f4a261", "#20A39E")
+		lineageTag: 29e66d62-a708-43d1-b21b-37b3f2516416
+
+	column Column
+		formatString: 0
+		lineageTag: d30d93c9-b671-4473-a15c-856cfc19433a
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Age Standardisation Measures' = calculated
+		mode: import
+		source = Row("Column", BLANK())
+
+	annotation PBI_Id = 6e988a88ba0a4a3c9092b25f3c89a808
+
+	annotation 436ba87b-9c83-4389-a31b-ebd06a36be98 = {"Expression":""}
+

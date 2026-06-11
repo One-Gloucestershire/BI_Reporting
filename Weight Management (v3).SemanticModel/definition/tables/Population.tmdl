@@ -1,0 +1,40 @@
+table Population
+	lineageTag: 3df6ed91-b5ad-4485-bb6e-34ce1132dc31
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: cee92d36-0836-433d-8141-f18f66fa2a56
+		summarizeBy: none
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column district
+		dataType: string
+		lineageTag: b647d016-bb69-4ccd-a259-e48c4141af44
+		summarizeBy: none
+		sourceColumn: district
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA code'
+		dataType: string
+		lineageTag: c8e905b1-8cb8-4679-8d42-9ec0f55673c1
+		summarizeBy: none
+		sourceColumn: LSOA code
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Population = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIReports", [Query="SELECT sum(1) as [counter], district ,[LSOA code]#(lf)FROM [BIReports].[mpi].[mpi_current] #(lf)where ccg_of_registration = '11m' and district IN (#(lf)'Cheltenham',#(lf)'Cotswold',#(lf)'Gloucester',#(lf)'Forest of Dean',#(lf)'Stroud',#(lf)'Tewkesbury')#(lf)group by district,[LSOA code]#(lf)ORDER BY [counter]"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

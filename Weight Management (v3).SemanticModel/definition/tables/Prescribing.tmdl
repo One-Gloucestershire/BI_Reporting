@@ -1,0 +1,105 @@
+table Prescribing
+	lineageTag: 2581c16d-49fd-4152-bce6-3db0223fda6a
+
+	measure 'sum of Items' = sum(Prescribing[Items])
+		formatString: #,0
+		lineageTag: 658aa83e-eaaf-4ea6-9e3e-7a4d1b6dbf52
+
+	measure 'sum of cost' = sum(Prescribing[ActualCost])
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 91f23791-94dc-4d6d-aae4-a1b1720b8ab2
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Title = MAX('Cost/Items'[Cost & Items]) &" by BNF Chemical Substance over Time"
+		lineageTag: 569284bb-3c86-4406-8dab-f14131a1ee9e
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 00392b26-50e1-42a7-b0d6-f285e35e4eff
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSection
+		dataType: string
+		lineageTag: f1b3a55a-58b7-4ebd-8f0b-8abf5b457322
+		summarizeBy: none
+		sourceColumn: BNFSection
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFParagraph
+		dataType: string
+		lineageTag: 767b0095-03e4-417a-818c-ccce13d8c2e6
+		summarizeBy: none
+		sourceColumn: BNFParagraph
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstance
+		dataType: string
+		lineageTag: ac47beb9-385a-4359-941f-3519cfa5bb0f
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column Items
+		dataType: int64
+		formatString: 0
+		lineageTag: fd353963-3a39-4794-af18-d25d71614a21
+		summarizeBy: sum
+		sourceColumn: Items
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActualCost
+		dataType: double
+		lineageTag: e89ae310-ec58-4076-8615-6017d0a471a1
+		summarizeBy: sum
+		sourceColumn: ActualCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column FiveYearsAgeBand
+		dataType: string
+		lineageTag: 116e858d-9ebd-4553-9c57-96bd7f052694
+		summarizeBy: none
+		sourceColumn: FiveYearsAgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column HSPracticeCode
+		dataType: string
+		lineageTag: 04dbedfa-a6e6-45a8-be83-fdc8f9dfead1
+		summarizeBy: none
+		sourceColumn: HSPracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Literal
+		dataType: string
+		lineageTag: dddfef12-8e25-4502-936e-abf068186ecd
+		summarizeBy: none
+		sourceColumn: Literal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Prescribing = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT [YearMonth]#(lf)#(tab)  ,[BNFSection]#(lf)#(tab)  ,[BNFParagraph]#(lf)#(tab)  ,[BNFChemicalSubstance]#(lf)      ,[Items] = SUM([Items])#(lf)#(tab)  ,[ActualCost] = SUM([ActualCost])#(lf)      ,[FiveYearsAgeBand]#(lf)#(tab)  ,[HSPracticeCode]#(lf) #(lf)  FROM [CCG_Current].[ePACT2].[vw_Extract]#(lf)#(lf)  Where (bnfpresentation like '%Semaglutide%'#(lf)or bnfpresentation like '%Orlistat%' #(lf)or BNFPresentation like '%Liraglutide%') --NICE Guideline Weight Loss Drugs#(lf)  and YearMonth >=202104#(lf)  and HSCommissioner_or_ProviderCode like '11m%'#(lf)#(lf)  GROUP BY [YearMonth]#(lf)#(tab)#(tab)  ,[BNFSection]#(lf)#(tab)#(tab)  ,[BNFParagraph]#(lf)#(tab)#(tab)  ,[BNFChemicalSubstance]#(lf)#(tab)#(tab)  ,[FiveYearsAgeBand]#(lf)#(tab)#(tab)  ,[HSPracticeCode]#(lf)#(tab)#(tab)  #(lf)#(lf)  Order by YearMonth#(lf)#(lf)#(lf)"]),
+				    #"Inserted Literal" = Table.AddColumn(Source, "Literal", each "2021/04", type text)
+				in
+				    #"Inserted Literal"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

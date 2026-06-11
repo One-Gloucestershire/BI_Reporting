@@ -1,0 +1,938 @@
+table TrajectoryAnalysis
+	lineageTag: a3eb2ef2-d60f-4556-baf3-8f5af31ea8c6
+
+	measure HighRiskPatientsOver70 = ```
+			
+			DIVIDE(
+			    COUNTROWS(
+			        FILTER(TrajectoryAnalysis, [Predicted_High_Risk_Probability] > 0.7)
+			    ),
+			    COUNTROWS(TrajectoryAnalysis)
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 01681518-9726-4e02-ad4d-2848cb09545f
+
+	measure AvgHighRiskProbability = AVERAGE(TrajectoryAnalysis[Predicted_High_Risk_Probability])
+		lineageTag: 982ef2a3-fe6e-4c90-94cf-dd9039049f7c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure AvgHighRiskProbability_ByPractice = ```
+			
+			AVERAGEX(
+			    VALUES(TrajectoryAnalysis[Practice]),
+			    CALCULATE(AVERAGE(TrajectoryAnalysis[Predicted_High_Risk_Probability]))
+			)
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 88a79467-9dd7-4f28-a73b-9f8a6b0368ae
+
+	measure TopPracticeName = ```
+			
+			VAR TopPractice = 
+			    TOPN(1, 
+			        SUMMARIZE(
+			            TrajectoryAnalysis, 
+			            TrajectoryAnalysis[Practice], 
+			            "AvgRisk", AVERAGE(TrajectoryAnalysis[Predicted_High_Risk_Probability])
+			        ), 
+			        [AvgRisk], 
+			        DESC
+			    )
+			RETURN
+			    MAXX(TopPractice, TrajectoryAnalysis[Practice])
+			
+			```
+		lineageTag: 4f5b06b2-e744-45a5-b025-990472b2c7d7
+
+	measure SingleReadingPct =
+			
+			DIVIDE(
+			    COUNTROWS(
+			        FILTER(TrajectoryAnalysis, TrajectoryAnalysis[Trajectory_Label] = "Single Reading Only")
+			    ),
+			    COUNTROWS(TrajectoryAnalysis)
+			)
+		lineageTag: 89c45404-0b4b-4aa5-9b29-3785e447bccd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Single_Reading_Due = ```
+			
+			VAR rowDate = SELECTEDVALUE('TrajectoryAnalysis'[Follow_HbA1c_Date])
+			VAR isSingle = SELECTEDVALUE('TrajectoryAnalysis'[Trajectory_Label]) = "Single Reading Only"
+			RETURN IF( isSingle && NOT ISBLANK(rowDate) && DATEDIFF(rowDate, TODAY(), DAY) >= 270, 1, 0 )
+			
+			```
+		formatString: 0
+		lineageTag: 35675214-a550-4609-a790-ed1611e04655
+
+	measure AllPatients_Count = ```
+			
+			DISTINCTCOUNT('TrajectoryAnalysis'[Derived_Pseudo_NHS_Number])
+			
+			```
+		formatString: 0
+		lineageTag: 00b08061-5205-41ca-b416-a2ab8c8789ce
+
+	measure HighRisk_Count = ```
+			
+			CALCULATE(
+			    DISTINCTCOUNT('TrajectoryAnalysis'[Derived_Pseudo_NHS_Number]),
+			    'TrajectoryAnalysis'[Final_Risk_Band] = "High Risk"
+			)
+			
+			
+			```
+		formatString: 0
+		lineageTag: 7687f2fe-a141-443c-9832-36a2504472f1
+
+	measure HighRisk_per_1k =
+			
+			1000 * DIVIDE([HighRisk_Count], [AllPatients_Count])
+		lineageTag: 802bdf3b-06cc-4f5e-b086-2f9a9f9dc56f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Patient_Count = ```
+			
+			COUNTROWS('TrajectoryAnalysis')
+			
+			```
+		formatString: #,0
+		lineageTag: f5379690-9e2b-4702-93b8-df73689f45e1
+
+	measure Measure = ```
+			
+			COUNTROWS (
+			    FILTER (
+			        'TrajectoryAnalysis',
+			        'TrajectoryAnalysis'[Trajectory_Label] = "Deteriorating"
+			            && 'TrajectoryAnalysis'[Final_Risk_Band] = "Moderate Risk"
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 66936029-7e03-4ec5-a3fd-84fe98ac316f
+
+	measure LTC_Patients_NDA = ```
+			
+			VAR NDA_Patients =
+			    VALUES ( TrajectoryAnalysis[Derived_Pseudo_NHS_Number] )
+			
+			VAR Cond =
+			    SELECTEDVALUE ( LTC_Conditions[LTCName] )
+			
+			RETURN
+			SWITCH (
+			    TRUE (),
+			
+			    Cond = "Hypertension",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Hypertension] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Depression",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Depression] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Diabetes",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Diabetes] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Asthma",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Asthma] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Chronic Kidney Disease",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[ChronicKidneyDisease] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Cancer",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Cancer] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Coronary Heart Disease",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[CoronaryHeartDisease] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Atrial Fibrillation",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[AtrialFibrillation] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Stroke",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Stroke] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "COPD",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[COPD] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Heart Failure",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[HeartFailure] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Dementia",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Dementia] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Mental Illness",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[MentalIllness] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Learning Disability",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[LearningDisability] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Palliative Care",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[PalliativeCare] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    Cond = "Epilepsy",
+			        CALCULATE (
+			            DISTINCTCOUNT ( Patient_Summary[PseudoNHSNumber] ),
+			            Patient_Summary[Epilepsy] = 1,
+			            TREATAS ( NDA_Patients, Patient_Summary[PseudoNHSNumber] )
+			        ),
+			
+			    BLANK ()
+			)
+			
+			```
+		formatString: 0
+		lineageTag: a3cf869d-a4b7-4279-8666-0a3139ab7fd1
+
+	measure CM_TP =
+			
+			CALCULATE (
+			    COUNTROWS ( 'TrajectoryAnalysis' ),
+			    'TrajectoryAnalysis'[Predicted_High_Risk_Flag] = 1,
+			    'TrajectoryAnalysis'[Observed_High_Risk_Flag] = 1
+			)
+		formatString: 0
+		lineageTag: 1f136a92-f760-48c9-a3ea-e95599eb2337
+
+	measure CM_FP =
+			
+			CALCULATE (
+			    COUNTROWS ( 'TrajectoryAnalysis' ),
+			    'TrajectoryAnalysis'[Predicted_High_Risk_Flag] = 1,
+			    'TrajectoryAnalysis'[Observed_High_Risk_Flag] = 0
+			)
+		formatString: 0
+		lineageTag: 268a8980-34b2-4560-aa53-27f637d722f4
+
+	measure CM_FN =
+			
+			CALCULATE (
+			    COUNTROWS ( 'TrajectoryAnalysis' ),
+			    'TrajectoryAnalysis'[Predicted_High_Risk_Flag] = 0,
+			    'TrajectoryAnalysis'[Observed_High_Risk_Flag] = 1
+			)
+		formatString: 0
+		lineageTag: 282f58ca-84f8-4c3e-9b78-5e5daabbdc2f
+
+	measure CM_TN =
+			
+			CALCULATE (
+			    COUNTROWS ( 'TrajectoryAnalysis' ),
+			    'TrajectoryAnalysis'[Predicted_High_Risk_Flag] = 0,
+			    'TrajectoryAnalysis'[Observed_High_Risk_Flag] = 0
+			)
+		formatString: 0
+		lineageTag: 02d2612e-5311-4ba1-841b-cdb071fc4845
+
+	measure CM_Precision =
+			
+			DIVIDE ( [CM_TP], [CM_TP] + [CM_FP] )
+		lineageTag: c3afa4a5-df3c-4261-aa5e-9bb7fe858d5b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CM_Recall =
+			
+			DIVIDE ( [CM_TP], [CM_TP] + [CM_FN] )
+		lineageTag: 98322bc6-f889-46f2-a67a-22fe01737235
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CM_Accuracy =
+			
+			DIVIDE (
+			    [CM_TP] + [CM_TN],
+			    [CM_TP] + [CM_FP] + [CM_FN] + [CM_TN]
+			)
+		lineageTag: 7b4977ef-3cc2-49b6-91fe-066f28492709
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Model_Validation_Summary = ```
+			
+			VAR Prec = [CM_Precision]
+			VAR Rec  = [CM_Recall]
+			VAR Acc  = [CM_Accuracy]
+			RETURN
+			"Within the selected cohort, the model correctly classifies "
+			& FORMAT ( Acc, "0.0%" ) & " of patients overall, identifies "
+			& FORMAT ( Rec, "0.0%" ) & " of patients currently in the High Risk band, "
+			& "and when it flags a patient as high risk it is correct "
+			& FORMAT ( Prec, "0.0%" ) & " of the time."
+			
+			```
+		lineageTag: 9665c691-fec6-4bda-8e94-7fa5035ec980
+
+	column Derived_Pseudo_NHS_Number
+		dataType: string
+		lineageTag: 49706fbf-b15e-4c94-9532-d7f77b7129d0
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Base_HbA1c
+		dataType: int64
+		formatString: 0
+		lineageTag: 027a37f5-dac4-456d-bdc0-9fe7c7ba08fb
+		summarizeBy: sum
+		sourceColumn: Base_HbA1c
+
+		annotation SummarizationSetBy = Automatic
+
+	column Follow_HbA1c
+		dataType: string
+		lineageTag: 8472c4d5-756c-4319-9111-9225318912c3
+		summarizeBy: none
+		sourceColumn: Follow_HbA1c
+
+		annotation SummarizationSetBy = Automatic
+
+	column HbA1c_Change
+		dataType: string
+		lineageTag: 84de8896-6818-45ba-a69b-ba7cda08c0cd
+		summarizeBy: none
+		sourceColumn: HbA1c_Change
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: 7f5c1d30-afa7-4b67-a1cf-2384f844cb9d
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Base_HbA1c_Date
+		dataType: string
+		lineageTag: bc930c9e-af03-49ec-82fe-d8c8d9b7e8dc
+		summarizeBy: none
+		sourceColumn: Base_HbA1c_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Follow_HbA1c_Date
+		dataType: string
+		lineageTag: 1a8f00f9-0043-42f6-bc4f-a606fa87ad98
+		summarizeBy: none
+		sourceColumn: Follow_HbA1c_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Days_Between_Readings
+		dataType: string
+		lineageTag: f5d203fe-de65-4de4-9de7-445c1b812e58
+		summarizeBy: none
+		sourceColumn: Days_Between_Readings
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trajectory_Label
+		dataType: string
+		lineageTag: 45ccf6b9-e7b8-41ac-8d92-009a5dc311d7
+		summarizeBy: none
+		sourceColumn: Trajectory_Label
+
+		annotation SummarizationSetBy = Automatic
+
+	column HbA1c_Percent_Change_Display
+		dataType: double
+		lineageTag: d3fef845-70a8-472a-aa23-584a6ef53d97
+		summarizeBy: sum
+		sourceColumn: HbA1c_Percent_Change_Display
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column HbA1c_Score
+		dataType: string
+		lineageTag: ab9bc81e-8b84-4984-8686-01e073aae28b
+		summarizeBy: none
+		sourceColumn: HbA1c_Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column Final_Risk_Band
+		dataType: string
+		lineageTag: fe422ab2-2405-4da9-b0df-50c688b903fa
+		summarizeBy: none
+		sourceColumn: Final_Risk_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column CURRENT_GP
+		dataType: string
+		lineageTag: 906b3934-6521-4bdc-9810-f19a40627e05
+		summarizeBy: none
+		sourceColumn: CURRENT_GP
+
+		annotation SummarizationSetBy = Automatic
+
+	column Clean_Sex
+		dataType: string
+		lineageTag: a8e92c11-7ce1-4633-8794-30edb3606de4
+		summarizeBy: none
+		sourceColumn: Clean_Sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Clean_Birth_Year
+		dataType: string
+		lineageTag: 1d796704-d14e-4b9a-bd55-4b57f863b87d
+		summarizeBy: none
+		sourceColumn: Derived_Clean_Birth_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Clean_Ethnicity
+		dataType: string
+		lineageTag: 3c56fdf4-d9fc-4bf4-a5f5-c66c061697bf
+		summarizeBy: none
+		sourceColumn: Clean_Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice
+		dataType: string
+		lineageTag: 1019e3f4-0e13-4006-aee8-75f3071cd162
+		summarizeBy: none
+		sourceColumn: Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Predicted_High_Risk_Probability
+		dataType: double
+		lineageTag: 78415f18-f190-4545-ace7-081ff2eb6ff7
+		summarizeBy: sum
+		sourceColumn: Predicted_High_Risk_Probability
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column HbA1c_Readings_Count
+		dataType: string
+		lineageTag: 671f6c01-4ee3-4283-8940-4a38cea420f4
+		summarizeBy: none
+		sourceColumn: HbA1c_Readings_Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column Single_Reading_Flag
+		dataType: string
+		lineageTag: 20212e4c-5a89-4c70-ae55-2849f958c9f4
+		summarizeBy: none
+		sourceColumn: Single_Reading_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Predicted_Risk_Band
+		dataType: string
+		lineageTag: 7938f213-e28c-4efa-b175-9fff0828cd83
+		summarizeBy: none
+		sourceColumn: Predicted_Risk_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN_Code
+		dataType: string
+		lineageTag: 2216a661-2b74-46b2-93d1-c224aa63aa17
+		summarizeBy: none
+		sourceColumn: PCN_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Smoking_Value
+		dataType: int64
+		formatString: 0
+		lineageTag: e55c1084-af6f-456f-9edf-d428d4608ec1
+		summarizeBy: sum
+		sourceColumn: Latest_Smoking_Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_BMI
+		dataType: double
+		lineageTag: d1f4bb4b-7991-4c7c-a103-4b9b27b53577
+		summarizeBy: sum
+		sourceColumn: Latest_BMI
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Latest_Systolic_Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 3abc2bd8-c457-44dd-b9c4-d88492fb394c
+		summarizeBy: sum
+		sourceColumn: Latest_Systolic_Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Cholesterol_Total
+		dataType: double
+		lineageTag: 6cb3e241-de52-426c-ae48-3f509a69f8ed
+		summarizeBy: sum
+		sourceColumn: Latest_Cholesterol_Total
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column IMD_Quintile
+		dataType: int64
+		formatString: 0
+		lineageTag: 845c3dbb-830e-4658-ac36-aa293228077e
+		summarizeBy: sum
+		sourceColumn: IMD_Quintile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: 7ebdcbe7-6bc6-4ff6-9351-c336bad20bfd
+		summarizeBy: sum
+		sourceColumn: Frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column Statin_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 6754048a-b986-4162-aebf-87aa995d4dd8
+		summarizeBy: sum
+		sourceColumn: Statin_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Clean_IHD_Value
+		dataType: string
+		lineageTag: ddd6c41f-05e2-4c7d-8c23-9f28088cf228
+		summarizeBy: none
+		sourceColumn: Clean_IHD_Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column CVD_Admission
+		dataType: string
+		lineageTag: e87f71a1-8f4d-4a71-81db-c1bfce0e2349
+		summarizeBy: none
+		sourceColumn: CVD_Admission
+
+		annotation SummarizationSetBy = Automatic
+
+	column All_8_Care_Processes
+		dataType: string
+		lineageTag: 52954798-7a88-4cf1-a206-acd597a392fd
+		summarizeBy: none
+		sourceColumn: All_8_Care_Processes
+
+		annotation SummarizationSetBy = Automatic
+
+	column All_9_Care_Processes
+		dataType: string
+		lineageTag: 62d29a73-dd10-4e4a-b8b3-c5110279e217
+		summarizeBy: none
+		sourceColumn: All_9_Care_Processes
+
+		annotation SummarizationSetBy = Automatic
+
+	column Remission
+		dataType: string
+		lineageTag: 8782a7b6-d257-4964-b221-16456496aa09
+		summarizeBy: none
+		sourceColumn: Remission
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sex_Male
+		dataType: string
+		lineageTag: 1d9bec11-d5c1-4675-9e0a-fc798398656a
+		summarizeBy: none
+		sourceColumn: Sex_Male
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Group
+		dataType: string
+		lineageTag: 3c0fc122-6a89-49ab-9983-13d73279b750
+		summarizeBy: none
+		sourceColumn: Ethnicity_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Smoking_Group
+		dataType: string
+		lineageTag: fc119b0a-25fd-4e84-a908-e0e72618baa3
+		summarizeBy: none
+		sourceColumn: Smoking_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Action_Act_Now = ```
+			
+			VAR traj = 'TrajectoryAnalysis'[Trajectory_Label]
+			VAR frb  = 'TrajectoryAnalysis'[Final_Risk_Band]
+			VAR prb  = 'TrajectoryAnalysis'[Predicted_Risk_Band]
+			RETURN IF( (traj="Deteriorating" && frb="High Risk") || prb="Very High Risk" || prb="High Risk", 1, 0 )
+			
+			```
+		formatString: 0
+		lineageTag: 32e134b6-fdb4-46f0-b0cb-71fc09bf20d1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Action_Review_Soon = ```
+			
+			IF( 'TrajectoryAnalysis'[Trajectory_Label]="Deteriorating"
+			    && 'TrajectoryAnalysis'[Final_Risk_Band]="Moderate Risk", 1, 0 )
+			
+			```
+		formatString: 0
+		lineageTag: 5ce1c898-56bf-4943-8d5e-c2cea2d99806
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Action_Rapid_Improvement = ```
+			
+			IF( 'TrajectoryAnalysis'[Trajectory_Label]="Improved"
+			    && 'TrajectoryAnalysis'[Final_Risk_Band]="Rapid Improvement", 1, 0 )
+			
+			
+			
+			
+			
+			
+			```
+		formatString: 0
+		lineageTag: 9e5115c6-b980-428a-91a7-e5a3327530c9
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Action_Rising_Risk = ```
+			
+			VAR p = 'TrajectoryAnalysis'[Predicted_High_Risk_Probability]
+			RETURN IF( p > 0.40 && p <= 0.70, 1, 0 )
+			
+			```
+		formatString: 0
+		lineageTag: ec41d5c1-5fc8-4c86-afe6-16ea5998f150
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Final_Risk_Sort = ```
+			
+			SWITCH(
+			    'TrajectoryAnalysis'[Final_Risk_Band],
+			    "High Risk", 1, "Moderate Risk", 2, "Low Risk", 3, "No Risk", 4,
+			    "Rapid Improvement", 5, "Moderate Improvement", 6, "Gradual Improvement", 7,
+			    "No Change", 8, "Stable", 9, "Single Reading Only", 10, 99
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 13acde25-e332-418c-9ff6-95145cb85207
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Predicted_Risk_Sort = ```
+			
+			SWITCH(
+			    'TrajectoryAnalysis'[Predicted_Risk_Band],
+			    "Very High Risk", 1, "High Risk", 2, "Moderate Risk", 3, "Low Risk", 4, "Below Threshold", 5, 99
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 6d8a60ce-32f0-451a-96ab-cc715ec209bc
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gestational = ```
+			
+			VAR ageNum =
+			    IFERROR( VALUE( 'TrajectoryAnalysis'[Age] ), BLANK() )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(ageNum), BLANK(),
+			    ageNum < 18, "<18",
+			    ageNum <= 24, "18–24",
+			    ageNum <= 29, "25–29",
+			    ageNum <= 34, "30–34",
+			    ageNum <= 39, "35–39",
+			    ageNum <= 44, "40–44",
+			    ageNum <= 49, "45–49",
+			    "50+"
+			)
+			
+			
+			
+			
+			
+			```
+		lineageTag: e8362936-435a-4055-b135-5a103c1ce7a2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Clean_Sex_Label = ```
+			
+			SWITCH(
+			    TRUE(),
+			    VALUE('TrajectoryAnalysis'[Clean_Sex]) = 1, "Male",
+			    VALUE('TrajectoryAnalysis'[Clean_Sex]) = 2, "Female",
+			    BLANK()
+			)
+			
+			
+			```
+		lineageTag: 033c9ecc-6814-47b7-9c8b-5cc726cbde2e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Smoking_Label = ```
+			
+			VAR s = TRIM( UPPER( FORMAT('TrajectoryAnalysis'[Latest_Smoking_Value], "") ) )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(s), "Unknown",
+			    s IN { "CURRENT SMOKER", "SMOKER", "CURRENT" }, "Current Smoker",
+			    s IN { "EX-SMOKER", "EX SMOKER", "PREVIOUS" }, "Ex-Smoker",
+			    s IN { "NEVER", "NEVER SMOKER" }, "Never Smoked",
+			    "Unknown"
+			)
+			
+			```
+		lineageTag: 51355693-140d-4e39-a701-60d4d3818303
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column HbA1c_Category = ```
+			
+			VAR val = VALUE('TrajectoryAnalysis'[Follow_HbA1c])
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(val), "Unknown",
+			    val < 48, "<48 (Normal)",
+			    val <= 58, "48–58 (Good Control)",
+			    val <= 74, "59–74 (Sub-optimal)",
+			    val >= 75, "≥75 (Poor Control)",
+			    "Unknown"
+			)
+			
+			```
+		lineageTag: 7248da4f-ab5b-43ef-84b8-5e1e0ef969c5
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Predicted_Class
+		dataType: string
+		lineageTag: 5f5d1f60-3aff-487d-b45c-17c476f71a32
+		summarizeBy: none
+		sourceColumn: Predicted_Class
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rising_Risk_Flag
+		dataType: string
+		lineageTag: 88e29c3b-e000-4bbb-9ddc-a98bd117175a
+		summarizeBy: none
+		sourceColumn: Rising_Risk_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTC_List = ```
+			
+			VAR LTCs =
+			    UNION (
+			        ROW ( "Name", "Asthma",                 "Has", RELATED ( Patient_Summary[Asthma] ) ),
+			        ROW ( "Name", "COPD",                   "Has", RELATED ( Patient_Summary[COPD] ) ),
+			        ROW ( "Name", "Dementia",               "Has", RELATED ( Patient_Summary[Dementia] ) ),
+			        ROW ( "Name", "Depression",             "Has", RELATED ( Patient_Summary[Depression] ) ),
+			        ROW ( "Name", "Diabetes",               "Has", RELATED ( Patient_Summary[Diabetes] ) ),
+			        ROW ( "Name", "Palliative Care",        "Has", RELATED ( Patient_Summary[PalliativeCare] ) ),
+			        ROW ( "Name", "Chronic Kidney Disease", "Has", RELATED ( Patient_Summary[ChronicKidneyDisease] ) ),
+			        ROW ( "Name", "Epilepsy",               "Has", RELATED ( Patient_Summary[Epilepsy] ) ),
+			        ROW ( "Name", "Heart Failure",          "Has", RELATED ( Patient_Summary[HeartFailure] ) ),
+			        ROW ( "Name", "Stroke",                 "Has", RELATED ( Patient_Summary[Stroke] ) ),
+			        ROW ( "Name", "Atrial Fibrillation",    "Has", RELATED ( Patient_Summary[AtrialFibrillation] ) ),
+			        ROW ( "Name", "Cancer",                 "Has", RELATED ( Patient_Summary[Cancer] ) ),
+			        ROW ( "Name", "Coronary Heart Disease", "Has", RELATED ( Patient_Summary[CoronaryHeartDisease] ) ),
+			        ROW ( "Name", "Hypertension",           "Has", RELATED ( Patient_Summary[Hypertension] ) ),
+			        ROW ( "Name", "Learning Disability",    "Has", RELATED ( Patient_Summary[LearningDisability] ) ),
+			         ROW ( "Name", "Obesity",               "Has", RELATED ( Patient_Summary[Obesity] ) ),
+			        ROW ( "Name", "Mental Illness",         "Has", RELATED ( Patient_Summary[MentalIllness] ) )
+			    )
+			
+			VAR LTCsWithFlag =
+			    ADDCOLUMNS (
+			        LTCs,
+			        "HasNumeric",
+			            IF (
+			                NOT ISBLANK ( [Has] ) &&
+			                [Has] <> 0,
+			                1,
+			                0
+			            )
+			    )
+			
+			VAR HasLTCs =
+			    FILTER ( LTCsWithFlag, [HasNumeric] = 1 )
+			
+			RETURN
+			IF (
+			    COUNTROWS ( HasLTCs ) = 0,
+			    BLANK(),
+			    CONCATENATEX ( HasLTCs, [Name], ", " )
+			)
+			
+			```
+		lineageTag: 306b58a1-e324-421b-95f2-12237987e43f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Predicted_Risk_Decile
+		dataType: string
+		lineageTag: 885184ec-240f-41e7-9b6d-dd001bae7b0d
+		summarizeBy: none
+		sourceColumn: Predicted_Risk_Decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observed_High_Risk_Flag =
+			
+			IF ( 'TrajectoryAnalysis'[Final_Risk_Band] = "High Risk", 1, 0 )
+		formatString: 0
+		lineageTag: 421c5380-b0f2-4716-b44c-ee4dd2706c37
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Predicted_High_Risk_Flag = ```
+			
+			IF (
+			    NOT ISBLANK ( 'TrajectoryAnalysis'[Predicted_High_Risk_Probability] )
+			        && VALUE ( 'TrajectoryAnalysis'[Predicted_High_Risk_Probability] ) >= 0.7,
+			    1,
+			    0
+			)
+			
+			```
+		formatString: 0
+		lineageTag: c70b0d91-f475-4bec-85ae-6e3f4843148d
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition TrajectoryAnalysis = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Data_Mart_National_Diabetes_Audit", [Query="/* ========= 1) Core pairing & counts ========= */#(lf)WITH RankedHbA1c AS (#(lf)    SELECT#(lf)        Derived_Pseudo_NHS_Number,#(lf)        HbA1c_mmol_Value,#(lf)        HBA1C_Date,#(lf)        Diabetes_Duration,#(lf)        PCN_Code,#(lf)        -- removed Age here to avoid duplication/drift#(lf)        Clean_Sex,#(lf)        Derived_Clean_Birth_Year,#(lf)        Clean_Ethnicity,#(lf)        CURRENT_GP,#(lf)        ROW_NUMBER() OVER (PARTITION BY Derived_Pseudo_NHS_Number ORDER BY HBA1C_Date ASC)  AS RN_Start,#(lf)        ROW_NUMBER() OVER (PARTITION BY Derived_Pseudo_NHS_Number ORDER BY HBA1C_Date DESC) AS RN_End#(lf)    FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA]#(lf)    WHERE HbA1c_mmol_Value IS NOT NULL#(lf)      AND Clean_Diabetes_Type NOT IN ('1', '01')#(lf)),#(lf)ReadingCounts AS (#(lf)    SELECT#(lf)        Derived_Pseudo_NHS_Number,#(lf)        COUNT(*) AS HbA1c_Readings_Count#(lf)    FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA]#(lf)    WHERE HbA1c_mmol_Value IS NOT NULL#(lf)      AND Clean_Diabetes_Type NOT IN ('1', '01')#(lf)    GROUP BY Derived_Pseudo_NHS_Number#(lf)),#(lf)Base AS (#(lf)    SELECT * FROM RankedHbA1c WHERE RN_Start = 1#(lf)),#(lf)FollowUp AS (#(lf)    SELECT * FROM RankedHbA1c WHERE RN_End   = 1#(lf))#(lf)#(lf)/* ========= 2) Latest value CTEs ========= */#(lf), LatestSmoking AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Clean_Smoking_Value AS Latest_Smoking_Value,#(lf)           Clean_Smoking_Date  AS Latest_Smoking_Date#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Clean_Smoking_Value,#(lf)               c.Clean_Smoking_Date,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY c.Clean_Smoking_Date DESC, c.HBA1C_Date DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.Clean_Smoking_Value IS NOT NULL#(lf)           OR c.Clean_Smoking_Date  IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestBMI AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           BMI              AS Latest_BMI,#(lf)           BMI_Date         AS Latest_BMI_Date#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.BMI,#(lf)               c.BMI_Date,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY c.BMI_Date DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.BMI IS NOT NULL#(lf)           OR c.BMI_Date IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestBP AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Systolic_Value          AS Latest_Systolic_Value,#(lf)           Diastolic_Value         AS Latest_Diastolic_Value,#(lf)           BP_Date                 AS Latest_BP_Date,#(lf)           [BP<=140/80_TT]         AS Latest_BP_Target_Achieved#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Systolic_Value,#(lf)               c.Diastolic_Value,#(lf)               c.BP_Date,#(lf)               c.[BP<=140/80_TT],#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY c.BP_Date DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.BP_Date IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestChol AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Cholesterol_Value_Total AS Latest_Cholesterol_Total,#(lf)           Cholesterol_Date_Total  AS Latest_Cholesterol_Date,#(lf)           [CHOL_TOTAL_<5]         AS Latest_CHOL_TOTAL_lt5,#(lf)           [CHOL_TOTAL_<4]         AS Latest_CHOL_TOTAL_lt4#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Cholesterol_Value_Total,#(lf)               c.Cholesterol_Date_Total,#(lf)               c.[CHOL_TOTAL_<5],#(lf)               c.[CHOL_TOTAL_<4],#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY c.Cholesterol_Date_Total DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.Cholesterol_Date_Total IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestIMD AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           IMD_Quintile#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.IMD_Quintile,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY c.HBA1C_Date DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.IMD_Quintile IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestFrailty AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Frailty,#(lf)           Frailty_Date#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Frailty,#(lf)               c.Frailty_Date,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY COALESCE(c.Frailty_Date, c.HBA1C_Date) DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.Frailty IS NOT NULL#(lf)           OR c.Frailty_Date IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestStatin AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Statin_Flag#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Statin_Flag,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY COALESCE(c.Cholesterol_Date_Total, c.HBA1C_Date) DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.Statin_Flag IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestIHD AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Clean_IHD_Value#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Clean_IHD_Value,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY COALESCE(c.Creatinine_Date, c.HBA1C_Date) DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.Clean_IHD_Value IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestCVD AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           CVD_Admission#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.CVD_Admission,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY COALESCE(c.HBA1C_Date, c.BP_Date, c.Cholesterol_Date_Total) DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.CVD_Admission IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestCare AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           All_8_Care_Processes,#(lf)           All_9_Care_Processes#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.All_8_Care_Processes,#(lf)               c.All_9_Care_Processes,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY COALESCE(c.HBA1C_Date, c.BP_Date, c.Cholesterol_Date_Total) DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.All_8_Care_Processes IS NOT NULL#(lf)           OR c.All_9_Care_Processes IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf)),#(lf)LatestRemission AS (#(lf)    SELECT Derived_Pseudo_NHS_Number,#(lf)           Remission,#(lf)           Remission_Date#(lf)    FROM (#(lf)        SELECT c.Derived_Pseudo_NHS_Number,#(lf)               c.Remission,#(lf)               c.Remission_Date,#(lf)               ROW_NUMBER() OVER (#(lf)                   PARTITION BY c.Derived_Pseudo_NHS_Number#(lf)                   ORDER BY c.Remission_Date DESC#(lf)               ) AS rn#(lf)        FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] c#(lf)        WHERE c.Remission IS NOT NULL#(lf)           OR c.Remission_Date IS NOT NULL#(lf)    ) x#(lf)    WHERE rn = 1#(lf))#(lf)#(lf)/* ========= 3) Score & assemble ========= */#(lf), Scored AS (#(lf)    SELECT#(lf)        b.Derived_Pseudo_NHS_Number,#(lf)        b.CURRENT_GP,#(lf)        b.PCN_Code,#(lf)#(lf)        /* Age anchored to the follow-up (or base) date for accuracy */#(lf)        DATEDIFF(YEAR, DATEFROMPARTS(b.Derived_Clean_Birth_Year, 7, 1), COALESCE(f.HBA1C_Date, b.HBA1C_Date))#(lf)          - CASE WHEN DATEFROMPARTS(b.Derived_Clean_Birth_Year, 7, 1) > COALESCE(f.HBA1C_Date, b.HBA1C_Date)#(lf)                 THEN 1 ELSE 0 END AS Age,#(lf)#(lf)        b.Clean_Sex,#(lf)        b.Derived_Clean_Birth_Year,#(lf)        b.Clean_Ethnicity,#(lf)#(lf)        b.HbA1c_mmol_Value AS Base_HbA1c,#(lf)        b.HBA1C_Date       AS Base_HbA1c_Date,#(lf)        f.HbA1c_mmol_Value AS Follow_HbA1c,#(lf)        f.HBA1C_Date       AS Follow_HbA1c_Date,#(lf)        rc.HbA1c_Readings_Count,#(lf)#(lf)        DATEDIFF(DAY, b.HBA1C_Date, f.HBA1C_Date) AS Days_Between_Readings,#(lf)#(lf)        (f.HbA1c_mmol_Value - b.HbA1c_mmol_Value) AS HbA1c_Change,#(lf)#(lf)        /* Display % change to 1 d.p.; T-SQL ROUND uses “half away from zero” */#(lf)        CASE#(lf)            WHEN b.HbA1c_mmol_Value IS NOT NULL AND b.HbA1c_mmol_Value <> 0#(lf)            THEN ROUND(((f.HbA1c_mmol_Value - b.HbA1c_mmol_Value) * 100.0) / b.HbA1c_mmol_Value, 1)#(lf)            ELSE NULL#(lf)        END AS HbA1c_Percent_Change_Display,#(lf)#(lf)        CASE#(lf)            WHEN rc.HbA1c_Readings_Count = 1 OR f.HbA1c_mmol_Value IS NULL THEN 'Single Reading Only'#(lf)            WHEN (f.HbA1c_mmol_Value - b.HbA1c_mmol_Value) > 0 THEN 'Deteriorating'#(lf)            WHEN (f.HbA1c_mmol_Value - b.HbA1c_mmol_Value) < 0 THEN 'Improved'#(lf)            ELSE 'Stable'#(lf)        END AS Trajectory_Label,#(lf)#(lf)        (#(lf)            FLOOR(ABS((f.HbA1c_mmol_Value - b.HbA1c_mmol_Value) * 100.0 / NULLIF(b.HbA1c_mmol_Value,0)) / 5)#(lf)            + CASE WHEN DATEDIFF(DAY, b.HBA1C_Date, f.HBA1C_Date) <= 180 THEN 5 ELSE 0 END#(lf)        ) AS HbA1c_Score,#(lf)#(lf)        ls.Latest_Smoking_Value,#(lf)        lbmi.Latest_BMI,#(lf)        lbp.Latest_Systolic_Value,#(lf)        lchol.Latest_Cholesterol_Total,#(lf)        limd.IMD_Quintile,#(lf)        lfrail.Frailty,#(lf)        lstatin.Statin_Flag,#(lf)        lihd.Clean_IHD_Value,#(lf)        lcvd.CVD_Admission,#(lf)        lcare.All_8_Care_Processes,#(lf)        lcare.All_9_Care_Processes,#(lf)        lrem.Remission#(lf)#(lf)    FROM Base b#(lf)    LEFT JOIN FollowUp f#(lf)      ON b.Derived_Pseudo_NHS_Number = f.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN ReadingCounts rc#(lf)      ON b.Derived_Pseudo_NHS_Number = rc.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestSmoking   ls      ON b.Derived_Pseudo_NHS_Number = ls.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestBMI       lbmi    ON b.Derived_Pseudo_NHS_Number = lbmi.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestBP        lbp     ON b.Derived_Pseudo_NHS_Number = lbp.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestChol      lchol   ON b.Derived_Pseudo_NHS_Number = lchol.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestIMD       limd    ON b.Derived_Pseudo_NHS_Number = limd.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestFrailty   lfrail  ON b.Derived_Pseudo_NHS_Number = lfrail.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestStatin    lstatin ON b.Derived_Pseudo_NHS_Number = lstatin.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestIHD       lihd    ON b.Derived_Pseudo_NHS_Number = lihd.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestCVD       lcvd    ON b.Derived_Pseudo_NHS_Number = lcvd.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestCare      lcare   ON b.Derived_Pseudo_NHS_Number = lcare.Derived_Pseudo_NHS_Number#(lf)    LEFT JOIN LatestRemission lrem    ON b.Derived_Pseudo_NHS_Number = lrem.Derived_Pseudo_NHS_Number#(lf))#(lf)#(lf)/* ========= 4) Final output ========= */#(lf)SELECT *,#(lf)    CASE#(lf)        WHEN HbA1c_Readings_Count = 1 THEN 'Single Reading Only'#(lf)        WHEN HbA1c_Change = 0 THEN 'Stable'#(lf)        WHEN Trajectory_Label = 'Deteriorating' THEN#(lf)            CASE#(lf)                WHEN HbA1c_Score >= 10 THEN 'High Risk'#(lf)                WHEN HbA1c_Score BETWEEN 5 AND 9 THEN 'Moderate Risk'#(lf)                WHEN HbA1c_Score BETWEEN 1 AND 4 THEN 'Low Risk'#(lf)                ELSE 'Stable' -- defensive, should be unreachable if change > 0#(lf)            END#(lf)        WHEN Trajectory_Label = 'Improved' THEN#(lf)            CASE#(lf)                WHEN HbA1c_Score >= 10 THEN 'Rapid Improvement'#(lf)                WHEN HbA1c_Score BETWEEN 5 AND 9 THEN 'Moderate Improvement'#(lf)                WHEN HbA1c_Score BETWEEN 1 AND 4 THEN 'Gradual Improvement'#(lf)                ELSE 'Stable' -- defensive, should be unreachable if change < 0#(lf)            END#(lf)        ELSE 'Stable'#(lf)    END AS Final_Risk_Band#(lf)FROM Scored#(lf)ORDER BY HbA1c_Change DESC;#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Follow_HbA1c", Int64.Type}, {"HbA1c_Change", Int64.Type}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type", {"CURRENT_GP"}, #"GP Practice Reference", {"OrganisationCode"}, "GP Practice Reference", JoinKind.LeftOuter),
+				    #"Expanded GP Practice Reference" = Table.ExpandTableColumn(#"Merged Queries", "GP Practice Reference", {"ReportingOrganisationName"}, {"GP Practice Reference.ReportingOrganisationName"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Expanded GP Practice Reference",{{"GP Practice Reference.ReportingOrganisationName", "Practice"}}),
+				    #"Run Python script" = Python.Execute("import pandas as pd#(lf)import numpy as np#(lf)#(lf)from sklearn.ensemble import RandomForestClassifier#(lf)from sklearn.compose import ColumnTransformer#(lf)from sklearn.impute import SimpleImputer#(lf)from sklearn.preprocessing import OneHotEncoder#(lf)from sklearn.pipeline import Pipeline#(lf)from sklearn.model_selection import train_test_split#(lf)from sklearn.metrics import roc_auc_score, confusion_matrix#(lf)#(lf)# =========================================#(lf)# CONFIG: fast, explainable, Power BI safe#(lf)# =========================================#(lf)RANDOM_STATE        = 42#(lf)FAST_MAX_TRAIN_ROWS = 20000     # cap training rows; set None to use all#(lf)FAST_TEST_SIZE      = 0.20#(lf)FAST_N_ESTIMATORS   = 150#(lf)FAST_MAX_DEPTH      = 6#(lf)FAST_MIN_LEAF       = 50#(lf)FAST_CLASS_WEIGHT   = ""balanced_subsample""#(lf)#(lf)# Risk band thresholds on P(High Risk)#(lf)TH_VERY_HIGH = 0.85#(lf)TH_HIGH      = 0.70#(lf)TH_MODERATE  = 0.50#(lf)TH_LOW       = 0.30#(lf)#(lf)# Optional ""borderline"" rising-risk window (between Moderate & High cutoffs)#(lf)RISING_LOW, RISING_HIGH = 0.50, 0.70#(lf)#(lf)# =========================================#(lf)# 1) Defensive setup (Power BI supplies `dataset`)#(lf)# =========================================#(lf)# Assumes `dataset` is your final SQL output:#(lf)#   - Includes: Age, HbA1c_Percent_Change_Display, Days_Between_Readings,#(lf)#     Latest_BMI, IMD_Quintile, Clean_Ethnicity, Clean_Sex,#(lf)#     Latest_Smoking_Value, Trajectory_Label, Final_Risk_Band, etc.#(lf)#(lf)dataset = dataset.copy()#(lf)#(lf)required_cols = [#(lf)    ""Age"",#(lf)    ""HbA1c_Percent_Change_Display"",#(lf)    ""Days_Between_Readings"",#(lf)    ""Latest_BMI"",#(lf)    ""IMD_Quintile"",#(lf)    ""Clean_Ethnicity"",#(lf)    ""Clean_Sex"",#(lf)    ""Latest_Smoking_Value"",#(lf)    ""Trajectory_Label"",#(lf)    ""Final_Risk_Band""#(lf)]#(lf)#(lf)for col in required_cols:#(lf)    if col not in dataset.columns:#(lf)        dataset[col] = pd.NA#(lf)#(lf)# =========================================#(lf)# 2) Feature engineering (aligned to NDA fields)#(lf)# =========================================#(lf)#(lf)def sex_to_male(s):#(lf)    if pd.isna(s):#(lf)        return np.nan#(lf)    s = str(s).strip().upper()#(lf)    if s in (""M"", ""MALE""):#(lf)        return 1#(lf)    if s in (""F"", ""FEMALE""):#(lf)        return 0#(lf)    return np.nan#(lf)#(lf)def map_ethnicity(e):#(lf)    if pd.isna(e):#(lf)        return ""Unknown / Not stated""#(lf)    e = str(e).strip().lower()#(lf)    if ""white"" in e:#(lf)        return ""White""#(lf)    if ""asian"" in e:#(lf)        return ""Asian / Asian British""#(lf)    if ""black"" in e:#(lf)        return ""Black / Black British""#(lf)    if ""mixed"" in e or ""other"" in e:#(lf)        return ""Mixed / Other""#(lf)    return ""Unknown / Not stated""#(lf)#(lf)def map_smoking(v):#(lf)    if pd.isna(v):#(lf)        return ""Unknown""#(lf)    v = str(v).strip().lower()#(lf)    if ""current"" in v or v == ""smoker"":#(lf)        return ""Current""#(lf)    if ""ex"" in v:#(lf)        return ""Ex-smoker""#(lf)    if ""never"" in v:#(lf)        return ""Never""#(lf)    return ""Unknown""#(lf)#(lf)# Derived features#(lf)dataset[""Sex_Male""]        = dataset[""Clean_Sex""].apply(sex_to_male)#(lf)dataset[""Ethnicity_Group""] = dataset[""Clean_Ethnicity""].apply(map_ethnicity)#(lf)dataset[""Smoking_Group""]   = dataset[""Latest_Smoking_Value""].apply(map_smoking)#(lf)#(lf)# Coerce numerics (robust against stray strings)#(lf)numeric_features = [#(lf)    ""Age"",#(lf)    ""HbA1c_Percent_Change_Display"",#(lf)    ""Days_Between_Readings"",#(lf)    ""Latest_BMI"",#(lf)    ""IMD_Quintile"",#(lf)    ""Sex_Male""#(lf)]#(lf)#(lf)for c in numeric_features:#(lf)    dataset[c] = pd.to_numeric(dataset[c], errors=""coerce"")#(lf)#(lf)categorical_features = [""Ethnicity_Group"", ""Smoking_Group""]#(lf)#(lf)# =========================================#(lf)# 3) Build training set (exclude Single Reading Only)#(lf)# =========================================#(lf)#(lf)# Use only patients with trajectories for training#(lf)dataset_model = dataset[dataset[""Trajectory_Label""] != ""Single Reading Only""].copy()#(lf)#(lf)# Binary target: observed High Risk from rule-based Final_Risk_Band#(lf)y_full = (dataset_model[""Final_Risk_Band""] == ""High Risk"").astype(int)#(lf)#(lf)X_full = dataset_model[numeric_features + categorical_features].copy()#(lf)#(lf)# Optional: cap rows for speed (stratified on outcome, if possible)#(lf)if FAST_MAX_TRAIN_ROWS is not None and len(dataset_model) > FAST_MAX_TRAIN_ROWS:#(lf)    pos = dataset_model[y_full == 1]#(lf)    neg = dataset_model[y_full == 0]#(lf)#(lf)    frac = FAST_MAX_TRAIN_ROWS / len(dataset_model)#(lf)#(lf)    pos_keep = max(1, int(len(pos) * frac))#(lf)    neg_keep = max(1, FAST_MAX_TRAIN_ROWS - pos_keep)#(lf)#(lf)    pos_sample = pos.sample(#(lf)        n=min(pos_keep, len(pos)), random_state=RANDOM_STATE#(lf)    )#(lf)    neg_sample = neg.sample(#(lf)        n=min(neg_keep, len(neg)), random_state=RANDOM_STATE#(lf)    )#(lf)#(lf)    dataset_model = (#(lf)        pd.concat([pos_sample, neg_sample], axis=0)#(lf)        .sample(frac=1.0, random_state=RANDOM_STATE)#(lf)    )#(lf)#(lf)    y_full = (dataset_model[""Final_Risk_Band""] == ""High Risk"").astype(int)#(lf)    X_full = dataset_model[numeric_features + categorical_features].copy()#(lf)#(lf)# =========================================#(lf)# 4) Preprocessing + model#(lf)# =========================================#(lf)#(lf)num_pipe = Pipeline(steps=[#(lf)    (""imputer"", SimpleImputer(strategy=""median"")),#(lf)])#(lf)#(lf)cat_pipe = Pipeline(steps=[#(lf)    (""imputer"", SimpleImputer(strategy=""most_frequent"")),#(lf)    (""onehot"", OneHotEncoder(handle_unknown=""ignore""))#(lf)])#(lf)#(lf)preprocess = ColumnTransformer(#(lf)    transformers=[#(lf)        (""num"", num_pipe, numeric_features),#(lf)        (""cat"", cat_pipe, categorical_features),#(lf)    ],#(lf)    remainder=""drop""#(lf))#(lf)#(lf)rf = RandomForestClassifier(#(lf)    n_estimators=FAST_N_ESTIMATORS,#(lf)    max_depth=FAST_MAX_DEPTH,#(lf)    min_samples_leaf=FAST_MIN_LEAF,#(lf)    class_weight=FAST_CLASS_WEIGHT,#(lf)    random_state=RANDOM_STATE,#(lf)    n_jobs=-1,#(lf))#(lf)#(lf)clf = Pipeline(steps=[#(lf)    (""preprocess"", preprocess),#(lf)    (""rf"", rf),#(lf)])#(lf)#(lf)# =========================================#(lf)# 5) Fit + evaluation#(lf)# =========================================#(lf)#(lf)# Default: no decile thresholds until we compute them#(lf)decile_thresholds = None#(lf)#(lf)if X_full.shape[0] >= 10 and y_full.sum() > 0 and y_full.sum() < len(y_full):#(lf)    X_train, X_test, y_train, y_test = train_test_split(#(lf)        X_full,#(lf)        y_full,#(lf)        test_size=FAST_TEST_SIZE,#(lf)        stratify=y_full,#(lf)        random_state=RANDOM_STATE#(lf)    )#(lf)else:#(lf)    # If too small / single-class, fit on all and skip proper evaluation#(lf)    X_train, y_train = X_full, y_full#(lf)    X_test,  y_test  = X_full, y_full#(lf)#(lf)clf.fit(X_train, y_train)#(lf)#(lf)# Evaluation only if we have a meaningful test set#(lf)if X_test.shape[0] > 0 and y_test.nunique() == 2:#(lf)    y_proba_test = clf.predict_proba(X_test)[:, 1]#(lf)#(lf)    # 1) ROC AUC#(lf)    auc = roc_auc_score(y_test, y_proba_test)#(lf)    print(""Test ROC AUC:"", round(auc, 3))#(lf)#(lf)    # 2) Confusion matrix at operational threshold TH_HIGH#(lf)    y_pred_test = (y_proba_test >= TH_HIGH).astype(int)#(lf)    tn, fp, fn, tp = confusion_matrix(y_test, y_pred_test).ravel()#(lf)    print(f""Confusion matrix @ threshold {TH_HIGH}:"")#(lf)    print(f""TP: {tp}, FP: {fp}, FN: {fn}, TN: {tn}"")#(lf)#(lf)    # 3) Decile thresholds (for calibration / lift plots)#(lf)    eval_df = pd.DataFrame({#(lf)        ""y_true"": y_test.values,#(lf)        ""y_proba"": y_proba_test#(lf)    })#(lf)#(lf)    # Rank-based deciles (1 = lowest, 10 = highest)#(lf)    eval_df[""Decile""] = (#(lf)        eval_df[""y_proba""]#(lf)        .rank(method=""first"", pct=True)#(lf)        .apply(lambda x: min(10, int(np.ceil(x * 10))))#(lf)    )#(lf)#(lf)    # For assigning deciles to all patients, use max prob per decile as boundary#(lf)    decile_thresholds = (#(lf)        eval_df#(lf)        .groupby(""Decile"")[""y_proba""]#(lf)        .max()#(lf)        .reset_index()#(lf)        .sort_values(""Decile"")#(lf)        .values.tolist()#(lf)    )#(lf)else:#(lf)    print(""Model evaluation skipped: insufficient rows or class variation."")#(lf)#(lf)# =========================================#(lf)# 6) Score ALL patients (including Single Reading Only)#(lf)# =========================================#(lf)#(lf)X_all = dataset[numeric_features + categorical_features].copy()#(lf)pred_proba_all = clf.predict_proba(X_all)[:, 1]#(lf)pred_class_all = (pred_proba_all >= TH_HIGH).astype(int)#(lf)#(lf)dataset[""Predicted_High_Risk_Probability""] = pred_proba_all#(lf)#(lf)dataset[""Predicted_Class""] = np.where(#(lf)    pred_class_all == 1,#(lf)    ""High Risk"",#(lf)    ""Not High Risk""#(lf))#(lf)#(lf)# Probability-based risk bands (model overlay)#(lf)def classify_predicted_risk(p):#(lf)    if pd.isna(p):#(lf)        return ""Below Threshold""#(lf)    if p > TH_VERY_HIGH:#(lf)        return ""Very High Risk""#(lf)    elif p > TH_HIGH:#(lf)        return ""High Risk""#(lf)    elif p > TH_MODERATE:#(lf)        return ""Moderate Risk""#(lf)    elif p > TH_LOW:#(lf)        return ""Low Risk""#(lf)    else:#(lf)        return ""Below Threshold""#(lf)#(lf)dataset[""Predicted_Risk_Band""] = dataset[#(lf)    ""Predicted_High_Risk_Probability""#(lf)].apply(classify_predicted_risk)#(lf)#(lf)# Rising risk: highlight borderline probabilities#(lf)def rising_flag(p):#(lf)    if pd.isna(p):#(lf)        return ""—""#(lf)    return ""Rising Risk"" if (p >= RISING_LOW and p < RISING_HIGH) else ""—""#(lf)#(lf)dataset[""Rising_Risk_Flag""] = dataset[#(lf)    ""Predicted_High_Risk_Probability""#(lf)].apply(rising_flag)#(lf)#(lf)# Trajectory flag for visuals#(lf)dataset[""Single_Reading_Flag""] = dataset[""Trajectory_Label""].apply(#(lf)    lambda x: ""Single Reading Only"" if x == ""Single Reading Only"" else ""Has Trajectory""#(lf))#(lf)#(lf)# =========================================#(lf)# 7) Assign risk deciles (for calibration visuals in Power BI)#(lf)# =========================================#(lf)#(lf)def assign_decile_from_thresholds(p, thresholds):#(lf)    if pd.isna(p):#(lf)        return np.nan#(lf)    # thresholds is list like [[1, max_p_dec1], [2, max_p_dec2], ...]#(lf)    for decile, t in thresholds:#(lf)        if p <= t:#(lf)            return int(decile)#(lf)    return 10#(lf)#(lf)if decile_thresholds is not None and len(decile_thresholds) >= 2:#(lf)    # Use test-set-based thresholds if available#(lf)    dataset[""Predicted_Risk_Decile""] = dataset[#(lf)        ""Predicted_High_Risk_Probability""#(lf)    ].apply(lambda p: assign_decile_from_thresholds(p, decile_thresholds))#(lf)else:#(lf)    # Fallback: derive deciles directly from all predictions#(lf)    try:#(lf)        # qcut may fail if not enough unique values; handle gracefully#(lf)        valid = dataset[""Predicted_High_Risk_Probability""].dropna()#(lf)        if valid.nunique() > 1:#(lf)            dataset.loc[valid.index, ""Predicted_Risk_Decile""] = pd.qcut(#(lf)                valid,#(lf)                q=10,#(lf)                labels=False,#(lf)                duplicates=""drop""#(lf)            ) + 1#(lf)        else:#(lf)            dataset[""Predicted_Risk_Decile""] = np.nan#(lf)    except Exception:#(lf)        dataset[""Predicted_Risk_Decile""] = np.nan#(lf)#(lf)# =========================================#(lf)# 8) Return to Power BI#(lf)# =========================================#(lf)output = dataset#(lf)",[dataset=#"Renamed Columns"]),
+				    dataset = #"Run Python script"{[Name="dataset"]}[Value],
+				    #"Changed Type1" = Table.TransformColumnTypes(dataset,{{"Latest_BMI", type number}, {"Latest_Smoking_Value", Int64.Type}}),
+				    #"Rounded Off" = Table.TransformColumns(#"Changed Type1",{{"Latest_BMI", each Number.Round(_, 1), type number}}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Rounded Off",{{"Latest_Systolic_Value", Int64.Type}, {"Latest_Cholesterol_Total", type number}}),
+				    #"Rounded Off1" = Table.TransformColumns(#"Changed Type2",{{"Latest_Cholesterol_Total", each Number.Round(_, 1), type number}}),
+				    #"Changed Type3" = Table.TransformColumnTypes(#"Rounded Off1",{{"IMD_Quintile", Int64.Type}, {"Frailty", Int64.Type}, {"Statin_Flag", Int64.Type}, {"Predicted_High_Risk_Probability", type number}}),
+				    #"Rounded Off2" = Table.TransformColumns(#"Changed Type3",{{"Predicted_High_Risk_Probability", each Number.Round(_, 2), type number}}),
+				    #"Changed Type4" = Table.TransformColumnTypes(#"Rounded Off2",{{"Base_HbA1c", Int64.Type}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type4",null,0,Replacer.ReplaceValue,{"Frailty", "Statin_Flag"}),
+				    #"Changed Type5" = Table.TransformColumnTypes(#"Replaced Value",{{"Frailty", Int64.Type}, {"Statin_Flag", Int64.Type}})
+				in
+				    #"Changed Type5"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,325 @@
+table 'Rockwood Frailty over Time'
+	lineageTag: 08df0869-2125-4585-92c6-cb1f9eb155d6
+
+	measure 'Frailty Population over Time' =
+			
+			
+			VAR _CURRENTDATE = MAX('Date Reference'[date])
+			
+			RETURN
+			    CALCULATE(
+			        COUNT('Rockwood Frailty over Time'[PseudoNHSNumber]),
+			        'Rockwood Frailty over Time'[Start_Date] <= _CURRENTDATE,
+			        OR ( ISBLANK('Rockwood Frailty over Time'[End_Date]), 'Rockwood Frailty over Time'[End_Date] >= _CURRENTDATE)
+			    )
+		formatString: #,0
+		lineageTag: 7402812e-e178-41ef-8aff-6a78be7ffc0d
+
+	measure '% Frail' =
+			
+			
+			'Rockwood Frailty over Time'[Frailty Population over Time]/'GP Population - All Years'[65+ Population - All Years]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fc3a7fd2-84cb-484b-ace0-db34c28fbe97
+
+	measure 'Frailty Population over Time - ICB' =
+			
+			
+			VAR _CURRENTDATE = MAX('Date Reference'[date])
+			
+			RETURN
+			    CALCULATE(
+			        COUNT('Rockwood Frailty over Time'[PseudoNHSNumber]),
+			        'Rockwood Frailty over Time'[Start_Date] <= _CURRENTDATE,
+			        OR ( ISBLANK('Rockwood Frailty over Time'[End_Date]), 'Rockwood Frailty over Time'[End_Date] >= _CURRENTDATE), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK()
+			    )
+		formatString: #,0
+		lineageTag: f301a349-b8b6-4025-ab37-1c386aa3c59f
+
+	measure '% Frail ICB' =
+			
+			
+			'Rockwood Frailty over Time'[Frailty Population over Time - ICB]/'GP Population - All Years'[65+ Population - All Years - ICB]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 0fd40143-187d-45d6-a369-1c7caa31dc68
+
+	measure '% Frail Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[month_number] ),
+			            "Value_x", 'Date Reference'[month_number],
+			            "Value_y", 'Rockwood Frailty over Time'[% Frail]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[month_number] ),
+			        Intercept + Slope * 'Date Reference'[month_number]
+			    )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b4d53dd2-04b5-4726-a2ff-096bbb469e06
+
+	measure '% Frail Trendline - ICB' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[month_number] ),
+			            "Value_x", 'Date Reference'[month_number],
+			            "Value_y", 'Rockwood Frailty over Time'[% Frail ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[month_number] ),
+			        Intercept + Slope * 'Date Reference'[month_number]
+			    )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cc30063c-d954-4f80-8c6e-23a5ab7b2ed7
+
+	measure '% Frail - Variance from ICB' =
+			
+			
+			[% Frail] - [% Frail ICB]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fed254a1-7790-4559-a994-017f62fd8e5b
+
+	measure '% Frail Variance from ICB Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[month_number] ),
+			            "Value_x", 'Date Reference'[month_number],
+			            "Value_y", 'Rockwood Frailty over Time'[% Frail - Variance from ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[month_number] ),
+			        Intercept + Slope * 'Date Reference'[month_number]
+			    )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ede97bd3-09f6-4237-8359-c177fae7935f
+
+	measure '% Frail 2021/22' =
+			
+			
+			CALCULATE([% Frail], 'Date Reference'[financial_year] = "2021/22", 'Date Reference'[Latest_Month_Name] = 1)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cdec8cdf-2389-4362-8e21-edf177717f71
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+	measure '% Frail Latest Year' =
+			
+			
+			CALCULATE([% Frail], 'Date Reference'[financial_year] = MAX('Date Reference'[financial_year]), 'Date Reference'[Latest_Month_Name] = 1)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 654001c4-418e-47b7-b026-5be3f5cb8964
+
+	measure 'Frail Card Variance' =
+			
+			
+			VAR _CALC = [% Frail Latest Year] - [% Frail 2021/22]
+			
+			RETURN
+			
+			FORMAT(_CALC, "+0.0%;-0.0%;0.0%")
+		lineageTag: 565face1-54f8-4468-a87f-1b0c49a8fe89
+
+	measure 'Frail Card Variance Colours' =
+			
+			
+			IF(([% Frail Latest Year] - [% Frail 2021/22]) > 0, "#8cb369", "#EF5B5B")
+		lineageTag: f91a1ece-58fb-4bf8-9833-7f3088792f19
+
+	measure 'Failty Over Time Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[month_number] ),
+			            "Value_x", 'Date Reference'[month_number],
+			            "Value_y", 'Rockwood Frailty over Time'[Frailty Population over Time]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[month_number] ),
+			        Intercept + Slope * 'Date Reference'[month_number]
+			    )
+			```
+		lineageTag: 7783daae-5fd6-4514-9437-53e77e05951f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Frailty_Type
+		dataType: string
+		lineageTag: 8361ad64-a3d2-4303-8c6e-4ae335e3876d
+		summarizeBy: none
+		sourceColumn: Frailty_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 27e21457-2d87-43cb-bd33-76c2796a7f0b
+		summarizeBy: none
+		sourceColumn: Start_Date
+
+		variation Variation
+			isDefault
+			relationship: cc20ca7b-fd78-4337-afce-8a826228f552
+			defaultHierarchy: LocalDateTable_de8081c2-a4ca-4d08-a4fd-32890b46ffbb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0c82beb8-9d6e-4e5c-b285-857b67154e62
+		summarizeBy: none
+		sourceColumn: End_Date
+
+		variation Variation
+			isDefault
+			relationship: b9522152-ba8d-41e7-9a1e-56c92a210aef
+			defaultHierarchy: LocalDateTable_03c5b0e0-7671-4a65-8057-70a075295f91.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sex
+		dataType: string
+		lineageTag: 24f738ea-fa98-40b8-b7f2-40152344734e
+		summarizeBy: none
+		sourceColumn: Sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: 026c38cd-197a-4d41-8bc1-1d8d22e8a685
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Deprivation
+		dataType: string
+		lineageTag: d760f40a-6fbe-45b3-8ba4-6c38920ed4a5
+		summarizeBy: none
+		sourceColumn: Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab1150c8-5656-4f43-b02c-2eed08fd5637
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 6972c9bb-9832-405d-8698-fa4bf20ab361
+			defaultHierarchy: LocalDateTable_57266d62-f560-4ce1-80b3-f07ac214570e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: af442b3c-72b0-43f2-ab01-cf7d45a89ad2
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 9f7f644b-306c-43ed-8790-05f0bb1a7ced
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Rockwood Frailty over Time' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="EXEC [sp_rockwood_frailty_over_time]#(lf);#(lf)#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[dbo].[tbl_rockwood_frailty_over_time]"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

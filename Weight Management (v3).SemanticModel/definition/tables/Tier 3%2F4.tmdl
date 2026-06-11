@@ -1,0 +1,345 @@
+table 'Tier 3/4'
+	lineageTag: c332429a-7da0-49e7-98a2-9d73623ba420
+
+	measure 'No. Unique Patients' = calculate(sum('Tier 3/4'[Counter]),'Tier 3/4'[Unique Patients (Per FY)] = 1)
+		formatString: 0
+		lineageTag: babe4689-3998-4d34-8541-97b2d47afc85
+
+	measure 'Avg Activity Per Patient' =
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+			VAR Denominator = calculate(DISTINCTCOUNT('Tier 3/4'[NHS Number]),'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+			
+			RETURN Numerator/Denominator
+		lineageTag: 04baa8c2-fa11-4ead-bc70-08c70d329c50
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Treatments Per Patient' =
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Procedure Type] = "Treatment",'Tier 3/4'[Attendance Flag] = "Attended")
+			VAR Denominaotr = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Unique Patients (Per FY)] = 1)
+			
+			RETURN Numerator/Denominaotr
+		lineageTag: 9b4c452d-ad77-4fe5-bb5f-1dfa1457a365
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Last Year Activity' =
+			
+			CALCULATE(
+			    SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1
+			)
+		formatString: 0
+		lineageTag: 8112639e-ca5b-45fa-8af8-1ebbb76bce74
+
+	measure 'Last Year Unique Patients' =
+			
+			CALCULATE(
+			    calculate(sum('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Per FY)] = 1
+			))
+		formatString: 0
+		lineageTag: 804d51fb-66ac-4f71-be4d-ed39b80f0447
+
+	measure 'Last Year Avg Activity Per Patient' = ```
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,'Tier 3/4'[Attendance Flag] = "Attended")
+			
+			VAR Denominator = calculate(DISTINCTCOUNT('Tier 3/4'[NHS Number]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Activity Type)] = 1,
+			    'Tier 3/4'[Attendance Flag] = "Attended")
+			
+			RETURN Numerator/Denominator
+			
+			
+			```
+		lineageTag: e48e54f3-225f-47b1-a110-996a7d861e82
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Last Year Avg Treatments Per Patient' = ```
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Per FY)] = 1,
+			    'Tier 3/4'[Procedure Type] = "Treatment",'Tier 3/4'[Attendance Flag] = "Attended")
+			VAR Denominator = calculate(SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Per FY)] = 1)
+			
+			RETURN Numerator/Denominator
+			
+			
+			```
+		lineageTag: 25a3e6d1-06e6-49c3-a746-e17be4467fcc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'DNA %' =
+			
+			VAR Numerator = calculate(sum('Tier 3/4'[Counter]),'Tier 3/4'[Attendance Flag]="DNA")
+			VAR Denominator = calculate(sum('Tier 3/4'[Counter]))
+			
+			RETURN
+			Numerator/Denominator
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b499a6d6-b2f7-4393-89c4-9d5a2ac49111
+
+	measure 'Last Year DNA %' = ```
+			
+			VAR Numerator = 
+			CALCULATE(
+			    SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[Attendance Flag] = "DNA",
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1
+			)
+			
+			VAR Denominator = 
+			CALCULATE(
+			    SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1
+			)
+			
+			RETURN
+			Numerator/Denominator
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bd83fa06-7c8f-45e9-b63e-301e4cc0663e
+
+	measure 'TESTAvg Assessments Per Patient' =
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Procedure Type] = "Assessment",'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+			
+			RETURN Numerator
+		formatString: 0
+		lineageTag: 4d14b44a-734a-417b-a937-cff2e4fccd60
+
+	measure Denominator = calculate(DISTINCTCOUNT('Tier 3/4'[NHS Number]),'Tier 3/4'[Procedure Type] = "Assessment",'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+		formatString: 0
+		lineageTag: a65b1a7a-8ecb-4653-99a4-ee94b260bdfa
+
+	column 'Start Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0743bf53-3692-43bf-9fa3-5cc575e3a587
+		summarizeBy: none
+		sourceColumn: Start Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'End Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ee99d4e5-10e2-4dc9-9608-0f23289042d6
+		summarizeBy: none
+		sourceColumn: End Date
+
+		variation Variation
+			isDefault
+			relationship: 5e1cec38-56c2-4267-ba0c-c3962f45e6a8
+			defaultHierarchy: LocalDateTable_9dafd001-23e7-438b-90f3-c432f4b7dfc8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS Number'
+		dataType: string
+		lineageTag: d35434e3-d537-4e8b-b7fa-83810bd6afa8
+		summarizeBy: none
+		sourceColumn: NHS Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 41489164-962f-4b26-8179-4a59467e5da2
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Code'
+		dataType: string
+		lineageTag: 160fedd5-7cd5-4641-bc2d-fdefeb5d40cb
+		summarizeBy: none
+		sourceColumn: Provider Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName_NameOfProvider
+		dataType: string
+		lineageTag: ad1cb049-76df-4ee6-888e-39cd7b22060c
+		summarizeBy: none
+		sourceColumn: OrganisationName_NameOfProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sector Flag'
+		dataType: string
+		lineageTag: eed2c07c-7599-4d6b-aefc-5a81af9c0620
+		summarizeBy: none
+		sourceColumn: Sector Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Procedure Type'
+		dataType: string
+		lineageTag: 61c17d54-10ca-44c9-b637-9d47363d23b3
+		summarizeBy: none
+		sourceColumn: Procedure Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Procedure Description'
+		dataType: string
+		lineageTag: 07d9860f-70d9-4f9a-afd4-89ee78670576
+		summarizeBy: none
+		sourceColumn: Procedure Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Attendance Flag'
+		dataType: string
+		lineageTag: 35aba411-a1b6-40c7-908e-a6160c3e7b1d
+		summarizeBy: none
+		sourceColumn: Attendance Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unique Patients'
+		dataType: int64
+		formatString: 0
+		lineageTag: aceb2995-c29d-476b-925f-78b134880cd5
+		summarizeBy: sum
+		sourceColumn: Unique Patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice'
+		dataType: string
+		lineageTag: 902923ed-8a76-466d-8e33-694de20687f2
+		summarizeBy: none
+		sourceColumn: GP Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 85ad9d2c-8073-441e-ba0c-94af74cda397
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 025a002c-e9ad-434d-b258-c68e21b31f45
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age at Event'
+		dataType: int64
+		formatString: 0
+		lineageTag: c4a642e8-de02-4c20-ae47-a9ecb90ef42c
+		summarizeBy: sum
+		sourceColumn: Age at Event
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Activity Type'
+		dataType: string
+		lineageTag: 960e50a6-a781-474d-8e38-33679a2c22bf
+		summarizeBy: none
+		sourceColumn: Activity Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column TFC
+		dataType: string
+		lineageTag: 33a3f9b5-03bb-492f-b16b-7e828ccb7bf7
+		summarizeBy: none
+		sourceColumn: TFC
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unique Patients (Activity Type)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 52e62dd0-c562-4f60-866b-c5fa0aae292b
+		summarizeBy: sum
+		sourceColumn: Unique Patients (Activity Type)
+
+		annotation SummarizationSetBy = Automatic
+
+	column YTD
+		dataType: int64
+		formatString: 0
+		lineageTag: 7f59746c-14e9-4d54-be74-4ca50fd28b2a
+		summarizeBy: sum
+		sourceColumn: YTD
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Previous Year Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 78681cd3-caac-41de-bbad-55468c2e0447
+		summarizeBy: sum
+		sourceColumn: Previous Year Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 5a63d3d5-cde2-40f1-b5d6-1294fcab0ef4
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unique Patients (Per FY)'
+		dataType: int64
+		formatString: 0
+		lineageTag: cdd1ebc9-3506-4587-9710-86e3c3e603b3
+		summarizeBy: sum
+		sourceColumn: Unique Patients (Per FY)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Tier 3/4' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT#(lf)[Start Date] = StartDate_HospitalProviderSpell,#(lf)[End Date] = DischargeDate_FromHospitalProviderSpell,#(lf)[NHS Number] = Derived_Pseudo_NHS,#(lf)[Counter] = '1',#(lf)[Provider Code] = left(OrganisationCode_CodeOfProvider,3),#(lf)OrganisationName_NameOfProvider,#(lf)[Sector Flag] = case when OrganisationCode_CodeOfProvider like 'RTE%' then 'GHFT'#(lf)when OrganisationCode_CodeOfProvider like 'R%' then 'NHS Provider'#(lf)else 'Independent Sector Provider' end,#(lf)[TFC] = treatmentfunctioncode,#(lf)[Procedure Type] = case #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when PrimaryProcedure_OPCS in ('G281', 'G282', 'G283', 'G284', 'G285', 'G301', 'G302', 'G303', 'G304', 'G312', 'G321', 'G331', 'G716') then 'Primary Procedure'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when PrimaryProcedure_OPCS in ('G305', 'G315', 'G316', 'G322', 'G323', 'G324', 'G325', 'G332', 'G387', 'G717') then 'Revision Procedure'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when PrimaryProcedure_OPCS in ('G481', 'G485') then 'Gastric Bubble/Balloon'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end,#(lf)[Procedure Description] = PrimaryProcedure_OPCS_Description,#(lf)[Attendance Flag] = NULL,#(lf)[Unique Patients] = row_number() over(partition by Derived_Pseudo_NHS order by StartDate_HospitalProviderSpell asc),#(lf)[Unique Patients (Per FY)] = row_number() over(partition by Derived_Pseudo_NHS, financialyear order by StartDate_HospitalProviderSpell asc),#(lf)[Unique Patients (Activity Type)] = row_number() over(partition by Derived_Pseudo_NHS, PrimaryProcedure_OPCS order by StartDate_HospitalProviderSpell asc),#(lf)[GP Practice] = PracticeCodeOfRegisteredGP,#(lf)[Locality] = CASE #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [E].[Locality] is null THEN 'Out of County'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when [e].Locality like '%cotswold%' then 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE [E].[Locality] END,#(lf)[PrimaryCareNetwork] = CASE WHEN [E].[PrimaryCareNetwork] is null THEN 'Out of County'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE [E].[PrimaryCareNetwork] END,#(lf)[Age at Event] = AgeatCDSActivityDate,#(lf)[Activity Type] = 'Tier 4 Weight Management',#(lf)[YTD] = case #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when cast(financialmonth as int) <= (select max(cast(financialmonth as int)) from ccg_reference.reference.vw_DateLookup [dat]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)inner join (select max(StartDate_HospitalProviderSpell) as [AptDate] from ccg_current.[SEM].[vw_HospitalProviderSpell]) [SEM] on [dat].[date] = [SEM].[AptDate])#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)then 1 else 0#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end,#(lf)[Previous Year Flag] = case #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when left(financialyear,4)+right(financialyear,2) = (#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)select left(max(financialyear),4)+ right(max(financialyear),2)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)from ccg_reference.reference.vw_DateLookup [dat]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)inner join (select max(StartDate_HospitalProviderSpell) as [AptDate] from ccg_current.[SEM].[vw_HospitalProviderSpell]) [SEM] on [dat].[date] = [SEM].[AptDate]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)-101 --taking back to previous year#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)then 1 else 0#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end,#(lf)[FinancialYear]#(lf)#(lf)FROM [CCG_Current].[SEM].[vw_HospitalProviderSpell][SEM]#(lf)  LEFT JOIN#(tab)[CCG_Reference].[Reference].[vw_gppractice] [E] #(lf)  ON [SEM].PracticeCodeOfRegisteredGP = [E].[OrganisationCode]#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] [Dat] on [SEM].StartDate_HospitalProviderSpell = [Dat].[Date]#(lf)WHERE#(lf)--Codes from https://digital.nhs.uk/data-and-information/publications/statistical/national-obesity-audit/weight-management-services-hes-22-23-final-and-csds-dq-q1-23-24/appendices#(lf)[PrimaryProcedure_OPCS] in (#(lf)--Primary Procedure#(lf)'G281', 'G282', 'G283', 'G284', 'G285', 'G301', 'G302', 'G303', 'G304', 'G312', 'G321', 'G331', 'G716',#(lf)--Revision Procedure#(lf)'G305', 'G315', 'G316', 'G322', 'G323', 'G324', 'G325', 'G332', 'G387', 'G717',#(lf)--Gastric Balloons and Bubbles#(lf)'G481', 'G485'#(lf))#(lf)/*Excluded, but previously included:#(lf)'G486',#(lf)'G328',#(lf)'G329',#(lf)'G330'#(lf)'G333',#(lf)'G334',#(lf)'G335',#(lf)'G336',#(lf)'G338',#(lf)'G339'*/#(lf)and LEFT([DiagnosisPrimary_ICD],3) = 'E66'#(lf)and [AdmissionMethod_HospitalProviderSpell] in ('11','12','13')#(lf)and OrganisationCode_CodeOfCommissioner like '11M%'#(lf)and cast(dischargedate_fromhospitalproviderspell as date) >= '20190401'#(lf)#(lf)#(lf)UNION ALL#(lf)--dna#(lf)--unique patient assessments#(lf)--HRG Code#(lf)SELECT#(lf)[Start Date] = cast([OP].[Appointment_Datetime] as date),#(lf)[End Date] = cast([OP].[Appointment_Datetime] as date),#(lf)[NHS Number] = [OP].nhs_number,#(lf)[Counter] = '1',#(lf)[Provider Code] = left(OrganisationCode_CodeOfProvider,3),#(lf)OrganisationName_NameOfProvider,#(lf)[Sector Flag] = case when OrganisationCode_CodeOfProvider like 'RTE%' then 'GHFT'#(lf)when OrganisationCode_CodeOfProvider like 'R%' then 'NHS Provider'#(lf)else 'Independent Sector Provider' end,#(lf)[TFC] = treatmentfunctioncode,#(lf)[Procedure Type] =  CASE WHEN [appointment_type_code] in ('APT1173FU','APT1173RN','APT1175FU','APT1175RN','APT3530FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT3530RN','APT3530UN','APT3535FU','APT3535RN','APT4050FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT4050RN','APT5374FU','APT5374RN','APT5378FU','APT5378RN'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT5391FU','APT8305FU','APT5695FU') THEN 'Assessment'#(lf)#(tab)#(tab)WHEN [appointment_type_code] in ('APT0275FU','APT0915FU','APT0925FU','APT2255FU','APT3545FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,'APT4055FU','APT5375FU','APT5379FU','APT5384FU','APT5392FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,'APT5393FU','APT5398FU','APT6325FU','APT6813FU','APT6815FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,'APT7945FU','APT8765FU','APT0025FU','APT9143FU') THEN 'Treatment'#(lf)#(tab)#(tab)WHEN appointment_type like '%assessment%' then 'Assessment'#(lf)#(tab)#(tab)WHEN appointment_type like '%Treatment%' then 'Treatment'#(lf)#(tab)#(tab)ELSE 'Other/Unknown' END,#(lf)[Procedure Description] = CASE WHEN [appointment_type_code] in ('APT0275FU','APT0925FU','APT3545FU','APT4055FU','APT5375FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT5379FU','APT5392FU','APT5398FU','APT7945FU','APT5695FU') THEN 'Individual'#(lf)#(tab)#(tab)   WHEN [appointment_type_code] in ('APT0915FU','APT2255FU','APT5384FU','APT5393FU','APT6325FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT6813FU','APT6815FU','APT8765FU','APT0025FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT9143FU','APT5394FU') THEN 'Group'#(lf)#(tab)#(tab)   ELSE null END,#(lf)[Attendance Flag] = CASE WHEN attended_or_did_not_attend_code in ('5','6') THEN 'Attended'#(lf)#(tab)#(tab)   WHEN attended_or_did_not_attend_code in ('4','2') THEN 'Cancelled'#(lf)#(tab)#(tab)   WHEN attended_or_did_not_attend_code in ('7','3') THEN 'DNA'#(lf)#(tab)#(tab)   WHEN attended_or_did_not_attend_code in ('0','Code Not Mapped') THEN 'Unknown'#(lf)#(tab)#(tab)   ELSE null END,#(lf)[Unique Patients] = row_number() over(partition by [OP].nhs_number order by [Appointment_Datetime] asc),#(lf)[Unique Patients (Per FY)] = row_number() over(partition by [OP].nhs_number, financialyear order by [Appointment_Datetime] asc),#(lf)[Unique Patients (Activity Type)] = row_number() over(partition by #(lf)#(tab)#(tab)#(tab)[OP].nhs_number,  #(lf)#(tab)#(tab)#(tab)financialyear, #(lf)#(tab)#(tab)#(tab)--Treatment type#(lf)#(tab)#(tab)#(tab) CASE WHEN [appointment_type_code] in ('APT1173FU','APT1173RN','APT1175FU','APT1175RN','APT3530FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT3530RN','APT3530UN','APT3535FU','APT3535RN','APT4050FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT4050RN','APT5374FU','APT5374RN','APT5378FU','APT5378RN'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),'APT5391FU','APT8305FU','APT5695FU') THEN 'Assessment'#(lf)#(tab)#(tab)WHEN [appointment_type_code] in ('APT0275FU','APT0915FU','APT0925FU','APT2255FU','APT3545FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,'APT4055FU','APT5375FU','APT5379FU','APT5384FU','APT5392FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,'APT5393FU','APT5398FU','APT6325FU','APT6813FU','APT6815FU'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,'APT7945FU','APT8765FU','APT0025FU','APT9143FU') THEN 'Treatment'#(lf)#(tab)#(tab)WHEN appointment_type like '%assessment%' then 'Assessment'#(lf)#(tab)#(tab)WHEN appointment_type like '%Treatment%' then 'Treatment'#(lf)#(tab)#(tab)ELSE 'Other/Unknown' END,#(lf)#(tab)#(tab)--Attended or not#(lf)#(tab)#(tab) CASE WHEN attended_or_did_not_attend_code in ('5','6') THEN 'Attended' else 'DNA' end#(lf)#(tab)#(tab)order by [Appointment_Datetime] asc),#(lf)[GP Practice] = PracticeCodeOfRegisteredGP,#(lf)[Locality] = CASE #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [E].[Locality] is null THEN 'Out of County'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when [e].Locality like '%cotswold%' then 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE [E].[Locality] END,#(lf)[PrimaryCareNetwork] = CASE WHEN [E].[PrimaryCareNetwork] is null THEN 'Out of County'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE [E].[PrimaryCareNetwork] END,#(lf)[Age at Event] = AgeatCDSActivityDate,#(lf)[Activity Type] = 'Tier 3 Weight Management',#(lf)[YTD] = case #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when cast(financialmonth as int) <= (select max(cast(financialmonth as int)) from ccg_reference.reference.vw_DateLookup [dat]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)inner join (select max(cast(appointment_datetime as date)) as [AptDate] from ccg_current.[GHFT].vw_opappointment) [op] on [dat].[date] = [op].[AptDate])#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)then 1 else 0#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end,#(lf)[Previous Year Flag] = case #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when left(financialyear,4)+right(financialyear,2) = (#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)select left(max(financialyear),4)+ right(max(financialyear),2)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)from ccg_reference.reference.vw_DateLookup [dat]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)inner join (select max(cast(appointment_datetime as date)) as [AptDate] from ccg_current.[GHFT].vw_opappointment) [op] on [dat].[date] = [op].[AptDate]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)-101 --taking back to previous year#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)then 1 else 0#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end,#(lf)[FinancialYear]#(lf)FROM [CCG_Current].[GHFT].[vw_OPAppointment] [OP]#(lf)LEFT JOIN [ccg_current].[sem].[vw_OPAppointment] [SEM] on [OP].cds_unique_identifier = [SEM].UniqueCDSidentifier#(lf)  LEFT JOIN#(tab)[CCG_Reference].[Reference].[vw_gppractice] [E] #(lf)  ON [SEM].PracticeCodeOfRegisteredGP = [E].[OrganisationCode]#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] [Dat] on cast([OP].appointment_datetime as date)= [Dat].[Date]#(lf)WHERE #(lf)(appointment_type like '%SWMS%' or#(lf)appointment_type_code in ('APT0025FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT0275FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT0375FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT0915FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT0925FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT0925RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT1173FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT1173RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT1175FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT1175RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT2255FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3530FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3530RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3530UN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3535FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3535RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3540FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT3545FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT4050FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT4050RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT4055FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5695FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT6325FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT6813FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT6815FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT7945FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT8305FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT8765FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT9143FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5375FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5378FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5374FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5374RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5398FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5386FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5379FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5393FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5384FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5392FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5394FU',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5378RN',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'APT5391FU') )#(lf)and OrganisationCode_CodeOfCommissioner like '11M%'#(lf)and cast(appointment_datetime as date) >= '20190401'#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,322 @@
+table 'Secondary Care Data'
+	lineageTag: 5c8323ea-ee4b-41e5-80d1-c5923c22279e
+
+	measure 'ED & MIIU Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[month_number] ),
+			            "Value_x", 'Date Reference'[month_number],
+			            "Value_y", 'Secondary Care Data'[Secondary Care Total Activity]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[month_number] ),
+			        Intercept + Slope * 'Date Reference'[month_number]
+			    )
+			```
+		formatString: #,0
+		lineageTag: 26c5afb4-e3ab-4349-bf7b-c22457f38ad7
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Secondary Care Total Activity' =
+			
+			
+			IF(SUM('Secondary Care Data'[Activity_Counter]) < 6, BLANK(), SUM('Secondary Care Data'[Activity_Counter]))
+		formatString: #,0
+		lineageTag: 2e94de40-6b12-4eaf-af06-c8d53032825f
+
+	measure 'Secondary Care Activity - Rate per 1,000' =
+			
+			
+			VAR _SECONDARYACT = CALCULATE(SUM('Secondary Care Data'[Activity_Counter]))
+			VAR _POP = CALCULATE(COUNT('Rockwood Frailty over Time'[PseudoNHSNumber]))
+			
+			RETURN
+			
+			(_SECONDARYACT/_POP)*1000
+		lineageTag: e87a8009-2076-4a1a-9e3a-39e294c7453e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Care Activity - Rate per 1,000 - ICB' =
+			
+			
+			VAR _SECONDARYACT = CALCULATE(SUM('Secondary Care Data'[Activity_Counter]), ALL('Frailty Reference'), ALL('Age Band Reference'), ALL('GP Reference'), ALL('Gender Reference'), ALL('Deprivation Level'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 'Frailty Reference'[Frailty Type] <> BLANK())
+			VAR _POP = CALCULATE(COUNT('Rockwood Frailty over Time'[PseudoNHSNumber]), ALL('Frailty Reference'), ALL('Age Band Reference'), ALL('GP Reference'), ALL('Gender Reference'), ALL('Deprivation Level'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 'Frailty Reference'[Frailty Type] <> BLANK())
+			
+			RETURN
+			
+			(_SECONDARYACT/_POP)*1000
+		lineageTag: 3c1e4845-7c6b-45f7-9bf2-d66e70deb33f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Care Activity - Variance from ICB' =
+			
+			
+			[Secondary Care Activity - Rate per 1,000] - [Secondary Care Activity - Rate per 1,000 - ICB]
+		lineageTag: c1690e30-21ac-4925-bc30-4c82166a956c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Care Activity - Rate per 1,000 Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[month_number] ),
+			            "Value_x", 'Date Reference'[month_number],
+			            "Value_y", 'Secondary Care Data'[Secondary Care Activity - Variance from ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[month_number] ),
+			        Intercept + Slope * 'Date Reference'[month_number]
+			    )
+			```
+		lineageTag: 06cdaf23-548b-4578-a6a8-7eb9d4dce046
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Care Activity - Rate per 1,000 - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('Date Reference'),
+			    'Date Reference'[financial_year],
+			    'Date Reference'[month_name],
+			    "Rate per 1,000", 'Secondary Care Data'[Secondary Care Activity - Rate per 1,000]
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Rate per 1,000])
+			
+			RETURN
+			
+			_AVG
+			```
+		lineageTag: 5226d4b1-b1cb-47ff-908f-96361479fcbc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Care Activity - Rate per 1,000 - ICB - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('Date Reference'),
+			    'Date Reference'[financial_year],
+			    'Date Reference'[month_name],
+			    "Rate per 1,000", 'Secondary Care Data'[Secondary Care Activity - Rate per 1,000 - ICB]
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Rate per 1,000])
+			
+			RETURN
+			
+			_AVG
+			```
+		lineageTag: 5b0411f5-473c-437c-9f87-f5b4086c19b4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Care Total Activity - Aggregated & Rate' =
+			
+			
+			VAR _SELECTION = MAX('Calculation Selection'[Selection Column - Calculation])
+			VAR _TOTALMONTHS = CALCULATE(DISTINCTCOUNT('Date Reference'[month_name]), 'Date Reference'[ytd_flag] = 1)
+			
+			RETURN
+			
+			IF(CONTAINSSTRING(_SELECTION, "Total Figure"), [Secondary Care Total Activity], ([Secondary Care Activity - Rate per 1,000]/_TOTALMONTHS))
+		lineageTag: d83545bb-ac42-4dab-abaf-0257f32551f1
+
+		formatStringDefinition =
+				VAR _SELECTION = MAX('Calculation Selection'[Selection Column - Calculation])
+				
+				RETURN
+				
+				IF(CONTAINSSTRING(_SELECTION, "Total Figure"), ",0", "0.0")
+
+	measure 'No Split' = BLANK()
+		formatString: 0
+		lineageTag: 3c9ed53e-874a-4cd9-b04d-59b64d91c0e2
+
+	measure '% ED' =
+			
+			
+			CALCULATE(SUM('Secondary Care Data'[Activity_Counter]), 'Secondary Care Data'[Service_Type] = "Emergency Department")/SUM('Secondary Care Data'[Activity_Counter])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e3e72bd0-5044-4c90-b8a9-47c9b1bc5e42
+
+	measure '% Major Injury' =
+			
+			
+			CALCULATE(SUM('Secondary Care Data'[Activity_Counter]), 'Secondary Care Data'[Injury_Type] = "Major")/SUM('Secondary Care Data'[Activity_Counter])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e9dc49c7-a7c4-4745-a354-94bd605ffa9f
+
+	measure '% Admissions' =
+			
+			
+			CALCULATE(SUM('Secondary Care Data'[Activity_Counter]), 'Secondary Care Data'[Admission_Flag] = "Admitted")/SUM('Secondary Care Data'[Activity_Counter])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 299b1b4e-362e-4f40-a729-c231e456023f
+
+	column CDS_Unique_Identifier
+		dataType: string
+		lineageTag: 49ef4e8a-4520-45b6-88fe-98fc435d7cad
+		summarizeBy: none
+		sourceColumn: CDS_Unique_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: f2f8d72d-760c-483f-9b73-48a95bd837a7
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisation_Code_Provider
+		dataType: string
+		lineageTag: 3d54230b-7f0f-4b57-bb2a-9a4c5187604e
+		summarizeBy: none
+		sourceColumn: Organisation_Code_Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Flag
+		dataType: string
+		lineageTag: f6a79506-da4d-445c-b15e-64b7bf848d92
+		summarizeBy: none
+		sourceColumn: Admission_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Type
+		dataType: string
+		lineageTag: 17527117-8475-49b8-959f-69178f6c3a72
+		summarizeBy: none
+		sourceColumn: Service_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Injury_Type
+		dataType: string
+		lineageTag: eedbaa9b-8b0b-4d76-aee4-4f595f0760e2
+		summarizeBy: none
+		sourceColumn: Injury_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Arrival_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a6b64573-85bf-4b9e-a365-349347ad1669
+		summarizeBy: none
+		sourceColumn: Arrival_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Frailty_Type
+		dataType: string
+		lineageTag: 0465b29f-4a38-4acf-839f-0a568d93cbbe
+		summarizeBy: none
+		sourceColumn: Frailty_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column General_Practice
+		dataType: string
+		lineageTag: 55ef8f84-00e4-4b86-9539-aa888496e63f
+		summarizeBy: none
+		sourceColumn: General_Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 5e21ceaf-f8b6-4212-9afd-56013e49b8e0
+		summarizeBy: sum
+		sourceColumn: Activity_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_code
+		dataType: string
+		lineageTag: f7dc3a5b-3e22-4da9-bee3-29a115a866a2
+		summarizeBy: none
+		sourceColumn: discharge_destination_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination
+		dataType: string
+		lineageTag: 7ca4d582-c78f-482c-8a3f-6960f1d428fd
+		summarizeBy: none
+		sourceColumn: Destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column disposal_method_grouped
+		dataType: string
+		lineageTag: 943e5623-a79e-41ad-b117-649a28badd04
+		summarizeBy: none
+		sourceColumn: disposal_method_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Secondary Care Data' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="#(lf)IF OBJECT_ID('TEMPDB..#TEMP_RWFRAILTY') IS NOT NULL DROP TABLE #TEMP_RWFRAILTY#(lf);#(lf)#(lf)SELECT DISTINCT [PseudoNHSNumber]#(lf)               ,[Start_Date]#(lf)#(tab)#(tab)#(tab)   ,[End_Date]#(lf)#(tab)#(tab)#(tab)   ,[Frailty_Type]#(lf)#(lf)INTO #TEMP_RWFRAILTY#(lf)FROM [PowerBI_Reporting].[dbo].[tbl_rockwood_frailty_over_time]#(lf);#(lf)#(lf)SELECT DISTINCT [ED].[CDS_Unique_Identifier]#(lf)               ,[ED].[NHS_Number]#(lf)#(tab)#(tab)#(tab)   ,[ED].[Organisation_Code_Provider]#(lf)#(tab)#(tab)#(tab)   ,[Service_Type] = CASE WHEN [Department_Type] IN (1, 2) THEN 'Emergency Department'#(lf)#(tab)#(tab)#(tab)                          WHEN [Department_Type] = 3 THEN 'Minor Injury Unit'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [Department_Type] = 4 THEN 'NHS Walk In Centre'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  ELSE 'Unrecorded' END#(lf)#(tab)#(tab)#(tab)   ,[Injury_Type] = CASE WHEN [Acuity] IN ('1064891000000107', '1064911000000105', '1064901000000108') THEN 'Major'#(lf)#(tab)#(tab)#(tab)                         WHEN [Acuity] IN ('1077241000000103', '1077251000000100') THEN 'Minor'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE 'Unrecorded' END#(lf)#(tab)#(tab)#(tab)   ,[Admission_Flag] = CASE WHEN [GHFTED].[Discharge_destination_code] = '01' THEN 'Admitted'#(lf)#(tab)#(tab)#(tab)                            WHEN [GHFTED].[discharge_destination_code] IN ('02', '03', '04', '05', '06', '07', '11', '12', '13', '14') THEN 'Discharged'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [ED].[Destination] IN ('1066331000000109', '1066361000000104', '1066371000000106', '1066381000000108',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   '1066391000000105', '1066401000000108') THEN 'Admitted'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [GHFTED].[disposal_method_grouped] = 'Admitted' THEN 'Admitted'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [GHFTED].[disposal_method_grouped] IN ('Discharged', 'Left before treatment', 'Streamed to primary care service / GP',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)                                            'Transferred to other Healthcare Provider', 'Did Not Wait') THEN 'Discharged'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [ED].[Destination] IN ('1066351000000102', '183919006', '19712007', '306689006', '306691003',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)                                               '306694006', '306705005', '50861005', '1066341000000100', '306706006') THEN 'Discharged'#(lf)#(tab)#(tab)#(tab)                            ELSE 'Unrecorded' END#(lf)#(tab)#(tab)#(tab)   ,[ED].[Arrival_Date]#(lf)#(tab)#(tab)#(tab)   ,[RW].[Frailty_Type]#(lf)#(tab)#(tab)#(tab)   ,[ED].[General_Practice]#(lf)#(tab)#(tab)#(tab)   ,[GHFTED].[discharge_destination_code]#(lf)#(tab)#(tab)#(tab)   ,[ED].[Destination]#(lf)#(tab)#(tab)#(tab)   ,[GHFTED].[disposal_method_grouped]#(lf)#(tab)#(tab)#(tab)   ,[Activity_Counter] = 1#(lf)#(lf)FROM [CCG_Current].[SEM].[vw_ECDS] AS [ED]#(lf)#(lf)LEFT JOIN (#(lf)          SELECT [PseudoNHSNumber]#(lf)                ,[Start_Date]#(lf)#(tab)#(tab)#(tab)#(tab),[End_Date]#(lf)#(tab)#(tab)#(tab)#(tab),[Frailty_Type]#(lf)#(tab)#(tab)#(tab)#(tab),[RW_Flag] = 1#(lf)#(tab)#(tab)   FROM #TEMP_RWFRAILTY#(lf)#(tab)#(tab)   ) AS [RW] ON [RW].[PseudoNHSNumber] = [ED].[NHS_Number]#(lf)#(lf)LEFT JOIN (#(lf)          SELECT DISTINCT [cds_unique_identifier]#(lf)#(tab)#(tab)                 ,[Discharge_destination_code]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ,[disposal_method_grouped]#(lf)#(tab)#(tab)  FROM [CCG_Current].[GHFT].[vw_EDAttendance]#(lf)#(tab)#(tab)  ) AS [GHFTED] ON [GHFTED].[cds_unique_identifier] = [ED].[CDS_Unique_Identifier]#(lf)#(lf)WHERE CAST([ED].[Arrival_Date] AS DATE) >= '20210401'#(lf)AND [ED].[Organisation_Code_Commissioner] = '11M'#(lf)AND [RW].[RW_Flag] = 1#(lf)AND [ED].[Arrival_Date] BETWEEN [RW].[Start_Date] AND ISNULL([RW].[End_Date], GETDATE())"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

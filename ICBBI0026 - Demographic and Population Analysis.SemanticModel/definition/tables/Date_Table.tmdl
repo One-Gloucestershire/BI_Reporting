@@ -1,0 +1,164 @@
+table Date_Table
+	lineageTag: c987463a-ec0b-4c2c-a711-cf9acca9c690
+
+	column date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab716d50-1df9-449b-b113-b3c5a5cfe062
+		summarizeBy: none
+		sourceColumn: date
+
+		variation Variation
+			isDefault
+			relationship: bc7b8cb4-bd9f-440f-9ed6-b3f3ab14c354
+			defaultHierarchy: LocalDateTable_2abc5474-49ea-4002-bbd9-3b452ce75936.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column day_month_year
+		dataType: string
+		lineageTag: b65fd354-15c4-4d30-a47d-9d764bbef781
+		summarizeBy: none
+		sourceColumn: day_month_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column day
+		dataType: int64
+		formatString: 0
+		lineageTag: 1fd36ca0-3da1-4de0-8ddf-69c8f0df6f65
+		summarizeBy: sum
+		sourceColumn: day
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday
+		dataType: int64
+		formatString: 0
+		lineageTag: 1337d177-b7a6-4f7a-a89c-a8016f008857
+		summarizeBy: sum
+		sourceColumn: weekday
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday_name
+		dataType: string
+		lineageTag: 5bcb1dd0-f854-4578-820b-f28e0b0abfde
+		summarizeBy: none
+		sourceColumn: weekday_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column month
+		dataType: int64
+		formatString: 0
+		lineageTag: 9f9c203a-2993-40fc-a791-ba6e3f42ced1
+		summarizeBy: sum
+		sourceColumn: month
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 9b24e999-41c7-4d4d-a1c4-7feb1a110e77
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 8bc54332-a697-42be-905b-f0f41a1a9e73
+		summarizeBy: sum
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: string
+		lineageTag: 0987da08-1488-413b-a2c9-a41bce0d3a23
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_weekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7ef3c494-a3ce-48a9-8fe6-52a13d1cf7e6
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_holiday
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 41353fbe-4158-4237-aba9-a5b918dff62d
+		summarizeBy: none
+		sourceColumn: is_holiday
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_week_of_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 59f1d117-8a40-4575-a4f8-aa244e2529a1
+		summarizeBy: sum
+		sourceColumn: financial_week_of_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 22ceca01-b698-486c-8719-75cd6c5ba495
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 7af6340f-d453-40c3-9ca3-9d5a4f7e512b
+		summarizeBy: sum
+		sourceColumn: financial_quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: string
+		lineageTag: 86147cad-4a18-4be3-8c1f-88eea7c5fa76
+		summarizeBy: none
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_year_name
+		dataType: string
+		lineageTag: 6e70be90-41c5-4e45-a54a-51379386e0ed
+		summarizeBy: none
+		sourceColumn: month_year_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ytd_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 00f009c2-375b-44b4-ab3a-474bb4ebf1b3
+		summarizeBy: sum
+		sourceColumn: ytd_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Date_Table = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Date] [date]#(lf)      ,[DayMonthYear] [day_month_year]#(lf)      ,[Day] [day]#(lf)      ,[Weekday] [weekday]#(lf)      ,[WeekDayName] [weekday_name]#(lf)      ,[Month] [month]#(lf)      ,left([MonthName],3) [month_name]#(lf)      ,[Quarter] [quarter]#(lf)      ,[YearMonth] [year_month]#(lf)      ,[IsWeekend] [is_weekend]#(lf)      ,[IsHoliday] [is_holiday]#(lf)      ,[FinancialWeekofYear] [financial_week_of_year]#(lf)      ,[FinancialYear] [financial_year]#(lf)      ,[FinancialQuarter] [financial_quarter]#(lf)      ,[FinancialMonth] [financial_month]#(lf)      ,[MonthYearName] [month_year_name]#(lf)      ,[ytd_flag] = CASE WHEN [FinancialMonth] <= (#(lf)                                           SELECT#(lf)                                           CAST([FinancialMonth] AS INT)#(lf)                                           FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)                                           WHERE [Date] = EOMONTH(DATEADD(MONTH, -1, GETDATE()))#(lf)                                           )#(lf)                                           THEN 1 ELSE 0 END#(lf)#(lf) #(lf)#(lf)from [CCG_Reference].[Reference].[vw_DateLookup]#(lf)where [Date] BETWEEN '20160401' AND EOMONTH(DATEADD(MONTH, -1, GETDATE()))"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

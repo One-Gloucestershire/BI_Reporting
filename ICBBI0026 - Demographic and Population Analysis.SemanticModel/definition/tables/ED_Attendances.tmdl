@@ -1,0 +1,90 @@
+table ED_Attendances
+	lineageTag: 003765b0-f5b3-48bd-b0e9-abb58c63b976
+
+	measure 'ED Attendances - Rate per 1000' = ```
+			
+			
+			VAR EDATT = CALCULATE ( SUM ( ED_Attendances[Attendances] ) , ALLEXCEPT( Date_Table, Date_Table[financial_year] ) , Date_Table[ytd_flag] = 1) 
+			VAR POP = CALCULATE ( SUM ( Populations[population] ) , ALLEXCEPT (Date_Table, Date_Table[financial_year] ) )
+			
+			RETURN ((EDATT/POP)*1000)
+			```
+		lineageTag: 1e9247bf-739c-40d1-83fc-517e495971b5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: ec89ae2d-b090-405b-b247-8d4bf7109f84
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: fa51e404-7099-48eb-be8b-e2cb49107875
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Network
+		dataType: string
+		lineageTag: 290d2dfc-c55b-471f-9111-67c1a7c0df10
+		summarizeBy: none
+		sourceColumn: Network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 50af5c88-4976-49a4-83ef-283bdfcd5e13
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: f86709b1-b9b7-49fb-b96b-5f3eb86b7cda
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 669843b6-73b1-43ff-ac8a-939982dd097a
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attendances
+		dataType: int64
+		formatString: 0
+		lineageTag: e7048c26-cd24-444a-a42d-165926e3cbef
+		summarizeBy: sum
+		sourceColumn: Attendances
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: ff8ac317-6205-4a87-8172-2107bc57925e
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ED_Attendances = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="SELECT DISTINCT #(lf)[OrganisationCode],#(lf)[OrganisationName] = [GP].[ReportingOrganisationName],#(lf)[Network] = [GP].[PrimaryCareNetwork],#(lf)[Locality],#(lf)[MonthName] = LEFT([D].[MonthName],3),#(lf)[D].[FinancialYear],#(lf)[D].[YearMonth],#(lf)[Attendances]#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice] [GP]#(lf)#(lf)LEFT JOIN (SELECT #(lf)[Arrival_Date] = CAST([ArrivalDate] AS DATE),#(lf)[GPpractice_Derived],#(lf)[Attendances] = COUNT(AEattendanceNumber)#(lf)FROM [CCG_Current].[SEM].vw_EDAttendance#(lf)#(lf)WHERE CAST([ArrivalDate] AS DATE) >= '01-APR-2019'#(lf)GROUP BY #(lf)CAST([ArrivalDate] AS DATE),#(lf)[GPpractice_Derived]) AS [ED]#(lf)ON [ED].[GPpractice_Derived] = [GP].[OrganisationCode]#(lf)#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] AS [D]#(lf)ON [D].[Date] = [ED].[Arrival_Date]#(lf)#(lf)WHERE [PrimaryCareNetwork] IS NOT NULL"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

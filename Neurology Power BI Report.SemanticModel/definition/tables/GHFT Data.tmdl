@@ -1,0 +1,88 @@
+table 'GHFT Data'
+	lineageTag: 0c87a5ca-4ac3-4acb-8f91-554227fc8e9c
+
+	measure 'Ward 6A LoS in Days' = CALCULATE(SUM('GHFT Data'[Average_LoS_Ward_6a_Neuro__Hours_])/24)
+		formatString: 0
+		lineageTag: 37d61363-7a45-4712-8d6e-874264c6214c
+
+	measure 'Stroke Unit LoS in Days' = CALCULATE(SUM('GHFT Data'[Average_Total_Stroke_Unit_LoS__Hours_])/24)
+		lineageTag: f3881e81-2bfa-4964-a097-833a40cd718f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column month_year_full
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d2cbf650-c278-42f7-b6e9-4b128591fef8
+		summarizeBy: none
+		sourceColumn: month_year_full
+
+		annotation SummarizationSetBy = Automatic
+
+	column Average_LoS_Ward_6a_Neuro__Hours_
+		dataType: double
+		formatString: 0
+		lineageTag: 80702ff7-66cc-4667-a3f5-42a2dfe6233d
+		summarizeBy: sum
+		sourceColumn: Average_LoS_Ward_6a_Neuro__Hours_
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_Neurology_Outliers
+		dataType: double
+		formatString: 0
+		lineageTag: 9ebab3aa-5f46-4ca1-9f73-a2f43ec5272e
+		summarizeBy: sum
+		sourceColumn: Number_of_Neurology_Outliers
+
+		annotation SummarizationSetBy = Automatic
+
+	column Average_Total_Stroke_Unit_LoS__Hours_
+		dataType: double
+		formatString: 0
+		lineageTag: 03106617-ef5d-4169-9c0f-0be161185843
+		summarizeBy: sum
+		sourceColumn: Average_Total_Stroke_Unit_LoS__Hours_
+
+		annotation SummarizationSetBy = Automatic
+
+	column Brain_Tumour_Physio_Referrals
+		dataType: double
+		lineageTag: 38911d00-74f9-4d34-8395-22951724f938
+		summarizeBy: sum
+		sourceColumn: Brain_Tumour_Physio_Referrals
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Brain_Tumour_Physio_Activity_F2F
+		dataType: double
+		lineageTag: 2bf7b7d9-c406-4496-802f-4d4c586735c2
+		summarizeBy: sum
+		sourceColumn: Brain_Tumour_Physio_Activity_F2F
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Brain_Tumour_Physio_Activity_Telephone
+		dataType: double
+		lineageTag: aa3f0536-cc9e-42f2-827a-d6e9e0bdbf84
+		summarizeBy: sum
+		sourceColumn: Brain_Tumour_Physio_Activity_Telephone
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'GHFT Data' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT *#(lf)  FROM [BIReports].[dbo].[GHFT_Neurology]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
