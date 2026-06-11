@@ -126,7 +126,7 @@ Folder names represent subject-area products (for example: Planned Care, Frailty
 
 Because this repository is artifact-first rather than application-first, there are currently:
 
-- no `package.json`/`pyproject.toml`-style dependency manifests
+- no top-level `package.json`/`pyproject.toml`-style repository dependency manifests
 - no conventional app build pipeline in repo files
 - no unit test framework in repo files
 - no `.github/workflows` pipeline definitions in this branch snapshot
