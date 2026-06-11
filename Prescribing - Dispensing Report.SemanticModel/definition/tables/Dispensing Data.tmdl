@@ -1,0 +1,261 @@
+table 'Dispensing Data'
+	lineageTag: 47478345-5d79-4ae9-a8ae-e4142a0b199c
+
+	measure 'Total Costs (£)' = SUM('Dispensing Data'[Cost])
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 13fc55b7-1dfc-4ffb-a8be-c40dc6b48bf3
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Total Items' = SUM('Dispensing Data'[Items])
+		formatString: #,0
+		lineageTag: e138726e-d859-4ea4-9d9c-fca2a9c5501e
+
+	measure 'Mapping Chart Title' =
+			
+			
+			CONCATENATE("Gloucestershire Mapping - ", [Item / Cost Title Function])
+		lineageTag: fbb29004-bda4-4605-8ee8-8ebea4155b0b
+
+	measure '% of Total Cost' =
+			
+			DIVIDE([Total Costs (£)], [Overall Cost])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2470a7de-c99b-4749-96fe-286d1d9570b0
+
+	measure 'Overall Cost' = CALCULATE(SUM('Dispensing Data'[Cost]), ALL('Dispensing Data'), 'Date Reference'[Financial Year] <> BLANK(), 'Dispensing Data'[BNFChapter] <> BLANK())
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 76e9e52e-fefa-4b19-ad95-63095f022c9a
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Average Item Cost' =
+			
+			
+			DIVIDE([Total Costs (£)], [Total Items])
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 2e4b4c29-c280-4afa-81bb-0b821e5a4f06
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Overall Items' = CALCULATE(SUM('Dispensing Data'[Items]), ALL('Dispensing Data'), 'Date Reference'[Financial Year] <> BLANK(), 'Dispensing Data'[BNFChapter] <> BLANK())
+		formatString: 0
+		lineageTag: 5003ba39-b28c-441b-a458-12233bd82adb
+
+	measure '% of Total Items' =
+			
+			DIVIDE([Total Items], [Overall Items])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 322a8d0a-9c05-4a9f-92c6-f6730653741e
+
+	measure 'Hidden Hex Code' =
+			
+			
+			IF(ISFILTERED('Items / Costs Parameter'[Parameter]), "#00FF0000", "#00FF0000")
+		lineageTag: 345386a8-79ab-47f0-ab0f-428826f21b25
+
+	measure 'Distinct Patients' = DISTINCTCOUNT('Dispensing Data'[NHS_Number])
+		formatString: #,0
+		lineageTag: f3ad9ae2-4fa3-4cad-951a-1d0b52a99f92
+
+	measure 'BNF Chart Title' =
+			
+			
+			CONCATENATE("BNF Categories - ", [Item / Cost Title Function])
+		lineageTag: a9bfd486-e8b4-48e6-ba24-314e3257ccba
+
+	measure 'Segmentation Bar Chart Title' =
+			
+			
+			CONCATENATE([Item / Cost Title Function], " - Segmented by - " & SELECTCOLUMNS('Legend Filter Parameter', 'Legend Filter Parameter'[Legend Filter Parameter]))
+		lineageTag: fbb4da0f-f35b-4578-86aa-59ab869bde57
+
+	column Processing_Period_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6ccd2063-ad06-4a04-81a8-95219a175952
+		summarizeBy: none
+		sourceColumn: Processing_Period_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Name
+		dataType: string
+		lineageTag: c3ff66cd-0966-494c-af54-ac849d930833
+		summarizeBy: none
+		sourceColumn: Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_LSOA
+		dataType: string
+		lineageTag: c84d1303-1ff1-4cae-91b2-b52cabe34bf5
+		summarizeBy: none
+		sourceColumn: Patient_LSOA
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_Bands
+		dataType: string
+		lineageTag: 50d0dd34-06a4-4805-84d4-903eff8c30bb
+		summarizeBy: none
+		sourceColumn: Age_Bands
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 87ce00d4-4edc-4d61-8f4c-0e3175f6b6cd
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: 7cd8f989-b5ba-4c56-9256-6c5a636e7d09
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cost
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: bf13a61b-a2fe-448b-9f98-dac420c36e81
+		summarizeBy: sum
+		sourceColumn: Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Items
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4842dcec-d4a3-4fee-b262-48f501a3651a
+		summarizeBy: sum
+		sourceColumn: Items
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChapter
+		dataType: string
+		lineageTag: f86b4145-ee49-4600-a87a-fa8489980246
+		summarizeBy: none
+		sourceColumn: BNFChapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChapterCode
+		dataType: int64
+		formatString: 0
+		lineageTag: 8ad32541-19d3-471a-91c4-7efd8720b091
+		summarizeBy: count
+		sourceColumn: BNFChapterCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSection
+		dataType: string
+		lineageTag: fb343d2a-c9d5-4745-ad2d-f9f6d992b2d4
+		summarizeBy: none
+		sourceColumn: BNFSection
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSectionCode
+		dataType: int64
+		formatString: 0
+		lineageTag: c0c41ae6-2b53-41ef-86a6-c51dbc1779fe
+		summarizeBy: count
+		sourceColumn: BNFSectionCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFParagraph
+		dataType: string
+		lineageTag: 639cf5f4-bb3d-4e22-9dbc-cfba925a4907
+		summarizeBy: none
+		sourceColumn: BNFParagraph
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFParagraphCode
+		dataType: int64
+		formatString: 0
+		lineageTag: d5985eed-2ff5-4be6-97e9-11e468c35ea6
+		summarizeBy: count
+		sourceColumn: BNFParagraphCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSubParagraph
+		dataType: string
+		lineageTag: 9db7bb15-0290-49df-be53-ae4c42e5f443
+		summarizeBy: none
+		sourceColumn: BNFSubParagraph
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSubParagraphCode
+		dataType: int64
+		formatString: 0
+		lineageTag: 04193207-805f-4750-aed3-0ff091bd31d4
+		summarizeBy: count
+		sourceColumn: BNFSubParagraphCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstance
+		dataType: string
+		lineageTag: 3aa832d4-5b13-45d5-a456-895a32e2bf25
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstanceCode
+		dataType: string
+		lineageTag: f287da64-5643-4767-ac35-512c18c27bcd
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstanceCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFProduct
+		dataType: string
+		lineageTag: 408e548f-946a-4f46-b956-404c05aa16eb
+		summarizeBy: none
+		sourceColumn: BNFProduct
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFProductCode
+		dataType: string
+		lineageTag: d9e77a5d-7aff-46cb-a0b2-4c717d5e8386
+		summarizeBy: none
+		sourceColumn: BNFProductCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 81d1c0f3-d8f5-4cb7-ab7e-c2ea3bb77b3f
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dispensing Data' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Data_Mart_Primary_Care_Meds", [Query="SELECT *#(lf)FROM [PowerBI_Processing].[dbo].[Prescribing_Dispensing_Output]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

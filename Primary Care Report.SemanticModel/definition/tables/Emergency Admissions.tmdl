@@ -1,0 +1,231 @@
+table 'Emergency Admissions'
+	lineageTag: 935691f8-90b7-4a61-b7ca-98b4a275afe0
+
+	measure 'Emergency Admissions Rate per 1,000' =
+			
+			
+			VAR _ADM = CALCULATE(SUM('Emergency Admissions'[counter]))
+			VAR POP = SUM('GP Population (Duplicate)'[population])
+			
+			RETURN
+			
+			(_ADM/POP)*1000
+		lineageTag: 5a7ef98a-eb76-4ab6-8b58-cd91a6999c4e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Emergency Admissions Rate per 1,000 - ICB' =
+			
+			
+			VAR _ADM = CALCULATE(SUM('Emergency Admissions'[counter]), ALL('GP Reference'))
+			VAR POP = CALCULATE(SUM('GP Population (Duplicate)'[population]), ALL('GP Reference'))
+			
+			RETURN
+			
+			(_ADM/POP)*1000
+		lineageTag: c55c487b-df37-490f-8568-9c39b2095d75
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Trendline - Emergency Admissions' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Emergency Admissions'[Emergency Admissions Rate per 1,000]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: e62acb9b-b4da-4b16-a4ff-797ac7f9c258
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Trendline - Emergency Admissions ICB' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Emergency Admissions'[Emergency Admissions Rate per 1,000 - ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: fda0ea8e-81cf-4bcf-930d-99bfa1a20810
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Variance from ICB - Emergency Admissions' = ```
+			
+			
+			 [Emergency Admissions Rate per 1,000] - [Emergency Admissions Rate per 1,000 - ICB]
+			```
+		lineageTag: c062e835-c426-4ff4-b238-657bbd96518f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Trendline - Emergency Admissions Variance' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Emergency Admissions'[Variance from ICB - Emergency Admissions]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: f0c5ee01-058d-4476-946f-a9eb22653131
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Emergency Admissions Rate per 1,000 average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE([Emergency Admissions Rate per 1,000])
+			)
+		lineageTag: 389aae5a-7a3e-437d-bc1b-78239fe22d57
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Emergency Admissions Rate per 1,000 - ICB average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE([Emergency Admissions Rate per 1,000 - ICB])
+			)
+		lineageTag: ffb9dc53-3bee-4098-996e-b51ef0fd9ae9
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Emergency Admissions Variance from ICB' = ```
+			
+			
+			 VAR _CALC = [Emergency Admissions Rate per 1,000 average per year_month] - [Emergency Admissions Rate per 1,000 - ICB average per year_month]
+			
+			 RETURN FORMAT(_CALC, "+ 0.0;- 0.0")
+			```
+		lineageTag: 1c36a0d6-3e0e-465e-bc55-b4d3b6af34e9
+
+	column hospital_provider_spell_number
+		dataType: string
+		lineageTag: ff3279ee-b656-4587-88d6-58e1ba5a6ef9
+		summarizeBy: none
+		sourceColumn: hospital_provider_spell_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 726bf4ec-9647-4682-80b3-daf14d8412a1
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 9f458b03-b25e-44b8-a890-cba7d0ff6c9c
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column start_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ca9ba2fa-578e-4b8f-99d4-540fff38036a
+		summarizeBy: none
+		sourceColumn: start_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Emergency Admissions' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  SELECT [hospital_provider_spell_number]#(lf)        ,[counter]#(lf)#(tab)#(tab),[practice_code]#(lf)#(tab)#(tab),[start_date]#(lf)#(lf)  FROM [PowerBI_Reporting].[SecondaryCare].[tbl07_Inpatients]#(lf)#(lf)  WHERE [admission_method_group_grouped] = 'Emergency'#(lf)  AND [start_date] >= '20210401'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

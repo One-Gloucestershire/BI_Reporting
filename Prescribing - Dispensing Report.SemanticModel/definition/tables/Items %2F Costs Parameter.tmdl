@@ -1,0 +1,78 @@
+table 'Items / Costs Parameter'
+	lineageTag: fcab3969-c679-4738-9b4d-1483be667b1e
+
+	measure 'Item / Cost Title Function' =
+			
+			
+			SELECTCOLUMNS('Items / Costs Parameter', 'Items / Costs Parameter'[Parameter])
+		lineageTag: 3c6f6d39-cca7-4076-9044-b8ee72c0bc03
+
+	measure 'Item / Cost Title Colour' =
+			
+			
+			IF ( CONTAINSSTRING('Items / Costs Parameter'[Selected Option], "Total Costs (£)") = TRUE(), "#F9A030", "#F26C64")
+		lineageTag: 39bd8361-a73a-4c95-a170-7a72e4814448
+
+	measure 'Selected Option' = MAX('Items / Costs Parameter'[Parameter])
+		lineageTag: 3170da74-edf1-40ff-892e-5544fbae57ed
+
+	measure 'Cost Colour Indicator' =
+			
+			
+			IF ( CONTAINSSTRING('Items / Costs Parameter'[Selected Option], "Total Costs (£)") = TRUE(), "#F9A030", "#00FF0000")
+		lineageTag: 48bb9f50-4288-49ef-8205-eb47cd1d3337
+
+	measure 'Item Colour Indicator' =
+			
+			
+			IF ( CONTAINSSTRING('Items / Costs Parameter'[Selected Option], "Total Costs (£)") = TRUE(), "#00FF0000", "#F26C64")
+		lineageTag: 3b4550a3-b1fb-4ece-9715-0b58dfbef5f7
+
+	measure 'Blank Format' = " "
+		lineageTag: f0f1b433-6ecf-46e1-a303-68b10c2d022c
+
+	column Parameter
+		lineageTag: ed0e6c71-54b6-4123-aa3e-3c23c92bbf18
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: efd1725d-49d1-4b87-919e-82dca40e3669
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 33ff7549-a88b-4d1d-bf6d-cae860c9ca2e
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Items / Costs Parameter' = calculated
+		mode: import
+		source =
+				{
+				    ("Total Costs (£)", NAMEOF('Dispensing Data'[Total Costs (£)]), 0),
+				    ("Total Items", NAMEOF('Dispensing Data'[Total Items]), 1)
+				}
+
+	annotation PBI_Id = ba66bf25ec854cb98765cb6c7216482e
+

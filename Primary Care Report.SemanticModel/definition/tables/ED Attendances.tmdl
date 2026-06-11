@@ -1,0 +1,239 @@
+table 'ED Attendances'
+	lineageTag: 0acced4d-44f3-4783-b340-4d7d55a52d1f
+
+	measure 'ED Rate per 1,000 - ICB' =
+			
+			
+			VAR _ED = CALCULATE(SUM('ED Attendances'[counter]), ALL('GP Reference'))
+			VAR POP = CALCULATE(SUM('GP Population (Duplicate)'[population]), ALL('GP Reference'))
+			
+			RETURN
+			
+			(_ED/POP)*1000
+		lineageTag: d37a22eb-682a-498b-bee0-04225dd0dd42
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ED Rate per 1,000' =
+			
+			
+			VAR _ED = CALCULATE(SUM('ED Attendances'[counter]))
+			VAR POP = SUM('GP Population (Duplicate)'[population])
+			
+			RETURN
+			
+			(_ED/POP)*1000
+		lineageTag: f060afff-2c14-4f3d-a7c1-af0f0a502810
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Trendline - ED Attendances ICB' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'ED Attendances'[ED Rate per 1,000 - ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: a6c15c36-97ac-409b-963c-c2ed0c94f3d9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Trendline - ED Attendances' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'ED Attendances'[ED Rate per 1,000]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: a7833377-7789-45d5-8b57-5e5e6168a314
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Variance from ICB' = ```
+			
+			
+			 [ED Rate per 1,000] - [ED Rate per 1,000 - ICB]
+			```
+		lineageTag: 56a29f62-4d8f-450f-9ee6-fa7ae8a1f2e6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Trendline - ED Attendance Variance' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'ED Attendances'[Variance from ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: 0dae7875-2f58-4cd2-9299-17bd9eefb714
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ED Rate per 1,000 average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE([ED Rate per 1,000])
+			)
+		lineageTag: 62a89407-53ea-45f8-a95a-29a6f9e0f4a2
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ED Rate per 1,000 - ICB average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE([ED Rate per 1,000 - ICB])
+			)
+		lineageTag: 0e68c4bb-ae20-4e47-806b-a1edcc101066
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ED Variance from ICB' = ```
+			
+			
+			 VAR _CALC = [ED Rate per 1,000 average per year_month] - [ED Rate per 1,000 - ICB average per year_month]
+			
+			 RETURN FORMAT(_CALC, "+ 0.0;- 0.0")
+			```
+		lineageTag: deee99b7-30d7-4ada-b55f-db6c7c3cba93
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: abce4cc3-1bbe-42e5-9586-85ac529490b3
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7fc3f291-cec8-4d6c-9ce1-8e4ac5f1b105
+		summarizeBy: none
+		sourceColumn: arrival_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitted_flag
+		dataType: string
+		lineageTag: ed52c62a-c1e6-4e07-b58e-d8f3da080bf2
+		summarizeBy: none
+		sourceColumn: admitted_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 89ea5e4c-8608-4d7d-a3d2-0ae9dda1b8af
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_type
+		dataType: string
+		lineageTag: 09657d05-32ee-4cb4-865a-a855edf016eb
+		summarizeBy: none
+		sourceColumn: department_type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ED Attendances' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  SELECT [counter]#(lf)        ,[arrival_date]#(lf)#(tab)#(tab),[admitted_flag]#(lf)#(tab)#(tab),[practice_code]#(lf)#(tab)#(tab),[department_type]#(lf)#(lf)  FROM [PowerBI_Reporting].[UrgentCare].[tbl01_ECDS]#(lf)#(lf)  WHERE [arrival_date] >= '20210401'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,37 @@
+table 'Time Until Appointment Reference'
+	lineageTag: 20fee6e3-0673-4d3d-9f44-76a26d6cc5bb
+
+	column TIME_BETWEEN_BOOK_AND_APPT
+		dataType: string
+		lineageTag: 4e2875a7-a7e7-47e6-bd05-436202acc62d
+		summarizeBy: none
+		sourceColumn: TIME_BETWEEN_BOOK_AND_APPT
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 321b2549-08fb-4767-9db8-c94f0faad7a2
+		summarizeBy: sum
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Time Until Appointment Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("TcyxCoAgEMbxVzluDkKz8gFaGpqiSRwchCBSSCN6++xMaPx+f+6UwtnsFgZzY4UMdaWQfYvT4hA99C+FZA2ZhBeZKCryXUvMWeE2P+CZZeGOePKHhbga9ys9lcVtzl8O6sTRwBjCaVOUqPUD", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [TIME_BETWEEN_BOOK_AND_APPT = _t, Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"TIME_BETWEEN_BOOK_AND_APPT", type text}, {"Column1", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Order"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

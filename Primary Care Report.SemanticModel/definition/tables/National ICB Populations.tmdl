@@ -1,0 +1,134 @@
+table 'National ICB Populations'
+	lineageTag: 89980d00-36db-4084-8fb4-db8a8ef7d97c
+
+	measure 'Rate per 1,000 - England' =
+			
+			
+			VAR _APPOINTMENTS = SUM('National Appointments'[COUNT_OF_APPOINTMENTS])
+			VAR _POPULATION = CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr")
+			
+			RETURN CALCULATE(DIVIDE(_APPOINTMENTS, _POPULATION) * 1000)
+		formatString: #,0.0
+		lineageTag: 43409d51-d0eb-4543-868f-200a988b4b51
+
+	measure 'April Populations' =
+			
+			
+			CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr")
+		formatString: 0
+		lineageTag: cd5ba2c9-1baf-4cb0-960d-b73a3c3b8b10
+
+	measure 'Rate per 1,000 - South West Region' =
+			
+			
+			VAR _APPOINTMENTS = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'ICB Mapping'[Region Name] = "South West")
+			VAR _POPULATION = CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr", 'ICB Mapping'[Region Name] = "South West")
+			
+			RETURN CALCULATE(DIVIDE(_APPOINTMENTS, _POPULATION) * 1000)
+		formatString: #,0.0
+		lineageTag: 547b7131-9231-4fb5-95d6-681f0d7e7654
+
+	measure 'Rate per 1,000 - Gloucestershire' =
+			
+			
+			VAR _APPOINTMENTS = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'ICB Mapping'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			VAR _POPULATION = CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr", 'ICB Mapping'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN CALCULATE(DIVIDE(_APPOINTMENTS, _POPULATION) * 1000)
+		formatString: #,0.0
+		lineageTag: b11cc51d-ce56-457f-aa67-a17b0ce67d30
+
+	measure 'Rate per 1,000 - ICBs' =
+			
+			
+			VAR _APPOINTMENTS = SUM('National Appointments'[COUNT_OF_APPOINTMENTS])
+			VAR _POPULATION = CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr")
+			
+			RETURN CALCULATE(DIVIDE(_APPOINTMENTS, _POPULATION) * 1000)
+		lineageTag: f2260397-a20d-42db-9eba-1217808d67f3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Extract_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f9cc8030-ab47-4daf-8ad0-caaf0297ba17
+		summarizeBy: none
+		sourceColumn: Extract_Date
+
+		variation Variation
+			isDefault
+			relationship: a2ea2005-b681-405b-989c-0514c665e11a
+			defaultHierarchy: LocalDateTable_08ec31eb-c72f-4bbe-8c21-a011e5b19955.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column SUB_ICB_Code
+		dataType: string
+		lineageTag: cb3d22d6-fce2-41ff-8a38-36f1dd8c9fdc
+		summarizeBy: none
+		sourceColumn: SUB_ICB_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 54f205a8-446e-4e08-b82e-ccd2873b198d
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: ef1fafb7-de66-466d-9526-fee346342f49
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Code
+		dataType: string
+		lineageTag: 1c3014f1-8971-4a69-8f9c-41fb19c59eb9
+		summarizeBy: none
+		sourceColumn: Region_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Name
+		dataType: string
+		lineageTag: 4d9e265b-59a2-4347-8169-08de00f53531
+		summarizeBy: none
+		sourceColumn: Region_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: f5e17d76-7ee3-43da-a92c-a558e0803f99
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: accda915-6f2f-4be9-a672-27458545c19e
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'National ICB Populations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  SELECT *#(lf)  FROM [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,348 @@
+table 'Calculation Selection Parameter'
+	lineageTag: dc1c9624-a554-4b58-a5d5-788cabe406de
+
+	measure 'Metric Calculation Output' =
+			
+			
+			VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), [Metric - Total Value],
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), [Metric - Total Value Crude Rate per 1,000],
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), [Metric - Total Value Crude Rate per 100,000],
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), [Metric - Direct Age Standardisation],
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "% of Population"), [Metric - Overall %],
+			    BLANK()
+			    )
+		lineageTag: 0c37d516-37af-4f5f-96c3-eda57a52a1b6
+
+		formatStringDefinition =
+				VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+				
+				RETURN
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), "0,0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "% of Population"), "#,##0.0%",
+				    BLANK()
+				    )
+
+	measure 'Metric Calculation Output - 19/20' = ```
+			
+			
+			VAR _TOTAL_MONTHS = CALCULATE(
+			                            DISTINCTCOUNT('Date Reference'[financial_month]),
+			                            'Date Reference'[financial_year] = "2019/20"
+			                            )
+			
+			RETURN
+			
+			IF(
+			   CALCULATE(
+			        [Metric Calculation Output]
+			        ,'Date Reference'[financial_year] = "2019/20"
+			            ) / _TOTAL_MONTHS = BLANK(), 
+			            " ",
+			   CALCULATE(
+			        [Metric Calculation Output]
+			        ,'Date Reference'[financial_year] = "2019/20"
+			            ) / _TOTAL_MONTHS
+			)
+			```
+		lineageTag: 10ab590a-2108-4bc2-ac61-236477c41912
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Calculation Output - Latest Year' =
+			
+			
+			VAR _LATEST_YEAR = CALCULATE(
+			                            MAX('Date Reference'[financial_year]),
+			                            'Date Reference'[financial_month] = MAX('Date Reference'[financial_month])
+			                            )
+			
+			VAR _TOTAL_MONTHS = CALCULATE(
+			                            DISTINCTCOUNT('Date Reference'[financial_month]),
+			                            'Date Reference'[financial_year] = _LATEST_YEAR
+			                            )
+			
+			RETURN
+			
+			CALCULATE(
+			    [Metric Calculation Output],
+			    'Date Reference'[financial_year] = _LATEST_YEAR
+			) / _TOTAL_MONTHS // Monthly Average //
+		lineageTag: d03bcb70-a333-474f-8d00-98d4c28dac19
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Calculation Output - 19/20 to Latest Year Variance' =
+			
+			
+			IFERROR([Metric Calculation Output - Latest Year] - [Metric Calculation Output - 19/20], " ")
+		lineageTag: e25ef48e-1da0-4c88-9909-f23215dd5e1a
+
+		formatStringDefinition = "+#,##0.0;-#,##0.0;=#,##0.0"
+
+	measure 'Metric Calculation Output - % Growth from 19/20' =
+			
+			
+			IFERROR(([Metric Calculation Output - Latest Year] - [Metric Calculation Output - 19/20]) / [Metric Calculation Output - 19/20], " ")
+		lineageTag: d692e9be-f68e-43e9-ac3e-da2ee7b1ba28
+
+		formatStringDefinition = "+0.00%;-0.00%;0.00%"
+
+	measure 'Metric Calculation Output - Lower CI' =
+			
+			
+			VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), BLANK(),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), IFERROR([Metric - CI Lower Bound - CRP 1,000], BLANK()),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), IFERROR([Metric - CI Lower Bound - CRP 100,000], BLANK()),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), IFERROR([Metric - CI Lower Bound - DSR], BLANK()),
+			    BLANK()
+			    )
+		lineageTag: 449b7423-f90e-4c33-bcb8-fd9c59c6c6e7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Calculation Output - Upper CI' =
+			
+			
+			VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), BLANK(),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), IFERROR([Metric - CI Upper Bound - CRP 1,000], BLANK()),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), IFERROR([Metric - CI Upper Bound - CRP 100,000], BLANK()),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), IFERROR([Metric - CI Upper Bound - DSR], BLANK()),
+			    BLANK()
+			    )
+		lineageTag: f218912a-6928-4f03-8c7c-dc63b09c2b4b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected Calculation' =
+			
+			
+			MAX('Calculation Selection Parameter'[Calculation Type])
+		lineageTag: e715b51c-f773-43fe-bd7c-61515a06d11a
+
+	measure 'Rolling 12 Month Average' = ```
+			
+			
+			VAR _ROLLINGSUM = 
+			
+			CALCULATE(
+			    [Metric Calculation Output],
+			    DATESINPERIOD(
+			        'Date Reference'[date],
+			        MAX('Date Reference'[date]),
+			        -12,
+			        MONTH),
+			        ALL('Date Reference')
+			)
+			
+			VAR _ROLLINGCOUNT = 
+			
+			CALCULATE(
+			    DISTINCTCOUNT('Date Reference'[year_month]),
+			    DATESINPERIOD(
+			        'Date Reference'[date],
+			        MAX('Date Reference'[date]),
+			        -12,
+			        MONTH),
+			        ALL('Date Reference')
+			)
+			
+			RETURN
+			
+			_ROLLINGSUM
+			```
+		lineageTag: 5e0b5cff-f0f8-469d-8838-662303820b04
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Calculation Output - 23/24' =
+			
+			
+			VAR _TOTAL_MONTHS = CALCULATE(
+			                            DISTINCTCOUNT('Date Reference'[financial_month]),
+			                            'Date Reference'[financial_year] = "2023/24"
+			                            )
+			
+			RETURN
+			
+			IF(
+			    ISBLANK(
+			        CALCULATE(
+			        [Metric Calculation Output],
+			        'Date Reference'[financial_year] = "2023/24"
+			        ) / _TOTAL_MONTHS
+			    ), " ",
+			    CALCULATE(
+			        [Metric Calculation Output],
+			        'Date Reference'[financial_year] = "2023/24"
+			    ) / _TOTAL_MONTHS
+			)
+		lineageTag: d6ec3f83-65b0-4042-a1cf-8ade80a1d9bd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Calculation Output - 23/24 to Latest Year Variance' =
+			
+			
+			IFERROR(
+			[Metric Calculation Output - Latest Year] - [Metric Calculation Output - 23/24],
+			" "
+			)
+		lineageTag: 9f28882b-c697-4716-b788-c8cfa0130175
+
+		formatStringDefinition = "+#,##0.0;-#,##0.0;=#,##0.0"
+
+	measure 'Metric Calculation Output - % Growth from 23/24' =
+			
+			
+			IFERROR(
+			        ([Metric Calculation Output - Latest Year] - [Metric Calculation Output - 23/24]) / [Metric Calculation Output - 23/24],
+			        " "
+			)
+		lineageTag: a8b61f68-d0a9-49a6-a689-7bd6fd680113
+
+		formatStringDefinition = "+0.00%;-0.00%;0.00%"
+
+	measure 'Metric Calculation Output - ICB' =
+			
+			
+			VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), CALCULATE(
+			                                                                     [Metric - Total Value]
+			                                                                    ,ALL('Deprivation Reference')
+			                                                                    ,ALL('Ethnicity Reference')
+			                                                                    ,ALL('Gender Reference')
+			                                                                    ,ALL('GP Reference')
+			                                                                    ,ALL('Age Band Reference')
+			                                                                    ,ALL('Age Band Reference - CYP Split')
+			                                                                    ,ALL('LD Reference')
+			                                                                    ),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), CALCULATE(
+			                                                                            [Metric - Total Value Crude Rate per 1,000]
+			                                                                           ,ALL('Deprivation Reference')
+			                                                                           ,ALL('Ethnicity Reference')
+			                                                                           ,ALL('Gender Reference')
+			                                                                           ,ALL('GP Reference')
+			                                                                           ,ALL('Age Band Reference')
+			                                                                           ,ALL('Age Band Reference - CYP Split')
+			                                                                           ,ALL('LD Reference')
+			                                                                           ),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), CALCULATE(
+			                                                                              [Metric - Total Value Crude Rate per 100,000]
+			                                                                             ,ALL('Deprivation Reference')
+			                                                                             ,ALL('Ethnicity Reference')
+			                                                                             ,ALL('Gender Reference')
+			                                                                             ,ALL('GP Reference')
+			                                                                             ,ALL('Age Band Reference')
+			                                                                             ,ALL('Age Band Reference - CYP Split')
+			                                                                             ,ALL('LD Reference')
+			                                                                             ),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), CALCULATE(
+			                                                                                  [Metric - Direct Age Standardisation]
+			                                                                                 ,ALL('Deprivation Reference')
+			                                                                                 ,ALL('Ethnicity Reference')
+			                                                                                 ,ALL('Gender Reference')
+			                                                                                 ,ALL('GP Reference')
+			                                                                                ,ALL('Age Band Reference')
+			                                                                                ,ALL('Age Band Reference - CYP Split')
+			                                                                                ,ALL('LD Reference')
+			                                                                                ),
+			    CONTAINSSTRINGEXACT(_CALC_SELECTION, "% of Population"), CALCULATE(
+			                                                                 [Metric - Overall %]
+			                                                                 ,ALL('Deprivation Reference')
+			                                                                 ,ALL('Ethnicity Reference')
+			                                                                 ,ALL('Gender Reference')
+			                                                                 ,ALL('GP Reference')
+			                                                                 ,ALL('Age Band Reference')
+			                                                                 ,ALL('Age Band Reference - CYP Split')
+			                                                                 ,ALL('LD Reference')
+			                                                                 ),
+			    BLANK()
+			    )
+		lineageTag: 822e052f-2259-4b94-a1e2-52e981eb8a21
+
+		formatStringDefinition =
+				VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+				
+				RETURN
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), "0,0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "% of Population"), "#,##0.0%",
+				    BLANK()
+				    )
+
+	measure 'Metric Calculation Output - Total Difference' =
+			
+			
+			[Metric Calculation Output] - [Metric Calculation Output - ICB]
+		lineageTag: a41462bf-788e-4ab0-9c93-f2810069f6b3
+
+		formatStringDefinition =
+				VAR _CALC_SELECTION = MAX('Calculation Selection Parameter'[Calculation Type])
+				
+				RETURN
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Overall Total"), "#,##0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 1,000"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Crude Rate per 100,000"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "Direct Age Standardisation"), "#,##0.0",
+				    CONTAINSSTRINGEXACT(_CALC_SELECTION, "% of Population"), "#,##0.0%",
+				    BLANK()
+				    )
+
+	column 'Calculation Type'
+		dataType: string
+		lineageTag: 307627e7-69a5-4877-9775-5de1dd50c888
+		summarizeBy: none
+		sourceColumn: Calculation Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Calculation Selection Parameter' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45W8i9LLUrMyVEIyS9JzClWitWJVnIuKk1JVQhKLElVKEgtUjDUMTAwwCphYACXcsksSk0uUXBMT1UILknMS0ksSsksTizJzM8DS6sq5KcpBOQXlOZAxWIB", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Calculation Type" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Calculation Type", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

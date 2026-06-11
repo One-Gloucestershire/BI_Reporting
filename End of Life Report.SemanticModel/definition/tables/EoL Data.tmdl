@@ -1,0 +1,1550 @@
+table 'EoL Data'
+	lineageTag: ad2c3987-8431-43e8-b6e9-49358a1e0b99
+
+	measure 'Deaths - Rate per 1,000' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead")
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]))
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: b7d2ff91-0151-466d-8ac1-58e2dc684f00
+
+	measure 'Deaths - Rate per 1,000 - Gloucestershire' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('Ethnicity Reference'))
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), ALL('GP Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('Ethnicity Reference'))
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: ca0c22b9-c082-4af2-af0b-6e7ac0d8d4cd
+
+	measure 'Palliative Care Register' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care"
+			    )
+			```
+		formatString: #,0
+		lineageTag: 40eef1b4-dca8-4b12-8426-b5df06041489
+
+	measure 'Palliative Care Register - ReSPECT Plan' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care",
+			        'EoL Data'[respect_form_date] >= 'EoL Data'[PALLIATIVE 6 BACK]
+			        )
+			```
+		formatString: 0
+		lineageTag: 5ac67683-25da-4981-bb46-205ac1ea03b2
+
+	measure 'ReSPECT Population' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			    )
+			```
+		formatString: #,0
+		lineageTag: 758c74ea-2570-4c75-ab4d-1945bd84a52d
+
+	measure '% Died in Place of Preference' =
+			
+			
+			VAR DIED = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", NOT(ISBLANK('EoL Data'[preferred_place_of_death_date])))
+			VAR PPOD = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[died_in_preferred_place_of_death_flag] = "Died in preferred place")
+			
+			RETURN (PPOD/DIED)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c5cd11eb-33b2-4081-933e-ec1dfe0f7f8c
+
+	measure 'Palliative Care Register Deaths' =
+			
+			
+			CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[palliative_care_flag] = "Palliative Care")
+		formatString: #,0
+		lineageTag: e658822a-11ec-49f7-809c-a9f82a514c2b
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '% Palliative Care Deaths' =
+			
+			
+			VAR PALL = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[palliative_care_flag] = "Palliative Care")
+			
+			RETURN PALL/SUM('EoL Data'[counter])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e69079e5-fa43-4cde-81d8-25cda2a76574
+
+	measure '% Non-Palliative Care Deaths' =
+			
+			
+			1 - [% Palliative Care Deaths]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 34ab9a46-27d4-423d-835c-c417189d6171
+
+	measure 'Deaths - Rate per 1,000 - Latest Month' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 'Death Date Reference'[latest_12_months_flag] = 1)
+			VAR POP = CALCULATE(SUM('Population'[population]), 'Death Date Reference'[latest_12_months_flag] = 1)
+			
+			RETURN (Deaths/POP)*1000
+		lineageTag: 95cc17d3-1587-4791-ae38-86d7b99883e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative Care Register - PCSP' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care",
+			        'EoL Data'[pcsp_date] >= 'EoL Data'[PALLIATIVE 6 BACK]
+			    )
+			```
+		formatString: #,0
+		lineageTag: 22bb23e7-8aee-4f67-b490-8529231607b3
+
+	measure '% ReSPECT Forms completed for Palliative Care Register' =
+			
+			
+			[Palliative Care Register - ReSPECT Plan] / [Palliative Care Register]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 68399f85-39a9-4a48-b22e-97227fb09315
+
+	measure '% PCSP completed for Palliative Care Register' =
+			
+			
+			[Palliative Care Register - PCSP] / [Palliative Care Register]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c010e971-db56-432d-84b9-b148938cb524
+
+	measure 'Palliative Deaths - Rate per 1,000' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 'EoL Data'[palliative_care_flag] = "Palliative Care")
+			VAR POP = CALCULATE(SUM('Population'[population]))
+			
+			RETURN (Deaths/POP)*1000
+		lineageTag: 3241d63a-92ae-48e9-8634-96133a9c6379
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative Deaths - Rate per 1,000 - Gloucestershire' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), 'EoL Data'[palliative_care_flag] = "Palliative Care", 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR POP = CALCULATE(SUM('Population'[population]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), 'EoL Data'[palliative_care_flag] = "Palliative Care", 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN (Deaths/POP)*1000
+		lineageTag: e5a80b58-23d0-493b-965b-571e1d6e87fd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Breakdown of Place of Death' = ```
+			
+			
+			VAR OVERALLDEATHS = CALCULATE([Deaths], REMOVEFILTERS('EoL Data'), VALUES('Death Date Reference'[financial_year]), VALUES('Death Date Reference'[ytd_flag]), 
+			    VALUES('GP Reference'), VALUES('Age Band Reference'), VALUES('EoL Data'[palliative_care_flag]), VALUES('Gender Reference'),'EoL Data'[place_of_death] <> BLANK())
+			
+			RETURN ([deaths]/OVERALLDEATHS)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7df67dbd-c385-405e-8a26-a5426ae069aa
+
+	measure '% Breakdown of Death' = ```
+			
+			
+			VAR _OVERALLDEATHS = 
+			
+			CALCULATE(
+			    [Deaths],
+			    ALL('EoL Data'[cause_of_death_primary],'EoL Data'[cause_of_death_primary_chapter])
+			)
+			
+			RETURN ([deaths]/_OVERALLDEATHS)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: aca8423f-1b26-4b83-86d5-3b2616556ffb
+
+	measure 'Deaths - Rate per 1,000 YTD' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead")
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), 'Death Date Reference'[month_name] IN {"Apr"})
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: dcdf4fdd-4e19-41f8-9c9c-588eb4875d79
+
+	measure 'Deaths - Rate per 1,000 - Gloucestershire YTD' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('Deprivation Reference'), ALL('Ethnicity Reference'))
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), ALL('GP Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ONLY LTC'),'Death Date Reference'[month_name] IN {"Apr"}, 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('Deprivation Reference'), ALL('Ethnicity Reference'))
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: 23dba856-51a8-44a6-bb0b-9a406a464d55
+
+	measure 'Palliative Deaths - Rate per 1,000 YTD' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 'EoL Data'[palliative_care_flag] = "Palliative Care")
+			VAR POP = CALCULATE(SUM('Population'[population]), 'Death Date Reference'[month_name] = {"Apr"})
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: c569f075-7518-43c5-95e0-fb222678fb98
+
+	measure 'Palliative Deaths - Rate per 1,000 - Gloucestershire YTD' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), 'EoL Data'[palliative_care_flag] = "Palliative Care", 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR POP = CALCULATE(SUM('Population'[population]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), 'EoL Data'[palliative_care_flag] = "Palliative Care", 'Death Date Reference'[month_name] IN {"Apr"}, 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN (Deaths/POP)*1000
+		lineageTag: a1db86c0-e3ac-4490-a0b1-1d4baee5ddfa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Preferred Place Recorded' =
+			
+			
+			VAR RECORDED = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[preferred_place_of_death] <> BLANK())
+			VAR TOTALDEATHS = CALCULATE(SUM('EoL Data'[counter]))
+			
+			RETURN RECORDED/TOTALDEATHS
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f380d4e3-2dcc-45ca-8b1b-e79ae928e74f
+
+	measure '% Preferred Place Recorded - Gloucestershire' =
+			
+			
+			VAR RECORDED = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[preferred_place_of_death] <> BLANK(), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR TOTALDEATHS = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN RECORDED/TOTALDEATHS
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8f7191e3-54ee-4593-ad40-8e703120747e
+
+	measure '% Died in Place of Preference - Gloucestershire' =
+			
+			
+			VAR DIED = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", NOT(ISBLANK('EoL Data'[preferred_place_of_death_date])), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR PPOD = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[died_in_preferred_place_of_death_flag] = "Died in preferred place", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN (PPOD/DIED)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1b38b685-f636-4959-9c5e-90d89171b6e5
+
+	measure 'ReSPECT Population - Rate per 1,000' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			VAR _POP = SUM('Census Population'[Counter])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			    )
+			
+			    RETURN DIVIDE(RESPECT,_POP)*1000
+			```
+		lineageTag: a51ffb89-8616-48d8-94a5-0a09509726ca
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT Population - Rate per 1,000 (April)' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			    )
+			
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), 'Active Populations - Date Table'[month_name] IN {"Apr"})
+			
+			RETURN 
+			
+			RESPECT/POP*1000
+			```
+		lineageTag: 3b2bb8a9-1a5a-45be-9754-640623a3f070
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT Population - Rate per 1,000 Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'
+			    ), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('eFI Reference Table'))
+			
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('eFI Reference Table'))
+			
+			    RETURN DIVIDE(RESPECT,POP)*1000
+			```
+		lineageTag: dd6961df-0477-4b1c-9628-0997aa7ceec5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT Population - Rate per 1,000 (April) - Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'Active Populations - Date Table'[month_name] IN {"Apr"}, 'GP Reference'[PrimaryCareNetwork] <> BLANK()) 
+			
+			    RETURN DIVIDE(RESPECT,POP)*1000
+			```
+		lineageTag: ff14ea82-9634-4895-8c0d-fb10dd168618
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT Population - Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('eFI Reference Table'))
+			```
+		formatString: 0
+		lineageTag: 93ef2ec4-c172-4d32-9691-7dece0698a66
+
+	measure 'Deaths - Rate per 1,000 YTD 65+' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"})
+			VAR POP = CALCULATE(SUM('Population'[population]), 'Death Date Reference'[month_name] IN {"Apr"}, 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"})
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: a5d2f1ee-64cc-4c23-beec-bcedf4ba4956
+
+	measure 'Deaths - Rate per 1,000 - Gloucestershire YTD 65+' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), ALL('Gender Reference'), 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"}, 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR POP = CALCULATE(SUM('Population'[population]), ALL('GP Reference'), 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"}, ALL('Gender Reference'), 'Death Date Reference'[month_name] IN {"Apr"}, 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN (Deaths/POP)*1000
+		lineageTag: 2ce646c4-673d-4d89-a8e8-968861da5252
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths - Rate per 1,000 - Gloucestershire 65+' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"}, ALL('Gender Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR POP = CALCULATE(SUM('Population'[population]), ALL('GP Reference'), 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"}, ALL('Gender Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN (Deaths/POP)*1000
+		lineageTag: 3ea4ff37-86a0-4a0d-9e32-01b96f18c584
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths - Rate per 1,000 65+' =
+			
+			
+			VAR Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"})
+			VAR POP = CALCULATE(SUM('Population'[population]), 'Age Band Reference'[Adult_Age_Band] IN {"65+ - Older Adults"})
+			
+			RETURN (Deaths/POP)*1000
+		formatString: 0.0
+		lineageTag: 71f0aadb-e09f-4e87-b862-8e1d25343c45
+
+	measure 'Average Age' =
+			
+			
+			AVERAGE('EoL Data'[age])
+		formatString: 0.0
+		lineageTag: 8569b350-d52f-415d-ac88-b9b1a5cb2f04
+
+	measure 'Palliative Care Register - Rate per 1,000' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR PCR = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care")
+			        
+			    RETURN DIVIDE(PCR, [Total Moving Population])*1000
+			```
+		lineageTag: 7a6825a0-a27a-499a-8ebc-77d13cf5b029
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative Care Register - Rate per 1,000 (April)' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care"
+			    )
+			
+			    RETURN DIVIDE(RESPECT, [Total Moving Population - Apr])*1000
+			```
+		lineageTag: ec3c1a8d-b1b3-4a7f-948a-1111428effde
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative Care Register - Rate per 1,000 (April) - Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			    RETURN DIVIDE(RESPECT,CALCULATE('EoL Data'[Total Moving Population - ICB], 'Active Populations - Date Table'[month_name] = "Apr"))*1000
+			```
+		lineageTag: 430d3e6c-c917-4475-bd6a-325aaf5a503e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative Care Register - Rate per 1,000 Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR PCR = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care", ALL('Gender Reference'), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), ALL('Age Band Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'))
+			        
+			    RETURN DIVIDE(PCR, [Total Moving Population - ICB])*1000
+			```
+		lineageTag: 5cf48b5e-2fb3-41d7-9fd9-64c6653d79bd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PCSP Population' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[pcsp_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[pcsp_flag] = "PCSP Completed"
+			    )
+			```
+		formatString: #,0
+		lineageTag: be25d409-7928-4948-81e2-c7821c23da4f
+
+	measure 'PCSP Population - Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[pcsp_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[pcsp_flag] = "PCSP Completed", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			```
+		formatString: 0
+		lineageTag: eb990657-4adc-416e-bd8a-3ba4fa61ee4d
+
+	measure 'PCSP Population - Rate per 1,000' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			VAR _POP = SUM('Census Population'[Counter])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[pcsp_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[pcsp_flag] = "PCSP Completed"
+			    )
+			
+			    RETURN DIVIDE(RESPECT,_POP)*1000
+			```
+		lineageTag: b096e328-47ed-416a-834f-1dad5937cbab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PCSP Population - Rate per 1,000 Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[pcsp_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[pcsp_flag] = "PCSP Completed", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'
+			    ), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			VAR POP = CALCULATE(SUM('Census Population'[Counter]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			    RETURN DIVIDE(RESPECT,POP)*1000
+			```
+		lineageTag: 68adb97a-a270-4b8d-8556-219de90305d6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PCSP Population - Rate per 1,000 (April)' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[pcsp_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[pcsp_flag] = "PCSP Completed"
+			    )
+			
+			    RETURN DIVIDE(RESPECT,Population[Total Population - April (For Active Populations)])*1000
+			```
+		formatString: 0.0
+		lineageTag: 267a3059-89b2-4abf-8bc0-614129325915
+
+	measure 'PCSP Population - Rate per 1,000 (April) - Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[pcsp_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[pcsp_flag] = "PCSP Completed", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			VAR POP = CALCULATE(SUM('Population'[population]), ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'Active Populations - Date Table'[month_name] IN {"Apr"}, 'GP Reference'[PrimaryCareNetwork] <> BLANK()) 
+			
+			    RETURN DIVIDE(RESPECT,POP)*1000
+			```
+		formatString: 0.0
+		lineageTag: 26a3c4d0-d260-435e-96ff-f616a87de5ed
+
+	measure 'Average Age - Gloucestershire' = ```
+			
+			
+			VAR POPULATION_TABLE = CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    ALL('GP Reference'), 
+			    ALL('Gender Reference'), 
+			    ALL('Age Band Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('eFI Reference Table'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			
+			VAR AGE_TABLE = CALCULATE(
+			    SUM('EoL Data'[age]), 
+			    ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('Gender Reference'), 
+			    ALL('Age Band Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('eFI Reference Table'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			
+			RETURN AGE_TABLE / POPULATION_TABLE
+			```
+		lineageTag: c1d7ef58-e1e5-46fe-bb9a-56ddd1eea129
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% >3 Emergency Admissions' =
+			
+			
+			VAR OVER_3 = CALCULATE( SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 'EoL Data'[>3_emergency_admissions_flag] = ">3 Admissions")
+			
+			VAR OVERALLDEATHS = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead")
+			
+			RETURN OVER_3 / OVERALLDEATHS
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 793fd34f-d42b-4f5d-9e8c-48b7de5617d9
+
+	measure '% >3 Emergency Admissions - ICB' = ```
+			
+			
+			VAR OVER_3 = CALCULATE(
+			    SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 
+			    'EoL Data'[>3_emergency_admissions_flag] = ">3 Admissions", 
+			    ALL('Gender Reference'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('GP Reference'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('Age Band Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('eFI Reference Table'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			
+			VAR OVERALLDEATHS = CALCULATE(
+			    SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", 
+			    ALL('Gender Reference'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(),
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('Age Band Reference'), 
+			    ALL('eFI Reference Table'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			
+			RETURN OVER_3 / OVERALLDEATHS
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c4b3a45a-e383-4ef9-9e59-c60a2940129c
+
+	measure 'Latest Month' =
+			
+			
+			CALCULATE(SELECTEDVALUE('Death Date Reference'[month_year]), 'Death Date Reference'[date] = MAX('Death Date Reference'[date]))
+		lineageTag: f4ab29c9-3af7-4ffe-b919-5f618b31f068
+
+	measure 'Current ReSPECT Population' = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[respect_form_flag] = "Respect Form Completed")
+		lineageTag: 1e9b659e-5f7a-436f-a3fe-30d06b903c00
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% with ReSPECT' =
+			
+			
+			[Current ReSPECT Population]/[Total Population]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7466a2a8-fb87-4d66-8980-44cb31ef5764
+
+	measure 'CKD Deaths' =
+			
+			
+			CALCULATE(SUM('EoL Data'[counter]), 'LTC Reference Table - ONLY LTC'[Attribute] = "Chronic Kidney Disease")
+		formatString: 0
+		lineageTag: 73631755-dbc1-4175-910b-b4fed546992b
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '% CKD' =
+			
+			
+			[CKD Deaths] / [Deaths]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6bad4b98-bb5d-4a6e-bb85-8e618eaf13a1
+
+	measure 'CKD Deaths - >3' =
+			
+			
+			VAR _3 = CALCULATE(SUM('EoL Data'[counter]), 'LTC Reference Table - ONLY LTC'[Attribute] = "Chronic Kidney Disease", 'EoL Data'[>3_emergency_admissions_flag] = ">3 Admissions")
+			
+			RETURN
+			
+			(_3/[CKD Deaths]) * 1000
+		formatString: 0.0
+		lineageTag: 6a5c08a7-2ba4-4aef-aa15-bc3a12a17a2c
+
+	measure 'Deaths - >3' =
+			
+			
+			VAR _3 = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[>3_emergency_admissions_flag] = ">3 Admissions")
+			
+			RETURN
+			
+			(_3/[Deaths]) * 1000
+		formatString: 0.0
+		lineageTag: fdd8330a-346f-4c73-acc0-8124a0966db2
+
+	measure 'Palliative Care Register - Gloucestershire' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			RETURN 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care", ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('Gender Reference'), ALL('Age Band Reference'), ALL('Deprivation Reference'), ALL('Ethnicity Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC')
+			    )
+			```
+		formatString: #,0
+		lineageTag: cc8bb5de-37c4-4610-a906-5791e4e54f8f
+
+	measure 'Palliative Care - Static Figure' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[palliative_care_register_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[palliative_care_flag] = "Palliative Care", ALL('GP Reference'), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('Deprivation Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			        
+			    RETURN RESPECT
+			```
+		formatString: 0
+		lineageTag: 79ff1f40-37f0-4d78-a554-0ad58f447035
+
+	measure '% of Palliative Care Register' =
+			
+			
+			DIVIDE([Palliative Care Register],[Palliative Care - Static Figure])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 7772fd03-fb26-4429-8f5e-1df963eb900a
+
+	measure '% Preferred Place Recorded - ICB' =
+			
+			
+			VAR RECORDED = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[preferred_place_of_death] <> BLANK(), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR TOTALDEATHS = CALCULATE(SUM('EoL Data'[counter]), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN RECORDED/TOTALDEATHS
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cd2190be-3116-402f-8d14-e4781285c0ea
+
+	measure '% Preferred Place Recorded Colours' =
+			
+			
+			IF([% Preferred Place Recorded] >= [% Preferred Place Recorded - ICB], "#749a54", "#ef5b5b")
+		lineageTag: e72f92cd-8077-4e40-bc0a-667f14088c62
+
+	measure '% Died in Place of Preference - ICB' =
+			
+			
+			VAR DIED = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", NOT(ISBLANK('EoL Data'[preferred_place_of_death_date])), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			VAR PPOD = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[died_in_preferred_place_of_death_flag] = "Died in preferred place", ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+			
+			RETURN (PPOD/DIED)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 3ce38d82-e1f9-4f07-850e-3a574960f845
+
+	measure '% Died in Preferred Place Recorded Colours' =
+			
+			
+			IF([% Died in Place of Preference] >= [% Died in Place of Preference - ICB], "#749a54", "#ef5b5b")
+		lineageTag: 601a613a-c4df-4fbd-bced-f4cbee115eaa
+
+	measure 'ReSPECT Population - Rate per 1,000 - ICB' = ```
+			
+			
+			VAR CurrentDate = MAX('Active Populations - Date Table'[date])
+			
+			VAR RESPECT = 
+			    CALCULATE(
+			        DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]),
+			        'EoL Data'[respect_form_date] <= CurrentDate,
+			        OR (ISBLANK('EoL Data'[removal_date]), 'EoL Data'[removal_date] >= CurrentDate),
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			    )
+			
+			    RETURN DIVIDE(RESPECT,Population[Total Population])*1000
+			```
+		lineageTag: 87d0da94-4918-41ae-92f2-29789269179d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT Plan Colours' =
+			
+			
+			IF([ReSPECT Population - Rate per 1,000 (April)] >= [ReSPECT Population - Rate per 1,000 (April) Average], "#749a54", "#ef5b5b")
+		lineageTag: 51a28e6e-80d6-42e6-bb0c-af57601e336b
+
+	measure 'PC&SP Plan Colours' =
+			
+			
+			IF([PCSP Population - Rate per 1,000 (April)] >= [PCSP Population - Rate per 1,000 (April) Average], "#749a54", "#ef5b5b")
+		lineageTag: c7bb0233-1ff0-4115-a71e-244605c2f962
+
+	measure 'Excess Deaths' =
+			
+			
+			VAR NumOfMonths = 60
+			VAR LastCurrentDate =
+			    MAX ( 'Death Date Reference'[Date] )
+			VAR Period =
+			    DATESINPERIOD ( 'Death Date Reference'[Date], LastCurrentDate, - NumOfMonths, MONTH )
+			
+			VAR Result =
+			     CALCULATE (
+			        AVERAGEX (
+			            VALUES ( 'Death Date Reference'[year_month] ),
+			            [Deaths]
+			        ),
+			        Period, NOT 'Death Date Reference'[year_month] IN {202004, 202012, 202101}
+			    )
+			VAR FirstDateInPeriod = MINX ( Period, 'Death Date Reference'[Date] )
+			VAR LastDateWithSales = MAX ( 'Death Date Reference'[Date] )
+			
+			RETURN
+			    IF ( FirstDateInPeriod <= LastDateWithSales, [Deaths] - Result )
+		lineageTag: 6aad3cbb-ade9-4d64-9be6-6bcb16406d76
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YLL Male' = ```
+			
+			 
+			VAR _MALE = (CALCULATE(DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]), 'EoL Data'[death_flag] = "Dead", 'Gender Reference'[sex] = "Male")*79.6)
+			
+			RETURN
+			
+			_MALE - CALCULATE(SUM('EoL Data'[age]), 'EoL Data'[death_flag] = "Dead", 'Gender Reference'[sex] = "Male")
+			```
+		formatString: #,0
+		lineageTag: d22683d3-7326-4cf0-a6a3-695dc2fceade
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'YLL Female' = ```
+			
+			 
+			VAR _MALE = (CALCULATE(DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]), 'EoL Data'[death_flag] = "Dead", 'Gender Reference'[sex] = "Female")*83.3)
+			
+			RETURN
+			
+			_MALE - CALCULATE(SUM('EoL Data'[age]), 'EoL Data'[death_flag] = "Dead", 'Gender Reference'[sex] = "Female")
+			```
+		lineageTag: 83065760-d7e4-4e55-a309-37cb9345fbae
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Ribbon Rank' = ```
+			
+			
+			VAR _DEATH = [Deaths]
+			
+			VAR _RANK = 
+			RANKX(ALL('EoL Data'[cause_of_death_primary_chapter]), [Deaths],,ASC, Skip)
+			
+			VAR _RESULT = 
+			
+			IF(_DEATH, 1 + DIVIDE(_RANK, 1000))
+			
+			RETURN
+			
+			_RESULT
+			```
+		lineageTag: 426979cb-175b-4362-a1e9-b55ea6d6fa1a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Selected Cohort on PCR' =
+			
+			
+			IFERROR('EoL Data'[Palliative Care Register] / 'EoL Data'[Total Moving Population], BLANK())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fe6bfce1-bfca-43a3-9963-2072738f5b83
+
+	measure 'Total Moving Population' =
+			
+			
+			SUM('Census Population'[Counter])
+		formatString: 0
+		lineageTag: b03a8a43-01f1-45f2-85d9-5ac11a86b1c1
+
+	measure '% Selected Cohort on PCR - ICB' =
+			
+			
+			'EoL Data'[Palliative Care Register - Gloucestershire] / 'EoL Data'[Total Moving Population - ICB]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d4a30453-760d-4362-922f-ecebabab8ca0
+
+	measure 'Total Moving Population - ICB' = ```
+			
+			
+			    CALCULATE(
+			        SUM('Census Population'[Counter]), ALL('Age Band Reference'), ALL('Gender Reference'), ALL('Deprivation Reference'), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('LTC Reference Table - ALL'), ALL('LTC Reference Table - ONLY LTC'), ALL('Ethnicity Reference'), ALL('eFI Reference Table'))
+			
+			```
+		formatString: 0
+		lineageTag: 5ba893e9-f71e-4aad-b87b-3792a2e2ade3
+
+	measure '% Selected Cohort with ReSPECT' =
+			
+			
+			IFERROR('EoL Data'[ReSPECT Population] / 'EoL Data'[Total Moving Population], BLANK())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7845c5b3-18f9-4ff9-9da7-8ad1c7332b9f
+
+	measure '% Selected Cohort with ReSPECT - ICB' =
+			
+			
+			'EoL Data'[ReSPECT Population - Gloucestershire] / 'EoL Data'[Total Moving Population - ICB]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 0e4d8bce-55d5-40d4-84df-5458d08e43b3
+
+	measure '% Selected Cohort with PC&SP' =
+			
+			
+			IFERROR('EoL Data'[PCSP Population] / 'EoL Data'[Total Moving Population], BLANK())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 9d432261-a264-4196-9516-221e40063e27
+
+	measure '% Selected Cohort on PCR - Apr' =
+			
+			
+			'EoL Data'[Palliative Care Register] / CALCULATE('EoL Data'[Total Moving Population], 'Active Populations - Date Table'[month_name] = "Apr")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f8c9be2e-b6ca-400f-a3c9-8917edfa61ad
+
+	measure '% Selected Cohort on PCR - ICB - Apr' =
+			
+			
+			'EoL Data'[Palliative Care Register - Gloucestershire] / CALCULATE('EoL Data'[Total Moving Population - ICB], 'Active Populations - Date Table'[month_name] = "Apr")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5bfd7ab7-db53-43d3-a3e1-ca2e680e1794
+
+	measure 'Total Moving Population - Apr' =
+			
+			
+			CALCULATE('EoL Data'[Total Moving Population], 'Active Populations - Date Table'[month_name] = "Apr")
+		formatString: 0
+		lineageTag: 025f1de0-9a8c-491e-8874-b4f78e79b663
+
+	measure 'ReSPECT Population - Rate per 1,000 (April) Average' =
+			
+			
+			CALCULATE(
+			    [ReSPECT Population - Rate per 1,000 (April)]
+			    ,ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK()
+			    ,ALL('Age Band Reference')
+			    ,ALL('Gender Reference')
+			    ,ALL('Deprivation Reference')
+			    ,ALL('Ethnicity Reference')
+			    ,ALL('LTC Reference Table - ONLY LTC'[Attribute])
+			    )
+		lineageTag: 1ae8645e-7a8a-4f8a-9123-072172e4c6ab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PCSP Population - Rate per 1,000 (April) Average' =
+			
+			
+			CALCULATE([PCSP Population - Rate per 1,000 (April)], ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+		lineageTag: edb7bb8e-64f0-481d-aac9-2ce865efed9f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Census Population - April' =
+			
+			
+			CALCULATE(SUM('Census Population'[Counter]), 'Death Date Reference'[month_name] IN {"Apr"})
+		formatString: 0
+		lineageTag: d89a58dc-82fb-48f3-9ebd-63fadfc0ad74
+
+	measure '% ReSPECT Plan Deaths' = ```
+			
+			
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			    ) 
+			/ 
+			    SUM('EoL Data'[counter])
+			```
+		lineageTag: 7300b21a-c99a-48f7-9fe1-6d6e8d49454f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% ReSPECT Plan & PCR Deaths' =
+			
+			
+			CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[respect_form_flag] = "ReSPECT Form Completed", 'EoL Data'[palliative_care_flag] = "Palliative Care")
+			
+			/
+			
+			CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[palliative_care_flag] = "Palliative Care")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b63b3e24-ec54-4eb6-bb68-71668a2287e6
+
+	measure 'Total LTC' =
+			
+			
+			COUNT('LTC Reference Table - ALL'[NumberOfLTC])
+		formatString: 0
+		lineageTag: 23143cae-3412-47d8-bcbf-78d24f3c8246
+
+	measure '% ReSPECT Population Breakdown' =
+			
+			
+			[ReSPECT Population] / [ReSPECT Population - Gloucestershire]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 586ba6d5-3d05-42f3-acba-42a2244daf98
+
+	measure 'Total ReSPECT Plans Recorded' = ```
+			
+			
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			    )
+			```
+		formatString: 0
+		lineageTag: d39e08b6-64c4-4d49-b963-66da3eb4bd3a
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '% ReSPECT Plan Deaths - No Plan Recorded' =
+			
+			
+			1 - [% ReSPECT Plan Deaths]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 90ee01c8-deed-43d2-acc4-88b9fb10dcc5
+
+	measure '% ReSPECT Plan Deaths - Within 2 Years' = ```
+			
+			
+			CALCULATE(
+			    SUM( 'EoL Data'[counter] ),
+			    FILTER(
+			        'EoL Data',
+			        'EoL Data'[respect_form_flag] = "ReSPECT Form Completed"
+			            && 'EoL Data'[respect_form_date] >= EDATE('EoL Data'[death_date], -24)
+			            && 'EoL Data'[respect_form_date] <= 'EoL Data'[death_date]
+			    )
+			)
+			/ 
+			    SUM('EoL Data'[counter])
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 87e2a503-5c33-4e0c-af68-73ffa1f0bae6
+
+	measure '% ReSPECT Plan Deaths - No Plan Recorded - Within 2 Years' =
+			
+			
+			1 - [% ReSPECT Plan Deaths - Within 2 Years]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7efe6546-4e46-4f9a-81e1-d014b7c9fec9
+
+	measure 'Total PC&SPs Recorded' = ```
+			
+			
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    'EoL Data'[pcsp_flag] = "PCSP Completed"
+			    )
+			```
+		lineageTag: eaf58cf3-8da8-4873-98c0-07a279b9754a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column pseudo_nhs_number
+		dataType: string
+		lineageTag: 0a9fb94f-96e1-428e-acd4-16137b1a5bcf
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: double
+		formatString: #,0
+		lineageTag: a457d88d-2521-49ce-8188-0adb72d44f07
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column age
+		dataType: int64
+		formatString: 0
+		lineageTag: e358ae50-54b7-46e7-bcdd-2f5d5140ce01
+		summarizeBy: none
+		sourceColumn: age
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_banding_5_year
+		dataType: string
+		lineageTag: 47811a94-a7b6-4371-ad01-a50a3f2edf37
+		summarizeBy: none
+		sourceColumn: age_banding_5_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_banding_10_year
+		dataType: string
+		lineageTag: dcd98dab-db52-414c-92a8-6c52bb223e82
+		summarizeBy: none
+		sourceColumn: age_banding_10_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_banding_cyp
+		dataType: string
+		lineageTag: 18d892f6-9357-41f0-8ad5-2613e3510e8c
+		summarizeBy: none
+		sourceColumn: age_banding_cyp
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 2583d00d-ffd6-4db5-b12b-128b419dae62
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: 457c51dc-eae1-465a-8554-350ceabc0cd6
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprivation
+		dataType: string
+		lineageTag: 3413a4ae-782c-42a0-bd3a-950c98f3c715
+		summarizeBy: none
+		sourceColumn: deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcn
+		dataType: string
+		lineageTag: 5d22af6f-3e1d-4f36-b15e-d0dd1189e468
+		summarizeBy: none
+		sourceColumn: pcn
+
+		annotation SummarizationSetBy = Automatic
+
+	column district
+		dataType: string
+		lineageTag: d998337f-dd8f-4912-be21-38b0c803c71a
+		summarizeBy: none
+		sourceColumn: district
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: cbf5fc98-21bd-41be-9448-998bc74eae07
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: d7e4ee39-67e8-4c9d-ad30-54a273f4c22d
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider
+		dataType: string
+		lineageTag: d5b9c7e3-2db3-4f57-84d0-5546d87ceb5c
+		summarizeBy: none
+		sourceColumn: provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column removal_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fcc7b1ad-94bc-4ad2-9a04-eee0a59763c0
+		summarizeBy: none
+		sourceColumn: removal_date
+
+		variation Variation
+			isDefault
+			relationship: e4b7178e-bacc-4328-b76e-86882464beda
+			defaultHierarchy: LocalDateTable_622e2e82-89ca-4093-8742-19252b1b499c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column death_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e04179da-2e77-424a-93f5-5e5c4a8896c4
+		summarizeBy: none
+		sourceColumn: death_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column death_flag
+		dataType: string
+		lineageTag: be275fba-412f-4bfc-85b8-e568c06c3ad1
+		summarizeBy: none
+		sourceColumn: death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column cause_of_death_primary
+		dataType: string
+		lineageTag: 09a6913a-98d8-4c4e-b637-a363e0b7a8a1
+		summarizeBy: none
+		sourceColumn: cause_of_death_primary
+
+		annotation SummarizationSetBy = Automatic
+
+	column cause_of_death_secondary
+		dataType: string
+		lineageTag: 8bb05181-9374-4152-82bd-f88e83016ad5
+		summarizeBy: none
+		sourceColumn: cause_of_death_secondary
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_care_register_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 598f1440-b383-4163-9678-1a0032615aec
+		summarizeBy: none
+		sourceColumn: palliative_care_register_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_care_flag
+		dataType: string
+		lineageTag: 72365b83-9a0c-4fa4-9dfe-5d3d0f08ee3d
+		summarizeBy: none
+		sourceColumn: palliative_care_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column expected_death_flag
+		dataType: string
+		lineageTag: 934362a2-6ef9-4932-a5a8-ed18712fa108
+		summarizeBy: none
+		sourceColumn: expected_death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column place_of_death
+		dataType: string
+		lineageTag: 687f0c20-fd71-46b8-9081-a1ffc88a9a16
+		summarizeBy: none
+		sourceColumn: place_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column preferred_place_of_death
+		dataType: string
+		lineageTag: 4200bb36-6314-4829-af0e-50a0c57b8e42
+		summarizeBy: none
+		sourceColumn: preferred_place_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column preferred_place_of_death_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1396562f-7625-4ef0-9469-3b1c984e6a41
+		summarizeBy: none
+		sourceColumn: preferred_place_of_death_date
+
+		variation Variation
+			isDefault
+			relationship: 9ac07833-73c2-4d71-b4d1-f94c8283fd04
+			defaultHierarchy: LocalDateTable_ba544a54-aa95-4ed7-8c79-c2f1f83ebb2a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column died_in_preferred_place_of_death_flag
+		dataType: string
+		lineageTag: 0721c07e-0e96-437e-97e4-f7bb6e0438ee
+		summarizeBy: none
+		sourceColumn: died_in_preferred_place_of_death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column >3_emergency_admissions_flag
+		dataType: string
+		lineageTag: 926b34d5-1c78-4ce6-9375-46a062df8d91
+		summarizeBy: none
+		sourceColumn: >3_emergency_admissions_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column respect_form_flag
+		dataType: string
+		lineageTag: 14c472b2-b861-49ab-b166-840c6bbf695d
+		summarizeBy: none
+		sourceColumn: respect_form_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column respect_form_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3b0ffede-0dd9-4530-a8a9-45f98d8b2db2
+		summarizeBy: none
+		sourceColumn: respect_form_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcsp_flag
+		dataType: string
+		lineageTag: 5c248670-a578-4192-aacd-8c1d64f51f11
+		summarizeBy: none
+		sourceColumn: pcsp_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcsp_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2e2fe2c5-cdf0-407f-ac41-90110635079d
+		summarizeBy: none
+		sourceColumn: pcsp_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: f27f467a-f047-4f36-aad0-fe611d1d652c
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column icd10_primary_cause_of_death
+		dataType: string
+		lineageTag: 4e55a978-dcf6-4b64-bea4-b6bca5fbc8b8
+		summarizeBy: none
+		sourceColumn: icd10_primary_cause_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column cause_of_death_primary_chapter
+		dataType: string
+		lineageTag: 5ea02713-adb8-4b57-94a8-140e49b1c86a
+		summarizeBy: none
+		sourceColumn: cause_of_death_primary_chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column nctr_death
+		dataType: string
+		lineageTag: 4ceb8fe2-e22a-4e80-93aa-2a5f1556bdc2
+		summarizeBy: none
+		sourceColumn: nctr_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column nctr_days_before_death
+		dataType: string
+		lineageTag: f70322b9-79e5-403e-b804-f447e0dc5e99
+		summarizeBy: none
+		sourceColumn: nctr_days_before_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column number_of_emergency_spells
+		dataType: string
+		lineageTag: e1e24539-ab40-4732-bf73-29e57b0af907
+		summarizeBy: none
+		sourceColumn: number_of_emergency_spells
+
+		annotation SummarizationSetBy = Automatic
+
+	column average_hospital_los
+		dataType: string
+		lineageTag: ce5ab3bd-ba9d-4fa9-b0a1-79e4c5e3c38c
+		summarizeBy: none
+		sourceColumn: average_hospital_los
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_hospital_days
+		dataType: string
+		lineageTag: 87da3024-3eed-49db-ab5d-04811b5da86e
+		summarizeBy: none
+		sourceColumn: total_hospital_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_hospital_days_%
+		dataType: string
+		lineageTag: 2e811a45-061b-47da-a809-7378545f7d62
+		summarizeBy: none
+		sourceColumn: total_hospital_days_%
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_updated_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1f817bf9-22fa-416a-97d7-b506f60237e6
+		summarizeBy: none
+		sourceColumn: last_updated_date
+
+		variation Variation
+			isDefault
+			relationship: 73403f16-39ca-4002-a460-0ea3d6bd5a65
+			defaultHierarchy: LocalDateTable_916b8977-d32d-4986-94b8-d82d56635a11.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa_code
+		dataType: string
+		lineageTag: 54cbe0d9-baa7-428e-abbe-721b0665980c
+		summarizeBy: none
+		sourceColumn: lsoa_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprivation_national
+		dataType: string
+		lineageTag: 70f755e7-2f58-4b07-9444-56b9c4544e7a
+		summarizeBy: none
+		sourceColumn: deprivation_national
+
+		annotation SummarizationSetBy = Automatic
+
+	column start_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a95989a9-3ec5-44fe-aff4-529d6fc8d4b3
+		summarizeBy: none
+		sourceColumn: start_date
+
+		variation Variation
+			isDefault
+			relationship: 9de4f5e3-f0ff-4501-b505-fa9cf188d6c0
+			defaultHierarchy: LocalDateTable_fb367c63-97e5-4461-9450-b98b447bc8b5.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PALLIATIVE 6 BACK' =
+			
+			
+			DATEADD('EoL Data'[palliative_care_register_date], -6, MONTH)
+		formatString: General Date
+		lineageTag: d3a1787f-ab74-437d-a467-69cce7524113
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: a4c0a406-785f-4466-a277-ad417e99407e
+			defaultHierarchy: LocalDateTable_d48812e0-e735-4a05-89bc-c9bf4a99fd15.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ONS_category_cause_of_death
+		dataType: string
+		lineageTag: 232da8be-e2da-439c-bbd2-dd39b99e11f2
+		summarizeBy: none
+		sourceColumn: ONS_category_cause_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_frailty_score
+		dataType: string
+		lineageTag: 60b8f8d7-5aca-4cd5-a18e-e924c603a9c4
+		summarizeBy: none
+		sourceColumn: eFI_frailty_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column learning_disability_flag
+		dataType: string
+		lineageTag: 32431b7e-2de6-48bc-8935-8ea7db3ed1ac
+		summarizeBy: none
+		sourceColumn: learning_disability_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'EoL Data' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT DISTINCT *#(lf)FROM [PowerBI_Reporting].[EndofLife].[tbl01_EOL_Report_Table]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

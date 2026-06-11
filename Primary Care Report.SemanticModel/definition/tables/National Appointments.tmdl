@@ -1,0 +1,407 @@
+table 'National Appointments'
+	lineageTag: 71c12808-04dc-4f6a-9ed1-6d340d789f1c
+
+	measure 'National Trendline - All Appointments' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'National Appointments'[Total National Appointments - Gloucestershire]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: dc934802-dbcc-4731-8567-c2711b4fa34a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total National Appointments - Gloucestershire' =
+			
+			
+			CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+		formatString: #,0
+		lineageTag: 158e022f-e913-4083-829d-7c586f79f4e8
+
+	measure 'National GP 19/20 Baseline' =
+			
+			
+			VAR _1920B = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[financial_year] = "2019/20")
+			
+			RETURN _1920B/12
+		formatString: #,0
+		lineageTag: d54a7487-ef6c-455e-af10-f0fa9f82b5f2
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'National Latest Year Baseline' =
+			
+			
+			VAR _YTDMONTHS = CALCULATE(DISTINCTCOUNT('Date Reference Script'[month]), 'Date Reference Script'[ytd_flag] = 1)
+			VAR _LATESTYEARPOP = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))
+			
+			RETURN _LATESTYEARPOP/_YTDMONTHS
+		formatString: #,0
+		lineageTag: d93f227d-322c-46bd-8670-c9e4e6dfe884
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'National Appointments - Latest Year Growth %' = ```
+			
+			
+			VAR _YTDMONTHS = CALCULATE(DISTINCTCOUNT('Date Reference Script'[month]), 'Date Reference Script'[ytd_flag] = 1)
+			VAR _LATESTYEARPOP = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))
+			
+			RETURN 
+			
+			((_LATESTYEARPOP/_YTDMONTHS)-[National GP 19/20 Baseline])/[National GP 19/20 Baseline]
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e76f0f9c-ec60-4b27-aa47-8ddb34c4792b
+
+	measure 'Total National Appointments - South West' =
+			
+			
+			CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[REGION_ONS_NAME] = "South West")
+		formatString: 0
+		lineageTag: e9c95010-e2b6-49a0-90e3-85f9ac6c9105
+
+	measure 'Total National Appointments - England' =
+			
+			
+			SUM('National Appointments'[COUNT_OF_APPOINTMENTS])
+		formatString: 0
+		lineageTag: aecdb077-1233-44d3-8c82-9c336ac9c010
+
+	measure 'National Appointments - % Same Day Glos' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day", 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - Gloucestershire])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 10779887-de98-449d-bd30-48162a5f2ea3
+
+	measure 'National Appointments - % Same Day England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bf97c2e6-8b8f-40af-82ac-413e1dbdf55c
+
+	measure 'National Appointments - % Same Day SW' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day", 'National Appointments'[REGION_ONS_NAME] = "South West")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - South West])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 26afaecd-4c5f-4f46-a955-bd81bb9da1a5
+
+	measure 'National Appointments - % within 21 Days England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days", "15 to 21 Days"})
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 06c20d7f-0bfb-42d0-8432-7bd064f59c14
+
+	measure 'National Appointments - % within 21 Days Glos' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days", "15 to 21 Days"}, 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - Gloucestershire])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f5f4f5d5-efa2-409e-8413-a7ba410b1600
+
+	measure 'National Appointments - % within 21 Days SW' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days", "15 to 21 Days"}, 'National Appointments'[REGION_ONS_NAME] = "South West")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - South West])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 713839d6-021a-474a-b797-67e57ee7f24e
+
+	measure 'National Appointments - % GP England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[HCP_TYPE] = "GP")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6c3182c7-0993-4e62-aa79-04c0b7ca698d
+
+	measure 'National Appointments - % GP Glos' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[HCP_TYPE] = "GP", 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - Gloucestershire])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 60bf62ac-e01f-4dda-8470-cfab29cdb710
+
+	measure 'National Appointments - % GP SW' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[HCP_TYPE] = "GP", 'National Appointments'[REGION_ONS_NAME] = "South West")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - South West])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 71deec00-c728-4848-b6e0-43395dc3d778
+
+	measure 'National Appointments - % F2F England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[APPT_MODE] = "Face-to-Face")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1a457f74-dd1d-415b-99ac-ce3210b87bfa
+
+	measure 'National Appointments - % F2F Glos' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[APPT_MODE] = "Face-to-Face", 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - Gloucestershire])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 894a6c2d-9639-4ff5-a38c-e4d4af2adfdf
+
+	measure 'National Appointments - % F2F SW' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[APPT_MODE] = "Face-to-Face", 'National Appointments'[REGION_ONS_NAME] = "South West")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - South West])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8f07dff0-70e9-4f9c-bc07-ab03a5ddad28
+
+	measure 'National Appointments - % Telephone England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[APPT_MODE] = "Telephone")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bdfc2170-25cf-4778-bc32-3a038086c240
+
+	measure 'National Appointments - % Telephone Glos' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[APPT_MODE] = "Telephone", 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - Gloucestershire])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7603c50a-80c2-48e3-bf9c-cf3da7b5aca8
+
+	measure 'National Appointments - % Telephone SW' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[APPT_MODE] = "Telephone", 'National Appointments'[REGION_ONS_NAME] = "South West")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - South West])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d90ff39c-dda1-4980-b8ce-bb5885c829c2
+
+	measure 'National Appointments - England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]))
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		lineageTag: 0297ca39-cfac-4d47-af4d-10d06474b9a7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'England Appointments' =
+			
+			
+			CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), REMOVEFILTERS('National Appointments'[APPT_MODE], 'National Appointments'[APPT_STATUS], 'National Appointments'[HCP_TYPE], 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT]))
+		formatString: 0
+		lineageTag: ff5cd3f9-1a72-400c-90fe-88834dd08f56
+
+	measure 'Average Daily Appointments - Gloucestershire' =
+			
+			
+			[Total National Appointments - Gloucestershire] / SUM('Date Reference Script'[is_working_day])
+		lineageTag: 264cecf8-0716-4017-a318-fc51bc4f2e7d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Daily Appointments - England' =
+			
+			
+			[Total National Appointments - England] / SUM('Date Reference Script'[is_working_day])
+		lineageTag: 01f71172-2473-462a-a27e-549ac8402d30
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Daily Appointments - South West' =
+			
+			
+			[Total National Appointments - South West] / SUM('Date Reference Script'[is_working_day])
+		lineageTag: eb9d972b-8980-4c2a-879d-7cbfdcb8ad25
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Appointments - % within 14 Days England' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days"})
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - England])
+		lineageTag: 98a82c61-5c9b-486c-8598-78f31872a0a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Appointments - % within 14 Days Glos' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days"}, 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - Gloucestershire])
+		lineageTag: b0496a4f-6352-4e15-8af4-df1a9028e581
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Appointments - % within 14 Days SW' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days"}, 'National Appointments'[REGION_ONS_NAME] = "South West")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total National Appointments - South West])
+		lineageTag: 744aeeb1-8a84-4c81-956f-1c67e9047fac
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Appointments - GP - England' =
+			
+			
+			CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[HCP_TYPE] = "GP")
+		formatString: 0
+		lineageTag: 429f85fe-7d4c-4daa-b9db-685ae4f77d95
+
+	measure 'National Appointments - GP - SW' =
+			
+			
+			CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[HCP_TYPE] = "GP", 'National Appointments'[REGION_ONS_NAME] = "South West")
+		formatString: 0
+		lineageTag: cf65707e-2a85-4692-952b-3739476ab688
+
+	measure 'National Appointments - GP - Gloucestershire' =
+			
+			
+			CALCULATE(SUM('National Appointments'[COUNT_OF_APPOINTMENTS]), 'National Appointments'[HCP_TYPE] = "GP", 'National Appointments'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+		formatString: 0
+		lineageTag: b88c12d7-1b42-4305-9611-15db0705b36b
+
+	column REGION_ONS_NAME
+		dataType: string
+		lineageTag: 9a3624a1-d067-4f71-85a7-978ef64c5ac8
+		summarizeBy: none
+		sourceColumn: REGION_ONS_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column MONTH_YEAR
+		dataType: string
+		lineageTag: dfd48973-53a7-4d72-a9e9-5ee7de9ab1da
+		summarizeBy: none
+		sourceColumn: MONTH_YEAR
+
+		annotation SummarizationSetBy = Automatic
+
+	column APPT_STATUS
+		dataType: string
+		lineageTag: 1628a98b-aa79-4201-b5a3-466f28c335e9
+		summarizeBy: none
+		sourceColumn: APPT_STATUS
+
+		annotation SummarizationSetBy = Automatic
+
+	column HCP_TYPE
+		dataType: string
+		lineageTag: cddd9008-6ad6-4f10-a975-c69d245210ff
+		summarizeBy: none
+		sourceColumn: HCP_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column APPT_MODE
+		dataType: string
+		lineageTag: 48dcceeb-2907-4c8c-a059-1f41c2e99aed
+		summarizeBy: none
+		sourceColumn: APPT_MODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column TIME_BETWEEN_BOOK_AND_APPT
+		dataType: string
+		lineageTag: eed698c0-d8e4-49c9-8b43-09ce86b432ab
+		summarizeBy: none
+		sourceColumn: TIME_BETWEEN_BOOK_AND_APPT
+
+		annotation SummarizationSetBy = Automatic
+
+	column COUNT_OF_APPOINTMENTS
+		dataType: int64
+		formatString: #,0
+		lineageTag: c6dbbebd-330d-4137-8cd7-616fa02ae5a4
+		summarizeBy: sum
+		sourceColumn: COUNT_OF_APPOINTMENTS
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: 95ccc7fb-f33d-41d3-a482-b356f8084627
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: db6ba2ef-fc6f-46a6-84e9-7f453713bab0
+		summarizeBy: none
+		sourceColumn: LastDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'National Appointments' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT DISTINCT [GP].*#(lf)             ,[DATE].[LastDateofMonth]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl09_National_GP_Appointments] AS [GP]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT [LastDateofMonth], [MonthYearName] FROM [CCG_Reference].[Reference].[vw_DateLookup]) AS DATE ON [DATE].[MonthYearName] = [GP].[MONTH_YEAR]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,72 @@
+table 'Parameter - Appointment Types'
+	lineageTag: 18ac1d49-b908-4a03-9e31-9834556fc380
+
+	measure 'Parameter 3 Selected Option' =
+			
+			
+			MAX('Parameter - Appointment Types'[Parameter])
+		lineageTag: ae921d6d-c6d5-4ed3-9fa1-5e8fffe3e0cb
+
+	measure 'Appointment Types Colours' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "Total Appointments") = TRUE(), "#582841",
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "% Same Day") = TRUE(), "#7F395D",
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "% Face-to-Face") = TRUE(), "#9b4672",
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "% Telephone") = TRUE(), "#b35686", "#c0729a"))))
+		lineageTag: e892b281-c8ad-4189-8a8c-49b3be063f68
+
+	measure 'Appointment Chart Title' =
+			
+			
+			CONCATENATE([Parameter 3 Selected Option], " - Over Time")
+		lineageTag: dfacf80d-3449-41dd-9241-4aab8ac9ee08
+
+	column Parameter
+		lineageTag: 869b84dc-e073-4c12-9d7c-5da25c797d2a
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: bd233cae-60bb-4b1f-93da-d351c1e75114
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 34d5bffa-a0b0-4939-b257-31c83494236c
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Parameter - Appointment Types' = calculated
+		mode: import
+		source =
+				{
+				    ("Total Appointments", NAMEOF('Glos Practice Appointments'[Total Glos Appointments]), 0),
+				    ("% Same Day", NAMEOF('Glos Practice Appointments'[National Gloucestershire % Same Day]), 1),
+				    ("% Face-to-Face", NAMEOF('Glos Practice Appointments'[National Gloucestershire % F2F]), 2),
+				    ("% Telephone", NAMEOF('Glos Practice Appointments'[National Gloucestershire % Telephone]), 3),
+				    ("% GP", NAMEOF('Glos Practice Appointments'[National Gloucestershire % GP]), 4)
+				}
+
+	annotation PBI_Id = 9901348a337b41ca86eee2e1b614ae99
+

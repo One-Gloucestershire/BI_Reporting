@@ -1,0 +1,173 @@
+table 'DMRS Claims'
+	lineageTag: 4be35cd6-7e3b-499c-bebb-6ee54cc51951
+
+	column 'Pseudo Reference'
+		dataType: string
+		lineageTag: 3a30a7c2-74e4-42cb-918a-7641796a2169
+		summarizeBy: none
+		sourceColumn: Pseudo Reference
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Rate per mile'
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 9f08a7fd-a4c0-4f5b-9ba4-a390d5f131b2
+		summarizeBy: sum
+		sourceColumn: Rate per mile
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Claim End Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 9dc496d7-a6a9-4e09-ace0-8d8cc919d096
+		summarizeBy: none
+		sourceColumn: Claim End Date
+
+		variation Variation
+			isDefault
+			relationship: cc878bc0-473d-47cc-97cb-65eb39b74125
+			defaultHierarchy: LocalDateTable_e82c62e7-b4db-4035-a1b8-cb87baf82fdb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Month Claim End Date'
+		dataType: dateTime
+		formatString: yyyy-mm
+		lineageTag: f94a8890-dfeb-438b-98c3-41fda330998c
+		summarizeBy: none
+		sourceColumn: Month Claim End Date
+
+		variation Variation
+			isDefault
+			relationship: 2dcedece-be9a-4a09-a901-36bd91044a17
+			defaultHierarchy: LocalDateTable_732559b0-2eab-4419-8073-b72e823c842c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Total No. of Miles travelled'
+		dataType: double
+		lineageTag: 121acf25-7252-47d2-b808-759654f87246
+		summarizeBy: sum
+		sourceColumn: Total No. of Miles travelled
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'No. of  journeys'
+		dataType: double
+		formatString: #,0
+		lineageTag: 81a010ea-bce9-4a20-8040-2b134c7982f3
+		summarizeBy: sum
+		sourceColumn: No. of  journeys
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column 'Value agreed for payment'
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 27a06aaa-553f-4187-b4d6-65cddb851127
+		summarizeBy: sum
+		sourceColumn: Value agreed for payment
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Payment Month (*assumed)'
+		dataType: dateTime
+		formatString: yyyy-mm
+		lineageTag: e8df0bfc-8f7e-483f-931e-2d8f3a422efb
+		summarizeBy: none
+		sourceColumn: Payment Month (*assumed)
+
+		variation Variation
+			isDefault
+			relationship: 390c2917-8789-47cb-858b-8a2bc4557751
+			defaultHierarchy: LocalDateTable_d06d4846-06ed-4b30-9b8f-10d7f6f44a31.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Activity Month'
+		dataType: dateTime
+		formatString: yyyy-mm
+		lineageTag: 3cc87f9b-b28a-412c-8141-33e014b15b1f
+		summarizeBy: none
+		sourceColumn: Activity Month
+
+		variation Variation
+			isDefault
+			relationship: 4cbf3d90-9f70-4dd6-a981-f825fb34f454
+			defaultHierarchy: LocalDateTable_74a91432-8f29-4f0f-80d6-087863f21cf2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Updated to PBI Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: feefb2dd-4f6f-490b-8486-239c7f87f2c9
+		summarizeBy: none
+		sourceColumn: Updated to PBI Date
+
+		variation Variation
+			isDefault
+			relationship: 9a92d9ca-8fd6-43b1-b802-a4e777a03790
+			defaultHierarchy: LocalDateTable_9521acd8-1aca-44d9-9829-2b076b4ce7bc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year_for_Rate = 'DMRS Claims'[Month Claim End Date].[Year]
+		dataType: int64
+		formatString: 0
+		lineageTag: ab62dc7b-bd5e-41a1-b2ba-1fbdb0920e0a
+		summarizeBy: sum
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fin Yr (Activity / Payment Month)'
+		dataType: string
+		lineageTag: a554278c-2fe8-400c-b460-64f559c87dbe
+		summarizeBy: none
+		sourceColumn: Fin Yr (Activity / Payment Month)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'DMRS Claims' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\PTS\Dashboard_development\Power BI dashboard_ FINAL\Scripts_AND_Upload to PBI files\DMRS\DMRS Claims_Flatfile.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Pseudo Reference", type text}, {"Rate per mile", type number}, {"Claim End Date", type date}, {"Month Claim End Date", type date}, {"Total No. of Miles travelled", type number}, {"No. of  journeys", type number}, {"Value agreed for payment", type number}, {"Payment Month (*assumed)", type date}, {"Activity Month", type date}, {"Updated to PBI Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

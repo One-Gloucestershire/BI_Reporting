@@ -1,0 +1,66 @@
+table Admissions
+	lineageTag: dc4431be-7516-44bd-8420-7954694dbf4f
+
+	column nhs_number
+		dataType: string
+		lineageTag: 7cfcd537-617b-4ed1-a81b-807590dab98a
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: e1122713-2473-4d95-892d-92386e7bdc43
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab8ddcd4-2c12-4d9b-8ac0-f58b725acc0a
+		summarizeBy: none
+		sourceColumn: discharge_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Emergency_Admission_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: e7dd555e-d008-43da-9508-9863095e56c8
+		summarizeBy: sum
+		sourceColumn: Emergency_Admission_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_Stay
+		dataType: int64
+		formatString: 0
+		lineageTag: f239866e-2f7d-40b5-9736-93757abe8400
+		summarizeBy: sum
+		sourceColumn: Length_of_Stay
+
+		annotation SummarizationSetBy = Automatic
+
+	column hospital_provider_spell_number
+		dataType: string
+		lineageTag: b8fc6baf-1f35-4346-9cf8-1ff7d254c0e8
+		summarizeBy: none
+		sourceColumn: hospital_provider_spell_number
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Admissions = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT DISTINCT [INP].[nhs_number]#(lf)               ,[INP].[hospital_provider_spell_number]#(lf)               ,[INP].[practice_code]#(lf)#(tab)#(tab)#(tab)   ,[INP].[discharge_date]#(lf)#(tab)#(tab)#(tab)   ,[INP].[Emergency_Admission_flag]#(lf)#(tab)#(tab)#(tab)   ,[Length_of_Stay] = [INP].[total_bed_days]#(lf)#(lf)FROM [PowerBI_Reporting].[SecondaryCare].[tbl07_Inpatients] AS [INP]#(lf)#(lf)INNER JOIN (SELECT DISTINCT [PseudoNHSNumber]#(lf)            FROM [PowerBI_Reporting].[PrimaryCare].[tbl02_INT_Metrics_Table]) AS [INT]#(lf)ON [INT].[PseudoNHSNumber] = [INP].[nhs_number]#(lf)#(lf)WHERE [INP].[discharge_date] >= '20230701'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

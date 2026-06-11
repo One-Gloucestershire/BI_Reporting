@@ -1,0 +1,49 @@
+table 'ReSPECT Plans Coded'
+	lineageTag: cf390c57-399e-41aa-9603-60fdb561f0ec
+
+	measure 'ReSPECT Plans Coded' =
+			
+			
+			CALCULATE(
+			    SUM('ReSPECT Plans Coded'[Counter]),
+			    USERELATIONSHIP('ReSPECT Date Reference'[date], 'ReSPECT Plans Coded'[EventDate])
+			)
+		formatString: 0
+		lineageTag: a3956068-2f34-4b26-8104-07b52b65bc7c
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 39e5ff6b-7730-4d81-9065-b9c7a92f6337
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column EventDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8f695ad6-3865-4560-bb39-64fc4a593d66
+		summarizeBy: none
+		sourceColumn: EventDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 65011b49-3b8d-447d-bf21-8c4fbdae6bcc
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ReSPECT Plans Coded' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="SELECT [PseudoNHSNumber]#(lf)      ,[EventDate] = CAST([EventDate] AS DATE)#(lf)      ,[Counter] = 1#(lf)#(lf)FROM [CCG_Current].[PrimaryCare].[vw_Events]#(lf)#(lf)WHERE CAST([EventDate] AS DATE) >= '2022-04-01'#(lf)AND [SnomedCode] IN ('1107891000000106', '1382601000000107')"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

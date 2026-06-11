@@ -1,0 +1,123 @@
+table 'GP Population'
+	lineageTag: 0518a087-c342-4f23-b746-5ce692e9948f
+
+	measure '65 + Population' =
+			
+			
+			CALCULATE(SUM('GP Population'[population]), 'Age Band Reference'[age_banding] IN {"65-69", "70-74", "75-79", "80-84", "85+"})
+		formatString: #,0
+		lineageTag: 9edf6870-8a27-4395-87db-4fe1d2e7b89e
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '65 + Population - ICB' =
+			
+			
+			CALCULATE(SUM('GP Population'[population]), 'Age Band Reference'[age_banding] IN {"65-69", "70-74", "75-79", "80-84", "85+"}, ALL('Age Band Reference'), ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK())
+		lineageTag: 2ab18e41-531a-472a-bad3-c6746ed94e87
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column locality
+		dataType: string
+		lineageTag: 923a72a0-6f56-4634-a7a1-878e2eebded7
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 65605ddb-a193-4d73-958e-afa7e8ba0668
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 77a53b0f-0c26-4078-8566-494bcef4e1a4
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: f4768d75-b7fa-46e5-bbb0-8d41d359ac86
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column sex
+		dataType: string
+		lineageTag: 90ac4627-5415-46dc-b54c-7c3243750070
+		summarizeBy: none
+		sourceColumn: sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 1c2f55b4-c261-4a13-ad43-ce7d9d97733a
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column population
+		dataType: double
+		formatString: 0
+		lineageTag: 54eaebb6-889e-4b8d-b6d9-f11165931a2d
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column practice_code
+		dataType: string
+		lineageTag: f6b2e97a-452e-4417-9131-7901b7d5c3ac
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column gp_longitude
+		dataType: string
+		lineageTag: 069b9346-3027-4228-8e2c-1a19ecc7743e
+		summarizeBy: none
+		sourceColumn: gp_longitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column gp_latitude
+		dataType: string
+		lineageTag: 38f7ac9d-2da7-40d4-8c64-55f13869cfc9
+		summarizeBy: none
+		sourceColumn: gp_latitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column census_date
+		dataType: string
+		lineageTag: 95565f21-38f0-4bbd-a77e-a83c24c9ae23
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Population' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="#(lf)SELECT DISTINCT [locality]#(lf)               ,[primary_care_network]#(lf)               ,[practice_name]#(lf)#(tab)#(tab)#(tab)   ,[practice_code]#(lf)               ,[age_band] = CASE WHEN [age_band] IN ('85-89', '90-94', '95+') THEN '85+' ELSE [age_band] END#(lf)#(tab)#(tab)#(tab)   ,[sex]#(lf)               ,[financial_year]#(lf)#(tab)#(tab)#(tab)   ,[population]#(lf)               ,[gp_longitude]#(lf)               ,[gp_latitude]#(lf)               ,[census_date]#(lf)#(lf)  FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations] AS [GPP]#(lf)#(lf)  LEFT JOIN (SELECT DISTINCT [MonthYearName], [YearMonth], [Date_Flag] = 1 FROM [CCG_Reference].[Reference].[vw_DateLookup]) AS [DATE]#(lf)  ON [DATE].[MonthYearName] = [GPP].[census_date]#(lf)#(lf)  WHERE [DATE].[YearMonth] = (SELECT MAX([YearMonth])#(lf)                              FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations] AS [GPP]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  LEFT JOIN (SELECT DISTINCT [MonthYearName], [YearMonth], [Date_Flag] = 1 FROM [CCG_Reference].[Reference].[vw_DateLookup]) AS [DATE]#(lf)                              ON [DATE].[MonthYearName] = [GPP].[census_date]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHERE [DATE].[Date_Flag] = 1)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

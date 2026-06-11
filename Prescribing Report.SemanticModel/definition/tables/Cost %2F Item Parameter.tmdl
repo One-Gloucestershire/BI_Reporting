@@ -1,0 +1,42 @@
+table 'Cost / Item Parameter'
+	lineageTag: 81644bc4-cf8f-4e25-b84b-b1ee953d884e
+
+	measure 'Selection Type - Cost / Item' =
+			
+			
+			MAX('Cost / Item Parameter'[Selection])
+		lineageTag: 130c856d-5251-4319-86ae-e9d83631b840
+
+	measure 'Cost / Item Calculation' =
+			
+			
+			IF(CONTAINSSTRING('Cost / Item Parameter'[Selection Type - Cost / Item], "Costs"), [Rate per 1,000 Costs], [Rate per 1,000 Items])
+		lineageTag: 3bbc5c57-6ac6-40bb-8709-1364fabbbd1b
+
+		formatStringDefinition = IF(CONTAINSSTRING('Cost / Item Parameter'[Selection Type - Cost / Item], "Costs"), "£#,##0", "0,00")
+
+	measure 'Cost / Item Title Measure' =
+			
+			
+			IF(CONTAINSSTRING('Cost / Item Parameter'[Selection Type - Cost / Item], "Costs"), "Cost Per 1,000 Patients", "Items per 1,000 Patients")
+		lineageTag: c59b3fb5-e085-4c88-a85b-09bfe11c0046
+
+	column Selection
+		dataType: string
+		lineageTag: 1c732446-8145-4eb5-a7bd-9b76565c603b
+		summarizeBy: none
+		sourceColumn: Selection
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Cost / Item Parameter' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45Wcs4vLilWitWJVvIsSc0FsmIB", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Selection = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Selection", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

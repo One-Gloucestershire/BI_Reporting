@@ -1,0 +1,95 @@
+table 'Parameter - Growth %'
+	lineageTag: b2a98392-ca8b-497d-88cb-1fb42c01713c
+
+	measure 'Growth Parameter Selected Option' =
+			
+			
+			MAX('Parameter - Growth %'[Parameter])
+		lineageTag: b3baf94e-96d2-48f7-aafc-806165f3f282
+
+	measure 'Glos Appointments - Metric Growth Selection' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Total"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth %],
+			    IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Face-to-Face"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Face-to-Face],
+			        IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Attended"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Attended],
+			            IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% GP"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for GP],
+			                IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Same Day"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Same Day],
+			                    IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Telephone"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Telephone],
+			                        IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Within 21 Days"), 'Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for 1 Day, 15  to 21 Days, 2 to 7 Days, Same Day, or 8  to 14 Days], 0)))))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 393e1a21-1b78-4715-8879-0bc08fd424f8
+
+	measure 'Growth Colour Coding' =
+			
+			
+			IF('Parameter - Growth %'[Glos Appointments - Metric Growth Selection] >= 0, "#20A39E", "#EF5B5B")
+		lineageTag: 3ec0c700-9702-4309-8c7d-fb8f74e30364
+
+	measure 'Glos Appointments - Metric Growth Selection - Colours' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Total"), "#264653",
+			    IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Face-to-Face"), "#EB5E28",
+			        IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Attended"), "#005F60",
+			            IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% GP"), "#FAAB36",
+			                IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Same Day"), "#249EA0",
+			                    IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Telephone"), "#F78104",
+			                        IF(CONTAINSSTRING('Parameter - Growth %'[Growth Parameter Selected Option], "% Within 21 Days"), "#008083", "WHITE")))))))
+		lineageTag: 4c8abf32-4ca4-4747-8010-0ede7ecc3cec
+
+	measure 'Glos Appointments - Metric Growth Selection - Title' =
+			
+			
+			CONCATENATE("% Growth - Appointments - ", 'Parameter - Growth %'[Growth Parameter Selected Option])
+		lineageTag: 08342012-bcc7-4bdd-b5ac-b4736d4691f0
+
+	column Parameter
+		lineageTag: 0de3836a-2146-4963-ba82-98db05b763b8
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		lineageTag: 2a0a8356-8a05-41c4-b540-bb43d6bc9815
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 63c12e83-cd88-4f2c-83fb-494c4c66e335
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Parameter - Growth %' = calculated
+		mode: import
+		source =
+				{
+				    ("% Total", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth %]), 0),
+				        ("% Face-to-Face", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Face-to-Face]), 1),
+				                ("% Telephone", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Telephone]), 2),
+				                    ("% GP", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for GP]), 3),
+				                        ("% Same Day", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Same Day]), 4),
+				                                ("% Within 21 Days", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for 1 Day, 15  to 21 Days, 2 to 7 Days, Same Day, or 8  to 14 Days]), 5),
+				                                    ("% Attended", NAMEOF('Glos Practice Appointments'[National Gloucestershire Appointments - Latest Year Growth % for Attended]), 6)
+				}
+
+	annotation PBI_Id = e580163b6ce04285b452cf8afa096cf0
+

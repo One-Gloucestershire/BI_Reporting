@@ -1,0 +1,305 @@
+table 'Metrics Table'
+	lineageTag: 9e19ec13-1638-4f24-83dc-28d557ec84f0
+
+	measure 'Metric - Total Value' =
+			
+			
+			SUM('Metrics Table'[Value])
+		formatString: #,0
+		lineageTag: 81c08242-fda4-4b17-a509-52458e8e8fce
+
+	measure 'Metric - Total Value Crude Rate per 1,000' =
+			
+			
+			SUM('Metrics Table'[Value])
+			/
+			SUM('Census Population - Gloucestershire'[Value]) * 1000
+		formatString: #,0.0
+		lineageTag: 7d5dc52e-255c-49a8-99d5-40fc13d6fd39
+
+	measure 'Metric - CI Lower Bound - CRP 1,000' = ```
+			
+			
+			VAR _STANDARD_ERROR = 
+			    SQRT(
+			        ([Metric - Total Value Crude Rate per 1,000] / 1000) * (1 - ([Metric - Total Value Crude Rate per 1,000] / 1000))
+			        /
+			        SUM('Census Population - Gloucestershire'[Value])
+			    ) * 1000
+			
+			RETURN
+			
+			IF(
+			    [Metric - Total Value Crude Rate per 1,000] - (1.96 * _STANDARD_ERROR) < 0,
+			    0,
+			    [Metric - Total Value Crude Rate per 1,000] - (1.96 * _STANDARD_ERROR)
+			)
+			```
+		lineageTag: 6eb35f55-d767-4fb2-8707-10c14f9253a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - CI Upper Bound - CRP 1,000' = ```
+			
+			
+			VAR _STANDARD_ERROR = 
+			    SQRT(
+			        ([Metric - Total Value Crude Rate per 1,000] / 1000) * (1 - ([Metric - Total Value Crude Rate per 1,000] / 1000))
+			        /
+			        SUM('Census Population - Gloucestershire'[Value])
+			    ) * 1000
+			
+			RETURN
+			
+			[Metric - Total Value Crude Rate per 1,000] + (1.96 * _STANDARD_ERROR)
+			```
+		lineageTag: 6084c248-fade-4bc3-8f14-0bae3410bc4e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - Total Value Crude Rate per 100,000' =
+			
+			
+			SUM('Metrics Table'[Value])
+			/
+			SUM('Census Population - Gloucestershire'[Value]) * 100000
+		lineageTag: 9f1e928f-642e-41f3-bddf-3b7785e72610
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - Direct Age Standardisation' = ```
+			
+			
+			VAR _SUMMARYTABLE =
+			    SUMMARIZE(
+			        'Age Band Reference',
+			        'Age Band Reference'[5YR_Age_Band], // Age Bands //
+			        "Observed Events", SUM('Metrics Table'[Value]), // Observed Events from Metrics Table //
+			        "Local Population", SUM('Census Population - Gloucestershire'[Value]), // Local Population //
+			        "Reference Population", SUM('European Reference Population'[population]) // Reference Population //
+			    )
+			    
+			VAR _EXPECTED_EVENTS = 
+			    ADDCOLUMNS(
+			        _SUMMARYTABLE,
+			        "Expected Events", [Reference Population]/[Local Population]*[Observed Events]
+			    )
+			
+			RETURN
+			
+			SUMX(_EXPECTED_EVENTS, [Expected Events])
+			/
+			SUMX(_EXPECTED_EVENTS, [Reference Population])
+			*
+			1000 // Directly Standardised Rate per 1,000 //
+			```
+		lineageTag: 16b4cb14-f8c0-415b-b030-f2e7868a7b35
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - CI Lower Bound - DSR' = ```
+			
+			
+			VAR _STANDARD_ERROR = 
+			    SQRT(
+			        ([Metric - Direct Age Standardisation] / 1000) * (1 - ([Metric - Direct Age Standardisation] / 1000))
+			        /
+			        SUM('Census Population - Gloucestershire'[Value])
+			    ) * 1000
+			
+			RETURN
+			IFERROR(
+			IF(
+			    [Metric - Direct Age Standardisation] - (1.96 * _STANDARD_ERROR) < 0,
+			    0,
+			    [Metric - Direct Age Standardisation] - (1.96 * _STANDARD_ERROR)
+			), 0)
+			```
+		lineageTag: a31ae363-89aa-4865-99f6-2e61b6472dc9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - CI Upper Bound - CRP 100,000' = ```
+			
+			
+			VAR _STANDARD_ERROR = 
+			    SQRT(
+			        ([Metric - Total Value Crude Rate per 100,000] / 100000) * (1 - ([Metric - Total Value Crude Rate per 100,000] / 100000))
+			        /
+			        SUM('Census Population - Gloucestershire'[Value])
+			    ) * 100000
+			
+			RETURN
+			
+			[Metric - Total Value Crude Rate per 100,000] + (1.96 * _STANDARD_ERROR)
+			```
+		lineageTag: 25ac1788-672e-4a3a-8752-7f92efcb7785
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - CI Lower Bound - CRP 100,000' = ```
+			
+			
+			VAR _STANDARD_ERROR = 
+			    SQRT(
+			        ([Metric - Total Value Crude Rate per 100,000] / 100000) * (1 - ([Metric - Total Value Crude Rate per 100,000] / 100000))
+			        /
+			        SUM('Census Population - Gloucestershire'[Value])
+			    ) * 100000
+			
+			RETURN
+			
+			IF(
+			    [Metric - Total Value Crude Rate per 100,000] - (1.96 * _STANDARD_ERROR) < 0,
+			    0,
+			    [Metric - Total Value Crude Rate per 100,000] - (1.96 * _STANDARD_ERROR)
+			)
+			```
+		lineageTag: 026282b4-8b81-4286-b283-e574685e5a35
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric - CI Upper Bound - DSR' = ```
+			
+			
+			VAR _STANDARD_ERROR = 
+			    SQRT(
+			        ([Metric - Direct Age Standardisation] / 1000) * (1 - ([Metric - Direct Age Standardisation] / 1000))
+			        /
+			        SUM('Census Population - Gloucestershire'[Value])
+			    ) * 1000
+			
+			RETURN
+			
+			IF(
+			    [Metric - Direct Age Standardisation] + (1.96 * _STANDARD_ERROR) < 0,
+			    0,
+			    [Metric - Direct Age Standardisation] + (1.96 * _STANDARD_ERROR)
+			)
+			```
+		lineageTag: 7d582207-0350-4f05-9e81-e5492ceff148
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Selection' =
+			
+			
+			IF(
+			   ISFILTERED('Metrics Table'[MetricName])
+			   && DISTINCTCOUNT('Metrics Table'[MetricName]) = 1
+			  ,MAX('Metrics Table'[MetricName])
+			  ,"Please Select One Metric"
+			  )
+		lineageTag: 9d99bbc0-75e2-4c06-9ef1-a72841cf142e
+
+	measure 'Metric - Overall %' =
+			
+			
+			SUM('Metrics Table'[Value])
+			/
+			SUM('Census Population - Gloucestershire'[Value])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 823f22c3-4cb3-4859-b128-26e49ecec965
+
+	column MetricName
+		dataType: string
+		lineageTag: 73062ac5-68e5-4f3b-ad0e-5eb27db82313
+		summarizeBy: none
+		sourceColumn: MetricName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: #,0
+		lineageTag: d4e0b44c-d85e-498a-aaec-3888b798000e
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: bd7b1316-1b3c-4fe3-9a41-4915c89bd16b
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column CYPFlag
+		dataType: string
+		lineageTag: d45f3d4a-2ad1-4a5e-b95c-f35db975d49c
+		summarizeBy: none
+		sourceColumn: CYPFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: a5a088ec-0902-454c-85bd-a337cd01e52f
+		summarizeBy: none
+		sourceColumn: Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: d1904bd3-0cd6-4715-8e55-2efea410afbd
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 92ecf3d4-7d7d-482c-a8cb-2fb72fdbd1df
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityYearMonth
+		dataType: string
+		lineageTag: db33c354-7668-4c15-82a1-0b1e3dc6855e
+		summarizeBy: none
+		sourceColumn: ActivityYearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 58431339-c184-41a3-95cd-69f4437b7c86
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricCategory
+		dataType: string
+		lineageTag: ae65777c-9399-46b9-a997-08ccf7c1faa0
+		summarizeBy: none
+		sourceColumn: MetricCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column LDFlag
+		dataType: string
+		lineageTag: b6b93f1b-4818-4455-95ea-8ec66db62307
+		summarizeBy: none
+		sourceColumn: LDFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Metrics Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[PHM].[tbl05_HealthInequalitiesMetrics]#(lf)#(lf)WHERE [ActivityYearMonth] BETWEEN '201904' AND '202103'#(lf)OR [ActivityYearMonth] >= '202304'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

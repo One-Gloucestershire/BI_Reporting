@@ -1,0 +1,52 @@
+table 'Gender Reference'
+	lineageTag: f76cfa6e-e86b-4640-9e2f-414d270da905
+
+	measure 'Gender Filtered Values' = ```
+			
+			
+			VAR _FILTERED_COUNT = DISTINCTCOUNT('Gender Reference'[Gender])
+			VAR _MAXVALUES = 10
+			
+			RETURN 
+			
+			IF (
+			    _FILTERED_COUNT > _MAXVALUES
+			    && ISCROSSFILTERED( 'Gender Reference'[Gender] )
+			    && DISTINCTCOUNT('Gender Reference'[Gender]) < CALCULATE(DISTINCTCOUNT('Gender Reference'[Gender]), ALL('Gender Reference')),
+			        CONCATENATE(CONCATENATEX(
+			        TOPN(_MAXVALUES,
+			        VALUES('Gender Reference'[Gender]),
+			        'Gender Reference'[Gender], ASC
+			        ),
+			        'Gender Reference'[Gender],
+			        ", "), ", etc"),
+			IF (
+			    _FILTERED_COUNT <= _MAXVALUES
+			    && ISCROSSFILTERED( 'Gender Reference'[Gender] )
+			    && DISTINCTCOUNT('Gender Reference'[Gender]) < CALCULATE(DISTINCTCOUNT('Gender Reference'[Gender]), ALL('Gender Reference'[Gender])),
+			    CONCATENATEX(
+			        TOPN(_MAXVALUES,
+			        VALUES('Gender Reference'[Gender]),
+			        'Gender Reference'[Gender], ASC
+			        ),
+			        'Gender Reference'[Gender],
+			        ", "),
+			"All Genders are currently selected"
+			))
+			
+			```
+		lineageTag: 0b93979a-1e61-44fd-b3cc-a8b9e9b1798c
+
+	column Gender
+		lineageTag: f1deff6d-5656-4468-8a1d-409544d9cc2e
+		summarizeBy: none
+		sourceColumn: GP Population[sex]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Gender Reference' = calculated
+		mode: import
+		source = DISTINCT('GP Population'[sex])
+
+	annotation PBI_Id = 241f3e9e892d4ba6afad3904be6b1e3e
+

@@ -1,0 +1,141 @@
+table Data_Sheet
+	lineageTag: bd782ecc-0e91-4e69-ae1d-44e609a97f90
+
+	measure 'Metric Output' =
+			
+			
+			AVERAGE(
+			    'Data_Sheet'[Value - Amended Format]
+			)
+		formatString: 0.0
+		lineageTag: 08b2ca16-7cec-4c44-b6aa-f93990042902
+
+	measure 'Metric Output - ICB Overall' =
+			
+			
+			CALCULATE(
+			    AVERAGE('Data_Sheet'[Value - Amended Format])
+			    ,ALL('GP_Reference')
+			)
+		lineageTag: 129e88c2-7136-495e-969a-25fd0638935f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Colouration' =
+			
+			
+			SWITCH(
+			    TRUE()
+			    ,[Metric Output] > [Metric Output - ICB Overall], "#20a39e"
+			    ,[Metric Output] < [Metric Output - ICB Overall], "#ffba49"
+			    ,[Metric Output] = [Metric Output - ICB Overall], "#3d405b"
+			)
+		lineageTag: 6de21a76-09a9-4bfd-9bfe-bf83bd245dc4
+
+	measure Measure
+		lineageTag: edb6f80e-e9fc-4607-aa10-532c957efcc6
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure 'Metric Output - ICB' =
+			
+			
+			CALCULATE(
+			    AVERAGE('Data_Sheet'[Value - Amended Format])
+			    ,ALL('GP_Reference')
+			)
+		lineageTag: b28f2439-19d9-4e01-a810-ead8c8324699
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Output - % Metrics' =
+			
+			
+			AVERAGE(
+			    'Data_Sheet'[Value - Amended Format]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7b823910-3869-497d-80ca-0e605102c085
+
+	measure 'Metric Output - ICB - %' =
+			
+			
+			CALCULATE(
+			    AVERAGE('Data_Sheet'[Value - Amended Format])
+			    ,ALL('GP_Reference')
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e4466349-01cf-4e37-8a23-107cdca7fd54
+
+	column 'PCN Name'
+		dataType: string
+		lineageTag: e2487d9d-ed38-4465-923c-2284a03d21c5
+		summarizeBy: none
+		sourceColumn: PCN Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Code'
+		dataType: string
+		lineageTag: 6efa9d0d-660c-4c0d-a464-37bb1e1f01d7
+		summarizeBy: none
+		sourceColumn: Practice Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 3bebf437-5378-4b9f-a48a-f9372c49ab85
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Name'
+		dataType: string
+		lineageTag: e4e8bdd5-a4d8-4284-9b86-c6e7151e69cd
+		summarizeBy: none
+		sourceColumn: Metric Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: string
+		lineageTag: 3b22c405-40d2-4095-9232-0921ead5b9a3
+		summarizeBy: none
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Value - Amended Format' =
+			
+			
+			SWITCH(
+			    TRUE()
+			    ,'Data_Sheet'[Value] = "Yes", 1
+			    ,'Data_Sheet'[Value] IN {"No", "No Record"}, 0
+			    ,ISNUMBER(VALUE('Data_Sheet'[Value])), VALUE('Data_Sheet'[Value])
+			    )
+		formatString: 0.00
+		lineageTag: 1284df97-c472-4992-9f9a-379ff11e92fb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Data_Sheet = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Projects\Primary Care Data\PCARP\PCARP Report - Backing Data.xlsx"), null, true),
+				    Data_Sheet_Sheet = Source{[Item="Data_Sheet",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Data_Sheet_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"PCN Name", type text}, {"Practice Code", type text}, {"Practice Name", type text}, {"At least one support Programme updake (23/24 & 24/25)", Int64.Type}, {"At least one support Programme updake (ALL YEARS)", Int64.Type}, {"Attending at Least 1 Capabilty Building Webinar since 1st April 2023", type text}, {"Practice attended ""What is MGP Model"" Webinar ", type text}, {"Practice Attended at Least 1 D&C Webinar", type text}, {"At least 1 practice staff member completed Fundamentals ", type text}, {"PCN delegate participating in D&TL Programme", type text}, {"Care Navigation Foundation, Advanced or Knowledge Transfer Completed", type text}, {"No. Support offers taken up", Int64.Type}, {"SLF conversations - Lead by PCNs ", type text}, {"SLF conversations - Lead by NHSE ", type text}, {"SLF conversations - Lead by#(lf) ICB ", type any}, {"PHASE 1 - Critical List ", type text}, {"Telephony - Phase 2 (Long list)", type text}, {"PHASE 2 - Cohort a", type text}, {"Cloud Based Telephony in Place?#(lf)NHSE National Data - December 2024", type text}, {"Call-Back Functionality available (not contractual)", type any}, {"Call-Back In Place#(lf)November 2024#(lf)(info from practice phone around)", type text}, {"Call-Queuing Functionality available (not contractual)?", type any}, {"Call-Queuing in place#(lf)November 2024#(lf)(info from practice phone around)", type text}, {"CBT - Data Provision Notice ", type text}, {"ACC-08: practice level GPAD data as extracted from the NHSD ICB Appointments Tableau Dashboard#(lf)October 2024 - MONTHLY DATA ", type number}, {"Domain 1- Better digital telephony", type text}, {"Domain 2 - simpler online requests", type text}, {"Domain 3 - faster navigation", type text}, {"Organisational settings allow prospective access - CONTRACTUAL", type text}, {">10% registered patients identified as having access withheld (104 code) and need to ensure this reflects individual assessment of risk. (NHSE Parameter)", type text}, {" settings so that new online accounts have a default of prospective acces - CONTRACTUAL.", type text}, {"<90% patients with online accounts with full prospective access and need to ensure all eligible patients have access (NHSE Parameter)", type text}, {"Are pts able to book appts online via website or app - CONTRACTUAL #(lf)(info from practice ring around)", type text}, {"Book appts online with GP?#(lf) (info from practice ring around)", type text}, {"Book appts online with Nurse?#(lf) (info from practice ring around)", type text}, {"Book appts online with HCA?#(lf)(info from practice ring around)", type text}, {"Book appts online with Clinical Pharmacist? #(lf)(info from practice ring around)", type text}, {"Book appointments via link provided #(lf)(info from practice ring around)", type text}, {"ordering repeat medications - CONTRACTUAL #(lf)data no longer available ", type any}, {"Register with GP online - CONTRACTUAL#(lf)Microsoft Power BI - December 2024 ", type text}, {"Online consultation tool available to patients- CONTRACTUAL", type any}, {"Video Consultations available to - #(lf)CONTRACTUAL", type any}, {"NHS App - % of Patients with Full Access", type number}, {"% of calls to 111 during GP operating hours (Monday- Friday, 0800-1830)", type number}, {"PPG in Place - Edec#(lf)2024 data#(lf)CONTRACTUAL", type text}, {"PPG Contacts - information from ICB Engagement Team - January 2025#(lf)CONTRACTUAL", type text}, {"FFT - number of resposes (Nov 24)- CONTRACTUAL TO REPORT THE RESULTS", type any}, {"FFT - % positive resposes (Nov 24)", type any}, {"Transition and Transformation Funding - 23/24 ", type text}, {"Transition and Transformation Funding - 24/25", type text}}),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Changed Type", {"PCN Name", "Practice Code", "Practice Name"}, "Attribute", "Value"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Unpivoted Columns",{{"Attribute", "Metric Name"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,101 @@
+table 'Age Band Reference'
+	lineageTag: 2a6fba74-39b2-4c11-9619-0a0f30746ae6
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 4ae50fd7-0b29-4cde-a114-45424c08214f
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: b0c062b2-9237-458a-ad15-044786778690
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+		sortByColumn: 5YR_Age_Band_Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: 6159672a-6bff-43c2-8e51-fed432585c29
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column PBR_Age_Band
+		dataType: string
+		lineageTag: 179be59e-30c5-46e4-b664-1a75488a33af
+		summarizeBy: none
+		sourceColumn: PBR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Standard_Age_Band
+		dataType: string
+		lineageTag: 16324a9e-4b67-4e12-8faa-a35250d80c02
+		summarizeBy: none
+		sourceColumn: Standard_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Risk_Strat_Age_Band
+		dataType: string
+		lineageTag: aef8508d-826d-4e60-97f3-7685462748a8
+		summarizeBy: none
+		sourceColumn: Risk_Strat_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Risk_Strat_Age_BandInt
+		dataType: int64
+		formatString: 0
+		lineageTag: 0687cc1d-50c6-4b14-8cd5-3c24b6726d74
+		summarizeBy: sum
+		sourceColumn: Risk_Strat_Age_BandInt
+
+		annotation SummarizationSetBy = Automatic
+
+	column Adult_Age_Band
+		dataType: string
+		lineageTag: 237f6cc9-9775-4412-8378-78fdd3c75ca6
+		summarizeBy: none
+		sourceColumn: Adult_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: af0bbca0-3eef-4f78-842a-0cbe243ba670
+		summarizeBy: sum
+		sourceColumn: 5YR_Age_Band_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mortality_AgeBand
+		dataType: string
+		lineageTag: 18ccfe4f-100a-4376-bf4e-ce9251f27063
+		summarizeBy: none
+		sourceColumn: Mortality_AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Age Band Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Age]#(lf)      ,[5YR_Age_Band]#(lf)#(tab)  ,[10YR_Age_Band]#(lf)#(tab)  ,[PBR_Age_Band]#(lf)#(tab)  ,[Standard_Age_Band]#(lf)#(tab)  ,[Risk_Strat_Age_Band]#(lf)#(tab)  ,[Risk_Strat_Age_BandInt]#(lf)#(tab)  ,[Adult_Age_Band] = CASE WHEN [Adult_Age_Band] = '<18' THEN '0-17 - Children and Young Adults'#(lf)#(tab)                           WHEN [Adult_Age_Band] = '18-64' THEN '18-64 - Working Age'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [Adult_Age_Band] = '65+' THEN '65+ - Older Adults' ELSE [Adult_Age_Band] END#(lf)#(tab)  ,[5YR_Age_Band_Order]#(lf)      ,[Mortality_AgeBand] = CASE WHEN [Age] BETWEEN 0 AND 14 THEN '00-14'#(lf)#(tab)                              WHEN [Age] BETWEEN 15 AND 44 THEN '15-44'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [Age] BETWEEN 45 AND 64 THEN '45-64'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [Age] BETWEEN 65 AND 74 THEN '65-74'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [Age] BETWEEN 75 AND 84 THEN '75-84'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [Age] >= 85 THEN '85+'#(lf)#(tab)                              ELSE 'Unknown' END#(lf)FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)#(lf)WHERE [Age] BETWEEN 0 AND 128"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

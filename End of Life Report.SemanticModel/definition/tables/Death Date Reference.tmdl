@@ -1,0 +1,475 @@
+table 'Death Date Reference'
+	lineageTag: e737355f-956c-4a8c-acd9-94e3ef81f092
+
+	measure 'Death Date Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Death Date Reference'[financial_year], 'Death Date Reference'[financial_month],
+			                         'Death Date Reference'[month_name], 'Death Date Reference'[month_number] ),
+			            "Value_x", 'Death Date Reference'[month_number],
+			            "Value_y", 'Death Date Reference'[Deaths]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Death Date Reference'[month_number] ),
+			        Intercept + Slope * 'Death Date Reference'[month_number]
+			    )
+			```
+		lineageTag: 0ae67228-d88a-43d4-9ad6-d02111179596
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Deaths = CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead")
+		lineageTag: 43e50e4b-6244-4cb2-bb02-95aa48a1d8d0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Death Date - PCR - Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Death Date Reference'[financial_year], 'Death Date Reference'[financial_month],
+			                         'Death Date Reference'[month_name], 'Death Date Reference'[month_number] ),
+			            "Value_x", 'Death Date Reference'[month_number],
+			            "Value_y", 'EoL Data'[Palliative Care Register Deaths]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Death Date Reference'[month_number] ),
+			        Intercept + Slope * 'Death Date Reference'[month_number]
+			    )
+			```
+		lineageTag: ec1acd8b-f5cc-42d9-8871-f39b8e1b7796
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Previous Year Deaths' =
+			
+			
+			CALCULATE ( SUM('EoL Data'[counter]), (PREVIOUSYEAR('Death Date Reference'[date], "31/3")), 'Death Date Reference'[ytd_flag] = 1)
+		lineageTag: 62ff3c84-629e-4442-811e-3f6787a343b0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Change in Deaths' = (DIVIDE([Deaths],[Previous Year Deaths]) - 1)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 968b7b5f-97fb-4b17-aaff-80dd65611e55
+
+	measure 'Deaths ICB - Age' = ```
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('Gender Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('eFI Reference Table'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			```
+		lineageTag: 5cec754b-1672-4d91-9140-2cf6023351ee
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths ICB - Deprivation' = ```
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('Gender Reference'), 
+			    ALL('eFI Reference Table'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('Age Band Reference'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			```
+		lineageTag: de082374-c12d-4e4e-b1f2-a2b8a9593bb1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths ICB - Gender' = ```
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('eFI Reference Table'), 
+			    ALL('Ethnicity Reference'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('Age Band Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			```
+		lineageTag: 2eeea088-8dca-4377-8f82-ed7297df4e39
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths ICB - Ethnicity' = ```
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), 
+			    ALL('eFI Reference Table'), 
+			    ALL('LTC Reference Table - ALL'), 
+			    ALL('LTC Reference Table - ONLY LTC'), 
+			    ALL('Age Band Reference'), 
+			    ALL('Deprivation Reference'), 
+			    ALL('Gender Reference'), 
+			    ALL('EoL Data'[cause_of_death_primary_chapter]),
+			    ALL('Palliative Care Register - Reference')
+			    )
+			```
+		lineageTag: ae2b71a6-368a-49bc-a4d6-6d864caae9ab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths - Gloucestershire' =
+			
+			
+			CALCULATE(SUM('EoL Data'[counter]), 'EoL Data'[death_flag] = "Dead", ALL('GP Reference'), 'GP Reference'[PrimaryCareNetwork] <> BLANK(), ALL('EoL Data'[cause_of_death_primary], 'EoL Data'[cause_of_death_primary_chapter]), ALL('Ethnicity Reference'))
+		lineageTag: 615cfc46-57f6-423f-8f27-a4c59411150d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% of Overall Deaths' =
+			
+			
+			[Deaths] / [Deaths - Gloucestershire]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: a23a6578-d72f-47f6-a10b-5c0d6bc3fbf2
+
+	measure 'Latest Month for Card' = TODAY()
+		formatString: mmmm yyyy
+		lineageTag: a89e49e3-21c1-442e-92aa-b984982334e7
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c2c87873-1a50-4b66-aabd-6641f0613dec
+		summarizeBy: none
+		sourceColumn: date
+
+		variation Variation
+			isDefault
+			relationship: 68922ec0-747e-45ea-b095-803e0a3c265a
+			defaultHierarchy: LocalDateTable_493f183c-06f9-435c-9d5b-e906a7268c1f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column day_month_year
+		dataType: string
+		lineageTag: bf9392f2-d55a-4c57-93cf-5de9f5e59e45
+		summarizeBy: none
+		sourceColumn: day_month_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column day
+		dataType: int64
+		formatString: 0
+		lineageTag: e22b94b3-6c6d-48f3-bbd4-ee6b1ab1945a
+		summarizeBy: sum
+		sourceColumn: day
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday
+		dataType: int64
+		formatString: 0
+		lineageTag: 3bfef182-4443-47b6-9394-02c672909c25
+		summarizeBy: sum
+		sourceColumn: weekday
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday_name
+		dataType: string
+		lineageTag: 6801c130-158b-4b9d-9eb7-6649ca5ac732
+		summarizeBy: none
+		sourceColumn: weekday_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column month
+		dataType: int64
+		formatString: 0
+		lineageTag: 2ab448ba-a571-4cc2-9b7d-f29c041dd756
+		summarizeBy: sum
+		sourceColumn: month
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 4826d818-deba-4cc6-ad9e-6caa47cdf47d
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: financial_month
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: cac4b832-5133-4de9-8a52-d93f2ccdae0c
+		summarizeBy: sum
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 7b12f595-9d42-419b-ad48-09d61c120606
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_weekend
+		dataType: int64
+		formatString: 0
+		lineageTag: 624ce33e-5795-4ffd-89af-6ae36278987a
+		summarizeBy: sum
+		sourceColumn: is_weekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_holiday
+		dataType: int64
+		formatString: 0
+		lineageTag: 5b0ecc1e-5e48-41f9-862b-95a5ddfefd4c
+		summarizeBy: sum
+		sourceColumn: is_holiday
+
+		annotation SummarizationSetBy = Automatic
+
+	column holiday_description
+		dataType: string
+		lineageTag: fbcd2903-fed1-4481-9bbe-c327ff4e1e0c
+		summarizeBy: none
+		sourceColumn: holiday_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_working_day
+		dataType: int64
+		formatString: 0
+		lineageTag: 2c700443-c4e8-440f-b19d-ce38d2800142
+		summarizeBy: sum
+		sourceColumn: is_working_day
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_week_of_year
+		dataType: int64
+		formatString: 0
+		lineageTag: ffda0db9-2d9b-4b59-bf67-96a896842350
+		summarizeBy: sum
+		sourceColumn: financial_week_of_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: c249dfe9-93fc-41cb-95a8-d40f9c6b66bb
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 5925f557-64c2-4ba6-bd2d-2e2e951047ec
+		summarizeBy: sum
+		sourceColumn: financial_quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column day_of_quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: ef966462-f7d3-4bf6-a80a-589c724ad2c4
+		summarizeBy: sum
+		sourceColumn: day_of_quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter_start_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1f385f07-9ee0-4ff1-8733-686848c3d0cf
+		summarizeBy: none
+		sourceColumn: quarter_start_date
+
+		variation Variation
+			isDefault
+			relationship: 349c7310-aa14-4e9e-a583-c1981a004cf8
+			defaultHierarchy: LocalDateTable_d62aaefc-fb41-47f3-a36e-4baea6df9188.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter_end_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 86d7b24b-d8a5-47ac-8829-a1cabd1431b6
+		summarizeBy: none
+		sourceColumn: quarter_end_date
+
+		variation Variation
+			isDefault
+			relationship: 120ceb66-96e2-4cef-8201-862474d8d669
+			defaultHierarchy: LocalDateTable_6485f8df-bfc5-40e0-8742-8fbd892388b5.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_day_no
+		dataType: int64
+		formatString: 0
+		lineageTag: e1dbe1c3-41ae-4ca0-a9fe-edf739eae8ba
+		summarizeBy: sum
+		sourceColumn: month_day_no
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 47801e30-2b45-4eaf-a97d-13b9be30b4d7
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_year_name
+		dataType: string
+		lineageTag: fc8670d1-ce6d-4a28-b0e9-bd2428b7f90a
+		summarizeBy: none
+		sourceColumn: month_year_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ytd_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: b4ebaa26-92b6-4cdf-af1f-df80b7499cfa
+		summarizeBy: sum
+		sourceColumn: ytd_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_month_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 5cf2bbab-d0d9-42d4-a55d-a07522e04f16
+		summarizeBy: sum
+		sourceColumn: latest_month_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column previous_month_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 71895b72-7970-4220-9dc1-eb09f0d98767
+		summarizeBy: sum
+		sourceColumn: previous_month_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column latest_12_months_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: b849a805-5e6a-43cd-9c3e-ebc0d890964d
+		summarizeBy: sum
+		sourceColumn: latest_12_months_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column previous_12_months_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: ec05e4d0-40a8-448d-a04e-df62b58f2a1b
+		summarizeBy: sum
+		sourceColumn: previous_12_months_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column same_month_last_year_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 125e0f3f-b0be-46c4-b661-591d3a0da467
+		summarizeBy: sum
+		sourceColumn: same_month_last_year_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_year
+		dataType: string
+		lineageTag: b4886159-1797-4528-af62-24f303c0a5b2
+		summarizeBy: none
+		sourceColumn: month_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_number =
+			
+			
+			RANKX( ALL( 'Death Date Reference' ), 'Death Date Reference'[year_month], , ASC, Dense)
+		formatString: 0
+		lineageTag: 5ae89197-5886-4a1b-a655-7dfe3d2bc592
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Death Date Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "DSCRO_NATIONAL_LOOKUPS", [Query="/*===============================================================================================================#(lf)New Date Reference Script#(lf)Created by: Ben Adams#(lf)Created Date: 27/12/2023#(lf)===============================================================================================================*/#(lf) #(lf)SELECT DISTINCT [date] = CAST([Full_Date] AS DATE)#(lf)               ,[day_month_year] = CONVERT(VARCHAR, [Full_Date], 103) --> 103 converts to DD/MM/YYYY format#(lf)#(tab)#(tab)#(tab)   ,[day] = [Day_Of_Fin_Year]#(lf)#(tab)#(tab)#(tab)   ,[weekday] = [Weekday_No]#(lf)#(tab)#(tab)#(tab)   ,[weekday_name] = [Weekday_Name]#(lf)#(tab)#(tab)#(tab)   ,[month] = [Month_No]#(lf)#(tab)#(tab)#(tab)   ,[month_name] = [Month_Short_Name]#(lf)#(tab)#(tab)#(tab)   ,[quarter] = [Cal_Quarter_No]#(lf)#(tab)#(tab)#(tab)   ,[year_month] = [Year_Month]#(lf)#(tab)#(tab)#(tab)   ,[is_weekend] = CASE WHEN [Weekday_No] IN (6,7) THEN 1 ELSE 0 END#(lf)#(tab)#(tab)#(tab)   ,[is_holiday] = CASE WHEN [Bank_Holiday_Desc] IS NOT NULL THEN 1 ELSE 0 END#(lf)#(tab)#(tab)#(tab)   ,[holiday_description] = [Bank_Holiday_Desc] --> Description of holiday type i.e., 'Bank Holiday'#(lf)#(tab)#(tab)#(tab)   ,[is_working_day] = [Working_Day_Calc]#(lf)#(tab)#(tab)#(tab)   ,[financial_week_of_year] = [Fin_Week_No]#(lf)#(tab)#(tab)#(tab)   ,[financial_year] = REPLACE([Fin_Year_YYYY_dash_YY], ' - ', '/')#(lf)#(tab)#(tab)#(tab)   ,[financial_quarter] = [Fin_Quarter_No]#(lf)#(tab)#(tab)#(tab)   ,[day_of_quarter] = [Day_Of_Quarter]#(lf)#(tab)#(tab)#(tab)   ,[quarter_start_date] = CAST([Quarter_Start] AS DATE)#(lf)#(tab)#(tab)#(tab)   ,[quarter_end_date] = CAST([Quarter_Start] AS DATE)#(lf)#(tab)#(tab)#(tab)   ,[month_day_no] = [Month_Day_No]#(lf)#(tab)#(tab)#(tab)   ,[financial_month] = [Fin_Month_No]#(lf)#(tab)#(tab)#(tab)   ,[month_year_name] = CONCAT([Month_Short_Name], '-', LEFT([Date_112], 4))#(lf)#(tab)#(tab)#(tab)   ,[month_year] = [MonthYear_MMMM_YYYYY]#(lf)#(tab)#(tab)#(tab)   ,[ytd_flag] = CASE WHEN [Fin_Month_No] <= (#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)               SELECT#(lf)                                           CAST([Fin_Month_No] AS INT)#(lf)                                           FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)               WHERE [Full_Date] = EOMONTH ( DATEADD ( MONTH, -1, GETDATE() ) )#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)               )#(lf)                                           THEN 1 ELSE 0 END --> Establishes whether the month is included in year to date calculations and reflects across all years#(lf)#(tab)#(tab)#(tab)   ,[latest_month_flag] = CASE WHEN [Year_Month] IN #(lf)#(tab)#(tab)#(tab)                         (SELECT DISTINCT MAX([Year_Month]) #(lf)#(tab)#(tab)#(tab)                          FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHERE [Full_Date] BETWEEN '20190401' AND EOMONTH ( DATEADD ( MONTH, -1, GETDATE() ) )) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  THEN 1 ELSE 0 END --> The latest month available within your date range#(lf)#(tab)#(tab)#(tab)   ,[previous_month_flag] = CASE WHEN [Year_Month] IN#(lf)#(tab)#(tab)#(tab)                         (SELECT DISTINCT MAX([Year_Month]) #(lf)#(tab)#(tab)#(tab)                          FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHERE [Full_Date] BETWEEN '20190401' AND EOMONTH ( DATEADD ( MONTH, -2, GETDATE() ) )) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  THEN 1 ELSE 0 END --> The month before the latest month available within your date range#(lf)#(tab)#(tab)#(tab)   ,[latest_12_months_flag] = CASE WHEN [Year_Month] IN#(lf)#(tab)#(tab)#(tab)                             (SELECT DISTINCT [Year_Month]#(lf)#(tab)#(tab)#(tab)                              FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)      WHERE [Full_Date] BETWEEN EOMONTH ( DATEADD ( MONTH, -12, GETDATE() ) ) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  AND EOMONTH ( DATEADD ( MONTH, -1, GETDATE() ) )) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)      THEN 1 ELSE 0 END --> The latest 12 months within your date range#(lf)#(tab)#(tab)#(tab)   ,[previous_12_months_flag] = CASE WHEN [Year_Month] IN#(lf)#(tab)#(tab)#(tab)                               (SELECT DISTINCT [Year_Month]#(lf)#(tab)#(tab)#(tab)                                FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)        WHERE [Full_Date] BETWEEN EOMONTH ( DATEADD ( MONTH, -24, GETDATE() ) ) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)    AND EOMONTH ( DATEADD ( MONTH, -13, GETDATE() ) )) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)        THEN 1 ELSE 0 END --> The 12 months before the latest 12 months within your date range - allows comparing current to previous#(lf)#(tab)#(tab)#(tab)   ,[same_month_last_year_flag] = CASE WHEN [Year_Month] IN#(lf)#(tab)#(tab)#(tab)                                 (SELECT DISTINCT MAX([Year_Month]) #(lf)#(tab)#(tab)#(tab)                                 FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)         WHERE [Full_Date] BETWEEN '20190401' AND EOMONTH ( DATEADD ( MONTH, -13, GETDATE() ) )) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)         THEN 1 ELSE 0 END --> Same month last year as the latest month within the date range i.e., Nov-22 and Nov-23#(lf)#(lf)FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(lf)WHERE [Full_Date] BETWEEN '20130401' AND EOMONTH ( DATEADD ( MONTH, -1, GETDATE() ) ) --> This can be changed to meet your date range need. #(lf)                                                                                      --  The EOMONTH function finds the latest complete month.#(lf)#(lf)ORDER BY CAST([Full_Date] AS DATE) ASC"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

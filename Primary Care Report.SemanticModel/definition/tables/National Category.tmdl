@@ -1,0 +1,322 @@
+table 'National Category'
+	lineageTag: ab430003-2bb3-4b8c-88e5-8847c2c4fe89
+
+	measure 'NC - England Appointments Static' =
+			
+			
+			CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]))
+		formatString: 0
+		lineageTag: 630dbd2c-f984-40f1-ae82-b7da4adf418c
+
+	measure 'NC - SW Appointments Static' =
+			
+			
+			CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'National Category'[Region_Name] = "South West")
+		formatString: 0
+		lineageTag: f281e511-ff82-413f-a969-9cf6809a2e0a
+
+	measure 'NC - Glos Appointments Static' =
+			
+			
+			CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+		formatString: 0
+		lineageTag: 8b4823ae-d5a6-4e4e-9491-f4aeb068a9dc
+
+	measure '% of NC - Glos' =
+			
+			
+			VAR _EVENTS = CALCULATE(SUM('National Category'[Appointments]), 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN
+			
+			_EVENTS/[NC - Glos Appointments Static]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 3ac96313-29c0-4a99-89e3-501b01578942
+
+	measure 'NC - Rate per 1,000 - Glos' =
+			
+			
+			VAR _APP = CALCULATE(SUM('National Category'[Appointments]), 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			VAR _POP = CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr", 'National ICB Populations'[ICB_Name] = "NHS Gloucestershire Integrated Care Board")
+			
+			RETURN
+			
+			(_APP/_POP)*1000
+		lineageTag: 4f73e239-31fa-4723-a39f-0e76c560fdfe
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% of NC - SW' =
+			
+			
+			VAR _EVENTS = CALCULATE(SUM('National Category'[Appointments]), 'National Category'[Region_Name] = "South West")
+			
+			RETURN
+			
+			_EVENTS/[NC - SW Appointments Static]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d100d7b3-45d0-4f73-9a42-d53ff2653943
+
+	measure '% of NC - England' =
+			
+			
+			VAR _EVENTS = CALCULATE(SUM('National Category'[Appointments]))
+			
+			RETURN
+			
+			_EVENTS/[NC - England Appointments Static]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 0302264a-e2a6-4579-b300-d5926d5669dc
+
+	measure 'NC - Rate per 1,000 - SW' =
+			
+			
+			VAR _APP = CALCULATE(SUM('National Category'[Appointments]), 'National Category'[Region_Name] = "South West")
+			VAR _POP = CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr", 'National ICB Populations'[Region_Name] = "South West")
+			RETURN
+			
+			(_APP/_POP)*1000
+		lineageTag: 0aa2b52b-a2e5-48b5-aab0-19c4bc303c34
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'NC - Rate per 1,000 - England' =
+			
+			
+			VAR _APP = CALCULATE(SUM('National Category'[Appointments]))
+			VAR _POP = [April Populations]
+			RETURN
+			
+			(_APP/_POP)*1000
+		lineageTag: 146a3498-87be-47ff-a980-fd6274d4073b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'NC - England Measure' =
+			
+			
+			IF(CONTAINSSTRING([Parameter NC Selected Option], "% of Total Appointments"), [% of NC - England], [NC - Rate per 1,000 - England])
+		lineageTag: cf8f89cb-3705-459d-bffd-ebec63adaa20
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments"), "#,0.0%", "#,0.0")
+
+	measure 'NC - SW Measure' =
+			
+			
+			IF(CONTAINSSTRING([Parameter NC Selected Option], "% of Total Appointments"), [% of NC - SW], [NC - Rate per 1,000 - SW])
+		lineageTag: e6d6f9c0-70f4-4a4d-9f53-bff652d43a01
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments"), "#,0.0%", "#,0.0")
+
+	measure 'NC - Glos Measure' =
+			
+			
+			IF(CONTAINSSTRING([Parameter NC Selected Option], "% of Total Appointments"), [% of NC - Glos], [NC - Rate per 1,000 - Glos])
+		lineageTag: d7727c38-b3aa-44c9-8778-16a60dd16d31
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments"), "#,0.0%", "#,0.0")
+
+	measure 'NC - Card Measure - England' = ```
+			
+			
+			IF ( 
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month") = TRUE()), 
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1) / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_month_flag] = 1),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_6_months_flag] = 1) / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_12_months_flag] = 1) / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year])) / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year])),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month") = TRUE()),
+			    (CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1) / CALCULATE([April Populations], 'National ICB Populations'[FinancialYear] = MAX('Date Reference Script'[financial_year])))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_6_months_flag] = 1)/6) / CALCULATE([April Populations], 'National ICB Populations'[FinancialYear] = MAX('Date Reference Script'[financial_year])))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_12_months_flag] = 1)/12) / CALCULATE([April Populations], 'National ICB Populations'[FinancialYear] = MAX('Date Reference Script'[financial_year])))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))/[Distinct Months]) / CALCULATE([April Populations], 'National ICB Populations'[FinancialYear] = MAX('Date Reference Script'[financial_year])))*1000, "There is an Error"))))))))
+			```
+		lineageTag: f7426e0c-0dd6-4715-9c0f-072caaaacf96
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments"), "#,0.0%", "#,0.0")
+
+	measure 'A.TEST_APP' =
+			
+			
+			CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1)
+		formatString: 0
+		lineageTag: 18c610c9-698a-4f96-85f2-328611c139e4
+
+	measure 'A.TEST_POP' =
+			
+			
+			CALCULATE(SUM('National ICB Populations'[Population]), 'National ICB Populations'[MonthName] = "Apr", 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]))
+		formatString: 0
+		lineageTag: ecb95e7a-96d4-48d2-adf9-ebebc8be7172
+
+	measure 'NC - Card Measure - SW' = ```
+			
+			
+			IF ( 
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month") = TRUE()), 
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1, 'National Category'[Region_Name] = "South West") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_month_flag] = 1, 'National Category'[Region_Name] = "South West"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_6_months_flag] = 1, 'National Category'[Region_Name] = "South West") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_6_months_flag] = 1, 'National Category'[Region_Name] = "South West"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_12_months_flag] = 1, 'National Category'[Region_Name] = "South West") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_12_months_flag] = 1, 'National Category'[Region_Name] = "South West"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[ytd_flag] = 1, 'National Category'[Region_Name] = "South West") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[ytd_flag] = 1, 'National Category'[Region_Name] = "South West"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month") = TRUE()),
+			    (CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1, 'National Category'[Region_Name] = "South West") / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[Region_Name] = "South West"))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_6_months_flag] = 1, 'National Category'[Region_Name] = "South West")/6) / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[Region_Name] = "South West"))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_12_months_flag] = 1, 'National Category'[Region_Name] = "South West")/12) / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[Region_Name] = "South West"))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), 'National Category'[Region_Name] = "South West")/[Distinct Months]) / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[Region_Name] = "South West"))*1000, "There is an Error"))))))))
+			```
+		lineageTag: ad8c8aa7-215f-4c84-ac1e-29ed86971b08
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments"), "#,0.0%", "#,0.0")
+
+	measure 'NC - Card Measure - Glos' = ```
+			
+			
+			IF ( 
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month") = TRUE()), 
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_month_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_6_months_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_6_months_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_12_months_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[latest_12_months_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD") = TRUE()),
+			    CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[ytd_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board") / CALCULATE(SUM('National Category'[Appointments]), ALL('National Category'[National_Category]), 'Date Reference Script'[ytd_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board"),
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month") = TRUE()),
+			    (CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_month_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board") / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[ICB_Name] = "NHS Gloucestershire Integrated Care board"))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_6_months_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board")/6) / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[ICB_Name] = "NHS Gloucestershire Integrated Care board"))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[latest_12_months_flag] = 1, 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board")/12) / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[ICB_Name] = "NHS Gloucestershire Integrated Care board"))*1000,
+			IF (
+			    AND ( CONTAINSSTRING ('Parameter - National Category'[Parameter NC Selected Option], "Crude Rate per 1,000") = TRUE(), CONTAINSSTRING ('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD") = TRUE()),
+			    ((CALCULATE(SUM('National Category'[Appointments]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), 'National Category'[ICB_Name] = "NHS Gloucestershire Integrated Care board")/[Distinct Months]) / CALCULATE([April Populations], 'National ICB Populations'[Extract_Date] = MAX('National ICB Populations'[Extract_Date]), 'National ICB Populations'[ICB_Name] = "NHS Gloucestershire Integrated Care board"))*1000, "There is an Error"))))))))
+			```
+		lineageTag: cf080c04-1b13-4f55-a8b2-4f2a6124f2f6
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - National Category'[Parameter NC Selected Option], "% of Total Appointments"), "#,0.0%", "#,0.0")
+
+	column ICB_Code
+		dataType: string
+		lineageTag: 7460b5a3-f6ab-4410-89aa-d54013d80b64
+		summarizeBy: none
+		sourceColumn: ICB_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: d940b417-0059-45e5-81ce-fbaa390035b0
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Name
+		dataType: string
+		lineageTag: f690baeb-a1ab-456b-9beb-ed97a5b7bb3e
+		summarizeBy: none
+		sourceColumn: Region_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 02d88983-9136-4632-ac95-c90cda33c450
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 11850130-48ff-4553-9524-69efb8561f1f
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Setting
+		dataType: string
+		lineageTag: aab0507e-e49f-4aa5-811c-a772a419a465
+		summarizeBy: none
+		sourceColumn: Service_Setting
+
+		annotation SummarizationSetBy = Automatic
+
+	column Context_Type
+		dataType: string
+		lineageTag: c8e4bed1-0731-4c5f-a3d7-dafaac9eb84b
+		summarizeBy: none
+		sourceColumn: Context_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column National_Category
+		dataType: string
+		lineageTag: 9ee3da18-d86a-432d-af76-f0a83e7d82c0
+		summarizeBy: none
+		sourceColumn: National_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointments
+		dataType: int64
+		formatString: 0
+		lineageTag: 3bbe8786-b275-4246-8eff-612dd9542c97
+		summarizeBy: sum
+		sourceColumn: Appointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a57b5d0f-da8a-4448-9595-f21105b6225c
+		summarizeBy: none
+		sourceColumn: LastDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'National Category' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query=" SELECT DISTINCT *#(lf) FROM [PowerBI_Reporting].[primarycare].[tbl09_GP_Appointments_National_Category_Data]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,324 @@
+table Outpatients
+	lineageTag: 00b2d75f-95d5-4bcd-9177-12af730c4f14
+
+	measure 'Gloucestershire OP Attendances' =
+			
+			CALCULATE(
+				SUM('Outpatients'[Number of OP Attendances]),
+				'Outpatients'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		formatString: #,0
+		lineageTag: 8606216e-bf15-40a2-8a76-6da5811dd2a5
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Peer Average OP Attendance Rate' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Outpatients'[ICB of Registration])),
+				CALCULATE(SUM('Outpatients'[OP Attendance Rate per 1000 (Crude)]))
+			)
+		lineageTag: d5f44570-f812-4f1b-a331-9fbf78cab7cd
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Quartile OP Attendance Rate' =
+			
+			PERCENTILEX.INC(
+			    KEEPFILTERS(VALUES('Outpatients'[ICB of Registration])),
+			    CALCULATE(SUM('Outpatients'[OP Attendance Rate per 1000 (Crude)]))
+			,.25)
+		lineageTag: e0058834-4284-40ff-9a13-cbe4eddbdfb0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Decile OP Attendance Rate' =
+			
+			PERCENTILEX.INC(
+			    KEEPFILTERS(VALUES('Outpatients'[ICB of Registration])),
+			    CALCULATE(SUM('Outpatients'[OP Attendance Rate per 1000 (Crude)]))
+			,.10)
+		lineageTag: 6fd1fa38-2826-461c-8211-dbdccd2373cb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer Average OP Attendance Rate Variance to Glos OP Attendances' =
+			
+			(VAR __BASELINE_VALUE =
+				CALCULATE(
+					[Peer Average OP Attendance Rate],
+					'Outpatients'[ICB of Registration]
+						IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+				)
+			VAR __MEASURE_VALUE = [Peer Average OP Attendance Rate]
+			RETURN
+				IF(NOT ISBLANK(__MEASURE_VALUE), __MEASURE_VALUE - __BASELINE_VALUE))*-1
+		lineageTag: a0f462e0-57b4-48c9-a63a-731c0cc0b515
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Gloucestershire OP Attendance Rate' =
+			
+			CALCULATE(
+				SUM('Outpatients'[OP Attendance Rate per 1000 (Crude)]),
+				'Outpatients'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		lineageTag: 5a8bad19-f2f3-4c3f-ade4-4dfdcff26c82
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Quartile OP Attendance Rate Variance to Glos OP Attendance Rate' =
+			
+			[Gloucestershire OP Attendance Rate] - [Peer 1st Quartile OP Attendance Rate]
+		lineageTag: 47c9a088-8a59-4d75-be25-9f898030a84c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Decile OP Attendance Rate Variance to Glos OP Attendance Rate' =
+			
+			[Gloucestershire OP Attendance Rate] - [Peer 1st Decile OP Attendance Rate]
+		lineageTag: 7ff4fe8c-d0c2-46c8-803e-dcf7e35720ef
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer Average OP Attendances' = [Peer Average OP Attendance Rate Variance to Glos OP Attendances]* 674.37
+		formatString: #,0
+		lineageTag: 8da28600-ff1e-460f-9029-43660ab53297
+
+	measure 'Excess to Peer 1st Quartile OP Attendances' = [Peer 1st Quartile OP Attendance Rate Variance to Glos OP Attendance Rate]* 674.37
+		formatString: #,0
+		lineageTag: df93d4ec-f7dd-4757-89bd-18c579400cc4
+
+	measure 'Excess to Peer 1st Decile OP Attendances' = [Peer 1st Decile OP Attendance Rate Variance to Glos OP Attendance Rate]* 674.37
+		formatString: #,0
+		lineageTag: d32da9c1-e31a-466b-8525-ecd9a65ffc86
+
+	measure 'Excess to Peer Average £ OP Attendances' =
+			
+			[Excess to Peer Average OP Attendances] * AVERAGE('Outpatients'[Tariff])
+		formatString: #,0
+		lineageTag: 7c9944cc-bca9-4563-8a16-b84e6c3fa30d
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalMultiplication"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Excess to Peer 1st Quartile £ OP Attendances' =
+			
+			[Excess to Peer 1st Quartile OP Attendances] * AVERAGE('Outpatients'[Tariff])
+		formatString: #,0
+		lineageTag: 29e5bcf6-da03-4b6e-b051-099e886f9c9b
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Excess to Peer 1st Decile £ OP Attendances' =
+			
+			[Excess to Peer 1st Decile OP Attendances] * AVERAGE('Outpatients'[Tariff])
+		formatString: #,0
+		lineageTag: 671fcbba-e5b4-44e2-8993-6e227f6cbacb
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Gloucestershire OP DNAs' =
+			
+			CALCULATE(
+				SUM('Outpatients'[Number of OP DNAs]),
+				'Outpatients'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		formatString: 0
+		lineageTag: fa790490-33ea-4d2e-ab94-9e3054ddc21f
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Gloucestershire OP DNA Rate' =
+			
+			CALCULATE(
+				SUM('Outpatients'[OP DNA Rate]),
+				'Outpatients'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		lineageTag: 806271eb-e776-45b0-a834-7b0c091a06b4
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: 631b6ec4-fad4-45f5-bc15-de29ed680056
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB of Registration'
+		dataType: string
+		lineageTag: ffa41943-b011-4321-a483-b48a3c2f6078
+		summarizeBy: none
+		sourceColumn: ICB of Registration
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'New/Follow Up Code'
+		dataType: string
+		lineageTag: c5776428-d66d-49ff-89b0-e99daaeca45e
+		summarizeBy: none
+		sourceColumn: New/Follow Up Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Treatment Function Code'
+		dataType: string
+		lineageTag: f66e4c85-3052-4660-827e-d7845f3dbace
+		summarizeBy: none
+		sourceColumn: Treatment Function Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of OP Attendances'
+		dataType: int64
+		formatString: 0
+		lineageTag: 82e5306e-edfd-4114-917f-e5f4fd734ee6
+		summarizeBy: sum
+		sourceColumn: Number of OP Attendances
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of OP DNAs'
+		dataType: int64
+		formatString: 0
+		lineageTag: e2fdf6d0-f811-49b1-9f20-1d2b118b25aa
+		summarizeBy: sum
+		sourceColumn: Number of OP DNAs
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of OP Cancellations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 18270aa1-5a97-41d1-be11-2d543823f55b
+		summarizeBy: sum
+		sourceColumn: Number of OP Cancellations
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of OP Appointments'
+		dataType: int64
+		formatString: 0
+		lineageTag: 69fcd321-43bf-458d-8fb0-9ff60aecbd4f
+		summarizeBy: sum
+		sourceColumn: Number of OP Appointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Registered Population'
+		dataType: int64
+		formatString: 0
+		lineageTag: be2b331f-eb2a-4c1e-9594-48018d08c389
+		summarizeBy: sum
+		sourceColumn: Registered Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OP Attendance Rate per 1000 (Crude)'
+		dataType: double
+		lineageTag: 9ff1bf3b-6b96-4385-bfb1-e116eadb17fc
+		summarizeBy: sum
+		sourceColumn: OP Attendance Rate per 1000 (Crude)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: f109422d-b359-4e50-b3a6-16687c646a11
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'TFC Code'
+		dataType: string
+		lineageTag: 65134d7f-e209-41e4-8f95-ad9800893892
+		summarizeBy: none
+		sourceColumn: TFC Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tariff = IF(OR(Outpatients[New/Follow Up Code]="1 First attendance face to face",Outpatients[New/Follow Up Code]="3 First telephone or telemedicine consultation"),LOOKUPVALUE('OP Tariff Nov 22'[WF01B First Attendance - Single Professional],'OP Tariff Nov 22'[TFC Code],Outpatients[TFC Code]),LOOKUPVALUE('OP Tariff Nov 22'[WF01A Follow Up Attendance - Single Professional],'OP Tariff Nov 22'[TFC Code],Outpatients[TFC Code]))
+		formatString: 0
+		lineageTag: 3232fb5c-045c-4db2-b68f-cb21dccf17b7
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OP DNA Rate' = DIVIDE(Outpatients[Number of OP DNAs],(Outpatients[Registered Population]/1000))
+		lineageTag: d8516b52-d48d-46db-a574-5809e63333fc
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Outpatients-a4fd8bf6-3ddc-415f-9785-3b623d940400 = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\Outpatients"),
+				    #"Filtered Hidden Files1" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),
+				    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File (2)", each #"Transform File (2)"([Content])),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
+				    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (2)"}),
+				    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (2)", Table.ColumnNames(#"Transform File (2)"(#"Sample File (2)"))),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"Source.Name", type text}, {"ICB of Registration", type text}, {"New/Follow Up Code", type text}, {"Treatment Function Code", type text}, {"Number of OP Attendances", Int64.Type}, {"Number of OP DNAs", Int64.Type}, {"Number of OP Cancellations", Int64.Type}, {"Number of OP Appointments", Int64.Type}, {"Registered Population", Int64.Type}, {"OP Attendance Rate per 1000 (Crude)", type number}}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Changed Type", "Fiscal Year", each if [Source.Name] = "Outpatient HED 1920.csv" then "2019/20" else if [Source.Name] = "Outpatient HED 2021.csv" then "2020/21" else if [Source.Name] = "Outpatient HED 2122.csv" then "2021/22" else if [Source.Name] = "Outpatient HED 2223.csv" then "2022/23" else null),
+				    #"Added Custom" = Table.AddColumn(#"Added Conditional Column", "TFC Code", each Text.Start([Treatment Function Code],3))
+				in
+				    #"Added Custom"
+
+	annotation PBI_ResultType = Table
+

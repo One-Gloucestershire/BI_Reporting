@@ -1,0 +1,55 @@
+table 'LTC per Patient Table'
+	lineageTag: 44ce17b0-1e2c-42a0-a57f-cbcc4c4a8b23
+
+	measure 'LTC per Patient' =
+			
+			
+			SUM('LTC per Patient Table'[Total LTC]) / DISTINCTCOUNT('EoL Data'[pseudo_nhs_number])
+		lineageTag: 81a9182b-7f6e-451a-b752-31b5b25fc2a2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LTC Patients' =
+			
+			
+			DISTINCTCOUNT('EoL Data'[pseudo_nhs_number])
+		formatString: 0
+		lineageTag: 28a56c9c-1076-4585-9ff0-4c9d6fca865d
+
+	measure 'LTC Sum' =
+			
+			
+			SUM('LTC per Patient Table'[Total LTC])
+		formatString: 0
+		lineageTag: 21276214-cad8-4fdc-97f5-9bb767f0afa3
+
+	column pseudo_nhs_number
+		lineageTag: 4ecad58d-dfea-4b8f-ac17-d30c151f7b3c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: LTC Reference Table - ONLY LTC[pseudo_nhs_number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total LTC'
+		formatString: 0
+		lineageTag: 806f9703-bb81-4d92-b891-d60738b6affe
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total LTC]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'LTC per Patient Table' = calculated
+		mode: import
+		source =
+				
+				
+				SUMMARIZE(
+				    'LTC Reference Table - ONLY LTC',
+				    'LTC Reference Table - ONLY LTC'[pseudo_nhs_number],
+				    "Total LTC", SUM('LTC Reference Table - ONLY LTC'[Value])
+				)
+
+	annotation PBI_Id = 148d6bb5b8404c61ae762f61cb9d79f1
+

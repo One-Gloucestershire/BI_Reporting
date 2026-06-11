@@ -1,0 +1,96 @@
+table 'Age Band Reference'
+	lineageTag: b56c2529-1155-45dd-8755-317d32336002
+
+	measure 'Number of Age Bands' =
+			
+			
+			DISTINCTCOUNT('Age Band Reference'[Age Banding])
+		formatString: 0
+		lineageTag: 625070f8-29a6-4d0a-b45b-120e6cd9b8a8
+
+	measure 'Count of Age Bands' =
+			
+			
+			DISTINCTCOUNT('Dispensing Data'[Age_Bands])
+		formatString: 0
+		lineageTag: 356ba26c-a5c1-4c83-8bb0-4cb8b68106dc
+
+	measure 'Age Band Order' = ```
+			
+			
+			SUM('Age Band Reference'[Order])
+			
+			```
+		formatString: 0
+		lineageTag: 76829deb-002e-4dc6-b55d-e0ec01dea04b
+
+	measure 'Age Band Filtered Values' = ```
+			
+			
+			VAR _FILTERED_COUNT = DISTINCTCOUNT('Age Band Reference'[Age Banding])
+			VAR _MAXVALUES = 10
+			
+			RETURN 
+			
+			IF (
+			    _FILTERED_COUNT > _MAXVALUES
+			    && ISCROSSFILTERED( 'Age Band Reference'[Age Banding] )
+			    && DISTINCTCOUNT('Age Band Reference'[Age Banding]) < CALCULATE(DISTINCTCOUNT('Age Band Reference'[Age Banding]), ALL('Age Band Reference'[Age Banding])),
+			        CONCATENATE(CONCATENATEX(
+			        TOPN(_MAXVALUES,
+			        VALUES('Age Band Reference'[Age Banding]),
+			        'Age Band Reference'[Age Banding], ASC
+			        ),
+			        'Age Band Reference'[Age Banding],
+			        ", "), ", etc"),
+			IF (
+			    _FILTERED_COUNT <= _MAXVALUES
+			    && ISCROSSFILTERED( 'Age Band Reference'[Age Banding] )
+			    && DISTINCTCOUNT('Age Band Reference'[Age Banding]) < CALCULATE(DISTINCTCOUNT('Age Band Reference'[Age Banding]), ALL('Age Band Reference'[Age Banding])),
+			        CONCATENATEX(
+			        TOPN(_MAXVALUES,
+			        VALUES('Age Band Reference'[Age Banding]),
+			        'Age Band Reference'[Age Banding], ASC
+			        ),
+			        'Age Band Reference'[Age Banding],
+			        ", "),
+			"All Ages are currently selected"
+			))
+			
+			```
+		lineageTag: 88f151aa-00f8-4d44-8ed5-eaf0a603f7e4
+
+	column 'Age Banding'
+		dataType: string
+		lineageTag: b3e81314-d44c-4f59-b5b0-4ff618ae0677
+		summarizeBy: none
+		sourceColumn: Age Banding
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: int64
+		formatString: 0
+		lineageTag: fb75dfd7-fcea-4fec-8a82-7e4947656b33
+		summarizeBy: none
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Age Band Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("LZA7CsMwEAWvElT7weqz+lwihVvjKnZtCLk/0b5Vp6cRaJjjCIISthDDuR1BMeY58RwF0Uj2pYjGClcSJGPqS5GMVa4syMaaL0U21rnK/MzY8KUoxqL45wKlynJRKKnrVEEldZ+qqKQu1ASN1I2aopG6Uhd0Unfqik7qUkMwSN1qzAisICvD7CDGU1wXM4XwxQplpZgqudv7+b32+/N8r/uy26l4/gE=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t, Column2 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Age Banding"}, {"Column2", "Order"}})
+				in
+				    #"Renamed Columns"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

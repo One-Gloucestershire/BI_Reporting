@@ -1,0 +1,75 @@
+table 'LTC Reference Table - ALL'
+	lineageTag: 1c8b3958-72ce-4142-8a11-8f3737b42e6d
+
+	measure 'LTC Helper' =
+			
+			
+			IF(ISFILTERED('LTC Reference Table - ALL'[Attribute]), 1, 0)
+		formatString: 0
+		lineageTag: c94ecdf1-4381-456d-a61c-a85d1d666bfa
+
+	measure 'Average LTCs' =
+			
+			
+			DISTINCTCOUNT('EoL Data'[pseudo_nhs_number]) / SUM('LTC Reference Table - ALL'[Value])
+		lineageTag: 7885f039-4077-4c58-8c8d-b9cf2f8b0acc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column pseudo_nhs_number
+		dataType: string
+		lineageTag: 7b10a1d3-3104-4c9f-b2a7-a57d1e89ad6a
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 2a9502eb-1511-4b6b-a734-290ff92bb7d6
+		summarizeBy: sum
+		sourceColumn: Population_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column NumberOfLTC
+		dataType: int64
+		formatString: 0
+		lineageTag: d0d1bea5-e311-44b2-a665-a85e99823e2c
+		summarizeBy: sum
+		sourceColumn: NumberOfLTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: 9c856611-c559-404a-ac1b-d854f3f4f035
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 6c224acd-7ea2-4e1d-92e1-e6bef0a77294
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'LTC Reference Table - ALL' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)SELECT *,#(lf)[NumberOfLTC] =  [Hypertension]+[Depression]+[Asthma]+[Diabetes]+[Coronary Heart Disease]+[Cancer]+[Atrial Fibrilation]+#(lf)#(tab)#(tab)#(tab)#(tab)[Osteoporosis]+[COPD]+[Stroke]+[TIA]+[Heart Failure]+[Chronic Kidney Disease]+[Peripheral Arterial Disease]+#(lf)#(tab)#(tab)#(tab)#(tab)[SMI]+[Dementia]+[Epilepsy]+[Rheumatoid Arthritis]+[Learning Disability]+[Mental Health]#(lf)FROM(#(lf)SELECT#(lf)[PDS].[pseudo_nhs_number],#(lf)[Population_Counter] = 1,#(lf)[Hypertension] = COALESCE([Hypertension],0),#(lf)[Depression] = COALESCE([Depression],0),#(lf)[Asthma] = COALESCE([Asthma],0),#(lf)[Diabetes] = COALESCE([Diabetes],0),#(lf)[Coronary Heart Disease] = COALESCE([CoronaryHeartDisease],0),#(lf)[Cancer] = COALESCE([Cancer],0),#(lf)[Atrial Fibrilation] = COALESCE([AtrialFibrilation],0),#(lf)[Osteoporosis] = COALESCE([Osteoporosis],0),#(lf)[COPD] = COALESCE([COPD],0),#(lf)[Stroke] = COALESCE([Stroke],0),#(lf)[TIA] = COALESCE([TIA],0),#(lf)[Heart Failure] = COALESCE([HeartFailure],0),#(lf)[Chronic Kidney Disease] = COALESCE([ChronicKidneyDisease],0),#(lf)[Peripheral Arterial Disease] = COALESCE([PeripheralArterialDisease],0),#(lf)[SMI] = COALESCE([SMI],0),#(lf)[Dementia] = COALESCE([Dementia],0),#(lf)[Epilepsy] = COALESCE([Epilepsy],0),#(lf)[Rheumatoid Arthritis] = COALESCE([RheumatoidArthritis],0),#(lf)[Learning Disability] = COALESCE([LearningDisability],0),#(lf)[Mental Health] = COALESCE([MentalHealth],0)#(lf)FROM [PowerBI_Reporting].[EndofLife].[tbl01_EOL_Report_Table] AS [PDS]#(lf) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)LEFT JOIN (SELECT DISTINCT [LTC].[PseudoNHSNumber],#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Hypertension] = MAX(CASE WHEN [LTCCode] IN ('QOF48_HYP_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Depression] = MAX(CASE WHEN [LTCCode] IN ('QOF48_DEPR_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Asthma] = MAX(CASE WHEN [LTCCode] IN ('QOF48_AST_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Diabetes] = MAX(CASE WHEN [LTCCode] IN ('QOF48_DM_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[CoronaryHeartDisease] = MAX(CASE WHEN [LTCCode] IN ('QOF48_CHD_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Cancer] = MAX(CASE WHEN [LTCCode] IN ('QOF48_CAN_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[AtrialFibrilation] = MAX(CASE WHEN [LTCCode] IN ('QOF48_AFIB_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Osteoporosis] = MAX(CASE WHEN [LTCCode] IN ('QOF48_OSTEO_COD') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[COPD] = MAX(CASE WHEN [LTCCode] IN ('QOF48_COPD_COD') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Stroke] = MAX(CASE WHEN [LTCCode] IN ('QOF48_STRK_COD') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[TIA] = MAX(CASE WHEN [LTCCode] IN ('QOF48_TIA_COD') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[HeartFailure] = MAX(CASE WHEN [LTCCode] IN ('QOF48_HF_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[ChronicKidneyDisease] = MAX(CASE WHEN [LTCCode] IN ('QOF48_CKD_COD','QOF48_CKD1AND2_COD') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[PeripheralArterialDisease] = MAX(CASE WHEN [LTCCode] IN ('QOF48_PAD_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[SMI] =  MAX(CASE WHEN [LTCCode] IN ('QOF48_MH_COD') THEN 1 ELSE 0 END), #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Dementia] = MAX(CASE WHEN [LTCCode] IN ('QOF48_DEM_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[Epilepsy] = MAX(CASE WHEN [LTCCode] IN ('QOF48_EPIL_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[RheumatoidArthritis] = MAX(CASE WHEN [LTCCode] IN ('QOF48_RARTH_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[LearningDisability] = MAX(CASE WHEN [LTCCode] IN ('QOF48_LD_REG') THEN 1 ELSE 0 END),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[MentalHealth] = MAX(CASE WHEN [LTCCode] IN ('QOF48_MH_REG') THEN 1 ELSE 0 END)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)FROM [CCG_Current].[PrimaryCare].[vw_LongTermConditions] [LTC]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)GROUP BY [LTC].[PseudoNHSNumber]) [LTC]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ON [LTC].[PseudoNHSNumber] = [PDS].[pseudo_nhs_number]) AS [SUB]"]),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(Source, {"pseudo_nhs_number", "Population_Counter", "NumberOfLTC"}, "Attribute", "Value"),
+				    #"Filtered Rows" = Table.SelectRows(#"Unpivoted Columns", each true)
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

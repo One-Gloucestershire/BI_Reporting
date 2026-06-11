@@ -1,0 +1,39 @@
+table 'Ethnicity Reference'
+	lineageTag: 45625ac8-0d19-4921-b2d6-84a638e1a6ab
+
+	column Ethnic_Code
+		dataType: string
+		lineageTag: d3e36f5a-2afb-453a-ae97-9108564c6978
+		summarizeBy: none
+		sourceColumn: Ethnic_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_Category_Detailed
+		dataType: string
+		lineageTag: e3b47af6-2c21-4ec6-9f14-031241d197c1
+		summarizeBy: none
+		sourceColumn: Ethnic_Category_Detailed
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: 4925853d-7afa-469c-8178-09b641902788
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ethnicity Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="  SELECT [Ethnic_Code] = [NationalCode]#(lf)        ,[Ethnic_Category_Detailed] = [Description]#(lf)#(tab)#(tab),[Ethnicity] = CASE WHEN [NationalCode] IN ('L', 'K', 'H', 'J') THEN 'Asian or Asian British'#(lf)#(tab)#(tab)                    WHEN [NationalCode] IN ('N', 'P', 'M') THEN 'Black or Black British'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [NationalCode] IN ('G', 'F', 'E', 'D') THEN 'Mixed'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [NationalCode] IN ('S', 'R') THEN 'Other Ethnic Groups'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [NationalCode] IN ('C', 'A', 'B') THEN 'White'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE NULL END#(lf)#(lf)  FROM [CCG_Reference].[Reference].[vw_EthnicCategory]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

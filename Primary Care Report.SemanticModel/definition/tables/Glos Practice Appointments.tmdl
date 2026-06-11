@@ -1,0 +1,1420 @@
+table 'Glos Practice Appointments'
+	lineageTag: dcf0fdbe-7a45-4524-9a24-4d4a7e6aea27
+
+	measure 'National Gloucestershire GP 19/20 Baseline' =
+			
+			
+			VAR _1920B = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[financial_year] = "2021/22")
+			
+			VAR _1920M = CALCULATE(DISTINCTCOUNT('Glos Practice Appointments'[FirstDateofMonth]), 'Date Reference Script'[financial_year] = "2021/22")
+			
+			RETURN _1920B/_1920M
+		formatString: #,0
+		lineageTag: b9a8f760-f4a7-47a1-968a-bc96d236c007
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'National Gloucestershire Latest Year Baseline' =
+			
+			
+			VAR _YTDMONTHS = CALCULATE(DISTINCTCOUNT('Date Reference Script'[month]), 'Date Reference Script'[ytd_flag] = 1)
+			VAR _LATESTYEARPOP = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))
+			
+			RETURN _LATESTYEARPOP/_YTDMONTHS
+		formatString: #,0
+		lineageTag: 79a9fb03-f839-4018-b717-7f74a31232d8
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % - Cards' =
+			
+			
+			VAR _CALC = IFERROR(([National Gloucestershire Latest Year Baseline]-[National Gloucestershire GP 19/20 Baseline])/[National Gloucestershire GP 19/20 Baseline], 0)
+			
+			RETURN
+			
+			FORMAT(_CALC, "+0.0%;-0.0%")
+		lineageTag: 2d3b49c7-f445-4aaa-a1b2-5a7e3cb65d22
+
+	measure 'Total Glos Appointments' = SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS])
+		formatString: #,0
+		lineageTag: b4991b2a-d907-45ac-9132-680d89dfa2f7
+
+	measure 'YTD Glos Total Appointments' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[ytd_flag] = 1)
+		formatString: #,0
+		lineageTag: 3b2fdc39-a262-43d3-8fbc-57d054ed6feb
+
+	measure 'National Gloucestershire Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[Total Glos Appointments]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: 62d50d68-e7d8-4337-85aa-ea5be985d545
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Year Title - Appointments' =
+			
+			
+			VAR _LATESTYEAR = MAX('Date Reference Script'[financial_year])
+			
+			RETURN
+			
+			CONCATENATE(_LATESTYEAR, " Monthly Average")
+		lineageTag: 6a8cdea2-acba-4000-b686-3f43319dc937
+
+	measure 'National Gloucestershire % Same Day' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total Glos Appointments])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e29e5695-97e5-4ecd-9c41-1dcb533a19c9
+
+	measure 'National Gloucestershire % F2F' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Face-to-Face")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total Glos Appointments])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 9b930edb-0c95-44de-866e-a7b5e92bd370
+
+	measure 'National Gloucestershire % Telephone' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Telephone")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total Glos Appointments])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 32404957-f997-4c8b-913e-589172deb5f0
+
+	measure 'National Gloucestershire % GP' =
+			
+			
+			VAR _SAMEDAY = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[HCP_TYPE] = "GP")
+			
+			RETURN DIVIDE(_SAMEDAY, [Total Glos Appointments])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f667f095-2269-43ce-a2cc-84f35cc065c0
+
+	measure 'Total Static' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), REMOVEFILTERS('Glos Practice Appointments'[APPT_MODE], 'Glos Practice Appointments'[APPT_STATUS], 'Glos Practice Appointments'[HCP_TYPE], 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT]))
+		formatString: 0
+		lineageTag: ee9a499f-7573-45e4-b3cd-d09f8e69ace8
+
+	measure 'Total Same Day' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day")
+		formatString: 0
+		lineageTag: 5fb5d279-ebf2-4d7c-a908-03f8d6961a82
+
+	measure 'Total Within 21 Days' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days", "15 to 21 Days"})
+		formatString: 0
+		lineageTag: f7067b95-f9a1-42a1-9e1d-bb286f3d64fe
+
+	measure 'Total F2F' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Face-to-Face")
+		formatString: 0
+		lineageTag: 8b131f8e-88c5-4965-93e3-bb8ca75cc1da
+
+	measure 'Total Telephone' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Telephone")
+		formatString: 0
+		lineageTag: 745fe280-0fe5-4706-b1e3-f91c6368689a
+
+	measure 'Total GP' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[HCP_TYPE] = "GP")
+		formatString: 0
+		lineageTag: 0b68994d-5ed8-4e56-92b6-e97dacd3ea6f
+
+	measure '% of Parameter Totals' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"),
+			[Total F2F]/[Total Static],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"),
+			[Total Attended]/[Total Static],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"),
+			[Total GP]/[Total Static],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"),
+			[Total Same Day]/[Total Static],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"),
+			[Total Telephone]/[Total Static],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"),
+			[Total Within 21 Days]/[Total Static], 0
+			))))))
+		lineageTag: ed9c6081-26ee-478b-990c-6a7e9cdf6714
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - Totals'[Current Selection], "Rate per 1,000"), "#0.0", "#,0.0%")
+
+	measure '% of Parameter STD DEV' =
+			
+			
+			CALCULATE(STDEVX.P(VALUES('Glos Practice Appointments'[FirstDateofMonth]), [% of Parameter Totals]), ALLSELECTED( 'Date Reference Script'))
+		lineageTag: 526ace18-eedc-4ad9-b7fa-ecdd213e07c4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% of Parameter Mean' =
+			
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Rate per 1,000"),
+			CALCULATE([% of Parameter Totals], 'Date Reference Script'[SPC_Flag] = 1),
+			CALCULATE(([% of Parameter Totals]), 'Date Reference Script'[SPC_Flag] = 1, ALL('Date Reference Script')))
+		lineageTag: f6b8c0ed-c121-4641-970d-be32e41e7b21
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - Totals'[Current Selection], "Rate per 1,000"), "#0.0", "#,0.0%")
+
+	measure '% of Parameter LCL' =
+			
+			
+			IF(([% of Parameter Mean] - (3*[% of Parameter STD DEV])) < 0, 0, ([% of Parameter Mean] - (3*[% of Parameter STD DEV])))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c35f898b-eeac-4636-9780-6a5848c98ad3
+
+	measure '% of Parameter UCL' =
+			
+			
+			IF(([% of Parameter Mean] + (3*[% of Parameter STD DEV])) < 0, 0, ([% of Parameter Mean] + (3*[% of Parameter STD DEV])))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c0c6eb6c-9cb5-4af6-9f82-5a69b509adac
+
+	measure '% of parameter - Outlier Indicator' =
+			
+			
+			IF(OR([% of Parameter Totals] < [% of Parameter LCL], [% of Parameter Totals] > [% of Parameter UCL]), [% of Parameter Totals], BLANK())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 73cc6337-f631-45a8-9ddb-0aa67f9c3ed3
+
+	measure 'Total Static - No Area Filter' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), REMOVEFILTERS('Glos Practice Appointments'[APPT_MODE], 'Glos Practice Appointments'[APPT_STATUS], 'Glos Practice Appointments'[HCP_TYPE], 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT]), ALL('GP Reference'))
+		formatString: 0
+		lineageTag: 1cda0a78-7110-46f8-8143-14c93e4aed8c
+
+	measure '% of Parameter Totals - No Area Filter' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"),
+			CALCULATE([Total F2F], ALL('GP Reference'))/[Total Static - No Area Filter],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"),
+			CALCULATE([Total Attended], ALL('GP Reference'))/[Total Static - No Area Filter],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"),
+			CALCULATE([Total GP], ALL('GP Reference'))/[Total Static - No Area Filter],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"),
+			CALCULATE([Total Same Day], ALL('GP Reference'))/[Total Static - No Area Filter],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"),
+			CALCULATE([Total Telephone], ALL('GP Reference'))/[Total Static - No Area Filter],
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"),
+			CALCULATE([Total Within 21 Days], ALL('GP Reference'))/[Total Static - No Area Filter], 0))))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 4889c286-e1e7-422e-ad78-ab48661159ab
+
+	measure '% of Parameter Mean - No Area Filter' =
+			
+			
+			CALCULATE(([% of Parameter Totals - No Area Filter]), OR('Date Reference Script'[latest_12_months_flag] = 1, 'Date Reference Script'[previous_12_months_flag] =1), ALLSELECTED('Date Reference Script'))
+		lineageTag: 54a97e36-4631-4046-b127-7764c891fb27
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% of Parameter Totals - With Dates' =
+			
+			
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total GP], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))))))))))))))))))))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: eeb66b95-1c15-425a-bc67-130632f01b57
+
+	measure 'Bubble Sizing for %' = 1 - [% of Parameter Totals - With Dates]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 72969c75-3d0e-4656-8373-9cd8156adc7b
+
+	measure 'Total Attended' =
+			
+			
+			CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_STATUS] = "Attended")
+		formatString: 0
+		lineageTag: 21bb55f3-9e89-4ec6-9c1a-902bc2975bf6
+
+	measure '% of Parameter - Colour Coding' =
+			
+			
+			IF('Glos Practice Appointments'[% of Parameter Totals - With Dates] >= 'Glos Practice Appointments'[% of Parameter Totals - With Dates + No Area Filter], "#20a39e", "#f4a261")
+		lineageTag: a5881a40-ebbe-46fc-937f-51cc0d0749ca
+
+	measure '% of Parameter Totals - With Dates + No Area Filter' = ```
+			
+			
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total F2F], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Attended], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total GP], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[ytd_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    AND(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD")),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static - No Area Filter], 'Date Reference Script'[ytd_flag] = 1),0))))))))))))))))))))))))
+			
+			
+			```
+		lineageTag: afa1e160-2531-4d0c-a3c5-9a3a4171270b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 - Glos Practices' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), [Total F2F]/SUM('GP Population (Duplicate)'[population])*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_STATUS] = "Attended")/SUM('GP Population (Duplicate)'[population]))*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[HCP_TYPE] = "GP")/SUM('GP Population (Duplicate)'[population]))*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day")/SUM('GP Population (Duplicate)'[population]))*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Telephone")/SUM('GP Population (Duplicate)'[population]))*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days", "15 to 21 Days"})/SUM('GP Population (Duplicate)'[population]))*1000
+			,0))))))
+		lineageTag: 5d110658-3514-46e3-82ca-bb0af3533834
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 - Glos Practices Mean' = ```
+			
+			
+			VAR _SSUMMARYTABLE = 
+			SUMMARIZE(
+			    ALLSELECTED('Date Reference Script'), 
+			    'Date Reference Script'[financial_year], 
+			    'Date Reference Script'[month_name], 
+			    "Rate per 1,000", CALCULATE([Rate per 1,000 - Glos Practices], 'Date Reference Script'[SPC_Flag] = 1)
+			)
+			
+			VAR _AVG = 
+			AVERAGEX(_SSUMMARYTABLE, [Rate per 1,000])
+			
+			RETURN _AVG
+			
+			```
+		lineageTag: 053a1d7c-cdcc-4add-8c0c-e8093a625b93
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 - Glos Practices - STD DEV' = ```
+			
+			
+			VAR _SSUMMARYTABLE = 
+			SUMMARIZE(
+			    ALLSELECTED('Date Reference Script'), 
+			    'Date Reference Script'[financial_year], 
+			    'Date Reference Script'[month_name], 
+			    "Rate per 1,000", CALCULATE([Rate per 1,000 - Glos Practices], 'Date Reference Script'[SPC_Flag] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(
+			    _SSUMMARYTABLE,
+			    [Rate per 1,000]
+			)
+			
+			RETURN _STDV
+			```
+		lineageTag: 62a7d9d0-6543-4cb0-9f06-ad9ee0e9df3b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 - Glos Practices - LCL' =
+			
+			
+			IF(([Rate per 1,000 - Glos Practices Mean] - (3*[Rate per 1,000 - Glos Practices - STD DEV])) < 0, 0, ([Rate per 1,000 - Glos Practices Mean] - (3*[Rate per 1,000 - Glos Practices - STD DEV])))
+		lineageTag: a07ba43b-3d87-4780-9831-2cbc8d2e0678
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 - Glos Practices - UCL' =
+			
+			
+			IF(([Rate per 1,000 - Glos Practices Mean] + (3*[Rate per 1,000 - Glos Practices - STD DEV])) < 0, 0, ([Rate per 1,000 - Glos Practices Mean] + (3*[Rate per 1,000 - Glos Practices - STD DEV])))
+		lineageTag: 7af2413c-f1f5-4222-b163-de66a5e93635
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 - Glos Practices - Outlier Indicator' =
+			
+			
+			IF(OR([Rate per 1,000 - Glos Practices] < [Rate per 1,000 - Glos Practices - LCL], [Rate per 1,000 - Glos Practices] > [Rate per 1,000 - Glos Practices - UCL]), [Rate per 1,000 - Glos Practices], BLANK())
+		lineageTag: 005a41bd-c652-4dc2-a533-8e03e07bb129
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC % Title' =
+			
+			
+			CONCATENATE("% of Appointments - ", [Current Selection])
+		lineageTag: 204d88e2-edf1-4d7d-975c-07a6d04ac864
+
+	measure 'Total Attended %' = ```
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total Attended], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total Attended], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ce7d2e1a-d1cf-4ba7-842a-257e921efaf8
+
+	measure 'Total F2F %' =
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total F2F], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total F2F], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fb6dcb13-1ab8-4ebc-a7e2-d9ffbe2a2961
+
+	measure 'Total GP %' =
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total GP], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total GP], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6ec016fe-c211-42ec-9c0c-d3b0b8d595c7
+
+	measure 'Total Same Day %' = ```
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total Same Day], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b5cc3809-f90d-413f-8322-a49d841ff932
+
+	measure 'Total Telephone %' = ```
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total Telephone], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 9f58f422-983b-448b-b051-eb50306e9fde
+
+	measure 'Total Within 21 Days %' =
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1),0))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 13668766-b421-4dff-8b48-8e69db8bff68
+
+	measure 'Rate per 1,000 - Glos Practices + Dates' =
+			
+			
+			VAR _YTD = CALCULATE(DISTINCTCOUNT('Date Reference Script'[year_month]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), 'Date Reference Script'[ytd_flag] = 1)
+			
+			RETURN
+			
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices], 'Date Reference Script'[latest_6_months_flag] = 1)/6,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices], 'Date Reference Script'[latest_12_months_flag] = 1)/12,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices], 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))/_YTD))))
+		formatString: 0.0
+		lineageTag: c626cdd5-101c-44bb-8920-0b4411d57400
+
+	measure 'Rate per 1,000 - Glos Practices + No Areas' = ```
+			
+			
+			VAR _POPULATION = CALCULATE(SUM('GP Population (Duplicate)'[population]), 'GP Population (Duplicate)'[month_name] = "Apr", ALL('GP Reference'))
+			
+			RETURN 
+			
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total F2F"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Face-to-Face", ALL('GP Reference'))/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Attended"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_STATUS] = "Attended", ALL('GP Reference'))/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total GP"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[HCP_TYPE] = "GP", ALL('GP Reference'))/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Same Day"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day", ALL('GP Reference'))/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Telephone"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[APPT_MODE] = "Telephone", ALL('GP Reference'))/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Totals'[Current Selection], "Total Within 21 Days"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {"Same Day", "1 Day", "2 to 7 Days", "8 to 14 Days", "15 to 21 Days"}, ALL('GP Reference'))/_POPULATION)*1000
+			,0))))))
+			```
+		formatString: 0.0
+		lineageTag: d23c5d93-e954-4290-a7e0-0812f5f6d065
+
+	measure 'Rate per 1,000 - Glos Practices + Dates + No Area' =
+			
+			
+			VAR _YTD = CALCULATE(DISTINCTCOUNT('Date Reference Script'[year_month]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), 'Date Reference Script'[ytd_flag] = 1)
+			
+			RETURN
+			
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices + No Areas], 'Date Reference Script'[latest_month_flag] = 1),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices + No Areas], 'Date Reference Script'[latest_6_months_flag] = 1)/6,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices + No Areas], 'Date Reference Script'[latest_12_months_flag] = 1)/12,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"), CALCULATE('Glos Practice Appointments'[Rate per 1,000 - Glos Practices + No Areas], 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))/_YTD))))
+		formatString: 0.0
+		lineageTag: 3bf9e15f-ba8c-495e-8bcd-400a3783d373
+
+	measure 'Rate per 1,000 - Glos Practices - For Cards' = ```
+			
+			
+			VAR _POPULATION = CALCULATE(SUM('GP Population (Duplicate)'[population]), 'GP Population (Duplicate)'[month_name] = "Apr", 'GP Population (Duplicate)'[financial_year] = "2023/24")
+			
+			VAR _YTD = CALCULATE(DISTINCTCOUNT('Date Reference Script'[year_month]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), 'Date Reference Script'[ytd_flag] = 1)
+			
+			RETURN 
+			
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_month_flag] = 1)/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_6_months_flag] = 1)/_POPULATION)*1000)/6,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_12_months_flag] = 1)/_POPULATION)*1000)/12,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]))/_POPULATION)*1000)/_YTD, 0))))
+			```
+		formatString: 0.0
+		lineageTag: 277cb014-8575-4712-b3fd-b5376ebbbf1f
+
+	measure 'Rate per 1,000 - Glos Practices - Colour Coding' =
+			
+			
+			IF('Glos Practice Appointments'[Rate per 1,000 - Glos Practices + Dates] >= 'Glos Practice Appointments'[Rate per 1,000 - Glos Practices + Dates + No Area], "#20A39E", "#f4a261")
+		lineageTag: cbe54c60-4f25-4b4b-9295-98eb6c6935ea
+
+	measure 'Bubble Sizing for Rate per 1,000' = 1000 - [Rate per 1,000 - Glos Practices + Dates]
+		formatString: 0.0
+		lineageTag: 178c929c-7b15-47eb-a2ea-29d393bdfb23
+
+	measure 'Rate per 1,000 - Glos Practices - For Cards ICB' = ```
+			
+			
+			VAR _POPULATION = CALCULATE(SUM('GP Population (Duplicate)'[population]), 'GP Population (Duplicate)'[month_name] = "Apr", 'GP Population (Duplicate)'[financial_year] = "2023/24", ALL('GP Reference'))
+			VAR _YTD = CALCULATE(DISTINCTCOUNT('Date Reference Script'[year_month]), 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), 'Date Reference Script'[ytd_flag] = 1)
+			
+			RETURN 
+			
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/_POPULATION)*1000,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/_POPULATION)*1000)/6,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/_POPULATION)*1000)/12,
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[ytd_flag] = 1, 'Date Reference Script'[financial_year] = MAX('Date Reference Script'[financial_year]), ALL('GP Reference'))/_POPULATION)*1000)/_YTD, 0))))
+			```
+		formatString: 0.0
+		lineageTag: a3131c53-23cb-4cd5-a4dd-43ed40a3c820
+
+	measure 'SPC Rate per 1,000 Title' =
+			
+			
+			CONCATENATE("Crude Rate per 1,000 of Appointments - ", [Current Selection])
+		lineageTag: e4730c01-2a23-43bd-a8ea-811ad6370ae2
+
+	measure '% - Glos Practices - For Cards' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_month_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1)),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_6_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1))),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_12_months_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1)),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[ytd_flag] = 1)/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1)), 0))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cbb3936f-a671-489b-974c-dbec1f1274ba
+
+	measure '% - Glos Practices - For Cards + No Areas' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"), ((CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference')))),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))),
+			IF(CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"), (CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))), 0))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8c678756-867b-4bdc-833b-5ec41a44a0bd
+
+	measure 'Total Within 21 Days % - + No Areas' =
+			
+			
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Latest Month"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[latest_month_flag] = 1, ALL('GP Reference')),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 6 Months"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[latest_6_months_flag] = 1, ALL('GP Reference')),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Last 12 Months"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[latest_12_months_flag] = 1, ALL('GP Reference')),
+			IF(
+			    CONTAINSSTRING('Parameter - Dates'[Parameter 2 Selected Option], "Current YTD"),
+			    CALCULATE([Total Within 21 Days], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference'))/CALCULATE([Total Static], 'Date Reference Script'[ytd_flag] = 1, ALL('GP Reference')),0))))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 76c0405a-5b5c-4b8c-b9b3-b542d6a21a22
+
+	measure 'SPC % Title - + Date' =
+			
+			
+			CONCATENATE("% of Appointments - ", [Current Selection] & " - " & [Parameter 2 Selected Option])
+		lineageTag: 27c1266b-cb26-407e-a48b-5b5cea72623c
+
+	measure 'SPC Rate per 1,000 Title - + Date' =
+			
+			
+			CONCATENATE("Crude Rate per 1,000 of Appointments - ", [Current Selection] & " - " & [Parameter 2 Selected Option])
+		lineageTag: 4e0e4466-89ed-4857-9d06-d45683f7a849
+
+	measure '% of Parameter - Colour Coding Green Arrow' =
+			
+			
+			IF ( [% - Glos Practices - For Cards] >= [% - Glos Practices - For Cards + No Areas], "#90be6d", "#00FF0000")
+		lineageTag: 24b65129-9137-41a6-89ed-921f5ffb1190
+
+	measure 'National Gloucestershire Trendline  - % Same Day' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[National Gloucestershire % Same Day]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: 941b83f6-ec25-4cb7-8a85-7907dc7154aa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Gloucestershire Trendline  - % F2F' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[National Gloucestershire % F2F]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: 11eee13a-6a05-4a9b-a40f-2085bef0c622
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Gloucestershire Trendline  - % Telephone' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[National Gloucestershire % Telephone]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: 0238a36f-c53b-4f27-a332-14c6c0e4ea19
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Gloucestershire Trendline  - % GP' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[National Gloucestershire % GP]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: 7790a09a-5ea7-47aa-9506-e6674fa6b88f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Glos Appointments - Trendline' =
+			
+			
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "Total Appointments") = TRUE(), [National Gloucestershire Trendline],
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "% Same Day") = TRUE(), [National Gloucestershire Trendline  - % Same Day],
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "% Face-to-Face") = TRUE(), [National Gloucestershire Trendline  - % F2F],
+			IF(CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "% Telephone") = TRUE(), [National Gloucestershire Trendline  - % Telephone], [National Gloucestershire Trendline  - % GP]))))
+		lineageTag: 63e7dfd1-8ed8-4a04-8c46-7544f3e88911
+
+		formatStringDefinition = IF ( CONTAINSSTRING('Parameter - Appointment Types'[Parameter 3 Selected Option], "Total Appointments"), "#,0", "#,0.0%")
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth %' = ```
+			
+			
+			IFERROR(([National Gloucestershire Latest Year Baseline]-[National Gloucestershire GP 19/20 Baseline])/[National Gloucestershire GP 19/20 Baseline], 0)
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ebff0b1c-f9e2-4e4a-a342-8d894c8dce1c
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % for Face-to-Face' =
+			
+			CALCULATE(
+				[National Gloucestershire Appointments - Latest Year Growth %],
+				'Glos Practice Appointments'[APPT_MODE] IN { "Face-to-Face" }
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 07ebca35-9179-47f0-8278-aaf1ffbba20b
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % for Attended' =
+			
+			CALCULATE(
+				[National Gloucestershire Appointments - Latest Year Growth %],
+				'Glos Practice Appointments'[APPT_STATUS] IN { "Attended" }
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7498a10b-9888-4d09-bf4b-d20de7b68a3e
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % for GP' =
+			
+			CALCULATE(
+				[National Gloucestershire Appointments - Latest Year Growth %],
+				'Glos Practice Appointments'[HCP_TYPE] IN { "GP" }
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7a6223b9-b662-4dee-a5d7-00e864ac5944
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % for Same Day' =
+			
+			CALCULATE(
+				[National Gloucestershire Appointments - Latest Year Growth %],
+				'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT]
+					IN { "Same Day" }
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 15f17a11-9374-4fe1-83f3-d9d1bb751db0
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % for 1 Day, 15  to 21 Days, 2 to 7 Days, Same Day, or 8  to 14 Days' =
+			
+			CALCULATE(
+				[National Gloucestershire Appointments - Latest Year Growth %],
+				'Glos Practice Appointments'[TIME_BETWEEN_BOOK_AND_APPT] IN {
+					"1 Day",
+					"15  to 21 Days",
+					"2 to 7 Days",
+					"Same Day",
+					"8  to 14 Days"
+				}
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d61231ed-a654-4f32-abf9-db8ba56d84f6
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % for Telephone' =
+			
+			CALCULATE(
+				[National Gloucestershire Appointments - Latest Year Growth %],
+				'Glos Practice Appointments'[APPT_MODE] IN { "Telephone" }
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bd279b23-b293-44d4-a283-f38f79d2f11d
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'PC Rate per 1,000' =
+			
+			
+			VAR _ED = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]))
+			VAR POP = SUM('GP Population (Duplicate)'[population])
+			
+			RETURN
+			
+			(_ED/POP)*1000
+		lineageTag: f7cfd987-c28f-4012-b703-e1d4dc54517e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Rate per 1,000 - ICB' =
+			
+			
+			VAR _ED = CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), ALL('GP Reference'))
+			VAR POP = CALCULATE(SUM('GP Population (Duplicate)'[population]), ALL('GP Reference'))
+			
+			RETURN
+			
+			(_ED/POP)*1000
+		lineageTag: 2b37ec55-8b67-43ec-97bb-8ddb7e263618
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Rate per 1,000 Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[PC Rate per 1,000]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    ) < 0, BLANK(), 
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			    )
+			```
+		lineageTag: f61676f2-d75a-4373-873a-741199d5f610
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Rate per 1,000 Trendline - ICB' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[PC Rate per 1,000 - ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(
+			        SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    ) < 0, BLANK(), 
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			    )
+			```
+		lineageTag: 4fbb68da-36e3-472c-92a7-750f89d2756e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Variance from ICB' = ```
+			
+			
+			 [PC Rate per 1,000] - [PC Rate per 1,000 - ICB]
+			```
+		lineageTag: 62404d10-ec26-4940-9c41-8d994cad34f3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Rate per 1,000 Trendline - Variance' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference Script'[financial_year], 'Date Reference Script'[financial_month],
+			                         'Date Reference Script'[month_name], 'Date Reference Script'[month_number] ),
+			            "Value_x", 'Date Reference Script'[month_number],
+			            "Value_y", 'Glos Practice Appointments'[PC Variance from ICB]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Reference Script'[month_number] ),
+			        Intercept + Slope * 'Date Reference Script'[month_number]
+			    )
+			```
+		lineageTag: a73e5e19-9257-4eae-b96e-1e0fa5a32331
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % - Cards Down Arrow' = ```
+			
+			
+			VAR _CALC = IFERROR(([National Gloucestershire Latest Year Baseline]-[National Gloucestershire GP 19/20 Baseline])/[National Gloucestershire GP 19/20 Baseline], 0)
+			
+			RETURN 
+			
+			IF(_CALC < 0, "#f4a261", "#00FF0000")
+			```
+		lineageTag: a156fead-f135-4065-8b4a-57c58c6c86f7
+
+	measure 'National Gloucestershire Appointments - Latest Year Growth % - Cards Up Arrow' = ```
+			
+			
+			VAR _CALC = IFERROR(([National Gloucestershire Latest Year Baseline]-[National Gloucestershire GP 19/20 Baseline])/[National Gloucestershire GP 19/20 Baseline], 0)
+			
+			RETURN 
+			
+			IF(_CALC > 0, "#20A39E", "#00FF0000")
+			```
+		lineageTag: 4922b5d5-9d5e-4aaf-92de-87e224293f50
+
+	measure 'PC Rate per 1,000 average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE([PC Rate per 1,000])
+			)
+		lineageTag: cd9b77c8-0725-43af-badd-149bb80f2cd9
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Rate per 1,000 - ICB average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE([PC Rate per 1,000 - ICB])
+			)
+		lineageTag: 2cd0fe40-e032-43bd-baba-5f96d8fe11f7
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC Rate per 1,000 Variance' =
+			
+			
+			VAR _CALC = [PC Rate per 1,000 average per year_month] - [PC Rate per 1,000 - ICB average per year_month]
+			
+			RETURN FORMAT(_CALC, "+ 0.0;- 0.0")
+		lineageTag: df37d7e3-8a53-4db2-b881-5fc9a9bb60db
+
+	measure 'Forecast Moving Average' =
+			
+			
+			CALCULATE(
+			    AVERAGEX(
+			        DATESINPERIOD(
+			            'Forecast Date Reference'[date],
+			            MAX('Forecast Date Reference'[date]),
+			            -3,
+			            MONTH
+			        ),
+			        [Total Glos Appointments]
+			    )
+			)
+		lineageTag: 1044e38a-7020-4a99-8e96-c51277dc38cd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Measure
+		lineageTag: 99913394-3a3d-4e99-8b38-8fe324209ef1
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure Forecast =
+			
+			
+			VAR LastActualDate = CALCULATE(MAX('Forecast Date Reference'[date]), ALL('Forecast Date Reference'[date]))
+			VAR FuturePeriod = DATEDIFF(LastActualDate, MAX('Forecast Date Reference'[date]), MONTH)
+			VAR FutureValue = CALCULATE(
+			    AVERAGEX(
+			        DATESINPERIOD(
+			            'Forecast Date Reference'[date],
+			            LastActualDate,
+			            -3,  -- Change the period as needed
+			            MONTH
+			        ),
+			        [Total Glos Appointments]
+			    )
+			)
+			RETURN
+			IF (
+			    MAX('Forecast Date Reference'[date]) > LastActualDate,
+			    FutureValue,
+			    [Total Glos Appointments]
+			)
+		lineageTag: 0896510d-378a-4f33-ac82-640e93abc7c2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Appointments average per year_month' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Date Reference Script'[year_month])),
+				CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS])
+			)
+			)
+		formatString: #,0
+		lineageTag: d67904b0-24de-4934-9d05-bb2ba41e6566
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column FirstDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6d8e6c23-1698-4085-a30f-7e9171d3ecf6
+		summarizeBy: none
+		sourceColumn: FirstDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_CODE
+		dataType: string
+		lineageTag: 8efa9ecb-c161-4923-9b02-435e664c24d7
+		summarizeBy: none
+		sourceColumn: GP_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_NAME
+		dataType: string
+		lineageTag: 14d41e22-1717-497f-9a25-209353002df5
+		summarizeBy: none
+		sourceColumn: GP_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column SUPPLIER
+		dataType: string
+		lineageTag: 5acd458a-919f-4f31-90dd-61cf725dc906
+		summarizeBy: none
+		sourceColumn: SUPPLIER
+
+		annotation SummarizationSetBy = Automatic
+
+	column HCP_TYPE
+		dataType: string
+		lineageTag: 53852b98-fcad-4e9f-ba62-beb360a290c6
+		summarizeBy: none
+		sourceColumn: HCP_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column APPT_MODE
+		dataType: string
+		lineageTag: ef4d08e5-9347-46e8-9a64-96b25fb9abfa
+		summarizeBy: none
+		sourceColumn: APPT_MODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column TIME_BETWEEN_BOOK_AND_APPT
+		dataType: string
+		lineageTag: df0dcc08-cb43-45d7-bfbe-790b8939edb8
+		summarizeBy: none
+		sourceColumn: TIME_BETWEEN_BOOK_AND_APPT
+
+		annotation SummarizationSetBy = Automatic
+
+	column APPT_STATUS
+		dataType: string
+		lineageTag: 08b91545-84f4-403a-a94c-69f8dc1bdc04
+		summarizeBy: none
+		sourceColumn: APPT_STATUS
+
+		annotation SummarizationSetBy = Automatic
+
+	column COUNT_OF_APPOINTMENTS
+		dataType: int64
+		formatString: #,0
+		lineageTag: 41551c0d-9009-49e9-bba2-52976effd47d
+		summarizeBy: sum
+		sourceColumn: COUNT_OF_APPOINTMENTS
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Glos Practice Appointments' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT DISTINCT [DATE].[FirstDateofMonth] #(lf)      ,[GP_CODE]#(lf)      ,[GP_NAME]#(lf)      ,[SUPPLIER]#(lf)      ,[HCP_TYPE]#(lf)      ,[APPT_MODE]#(lf)      ,[TIME_BETWEEN_BOOK_AND_APPT]#(lf)      ,[APPT_STATUS]#(lf)      ,[COUNT_OF_APPOINTMENTS]#(lf)  FROM [BIReports].[dbo].[Gloucester_GP_Appointments] AS [GPA]#(lf)#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] AS [DATE]#(lf)  ON [DATE].[MonthYearName] = IIF([APPOINTMENT_MONTH_START_DATE] LIKE '%-%',#(lf)#(tab)                                    STUFF((RIGHT([GPA].[APPOINTMENT_MONTH_START_DATE], 6)), 5, 0, '20'),#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)(STUFF((RIGHT([GPA].[APPOINTMENT_MONTH_START_DATE],7)), 4, 0, '-')))#(lf)"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each true)
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

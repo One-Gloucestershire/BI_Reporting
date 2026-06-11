@@ -1,0 +1,72 @@
+table 'Dialysis Distinct Patients'
+	lineageTag: 0d3b8fc1-76a1-4d6c-8603-f38109a3f0b8
+
+	measure 'Main Dialysis Journeys divided by unique patients' =
+			
+			DIVIDE(
+				SUM('Main_Journeys'[Counter (Main)]),
+				SUM('Dialysis Distinct Patients'[counter Dialysis Distinct])
+			)
+		formatString: 0
+		lineageTag: 39855730-3380-4478-b117-d3869d2fcdc5
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+		changedProperty = FormatString
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 949384de-21ca-4d57-8062-44c63536489f
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column PassengerID
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f0dff01-6c53-4697-8673-442cfe5d2bcd
+		summarizeBy: count
+		sourceColumn: PassengerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity_Month
+		dataType: string
+		lineageTag: a86b1ff8-3a02-42e8-bf45-bb63a44f04da
+		summarizeBy: none
+		sourceColumn: Activity_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'counter Dialysis Distinct'
+		dataType: int64
+		formatString: 0
+		lineageTag: c1aa7c04-16eb-4714-8f9b-9a77688fdc87
+		summarizeBy: sum
+		sourceColumn: counter Dialysis Distinct
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dialysis Distinct Patients' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="--Dialysis Unique Patients:#(lf)#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[PTS].[tbl03_Dialysis]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Counter", "counter Dialysis Distinct"}}),
+				    #"Inserted Date" = Table.AddColumn(#"Renamed Columns", "Date", each Date.From([Activity_Month]), type date),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Inserted Date",{{"Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

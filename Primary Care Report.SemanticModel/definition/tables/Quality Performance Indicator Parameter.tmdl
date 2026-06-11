@@ -1,0 +1,340 @@
+table 'Quality Performance Indicator Parameter'
+	lineageTag: 91f085ad-4d44-4d21-8793-61cccb483aa3
+
+	measure 'Quality Performance Indicator Parameter Selection' =
+			
+			
+			MAX('Quality Performance Indicator Parameter'[Parameter])
+		lineageTag: e793852c-7e5b-495b-bbbb-0f8a65df026b
+
+	measure 'Quality Performance Indicator - Gloucester' =
+			
+			
+			IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+			        'National Appointments'[Total National Appointments - Gloucestershire],
+			    IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+			        'National Category'[NC - Rate per 1,000 - Glos],
+			        IF(
+			            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+			                'National Appointments'[Average Daily Appointments - Gloucestershire],
+			                    IF(
+			                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+			                            'National Appointments'[National Appointments - GP - Gloucestershire],
+			                                IF(
+			                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+			                                        'National Appointments'[National Appointments - % F2F Glos],
+			                                            IF(
+			                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+			                                                    'National Appointments'[National Appointments - % within 14 Days Glos],
+			                                                    0
+			    ))))))
+		lineageTag: d2550acc-5ca6-4d44-b899-038ca6903b91
+
+		formatStringDefinition =
+				IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+				        "0,0",
+				    IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+				        "0,0",
+				        IF(
+				            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+				                "0,0",
+				                    IF(
+				                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+				                            "0,0",
+				                                IF(
+				                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+				                                        "0.0%",
+				                                            IF(
+				                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+				                                                    "0.0%",
+				                                                    "0,0"
+				    ))))))
+
+	measure 'Quality Performance Indicator - England - Separate Axis' =
+			
+			
+			IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+			        'National Appointments'[Total National Appointments - England],
+			    IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+			        BLANK(),
+			        IF(
+			            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+			                'National Appointments'[Average Daily Appointments - England],
+			                    IF(
+			                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+			                            'National Appointments'[National Appointments - GP - England],
+			                                IF(
+			                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+			                                        BLANK(),
+			                                            IF(
+			                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+			                                                    BLANK(),
+			                                                    0
+			    ))))))
+		lineageTag: f81fe925-e6e0-4b7c-9df8-db5212a8dc14
+
+		formatStringDefinition =
+				IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+				        "##0,0",
+				    IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+				        "##0,0",
+				        IF(
+				            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+				                "##0,0",
+				                    IF(
+				                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+				                            "##0,0",
+				                                IF(
+				                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+				                                        "0.0%",
+				                                            IF(
+				                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+				                                                    "0.0%",
+				                                                    "##0,0"
+				    ))))))
+
+	measure 'Quality Performance Indicator - % Trend from Previous Month' = ```
+			
+			
+			VAR _PREV_GLOS = CALCULATE(
+			    [Quality Performance Indicator - Gloucester], 
+			    SAMEPERIODLASTYEAR('Date Reference Script'[date])
+			)
+			
+			VAR _PREV_ENG = CALCULATE(
+			    [Quality Performance Indicator - England - For Cards],
+			    SAMEPERIODLASTYEAR('Date Reference Script'[date])
+			)
+			
+			RETURN
+			
+			IF(
+			    CONTAINSSTRINGEXACT(
+			        MAX('Quality Performance Indicator - Organisation Selection'[Organisation]), "Gloucestershire ICB"),
+			        ([Quality Performance Indicator - Gloucester] - _PREV_GLOS) / [Quality Performance Indicator - Gloucester],
+			        ([Quality Performance Indicator - England - For Cards] - _PREV_ENG) / [Quality Performance Indicator - England - For Cards]
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 20cffed3-8d52-4265-99b8-b64fd57e7a50
+
+	measure 'QPI - Organisation Selection' =
+			
+			
+			IF(
+			    CONTAINSSTRINGEXACT(
+			        MAX('Quality Performance Indicator - Organisation Selection'[Organisation]), "Gloucestershire ICB"),
+			        [Quality Performance Indicator - Gloucester],
+			        [Quality Performance Indicator - England - For Cards]
+			)
+		lineageTag: c9c41fbf-a181-4762-993e-7cafab5f9305
+
+		formatStringDefinition =
+				IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+				        "0,0",
+				    IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+				        "0,0",
+				        IF(
+				            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+				                "0,0",
+				                    IF(
+				                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+				                            "0,0",
+				                                IF(
+				                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+				                                        "0.0%",
+				                                            IF(
+				                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+				                                                    "0.0%",
+				                                                    "0,0"
+				    ))))))
+
+	measure 'QPI - Organisation Selection Previous' = ```
+			
+			
+			IF(
+			    CONTAINSSTRINGEXACT(
+			        MAX('Quality Performance Indicator - Organisation Selection'[Organisation]), "Gloucestershire ICB"),
+			        CALCULATE(
+			    [Quality Performance Indicator - Gloucester], 
+			    SAMEPERIODLASTYEAR('Date Reference Script'[date])
+			),
+			        CALCULATE(
+			            [Quality Performance Indicator - England - For Cards],
+			            SAMEPERIODLASTYEAR('Date Reference Script'[date])
+			))
+			
+			
+			```
+		lineageTag: d38d60d4-b7aa-4604-bd52-626a356a16cc
+
+		formatStringDefinition =
+				IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+				        "0,0",
+				    IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+				        "0,0",
+				        IF(
+				            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+				                "0,0",
+				                    IF(
+				                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+				                            "0,0",
+				                                IF(
+				                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+				                                        "0.0%",
+				                                            IF(
+				                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+				                                                    "0.0%",
+				                                                    "0,0"
+				    ))))))
+
+	measure 'QPI - Previous Month - Title' =
+			
+			
+			CALCULATE(
+			    MAX('Date Reference Script'[month_year_name]),
+			    SAMEPERIODLASTYEAR('Date Reference Script'[date])
+			)
+		lineageTag: 9645138f-e8de-4ca9-b957-a5b0f0708bdc
+
+	measure 'Quality Performance Indicator Parameter Selection - Trend Title' =
+			
+			
+			CONCATENATE(MAX('Quality Performance Indicator Parameter'[Parameter]), " - Trend Comparison")
+		lineageTag: 063f7b27-19c2-4663-b8fd-a89998ef04ca
+
+	measure 'Quality Performance Indicator - England – Shared Axis' =
+			
+			
+			IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+			        BLANK(),
+			    IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+			        'National Category'[NC - Rate per 1,000 - England],
+			        IF(
+			            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+			                BLANK(),
+			                    IF(
+			                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+			                            BLANK(),
+			                                IF(
+			                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+			                                        'National Appointments'[National Appointments - % F2F England],
+			                                            IF(
+			                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+			                                                    'National Appointments'[National Appointments - % within 14 Days England],
+			                                                    0
+			    ))))))
+		lineageTag: 78220c2c-2965-4fdb-98df-c1f555babdc3
+
+		formatStringDefinition =
+				IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+				        "0,0",
+				    IF(
+				    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+				        "0,0",
+				        IF(
+				            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+				                "0,0",
+				                    IF(
+				                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+				                            "0,0",
+				                                IF(
+				                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+				                                        "0.0%",
+				                                            IF(
+				                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+				                                                    "0.0%",
+				                                                    "0,0"
+				    ))))))
+
+	measure 'Quality Performance Indicator - England - For Cards' =
+			
+			
+			IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Appointments per Month"),
+			        'National Appointments'[Total National Appointments - England],
+			    IF(
+			    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Appointments per 1,000 Patients"),
+			        'National Category'[NC - Rate per 1,000 - England],
+			        IF(
+			            CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Average Daily Appointments"),
+			                'National Appointments'[Average Daily Appointments - England],
+			                    IF(
+			                        CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "Total Number of GP Appointments"),
+			                            'National Appointments'[National Appointments - GP - England],
+			                                IF(
+			                                    CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% F2F Appointments"),
+			                                        'National Appointments'[National Appointments - % F2F England],
+			                                            IF(
+			                                                CONTAINSSTRINGEXACT('Quality Performance Indicator Parameter'[Quality Performance Indicator Parameter Selection], "% Appointments up to 14 Days"),
+			                                                    'National Appointments'[National Appointments - % within 14 Days England],
+			                                                    0
+			    ))))))
+		lineageTag: 64eeed72-e0f1-48d4-863d-2a8e2f8f0329
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Parameter
+		lineageTag: 60fbe157-e909-4b75-9271-78518416fec2
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: 9ca1f802-3f98-4379-972e-d81ae8207303
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 3af0bbb6-523b-4d23-bee7-dad3c832bd30
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Quality Performance Indicator Parameter' = calculated
+		mode: import
+		source =
+				{
+				    ("Total Appointments per Month", NAMEOF('National Appointments'[Total National Appointments - Gloucestershire]), 0),
+				    ("Appointments per 1,000 Patients", NAMEOF('National Category'[NC - Rate per 1,000 - Glos]), 1),
+				    ("Average Daily Appointments", NAMEOF('National Appointments'[Average Daily Appointments - Gloucestershire]), 2),
+				    ("Total Number of GP Appointments", NAMEOF('National Appointments'[National Appointments - % GP Glos]), 3),
+				    ("% F2F Appointments", NAMEOF('National Appointments'[National Appointments - % F2F Glos]), 4),
+				    ("% Appointments up to 14 Days", NAMEOF('National Appointments'[National Appointments - % within 14 Days Glos]), 5)
+				}
+
+	annotation PBI_Id = e921260ac68d4614ab16eb8cdb3ae423
+

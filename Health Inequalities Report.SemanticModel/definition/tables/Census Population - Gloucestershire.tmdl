@@ -1,0 +1,105 @@
+table 'Census Population - Gloucestershire'
+	lineageTag: e5d89d2a-bc54-4833-9b00-c1891c32255a
+
+	measure 'Census Population - Total' =
+			
+			
+			SUM('Census Population - Gloucestershire'[Value])
+		formatString: #,0
+		lineageTag: e679328d-59dc-4128-9e05-522ba5bcb3a9
+
+	column Metric
+		dataType: string
+		lineageTag: 500f288d-b6c7-4b13-922d-cb0fec148cd9
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: fb926a8f-334f-4166-8251-3c562207e683
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 9ef04f26-121d-4466-8ba5-249cf2ca3669
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: d45ce909-2eca-45ef-8c68-e4fbd1151f4d
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column CYP_Flag
+		dataType: string
+		lineageTag: 02971593-f401-4e65-9459-61597f52b21e
+		summarizeBy: none
+		sourceColumn: CYP_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: f0d71fb9-d19f-494f-a24b-6665cf1479d4
+		summarizeBy: none
+		sourceColumn: Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: b54a2f50-a7e8-48ad-a339-44980bf8a822
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 1098de8a-3b84-412b-aed9-9eb9fc5e24eb
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: 94b7d948-a401-4241-bf89-bab66279ce12
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_LD_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: da243e52-548e-4c3a-953f-3aa7c521b01f
+		summarizeBy: none
+		sourceColumn: QOF_LD_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Census Population - Gloucestershire' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  SELECT [Metric] = 'Population'#(lf)        ,[Value] = COUNT(*)#(lf)#(tab)#(tab),[POP].[Gender]#(lf)#(tab)#(tab),[Age] = [AGE].[5YR_Age_Band]#(lf)#(tab)#(tab),[AGE].[CYP_Flag]#(lf)#(tab)#(tab),[Deprivation] = [POP].[IMDNationalDecile]#(lf)#(tab)#(tab),[Ethnicity] = [ETH].[DerivedEthnicityGroup]#(lf)#(tab)#(tab),[Practice_Code] = [POP].[PrimaryCareProvider]#(lf)#(tab)#(tab),[YearMonth] = [DATE].[YearMonth]#(lf)#(tab)#(tab),[POP].[QOF_LD_Flag]#(lf)#(lf)  FROM [PowerBI_Reporting].[AgeingWell].[tbl02_Proactive_Whiteboard_Registered_Population_Over_Time] AS [POP]#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [Age]#(lf)             ,[5YR_Age_Band]#(lf)             ,[CYP_Flag] = CASE WHEN [Age] BETWEEN 0 AND 17 THEN '0-17'#(lf)                                WHEN [Age] >= 18 THEN '18+'#(lf)#(tab)#(tab)#(tab)  ELSE NULL END#(lf)             FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)             WHERE [Age] BETWEEN 0 AND 120#(lf)#(tab)  ) AS [AGE]#(lf)  ON [AGE].[Age] = [POP].[Age_at_census] /* Joining in Age Banding */#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [EthnicityCode]#(lf)#(tab)#(tab)#(tab)                ,[DerivedEthnicityGroup]#(lf)#(tab)#(tab)#(tab) FROM [ICB_Products].[Patient].[vw_Ethnicity]#(lf)#(tab)#(tab)#(tab) ) AS [ETH]#(lf)  ON [ETH].[EthnicityCode] = [POP].[Ethnicity_code] /* Joining in Ethnicity grouping */#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [date]#(lf)#(tab)#(tab)#(tab)                ,[YearMonth]#(lf)#(tab)#(tab)#(tab) FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(tab)#(tab)#(tab) ) AS [DATE]#(lf)  ON [DATE].[Date] = [POP].[Census_Date] /* Joining in YearMonth */#(lf)#(lf)  WHERE [POP].[Derived_Registered_CCG] = '11M'#(lf)  AND [POP].[Census_Date] >= '20190401'#(lf)#(lf)  GROUP BY [POP].[Gender], [AGE].[5YR_Age_Band], [AGE].[CYP_Flag], [POP].[IMDNationalDecile] #(lf)          ,[ETH].[DerivedEthnicityGroup], [POP].[PrimaryCareProvider], [DATE].[YearMonth], [POP].[QOF_LD_Flag]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

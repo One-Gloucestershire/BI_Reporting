@@ -1,0 +1,129 @@
+table 'Gloucester GP Appointments Detailed'
+	lineageTag: e83d6e23-da72-4205-87ab-94bce9df35e4
+
+	measure '% Clinically Urgent Patients seen Same Day' =
+			
+			
+			[Clinically Urgent Appointments - Numerator] / [Clinically Urgent Appointments - Denominator]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 18dc3415-0c87-4cd8-a37f-744c6297a76e
+
+	measure '% Clinically Urgent Patients - Title' =
+			
+			
+			CONCATENATE("% Clinically Urgent Patients seen Same Day - ", MAX('Date Reference Script'[month_year_name]))
+		lineageTag: a198559e-c74c-4832-beb3-7f54345e22fc
+
+	measure 'Clinically Urgent Appointments - Denominator' =
+			
+			
+			CALCULATE(
+			    SUM('Gloucester GP Appointments Detailed'[COUNT_OF_APPOINTMENTS])
+			    ,'Gloucester GP Appointments Detailed'[NATIONAL_CATEGORY] = "General Consultation Acute"
+			)
+		formatString: #,0
+		lineageTag: d15e574b-131e-4f93-ad56-3d099beb3f6f
+
+	measure 'Clinically Urgent Appointments - Numerator' =
+			
+			
+			CALCULATE(
+			    SUM('Gloucester GP Appointments Detailed'[COUNT_OF_APPOINTMENTS])
+			    ,'Gloucester GP Appointments Detailed'[NATIONAL_CATEGORY] = "General Consultation Acute"
+			    ,'Gloucester GP Appointments Detailed'[TIME_BETWEEN_BOOK_AND_APPT] = "Same Day"
+			)
+		formatString: #,0
+		lineageTag: 25eacfb6-6b26-441a-a30f-bbdb0d9175f5
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 84bf0c95-5d86-4b8e-8000-9117efc3a9c5
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 0f242cb8-b11d-4f6d-ad30-f8f1d470c5cb
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1efd84f4-42f2-4ad5-912b-d853cfbc09a9
+		summarizeBy: none
+		sourceColumn: FirstDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_CODE
+		dataType: string
+		lineageTag: 3e34d29b-e6cc-4a07-97d8-2c81b043c8d4
+		summarizeBy: none
+		sourceColumn: GP_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column HCP_TYPE
+		dataType: string
+		lineageTag: a0dc72bf-d1a4-4023-bdf9-b56e935a0a5c
+		summarizeBy: none
+		sourceColumn: HCP_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column APPT_MODE
+		dataType: string
+		lineageTag: b60168bc-5d53-4a54-96b3-d77664d56cd4
+		summarizeBy: none
+		sourceColumn: APPT_MODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column NATIONAL_CATEGORY
+		dataType: string
+		lineageTag: 4fc7de1a-1262-4d68-a8f4-de13eb77f4fc
+		summarizeBy: none
+		sourceColumn: NATIONAL_CATEGORY
+
+		annotation SummarizationSetBy = Automatic
+
+	column TIME_BETWEEN_BOOK_AND_APPT
+		dataType: string
+		lineageTag: 1efb4e8b-f94e-416c-a7e6-910084f23ef6
+		summarizeBy: none
+		sourceColumn: TIME_BETWEEN_BOOK_AND_APPT
+
+		annotation SummarizationSetBy = Automatic
+
+	column APPT_STATUS
+		dataType: string
+		lineageTag: 10996692-4cf8-4c5a-9e4e-5f301ba438e8
+		summarizeBy: none
+		sourceColumn: APPT_STATUS
+
+		annotation SummarizationSetBy = Automatic
+
+	column COUNT_OF_APPOINTMENTS
+		dataType: int64
+		formatString: 0
+		lineageTag: 8dbdf10c-57e0-4436-b8f7-9d4b85e25f69
+		summarizeBy: sum
+		sourceColumn: COUNT_OF_APPOINTMENTS
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Gloucester GP Appointments Detailed' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="WITH GP_APP_CTE AS#(lf)(#(lf)SELECT [APPOINTMENT_MONTH_START_DATE] = CASE WHEN LEN(REPLACE([APPOINTMENT_MONTH_START_DATE], '-', '')) <= 7 #(lf)                                             THEN LOWER(REPLACE(STUFF([APPOINTMENT_MONTH_START_DATE], 8, 0, '20'), '-', ''))#(lf)                                             ELSE [APPOINTMENT_MONTH_START_DATE] END#(lf)      ,[GP_CODE]#(lf)      ,[GP_NAME]#(lf)      ,[SUPPLIER]#(lf)      ,[PCN_CODE]#(lf)      ,[PCN_NAME]#(lf)      ,[SUB_ICB_LOCATION_CODE]#(lf)      ,[SUB_ICB_LOCATION_NAME]#(lf)      ,[HCP_TYPE]#(lf)      ,[APPT_MODE]#(lf)      ,[NATIONAL_CATEGORY]#(lf)      ,[TIME_BETWEEN_BOOK_AND_APPT]#(lf)      ,[COUNT_OF_APPOINTMENTS]#(lf)      ,[APPT_STATUS]#(lf)#(lf)FROM [BIReports].[dbo].[Gloucestershire_GP_Appointments_All]#(lf))#(lf)SELECT [DATE].[FinancialYear]#(lf)      ,[DATE].[MonthName]#(lf)      ,[DATE].[FirstDateofMonth]#(lf)      ,[GP_APP].[GP_CODE]#(lf)      ,[GP_APP].[HCP_TYPE]#(lf)      ,[GP_APP].[APPT_MODE]#(lf)      ,[GP_APP].[NATIONAL_CATEGORY]#(lf)      ,[GP_APP].[TIME_BETWEEN_BOOK_AND_APPT]#(lf)      ,[GP_APP].[APPT_STATUS]#(lf)      ,[GP_APP].[COUNT_OF_APPOINTMENTS]#(lf)#(lf)FROM GP_APP_CTE AS [GP_APP]#(lf)#(lf)INNER JOIN (#(lf)            SELECT DISTINCT [MonthYearName] = LOWER(REPLACE([MonthYearName], '-', ''))#(lf)                           ,[FinancialYear]#(lf)#(tab)                 ,[MonthName] = LEFT([MonthName], 3)#(lf)#(tab)#(tab)       ,[FirstDateofMonth]#(lf)   #(lf)            FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)            WHERE [FinancialYear] >= '2023/24'#(lf)           ) AS [DATE]#(lf)ON [DATE].[MonthYearName] = RIGHT([GP_APP].[APPOINTMENT_MONTH_START_DATE], 7)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

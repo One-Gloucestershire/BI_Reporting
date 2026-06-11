@@ -1,0 +1,128 @@
+table 'Contracted Activity'
+	lineageTag: ed0e441a-679f-4675-91cc-28f156f4e967
+
+	measure 'Completed (Main + GHT)' =
+			
+			[Completed: Counter (Main) minus Aborts or Cancel Flag] + [Completed: Counter (GHT) minus Aborts or Cancel Flag]
+		formatString: 0
+		lineageTag: 1d8a2184-7386-4993-911c-32c01391fd55
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalAddition"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Complete + Aborts (Main + GHT)' =
+			
+			[Complete + Aborts (Main)] + [Complete + Aborts (GHT)]
+		formatString: 0
+		lineageTag: b8c317ef-6675-4b39-bffa-7859856a8371
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalAddition"
+				}
+
+		changedProperty = FormatString
+
+	measure '% Use of Contracted activity (ALL journeys + Aborts)' =
+			
+			DIVIDE(
+				[Complete + Aborts (Main + GHT)],
+				SUM('Contracted Activity'[Contracted Activity])
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c3a3d8d2-19bc-4484-82a7-dc0f11b6969c
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+		changedProperty = FormatString
+
+	column Contracted_Activity_Month
+		dataType: string
+		lineageTag: b1de2ef9-7fb1-4b08-b570-98ff27dbfdb2
+		summarizeBy: none
+		sourceColumn: Contracted_Activity_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fin_Yr
+		dataType: string
+		lineageTag: 47cb5597-e702-4948-9662-e0d373767def
+		summarizeBy: none
+		sourceColumn: Fin_Yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Contracted Activity'
+		dataType: int64
+		formatString: #,0
+		lineageTag: d41fd58e-54f9-4f21-9be2-50e12a336034
+		summarizeBy: sum
+		sourceColumn: Contracted Activity
+
+		annotation SummarizationSetBy = User
+
+	column 'Contracted_Activity_Month - Copy.1'
+		dataType: string
+		lineageTag: 9be6332f-dd6a-48ff-a893-08c7a321024d
+		summarizeBy: none
+		sourceColumn: Contracted_Activity_Month - Copy.1
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Contracted_Activity_Month - Copy.2'
+		dataType: string
+		lineageTag: 246dca16-d182-4cc1-b911-9e9c1ce9c65a
+		summarizeBy: none
+		sourceColumn: Contracted_Activity_Month - Copy.2
+
+		annotation SummarizationSetBy = Automatic
+
+	column day
+		dataType: string
+		lineageTag: f57fb006-1710-42d9-a2a3-21e2ae43e09d
+		summarizeBy: none
+		sourceColumn: day
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 10023af3-1c16-44fa-b60e-45c5eadbe509
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'Contracted Activity' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\PTS\Dashboard_development\Power BI dashboard_ FINAL\Scripts_AND_Upload to PBI files\09. Contracted Activity.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Contracted_Activity_Month", type text}, {"Fin_Yr", type text}, {"Contracted Activity", Int64.Type}}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Changed Type", "Contracted_Activity_Month", "Contracted_Activity_Month - Copy"),
+				    #"Split Column by Delimiter" = Table.SplitColumn(#"Duplicated Column", "Contracted_Activity_Month - Copy", Splitter.SplitTextByDelimiter("/", QuoteStyle.Csv), {"Contracted_Activity_Month - Copy.1", "Contracted_Activity_Month - Copy.2"}),
+				    #"Added Custom" = Table.AddColumn(#"Split Column by Delimiter", "day", each "01"),
+				    #"Added Custom1" = Table.AddColumn(#"Added Custom", "date", each [day] & "-" &[#"Contracted_Activity_Month - Copy.2"] &"-" &[#"Contracted_Activity_Month - Copy.1"]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom1",{{"date", type date}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

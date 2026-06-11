@@ -1,0 +1,69 @@
+table 'Parameter - Total vs YTD'
+	lineageTag: bb2e18f2-e1bc-40f6-be8a-baf12138cb0b
+
+	measure 'Parameter 2' = ```
+			
+			
+			IF(CONTAINSSTRING('Parameter - Total vs YTD'[Parameter 1 Selected Option], "Total Appointments"), SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 
+			IF(CONTAINSSTRING('Parameter - Total vs YTD'[Parameter 1 Selected Option], "YTD Total Appointments"), CALCULATE(SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 'Date Reference Script'[ytd_flag] = 1), 0))
+			```
+		formatString: #,0
+		lineageTag: 01c72159-9273-4c64-a4db-ac738553c435
+
+	measure 'Parameter 1 Selected Option' =
+			
+			
+			MAX('Parameter - Total vs YTD'[Parameter])
+		lineageTag: cb057693-6387-4f00-8a7d-4e7ee65e06b4
+
+	measure 'Test Parameter Measure' =
+			
+			
+			IF ( CONTAINSSTRING('Parameter - Total vs YTD'[Parameter 1 Selected Option], "Total Appointments"), SUM('Glos Practice Appointments'[COUNT_OF_APPOINTMENTS]), 0)
+		formatString: 0
+		lineageTag: 45ca182a-4780-415d-9d2c-fddfda932651
+
+	column Parameter
+		dataType: string
+		lineageTag: d65e59f5-9c67-420e-b5e0-d1379dd8839d
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		lineageTag: 59e545ae-8a6a-4389-ba1c-85b8b860668e
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		formatString: 0
+		lineageTag: b8d4eb85-d7b9-4000-b3ce-84148e09e98f
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Parameter - Total vs YTD' = calculated
+		mode: import
+		source =
+				{
+				    ("Total Appointments", NAMEOF('Glos Practice Appointments'[Total Glos Appointments]), 0),
+				    ("YTD Total Appointments", NAMEOF('Glos Practice Appointments'[YTD Glos Total Appointments]), 1)
+				}
+
+	annotation PBI_Id = 920193299bc447f789c2d16bd71db5e6
+

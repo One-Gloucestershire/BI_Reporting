@@ -1,0 +1,83 @@
+table 'DMRS Registrations'
+	lineageTag: 894db847-4f2e-4c4a-a80d-0c82eb14805a
+
+	column Pseudo_Reference
+		dataType: string
+		lineageTag: ca03c53c-d4d5-47ab-b498-2116a0427fb6
+		summarizeBy: none
+		sourceColumn: Pseudo_Reference
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Registration Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 94a43888-b3c4-42bd-8a8a-42d5bb31191f
+		summarizeBy: none
+		sourceColumn: Registration Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Unit
+		dataType: string
+		lineageTag: 3ad792f4-2fd5-4150-9e85-1f5d63fbc173
+		summarizeBy: none
+		sourceColumn: Unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Updated to PBI Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: a7c76597-54a1-4f16-89ad-d3decb34b349
+		summarizeBy: none
+		sourceColumn: Updated to PBI Date
+
+		variation Variation
+			isDefault
+			relationship: d256c8e4-abf1-490f-b92c-1e2773c161d3
+			defaultHierarchy: LocalDateTable_9a2eee41-be09-4401-98ee-8c35529fbfd7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Registration yyy-mm' = ('DMRS Registrations'[Registration Date])
+		formatString: yyyy-mm
+		lineageTag: 73d15122-8062-437f-a33a-7432d6194f3f
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 0ec9e66e-759b-45ca-a0d2-a25f713c412b
+			defaultHierarchy: LocalDateTable_48fde470-a507-4d25-bb73-b902dc249073.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Column5
+		dataType: string
+		lineageTag: d4d2369b-9aad-43a4-8149-6082619fc437
+		summarizeBy: none
+		sourceColumn: Column5
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'DMRS Registrations' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\PTS\Dashboard_development\Power BI dashboard_ FINAL\Scripts_AND_Upload to PBI files\DMRS\DMRS_Registrations_Flatfile.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Pseudo_Reference", type text}, {"Registration Date", type date}, {"Unit", type text}, {"Updated to PBI Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

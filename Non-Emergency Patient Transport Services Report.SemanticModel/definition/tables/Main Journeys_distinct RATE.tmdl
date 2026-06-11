@@ -1,0 +1,114 @@
+table 'Main Journeys_distinct RATE'
+	lineageTag: cf5eef4f-e384-46f6-bebe-7dee21a72e9e
+
+	measure 'Counter_Passenger divided by population' =
+			
+			DIVIDE(
+				SUM('Main Journeys_distinct RATE'[Counter_Passenger]),
+				SUM('Main Journeys_distinct RATE'[population])
+			)
+		formatString: 0
+		lineageTag: 09f85e2d-2dc0-427b-97a3-3b726864f67d
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Rate per 1000 pop' = (sum('Main Journeys_distinct RATE'[Counter_Passenger])/sum('Main Journeys_distinct RATE'[population]))*1000
+		lineageTag: 15007744-5100-40d7-8097-af5b9be2b41b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Counter_Passenger
+		dataType: int64
+		formatString: #,0
+		lineageTag: 85dd8849-9fb5-4d65-9712-27766822186f
+		summarizeBy: sum
+		sourceColumn: Counter_Passenger
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter_Patient
+		dataType: int64
+		formatString: 0
+		lineageTag: a29712fc-8736-44dd-9bbf-e7c0b4a6aac3
+		summarizeBy: sum
+		sourceColumn: Counter_Patient
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Practice_Code
+		dataType: string
+		lineageTag: f0a9301c-250d-4d6b-94ec-6c3b98a90c9f
+		summarizeBy: none
+		sourceColumn: Patient_Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Practice_Description
+		dataType: string
+		lineageTag: 0e2199d0-2f31-469b-b593-f63d24465d1a
+		summarizeBy: none
+		sourceColumn: Patient_Practice_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		lineageTag: b183db35-c345-48df-b28d-31cff52f0f7e
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		annotation SummarizationSetBy = Automatic
+
+	column localityname
+		dataType: string
+		lineageTag: 9082e092-e574-4f0d-b148-5de46e30635e
+		summarizeBy: none
+		sourceColumn: localityname
+
+		annotation SummarizationSetBy = Automatic
+
+	column ageband_5yr_ordered
+		dataType: string
+		lineageTag: a61c5c99-3f6a-4fdb-b776-64c745329613
+		summarizeBy: none
+		sourceColumn: ageband_5yr_ordered
+
+		annotation SummarizationSetBy = Automatic
+
+	column population
+		dataType: int64
+		formatString: #,0
+		lineageTag: 59014b30-1f17-4f6c-b30d-3b8090a49055
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column sex
+		dataType: string
+		lineageTag: 758da4dd-b525-4077-a3bd-b6a5430c182d
+		summarizeBy: none
+		sourceColumn: sex
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Main Journeys_distinct RATE' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[PTS].[tbl04_Main_vs_Pop]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

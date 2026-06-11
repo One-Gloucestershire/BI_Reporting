@@ -1,0 +1,534 @@
+table 'INT Metric Population'
+	lineageTag: 13840f1a-087d-4027-8945-3c9a1c7a7101
+
+	measure 'Metric - Rockwood Population' =
+			
+			
+			VAR _MAXDATE = MAX('Date Reference'[date])
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('INT Metric Population'[PseudoNHSNumber]),
+			        'INT Metric Population'[Rockwood_Event_Date] <= _MAXDATE,
+			        OR (ISBLANK('INT Metric Population'[Removal_Date]), 'INT Metric Population'[Removal_Date] >= _MAXDATE)
+			    )
+		formatString: #,0
+		lineageTag: 30f82c38-96bd-458d-920a-b031c7651acc
+
+	measure 'Metric - % 65+ With Rockwood Coding' =
+			
+			
+			CALCULATE([Metric - Rockwood Population], 'INT Metric Population'[65+_Flag] = 1)
+			
+			/
+			
+			[65+ GP Population]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 98e6d509-8687-4ccf-8002-9047b338d36a
+
+	measure 'Metric - Total PC&SP Completed' =
+			
+			
+			SUM('PC&SP Events'[Counter])
+		formatString: #,0
+		lineageTag: 30156cb7-3162-41d8-8253-2b54955e11e6
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Metric - % Rockwood with PC&SP Completed' = ```
+			
+			
+			VAR _MAXDATE = MAX('Date Reference'[date])
+			
+			VAR _RWPCSP = 
+			    CALCULATE(
+			        [Metric - Rockwood Population],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[PCSP_Date] <= _MAXDATE,
+			        'INT Metric Population'[PCSP_Flag] = 1,
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			VAR _RWPOP = 
+			    CALCULATE(
+			        [Metric - Rockwood Population],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			RETURN
+			
+			_RWPCSP / _RWPOP
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b0d46c03-f30d-4eb2-a7d8-252252952abe
+
+	measure 'Metric - Total ReSPECT Completed' =
+			
+			
+			SUM('ReSPECT Events'[Counter])
+		formatString: #,0
+		lineageTag: 7387190b-1d71-49dc-9a72-de1298343f76
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Metric - % Rockwood with ReSPECT Completed' = ```
+			
+			
+			VAR _MAXDATE = MAX('Date Reference'[date])
+			
+			VAR _RWReSPECT = 
+			    CALCULATE(
+			        [Metric - Rockwood Population],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[ReSPECT_Flag] = 1,
+			        'INT Metric Population'[ReSPECT_Date] <= _MAXDATE,
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			VAR _RWPOP = 
+			    CALCULATE(
+			        [Metric - Rockwood Population],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			RETURN
+			
+			_RWReSPECT / _RWPOP
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f374fae5-8259-4208-b86a-ef9ba54ae611
+
+	measure 'Total Rockwood Events' = ```
+			
+			
+			    CALCULATE(
+			        SUM('INT Metric Population'[Counter]), 
+			        USERELATIONSHIP('Date Reference'[date], 'INT Metric Population'[Rockwood_Event_Date]),
+			        'INT Metric Population'[65+_Flag] = 1)
+			```
+		formatString: 0
+		lineageTag: 1f1c49c4-699a-4ec1-998a-6fb70c428363
+
+	measure 'RockWood Pop - 65+ / Moderate / Severe' = ```
+			
+			
+			    CALCULATE(
+			        [Metric - Rockwood Population], 
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1
+			        )
+			```
+		formatString: 0
+		lineageTag: 6872d9ef-d4ed-42ac-8365-b4912d2864a7
+
+	measure 'Total ReSPECT Events' =
+			
+			
+			SUM('ReSPECT Events'[Counter])
+		formatString: 0
+		lineageTag: 0d4835e3-e535-4b15-9e27-496c4bc75041
+
+	measure Total = SUM('INT Metric Population'[Counter])
+		formatString: 0
+		lineageTag: 587c7d0c-476d-4dc9-81e3-69cbc9e30429
+
+	measure 'Metric - Total LOS' = ```
+			
+			
+			VAR _TOTALPATIENTS = 
+			    CALCULATE(
+			        DISTINCTCOUNT('Admissions'[hospital_provider_spell_number]),
+			        'INT Metric Population'[65+_Flag] = 1,
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"})
+			
+			VAR _TOTALLOS = 
+			      CALCULATE(
+			        SUM('Admissions'[Length_of_Stay]),
+			        'INT Metric Population'[65+_Flag] = 1,
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"})
+			
+			RETURN
+			
+			_TOTALLOS / _TOTALPATIENTS
+			```
+		formatString: 0.0
+		lineageTag: 68da7808-70c8-4116-9d25-718fa81683f0
+
+	measure 'Metric - Emergency Admissions per Person' = ```
+			
+			
+			VAR _ADMISSIONS = 
+			
+			    CALCULATE(
+			        COUNT('Admissions'[nhs_number]),
+			        'Admissions'[Emergency_Admission_flag] = 1,
+			        'INT Metric Population'[65+_Flag] = 1,
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"}
+			    )
+			
+			VAR _POP = 
+			
+			    CALCULATE(
+			        [Metric - Rockwood Population],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			RETURN (_ADMISSIONS / _POP) * 1000
+			
+			```
+		formatString: 0.0
+		lineageTag: e58331af-29cb-4f60-a5e4-185018cf7ae3
+
+	measure 'Metric - Rockwood Population - PQ' =
+			
+			
+			VAR _MAXDATE = MAX('Date Reference'[Date_3_Months_Back])
+			
+			RETURN
+			    CALCULATE(
+			        DISTINCTCOUNT('INT Metric Population'[PseudoNHSNumber]),
+			        'INT Metric Population'[Rockwood_Event_Date] <= _MAXDATE,
+			        OR (ISBLANK('INT Metric Population'[Removal_Date]), 'INT Metric Population'[Removal_Date] >= _MAXDATE)
+			    )
+		formatString: #,0
+		lineageTag: f3649256-3477-4530-af1b-efff1d671f5c
+
+	measure 'Variance - Rockwood Population' =
+			
+			
+			[Metric - Rockwood Population] - [Metric - Rockwood Population - PQ]
+		formatString: #,0
+		lineageTag: 27698236-775b-4194-b214-74a1a8218fb9
+
+	measure 'Metric - % 65+ With Rockwood Coding - PQ' =
+			
+			
+			CALCULATE([Metric - Rockwood Population - PQ], 'INT Metric Population'[65+_Flag] = 1)
+			
+			/
+			
+			[65+ GP Population - PQ]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c872bd3e-59f5-44c8-8e07-16f1150d16e3
+
+	measure 'Variance - % 65+ With Rockwood Coding' =
+			
+			
+			[Metric - % 65+ With Rockwood Coding] - [Metric - % 65+ With Rockwood Coding - PQ]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ebdf00d8-4be3-49c0-9ca7-6f557dad9f8a
+
+	measure 'Metric - % Rockwood with PC&SP Completed - PQ' = ```
+			
+			
+			VAR _MAXDATE = MAX('Date Reference'[Date_3_Months_Back])
+			
+			VAR _RWPCSP = 
+			    CALCULATE(
+			        [Metric - Rockwood Population - PQ],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[PCSP_Date] <= _MAXDATE,
+			        'INT Metric Population'[PCSP_Flag] = 1,
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			VAR _RWPOP = 
+			    CALCULATE(
+			        [Metric - Rockwood Population - PQ],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			RETURN
+			
+			_RWPCSP / _RWPOP
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 105e3be5-1127-4a19-9ea4-0550fbdef244
+
+	measure 'Variance - % Rockwood with PC&SP Completed' =
+			
+			
+			[Metric - % Rockwood with PC&SP Completed] - [Metric - % Rockwood with PC&SP Completed - PQ]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 0aaf1b4b-0e05-4223-8dea-c05cb854fedb
+
+	measure 'Metric - % Rockwood with ReSPECT Completed - PQ' = ```
+			
+			
+			VAR _MAXDATE = MAX('Date Reference'[Date_3_Months_Back])
+			
+			VAR _RWReSPECT = 
+			    CALCULATE(
+			        [Metric - Rockwood Population - PQ],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[ReSPECT_Flag] = 1,
+			        'INT Metric Population'[ReSPECT_Date] <= _MAXDATE,
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			VAR _RWPOP = 
+			    CALCULATE(
+			        [Metric - Rockwood Population - PQ],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1
+			    )
+			
+			RETURN
+			
+			_RWReSPECT / _RWPOP
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 54b389a1-9ff6-4595-993a-e3bd8e1ce767
+
+	measure 'Variance - % Rockwood with ReSPECT Completed' =
+			
+			
+			[Metric - % Rockwood with ReSPECT Completed] - [Metric - % Rockwood with ReSPECT Completed - PQ]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2e805bf7-b534-4b93-88d4-9c87ad1d8067
+
+	measure 'Metric - Total PC&SP Completed - PQ' = ```
+			
+			
+			CALCULATE(
+			    SUM('PC&SP Events'[Counter]), 
+			    DATEADD('Date Reference'[date], -3, MONTH)
+			    )
+			```
+		formatString: #,0
+		lineageTag: 331990d8-d441-4186-a10d-a804a4a86333
+
+	measure 'Metric - Total ReSPECT Completed - PQ' =
+			
+			
+			CALCULATE(
+			    SUM('ReSPECT Events'[Counter]),
+			    DATEADD('Date Reference'[date], -3, MONTH)
+			)
+		formatString: 0
+		lineageTag: 58499a44-321f-4612-85aa-7be41c6fde09
+
+	measure 'Variance - Total PC&SP Completed' =
+			
+			
+			[Metric - Total PC&SP Completed] - [Metric - Total PC&SP Completed - PQ]
+		formatString: 0
+		lineageTag: 8ba8497c-4447-424f-87f8-6d8632757a1e
+
+	measure 'Variance - Total ReSPECT Completed' =
+			
+			
+			[Metric - Total ReSPECT Completed] - [Metric - Total ReSPECT Completed - PQ]
+		formatString: 0
+		lineageTag: 28679df1-cca0-4b6a-b5fb-f2185ccce217
+
+	measure 'Metric - Total LOS - PQ' = ```
+			
+			
+			VAR _TOTALPATIENTS = 
+			    CALCULATE(
+			        DISTINCTCOUNT('Admissions'[hospital_provider_spell_number]),
+			        'INT Metric Population'[65+_Flag] = 1,
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        DATEADD('Date Reference'[date], -3, MONTH)
+			    )
+			
+			VAR _TOTALLOS = 
+			    CALCULATE(
+			        SUM('Admissions'[Length_of_Stay]),
+			        'INT Metric Population'[65+_Flag] = 1,
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        DATEADD('Date Reference'[date], -3, MONTH)
+			    )
+			
+			RETURN
+			
+			_TOTALLOS / _TOTALPATIENTS
+			```
+		formatString: 0.0
+		lineageTag: 02fabe62-16d3-48f5-aa42-0b3ea6fd1259
+
+	measure 'Metric - Emergency Admissions per Person - PQ' = ```
+			
+			
+			VAR _ADMISSIONS = 
+			
+			    CALCULATE(
+			        COUNT('Admissions'[nhs_number]),
+			        'Admissions'[Emergency_Admission_flag] = 1,
+			        'INT Metric Population'[65+_Flag] = 1,
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        DATEADD('Date Reference'[date], -3, MONTH)
+			    )
+			
+			VAR _POP = 
+			
+			    CALCULATE(
+			        [Metric - Rockwood Population],
+			        'INT Metric Population'[Frailty_Category] IN {"Moderate", "Severe"},
+			        'INT Metric Population'[65+_Flag] = 1,
+			        DATEADD('Date Reference'[date], -3, MONTH)
+			    )
+			
+			RETURN (_ADMISSIONS / _POP) * 1000
+			
+			```
+		formatString: 0.0
+		lineageTag: 3e87ddd1-283d-4885-a58b-3c95e5eebb28
+
+	measure 'Variance - Emergency Admissions per Person' =
+			
+			
+			[Metric - Emergency Admissions per Person] - [Metric - Emergency Admissions per Person - PQ]
+		formatString: 0.0
+		lineageTag: 15308a93-2294-4173-a7c4-321ee0f9744d
+
+	measure 'Variance - Total LOS' =
+			
+			
+			[Metric - Total LOS] - [Metric - Total LOS - PQ]
+		formatString: 0.0
+		lineageTag: 97140c01-3963-4255-ac56-cd51ac0ed6bc
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 23218124-060a-439b-8692-2b9d47bb8389
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 4a146383-1954-42b2-888d-04db1834e503
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rockwood_Event_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b53a6ea1-cd0d-4fa4-aad4-cc457574e679
+		summarizeBy: none
+		sourceColumn: Rockwood_Event_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Score
+		dataType: int64
+		formatString: 0
+		lineageTag: c6b56ea8-7c1c-46ac-a36d-24a11747ae29
+		summarizeBy: sum
+		sourceColumn: Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column Frailty_Category
+		dataType: string
+		lineageTag: 7c3d16c9-4b21-42bb-9634-247230874f4a
+		summarizeBy: none
+		sourceColumn: Frailty_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 8e7d532b-1657-4270-9fb3-659e5b7882df
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 65+_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 47d63c8d-3aab-4283-a182-006772193078
+		summarizeBy: sum
+		sourceColumn: 65+_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rockwood_Event_Coding_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 9179a8ca-3daf-4f6d-aca2-e2bee7bdd737
+		summarizeBy: sum
+		sourceColumn: Rockwood_Event_Coding_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCSP_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 579a6d93-0488-405a-8235-4e0ad8a438c0
+		summarizeBy: none
+		sourceColumn: PCSP_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCSP_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: c30b9b84-a9d6-45d4-ad9f-062103769aa8
+		summarizeBy: sum
+		sourceColumn: PCSP_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReSPECT_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2d00d847-fb36-49c2-ab8e-e1a456781b2d
+		summarizeBy: none
+		sourceColumn: ReSPECT_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReSPECT_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: fcf70667-8c57-4b7b-8155-895929cc4d4a
+		summarizeBy: sum
+		sourceColumn: ReSPECT_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Removal_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4d6ffc8d-61c0-4ed0-893f-cc427fb4f481
+		summarizeBy: none
+		sourceColumn: Removal_Date
+
+		variation Variation
+			isDefault
+			relationship: 5eae95dc-15e5-45ab-86aa-d49c94f53eb3
+			defaultHierarchy: LocalDateTable_6ec45fe5-74f7-4bd4-9276-1a1cda961215.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter = 1
+		formatString: 0
+		lineageTag: 0e336b50-d608-4aec-b336-2143ab2347f8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'INT Metric Population' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[PrimaryCare].[tbl02_INT_Metrics_Table]"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

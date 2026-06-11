@@ -1,0 +1,281 @@
+table 'Census Population'
+	lineageTag: 7dc0f6d6-9080-47b3-8a81-e4d1a9811ede
+
+	measure 'Incidence Local Population' =
+			
+			
+			SUM('Census Population'[Counter])
+		formatString: 0
+		lineageTag: 16960a0a-0b6a-473a-a6a3-e039c3f601e8
+
+	measure 'Incidence Reference Population' = ```
+			
+			
+			CALCULATE(
+			    SUM('Census Population'[Counter]), 
+			    ALL('GP Reference'), 
+			    ALL('Gender Reference'),
+			    ALL('GP Reference'),
+			    ALL('EoL Data'[cause_of_death_primary], 'EoL Data'[cause_of_death_primary_chapter]), 
+			    ALL('Ethnicity Reference'),
+			    ALL('LTC Reference Table - ALL'),
+			    ALL('LTC Reference Table - ONLY LTC'),
+			    ALL('eFI Reference Table'),
+			    ALL('Deprivation Reference')
+			    )
+			```
+		formatString: 0
+		lineageTag: 401f659b-a307-4032-a55e-6ea49859cbcb
+
+	measure 'Incidence Reference Rate' =
+			
+			
+			([Incidence Reference Events] / [Incidence Reference Population])
+		formatString: 0.00000
+		lineageTag: 34a72d8e-48f8-4a7e-99b0-b3fadf5de831
+
+	measure 'Local Observed Deaths' = CALCULATE([DEATHS], ALL('Ethnicity Reference'))
+		lineageTag: 9c029a9a-5e55-483b-959b-90c681a10af5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Local Reference Crude Rate' = ([Local Observed Deaths] / [Incidence Reference Population]) * 1000
+		lineageTag: 204853a4-7437-49f6-9d3e-aa6c122ae453
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Local Reference Rate per 1,000' = [Incidence Reference Rate] * 1000
+		lineageTag: 38b7c5a8-60e4-461b-8069-5434fef370fd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Local Events' =
+			
+			
+			CALCULATE(
+			    SUM('EoL Data'[counter]),
+			    'EoL Data'[death_flag] = "Dead"
+			)
+		lineageTag: 6b949c36-5219-4fe7-9f69-f6c53bc9d506
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Reference Events' = ```
+			
+			
+			CALCULATE(
+			    SUM('EoL Data'[counter]), 
+			    'EoL Data'[death_flag] = "Dead", 
+			    ALL('GP Reference'),
+			    ALL('Gender Reference'),
+			    ALL('GP Reference'),
+			    ALL('EoL Data'[cause_of_death_primary], 'EoL Data'[cause_of_death_primary_chapter]), 
+			    ALL('Ethnicity Reference'),
+			    ALL('LTC Reference Table - ALL'),
+			    ALL('LTC Reference Table - ONLY LTC'),
+			    ALL('eFI Reference Table'),
+			    ALL('Deprivation Reference')
+			    )
+			```
+		lineageTag: ba556e71-60f1-449b-9a78-39e58e7550d3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence (Incorrect) Local Expected Events' = ```
+			
+			
+			( [Incidence Reference Rate] * [Incidence Local Population] )
+			
+			```
+		lineageTag: 89835d2b-bd39-4b91-9781-2f7d20d57881
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence (Corrected) Local Expected Events' =
+			
+			
+			SUMX(
+			    VALUES('Age Band Reference'[5YR_Age_Band]),
+			    [Incidence (Incorrect) Local Expected Events]
+			)
+		lineageTag: 759342bb-0f52-4db6-aa32-50935de2861e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Reference Rate per 1,000' =
+			
+			
+			([Incidence Reference Events] / [Incidence Reference Population]) * 1000
+		formatString: 0.00
+		lineageTag: 88697847-665b-4e93-8ee5-e02bc0c5adbd
+
+	measure 'Incidence Local Rate per 1,000 Indirectly Age Standardised' =
+			
+			
+			([Incidence Local Events] / [Incidence (Corrected) Local Expected Events]) * [Incidence Reference Rate per 1,000]
+		formatString: 0.00
+		lineageTag: 51878691-70c0-4132-8bdd-1ad711436c3d
+
+	measure 'Incidence - Age Standardisation Variance' =
+			
+			
+			IF(
+			    [Incidence Local Rate per 1,000 Indirectly Age Standardised] - [Incidence Reference Rate per 1,000] > 0 &&
+			    [Incidence Local Rate per 1,000 Indirectly Age Standardised] - [Incidence Reference Rate per 1,000] < 0.00000000000001,
+			    0,
+			    [Incidence Local Rate per 1,000 Indirectly Age Standardised] - [Incidence Reference Rate per 1,000]
+			)
+		formatString: 0.000000000000000
+		lineageTag: 6955bb5c-746e-491d-a02e-22dcdf5c4bc3
+
+	measure 'Age Standardisation Colours' =
+			
+			
+			IF([Incidence - Age Standardisation Variance] > 0, "#27a59d", "#ec5e5f")
+		lineageTag: b2be9764-d898-4565-93f8-133d0fb4581d
+
+	measure 'Incidence - Age Standardisation Variance Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Death Date Reference'[financial_year], 'Death Date Reference'[financial_month],
+			                         'Death Date Reference'[month_name], 'Death Date Reference'[month_number] ),
+			            "Value_x", 'Death Date Reference'[month_number],
+			            "Value_y", [Incidence - Age Standardisation Variance]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Death Date Reference'[month_number] ),
+			        Intercept + Slope * 'Death Date Reference'[month_number]
+			    )
+			```
+		lineageTag: c954d74d-18f0-4e12-8622-19267585690c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Census_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 98ee8339-138a-46d3-a373-2c4e080754da
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 481a3199-25f6-4a3c-a30c-25045f73763d
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Removal_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cb23467c-2f46-4906-b0ee-a545952566c7
+		summarizeBy: none
+		sourceColumn: Removal_Date
+
+		variation Variation
+			isDefault
+			relationship: 66a236b0-162b-476b-9953-3bc6839cd931
+			defaultHierarchy: LocalDateTable_7c8a88f3-20a9-4e11-9038-7e4c1c2b7dfd.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: ef6ee4da-2638-4f89-96a9-f8f56c4a8ff3
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_census
+		dataType: int64
+		formatString: 0
+		lineageTag: 42626f70-c607-4017-8f57-c85f55d1eca0
+		summarizeBy: none
+		sourceColumn: Age_at_census
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		lineageTag: dfe3d6b6-2d3e-4238-8bc1-551219aa361c
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 91b9fc26-23a1-40e0-b330-1f57b59fc021
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: e37ca550-2d65-419f-b8f7-4e8d0a20e8fa
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 2a4283e2-ea6f-4d4a-9d83-26cd04d90584
+		summarizeBy: none
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a819b2aa-520b-4d27-b6f3-1c0c1970043e
+		summarizeBy: sum
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f9f03d3-4773-4f1a-b7fb-7b0efb86d64b
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Census Population' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT [Census_Date]#(lf)      ,[Derived_NHS_Number]#(lf)      ,[Removal_Date]#(lf)      ,[Practice_Code] = [PrimaryCareProvider]#(lf)      ,[Age_at_census]#(lf)      ,[efi_category] = CASE WHEN [POP].[efi_category] = 'No EFI deficits recorded' THEN 'Not Recorded'#(lf)#(tab)                         ELSE [POP].[efi_category] END#(lf)      ,[Gender]#(lf)      ,[Ethnicity] = [ETH].[Description]#(lf)      ,[IMDcountyDecile]#(lf)      ,[Core20Flag]#(lf)#(tab)  ,[Counter] = 1#(lf)#(lf)  FROM [PowerBI_Reporting].[AgeingWell].[tbl02_Proactive_Whiteboard_Registered_Population_Over_Time] AS [POP]#(lf)#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_EthnicCategory] AS [ETH] ON [ETH].[NationalCode] = [POP].[Ethnicity_code]#(lf)#(lf)  WHERE [Derived_Registered_CCG] = '11M'#(lf)  AND [Census_Date] >= '20210401'"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,53 @@
+table 'Ethnicity Reference'
+	lineageTag: 8f9462ec-2ba9-4276-9484-5623b054c7a3
+
+	measure 'Ethnicity Filtered Values' = ```
+			
+			
+			VAR _FILTERED_COUNT = DISTINCTCOUNT('Ethnicity Reference'[Ethnicity])
+			VAR _MAXVALUES = 5
+			
+			RETURN 
+			
+			IF (
+			    _FILTERED_COUNT > _MAXVALUES
+			    && ISCROSSFILTERED( 'Ethnicity Reference'[Ethnicity] )
+			    && DISTINCTCOUNT('Ethnicity Reference'[Ethnicity]) < CALCULATE(DISTINCTCOUNT('Ethnicity Reference'[Ethnicity]), ALL('Ethnicity Reference')),
+			        CONCATENATE(CONCATENATEX(
+			        TOPN(_MAXVALUES,
+			        VALUES('Ethnicity Reference'[Ethnicity]),
+			        'Ethnicity Reference'[Ethnicity], ASC
+			        ),
+			        'Ethnicity Reference'[Ethnicity],
+			        ", "), ", etc"),
+			IF (
+			    _FILTERED_COUNT <= _MAXVALUES
+			    && ISCROSSFILTERED( 'Ethnicity Reference'[Ethnicity] )
+			    && DISTINCTCOUNT('Ethnicity Reference'[Ethnicity]) < CALCULATE(DISTINCTCOUNT('Ethnicity Reference'[Ethnicity]), ALL('Ethnicity Reference')),
+			    CONCATENATEX(
+			        TOPN(_MAXVALUES,
+			        VALUES('Ethnicity Reference'[Ethnicity]),
+			        'Ethnicity Reference'[Ethnicity], ASC
+			        ),
+			        'Ethnicity Reference'[Ethnicity],
+			        ", "),
+			"All Ethnicities are currently selected"
+			))
+			
+			```
+		lineageTag: 5ba6e514-9869-413d-8e5e-8e94f41fd8f0
+
+	column Ethnicity
+		lineageTag: f649c877-479a-4636-aa99-5216b6cd257f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Dispensing Data[Ethnicity]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ethnicity Reference' = calculated
+		mode: import
+		source = DISTINCT('Dispensing Data'[Ethnicity])
+
+	annotation PBI_Id = e343c93f8c474fc19872a851fc055590
+
