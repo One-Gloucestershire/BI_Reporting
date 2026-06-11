@@ -1,0 +1,165 @@
+table GP
+	lineageTag: 150dae75-4181-4194-ad76-61bcfe26ea4f
+
+	measure Rate = (sum('GP'[Value])/sum('GP'[Registered_Patients]))*1000
+		lineageTag: a6236e8c-5013-4d33-aecd-c4c29c23afd5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Percent of date total (GP_Type)' =
+			
+			DIVIDE (
+			    SUM ( 'GP'[Value] ),
+			    CALCULATE ( SUM ( 'GP'[Value] ), ALL ( 'GP'[Gp_Type] ) )
+			)
+		lineageTag: 161eba48-da55-4ee4-9f91-81fd0e22ac18
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column General_Practice_Code
+		dataType: string
+		lineageTag: a2302657-c411-4e6d-9acc-eb130f8f937b
+		summarizeBy: none
+		sourceColumn: General_Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column General_Practice_Name
+		dataType: string
+		lineageTag: 8957188e-2c96-4c9d-990d-b2615b3763ee
+		summarizeBy: none
+		sourceColumn: General_Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: 83bd4530-ef31-4b71-935e-188fdd649f5b
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 7ef17677-bc85-4971-863b-67bb0925171d
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 3ce2d1d4-fdcb-4a8e-b549-1ed1aaa25871
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		lineageTag: 41faf55b-313f-4575-9e9f-67b8d31b0db6
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Type
+		dataType: string
+		lineageTag: 02f6040c-2a6b-4ea1-bffd-8884d89bfef8
+		summarizeBy: none
+		sourceColumn: GP_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column QualificationOrigin
+		dataType: string
+		lineageTag: 9b54934d-53d5-4dd2-8a2c-2c9018ce381d
+		summarizeBy: none
+		sourceColumn: QualificationOrigin
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 40cbc914-3f38-40e4-984b-de33e71ed147
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: FinancialMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: eceb7bd0-8610-4f20-8b27-e39dd924a5d2
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Grouping
+		dataType: string
+		lineageTag: d7026161-f335-4c9b-b8ee-776b52b18c1b
+		summarizeBy: none
+		sourceColumn: Grouping
+
+		annotation SummarizationSetBy = Automatic
+
+	column Census_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6746eee6-e700-471e-b6d2-7f111a5098c4
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		variation Variation
+			isDefault
+			relationship: 96669c77-edcd-4f18-9a20-e33a8b848bad
+			defaultHierarchy: LocalDateTable_cb7c74e7-34d5-43a0-b26d-192a669c4815.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 5ef69526-d1aa-48f7-ae38-567f769a9145
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f378ea6-22cc-42c8-935e-af837840f50f
+		summarizeBy: sum
+		sourceColumn: FinancialMonth
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Registered_Patients
+		dataType: int64
+		formatString: 0
+		lineageTag: f745512a-a8f6-43b2-b7ab-a2987f6264e1
+		summarizeBy: sum
+		sourceColumn: Registered_Patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GP-7bc7528e-23ee-41bd-b7b0-ec1230877825 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="Select [WF].*,#(lf)[D].[FinancialYear],#(lf)[D].[FinancialMonth]#(lf)from [PowerBI_Reporting].[primarycare].[tbl_workforce_gp] [WF]#(lf)#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] [D]#(lf)ON [D].[Date] = [WF].[Census_Date]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

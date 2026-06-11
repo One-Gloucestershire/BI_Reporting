@@ -1,0 +1,70 @@
+table 'Emergency Age'
+	lineageTag: 4424d509-d818-4084-bc36-f66f9259e514
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: e8509c7f-729d-49e3-b348-ddb073e7476e
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB of Registration'
+		dataType: string
+		lineageTag: cac56d35-bdba-416d-b2c1-59e92d7ffecc
+		summarizeBy: none
+		sourceColumn: ICB of Registration
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age (Standard)'
+		dataType: string
+		lineageTag: e9faeb08-e795-48b5-8979-b323d74c255b
+		summarizeBy: none
+		sourceColumn: Age (Standard)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 3-Code Group (diagnosing ep)'
+		dataType: string
+		lineageTag: 0a8e7979-bedf-4e4e-b9eb-bf9874896385
+		summarizeBy: none
+		sourceColumn: ICD10 3-Code Group (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Admissions'
+		dataType: int64
+		formatString: 0
+		lineageTag: fbdbabcf-12d4-4ba0-a60b-1c0b66333379
+		summarizeBy: sum
+		sourceColumn: Number of Admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: 3294787a-67b2-4e50-9d05-1fff2efffc27
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Emergency Age-1813fabb-198e-4a9f-b92b-8fa5acb8afbf' = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\PHM Tabs\Emergency\Emergency Age"),
+				    #"Filtered Hidden Files1" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),
+				    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File (5)", each #"Transform File (5)"([Content])),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
+				    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (5)"}),
+				    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (5)", Table.ColumnNames(#"Transform File (5)"(#"Sample File (5)"))),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"Source.Name", type text}, {"ICB of Registration", type text}, {"Age (Standard)", type text}, {"ICD10 3-Code Group (diagnosing ep)", type text}, {"Number of Admissions", Int64.Type}}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Changed Type", "Fiscal Year", each if [Source.Name] = "Emergency Admissions Age 1920.csv" then "2019/20" else if [Source.Name] = "Emergency Admissions Age 2021.csv" then "2020/21" else if [Source.Name] = "Emergency Admissions Age 2122.csv" then "2021/22" else if [Source.Name] = "Emergency Admissions Age 2223.csv" then "2022/23" else null),
+				    #"Replaced Value" = Table.ReplaceValue(#"Added Conditional Column","5-14","05-14",Replacer.ReplaceText,{"Age (Standard)"})
+				in
+				    #"Replaced Value"
+
+	annotation PBI_ResultType = Table
+

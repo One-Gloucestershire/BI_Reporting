@@ -1,0 +1,116 @@
+table Population
+	lineageTag: 49346b74-d4dd-4a77-876a-07a6db55ac5c
+
+	measure 'Rate per 1,000 Items' =
+			
+			(DIVIDE(SUM('EPACT'[Items]), SUM('Population'[Total])))*1000
+		formatString: #,0.00
+		lineageTag: 93eece51-7f52-43e4-a74d-16113f4c2308
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+	measure 'Rate per 1,000 Costs' =
+			
+			(DIVIDE(SUM('EPACT'[ActualCost]), SUM('Population'[Total])))*1000
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 2aa6bf24-db1c-4807-acbc-a461d25eb029
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 5562c38b-4fd0-4e0f-bf6b-d5f428640463
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 8fb7dd45-1d1d-4813-b897-75cb5e40f8a6
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 68d504e3-46f9-4a13-86bb-27b62ce7ab35
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Place
+		dataType: string
+		lineageTag: f4c26407-f230-4942-b617-d83f25d7fa04
+		summarizeBy: none
+		sourceColumn: Place
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: d2c6eb1c-0ef5-460e-a296-f15e61586852
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column CensusDate
+		dataType: string
+		lineageTag: 6023e02c-4b50-49df-a50c-dc28ad1eccec
+		summarizeBy: none
+		sourceColumn: CensusDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeGroupType
+		dataType: string
+		lineageTag: a0cadfe9-38bd-4aeb-9ccd-0cc5a46704df
+		summarizeBy: none
+		sourceColumn: AgeGroupType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: 0
+		lineageTag: b38c5359-f08c-4c8e-8767-60c356d1429c
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: 65370225-a587-41a5-a8ae-f6fa8e07cd03
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year-MonthName
+		dataType: string
+		lineageTag: 7b970023-173f-4a10-b784-f13f75b13951
+		summarizeBy: none
+		sourceColumn: Year-MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Population-b5c5c83e-0f3d-44b2-92d8-4774c148a6fb = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)#(lf)/*=================================================#(lf)Date Ref#(lf)=================================================*/#(lf)#(lf)IF OBJECT_ID('tempdb..#DateRef1', 'U') IS NOT NULL DROP TABLE #DateRef1;#(lf)#(lf)SELECT [DateKey]#(lf)      ,[Date]#(lf)      ,[DayMonthYear]#(lf)      ,[Day]#(lf)      ,[DaySuffix]#(lf)      ,[Weekday]#(lf)      ,[WeekDayName]#(lf)      ,[DayofWeekInMonth]#(lf)      ,[DayOfYear]#(lf)      ,[WeekOfMonth]#(lf)      ,[WeekOfYear]#(lf)      ,[Month]#(lf)      ,[MonthName]#(lf)      ,[Quarter]#(lf)      ,[QuarterName]#(lf)      ,[Year]#(lf)      ,[MonthYear]#(lf)      ,[MonthYearName]#(lf)      ,[YearMonth]#(lf)      ,[IsWeekend]#(lf)      ,[IsHoliday]#(lf)      ,[FinancialWeekofYear]#(lf)      ,[HolidayName]#(lf)      ,[SpecialDays]#(lf)      ,[FinancialYear]#(lf)      ,[FinancialQuarter]#(lf)      ,[FinancialMonth]#(lf)      ,[FirstDateofYear]#(lf)      ,[LastDateofYear]#(lf)      ,[FirstDateofQuater]#(lf)      ,[LastDateofQuater]#(lf)      ,[FirstDateofMonth]#(lf)      ,[LastDateofMonth]#(lf)      ,[FirstDateofWeek]#(lf)      ,[LastDateofWeek]#(lf)      ,[WeekBand]#(lf)      ,[CurrentYear]#(lf)      ,[CurrentQuater]#(lf)      ,[CurrentMonth]#(lf)      ,[CurrentWeek]#(lf)      ,[CurrentDay]#(lf)#(tab)  ,[ShortMonth] = LEFT([MonthName],3)#(lf)#(tab)  ,[ShortYear] = RIGHT([Year], 2)#(lf)#(tab)  ,[YearMonthName] = CONCAT(LEFT([MonthName],3),RIGHT([Year],2))#(lf)#(tab)  ,[Year-MonthName] = CONCAT(LEFT([MonthName],3),'-',RIGHT([Year],2))#(lf)#(lf)#(tab)  INTO #DateRef1#(lf)#(lf)  FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(lf)  WHERE [Year] >= '2019'#(lf)#(lf)#(lf)/*=================================================#(lf)Population (max census date)#(lf)=================================================*/#(lf)#(lf)SELECT distinct [OrganisationCode]#(lf)      ,[OrganisationName]#(lf)      ,[PrimaryCareNetwork]#(lf)      ,[Place]#(lf)      ,[Locality]#(lf)      ,[CensusDate]#(lf)      ,[AgeGroupType]#(lf)      ,[Total] = sum([Total])#(lf)#(tab)  ,[YearMonth]#(lf)#(tab)  ,[Year-MonthName]#(lf)#(lf)  FROM [CCG_Reference].[Reference].[vw_GPPracticePopulation][Ref]#(lf)#(lf)  LEFT JOIN [#DateRef1]#(lf)  ON [#DateRef1].[Date] = CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE)#(lf)#(lf)  WHERE [AgeGroupType] = 'All'#(lf)  AND CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE) =  (select distinct MAX(CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE)) FROM CCG_Reference.Reference.vw_GPPracticePopulation)#(lf)#(lf)  GROUP BY   [OrganisationCode]#(lf)      ,[OrganisationName]#(lf)      ,[PrimaryCareNetwork]#(lf)      ,[Place]#(lf)      ,[Locality]#(lf)      ,[CensusDate]#(lf)      ,[AgeGroupType]#(lf)#(tab)  ,[YearMonth]#(lf)#(tab)  ,[Year-MonthName]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

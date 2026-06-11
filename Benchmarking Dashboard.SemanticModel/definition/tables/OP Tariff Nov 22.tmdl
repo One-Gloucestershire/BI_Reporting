@@ -1,0 +1,54 @@
+table 'OP Tariff Nov 22'
+	lineageTag: cb14d907-9b68-4940-b2eb-c2992a28394e
+
+	column 'TFC Code'
+		dataType: string
+		lineageTag: 72a5abd7-1f2e-41ab-bf16-23690f3cc0cd
+		summarizeBy: none
+		sourceColumn: TFC Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'TFC Description'
+		dataType: string
+		lineageTag: bcbbd3da-9bb7-4d75-bf74-54a45455e488
+		summarizeBy: none
+		sourceColumn: TFC Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'WF01A Follow Up Attendance - Single Professional'
+		dataType: int64
+		formatString: 0
+		lineageTag: dc7f552e-8b31-4ac1-8fc8-8db34bfb430c
+		summarizeBy: none
+		sourceColumn: WF01A Follow Up Attendance - Single Professional
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'WF01B First Attendance - Single Professional'
+		dataType: int64
+		formatString: 0
+		lineageTag: e396b5bb-5499-46a4-9e41-74e9bd93493c
+		summarizeBy: none
+		sourceColumn: WF01B First Attendance - Single Professional
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'OP Tariff Nov 22-1304e3f9-ea7f-4987-a4a4-29760eac40c2' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\OP Tariff Nov 2022.xlsx")),
+				    #"OP Tariff Nov 22_sheet" = Source{[Item="OP Tariff Nov 22",Kind="Sheet"]}[Data],
+				    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+				    #"Transposed Table" = Table.Transpose(#"OP Tariff Nov 22_sheet"),
+				    #"Removed Bottom Rows" = Table.RemoveLastN(#"Transposed Table", each try List.IsEmpty(List.Skip(FilterNullAndWhitespace(Record.FieldValues(_)), 1)) otherwise false),
+				    #"Transposed Table1" = Table.Transpose(#"Removed Bottom Rows"),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Transposed Table1", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"TFC Code", type text}, {"TFC Description", type text}, {"WF01A #(lf)Follow Up Attendance - #(lf)Single Professional", Int64.Type}, {"WF01B #(lf)First Attendance - #(lf)Single Professional", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

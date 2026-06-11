@@ -1,0 +1,87 @@
+table 'Emergency PCNs'
+	lineageTag: 82cfdcc1-f88e-42d3-bebf-4db07640a181
+
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: cd4e9b38-0171-4421-bc68-e7254a196f31
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 3-Code Group (diagnosing ep)'
+		dataType: string
+		lineageTag: e39fb21c-28b0-41d2-a1b9-e070793b0be7
+		summarizeBy: none
+		sourceColumn: ICD10 3-Code Group (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Admissions'
+		dataType: int64
+		formatString: 0
+		lineageTag: 745fc817-f0c0-4266-b80c-ec9bb4da28f0
+		summarizeBy: sum
+		sourceColumn: Number of Admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Bed Days'
+		dataType: int64
+		formatString: 0
+		lineageTag: 61625d2c-0230-4f6c-998e-aafbfba6833d
+		summarizeBy: sum
+		sourceColumn: Number of Bed Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Average Length of Stay'
+		dataType: double
+		lineageTag: 522c0845-1610-4208-bf0c-4515e01a10b1
+		summarizeBy: sum
+		sourceColumn: Average Length of Stay
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Admission Rate per 1000 (Crude)'
+		dataType: double
+		lineageTag: df0b628c-edad-4dc5-b497-702224799249
+		summarizeBy: sum
+		sourceColumn: Admission Rate per 1000 (Crude)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'PCN of Registration.1'
+		dataType: string
+		lineageTag: b0de0cf2-0024-453a-916e-d3eef152a1e5
+		summarizeBy: none
+		sourceColumn: PCN of Registration.1
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PCN of Registration.2'
+		dataType: string
+		lineageTag: e767f738-fcc5-486f-8628-b83291fb14fc
+		summarizeBy: none
+		sourceColumn: PCN of Registration.2
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Emergency PCNs-ef991015-4e64-40ed-90a7-4a8845d66ffe' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\Emergency\Emergency PCNs.csv"),[Delimiter="	", Columns=7, Encoding=1200, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Fiscal Year", type text}, {"PCN of Registration", type text}, {"ICD10 3-Code Group (diagnosing ep)", type text}, {"Number of Admissions", Int64.Type}, {"Number of Bed Days", Int64.Type}, {"Average Length of Stay", type number}, {"Admission Rate per 1000 (Crude)", type number}}),
+				    #"Split Column by Delimiter" = Table.SplitColumn(#"Changed Type", "PCN of Registration", Splitter.SplitTextByEachDelimiter({" - "}, QuoteStyle.Csv, true), {"PCN of Registration.1", "PCN of Registration.2"}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"PCN of Registration.1", type text}, {"PCN of Registration.2", type text}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,232 @@
+table Gloucester_Census_Population
+	lineageTag: c80cc168-30a0-43d6-a6c8-d330091e0bc7
+
+	measure 'Latest Census Month' = ```
+			
+			
+			VAR MaxDate = MAX ( 'Gloucester_Census_Population'[last_date_of_month] )
+			VAR SOMMaxDate = DATE ( YEAR ( MaxDate ) , MONTH ( MaxDate ) ,1 )
+			VAR EOMMaxDate = EOMONTH( MaxDate , 0 )
+			VAR Result =
+			CALCULATE( SUM('Gloucester_Census_Population'[population]) ,  
+			    FILTER (
+			        ALL ( 'Gloucester_Census_Population'[last_date_of_month] ),
+			        'Gloucester_Census_Population'[last_date_of_month] >= SOMMaxDate && 'Gloucester_Census_Population'[last_date_of_month] <= EOMMaxDate) )
+			
+			RETURN
+			    IF(Result <6, "<6", Result)
+			```
+		lineageTag: a3f6da54-757b-493a-97df-541d194501fe
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Small Number Suppression - Gloucestershire Population' = IF(SUM('Gloucester_Census_Population'[population])<6,0,SUM('Gloucester_Census_Population'[population]))
+		lineageTag: dc28469a-2b4c-4910-8fab-8b7a52ced2b4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Palliative Register of Whole Population' =
+			
+			
+			CALCULATE ( [Small Number Suppression - EoL Population] / [Small Number Suppression - Gloucestershire Population] )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8189786b-f696-4292-8c3e-4e7d8b2760fa
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Latest % Palliative Care Population' = ```
+			
+			
+			CALCULATETABLE (
+			    { 'Gloucester_Census_Population'[% Palliative Register of Whole Population] } , 
+			    'EoL_Population'[start_date] = MAX ( 'EoL_Population'[start_date] ))
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ba101cd0-b0e8-4284-81f1-6dda22ae9aac
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Gloucester Population 65+ Small Number Suppression' =
+			
+			VAR GLOSPOPULATION = CALCULATE(SUM('Gloucester_Census_Population'[population]),'Gloucester_Census_Population'[age_band] IN {"65-69","70-74","75-79","80-84","85-89","90-94","95+"})
+			VAR COUNTOF =
+			IF ( GLOSPOPULATION <6, 0, GLOSPOPULATION )
+			
+			RETURN
+			COUNTOF
+		lineageTag: 8490b580-e824-48e6-b81f-5db966df3cdf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest % Palliative Care Population 65+' = ```
+			
+			
+			CALCULATETABLE (
+			    { 'Gloucester_Census_Population'[% Palliative Register of Whole Population 65+] } , 
+			    'EoL_Population'[start_date] = MAX ( 'EoL_Population'[start_date] ))
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 23ad984d-7b9d-4fce-9731-f90bf6a05ea5
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '% Palliative Register of Whole Population 65+' =
+			
+			
+			CALCULATE ( [Small Number Suppression - EoL Population] / [Gloucester Population 65+ Small Number Suppression] )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 160757d2-9ddf-4175-89e0-27edce8838f1
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '% ReSPECT for 65%' = ( 7498 / 146339 )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 3de6f2dc-12bb-4517-a03e-5832f5b4801f
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Latest % ReSPECT for 65+' =
+			
+			
+			CALCULATETABLE (
+			    { 'Gloucester_Census_Population'[% ReSPECT for 65%] } ,
+			    'EoL_Population'[start_date] = MAX( 'EoL_Population'[start_date] ))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c0ce0192-f4e4-405a-8545-e1cfb8a49f96
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Latest % Died in Place of Preference' = ```
+			
+			
+			CALCULATETABLE (
+			    { 'Measures - DEATH'[% Died in preferred place] } , 
+			    'Death_Date'[year_month] = MAX ( 'Death_Date'[year_month] ))
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 9042de8c-2589-4e9b-a67a-085ee85dbd00
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	column practice_name
+		dataType: string
+		lineageTag: 47ddc4da-84f5-47bb-b2c5-98bca31c2e7e
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 2adb3269-588e-493c-8a81-5f03c0f1d148
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column place
+		dataType: string
+		lineageTag: 8d11e548-df23-4d3c-acda-6967781b3ad1
+		summarizeBy: none
+		sourceColumn: place
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: e4ab5667-b2fe-42af-ad0f-2120beb0e551
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: 0a53718f-7e92-46d3-8d67-f027a91be9dc
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column sex
+		dataType: string
+		lineageTag: 78e99646-0a4a-4eb7-8d27-e0df3be745ab
+		summarizeBy: none
+		sourceColumn: sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column population
+		dataType: int64
+		formatString: #,0
+		lineageTag: b253bf91-7c9a-4b9b-b86e-086d07ab82bd
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["FormatString","DataType"]
+
+	column census_date
+		dataType: string
+		lineageTag: 48ed6965-2663-4538-860e-3a017e7edd9b
+		summarizeBy: none
+		sourceColumn: census_date
+		sortByColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["SortByColumn"]
+
+	column year_month
+		dataType: string
+		lineageTag: ef96d1d8-c9be-4cfe-8375-e747795c65fc
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_date_of_month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: f6a44269-6cc8-45d2-a433-5472086b1c00
+		summarizeBy: none
+		sourceColumn: last_date_of_month
+
+		variation Variation
+			isDefault
+			relationship: 0047cf9e-b1d2-4906-b073-4b765cb76105
+			defaultHierarchy: LocalDateTable_1906e17d-6fc2-4fed-80a1-e02c4a032fb2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_ChangedProperties = ["DataType"]
+
+	column financial_year
+		dataType: string
+		lineageTag: 3b6ba3ed-e153-4bcb-af87-9a4f697ae748
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: c3028dbc-5997-4c41-8fc2-0ae64b17404e
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Gloucester_Census_Population-ef8e52ce-e3ee-4d33-a143-da4bd3ce24ed = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[dbo].[GP_Practice_Populations]#(lf)WHERE [last_date_of_month] BETWEEN '20160401' AND EOMONTH(DATEADD(MONTH, -1, GETDATE()))  -- Means data always stops at end of the previous month at the latest"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

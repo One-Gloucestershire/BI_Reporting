@@ -1,0 +1,272 @@
+table 'Elective Inpatient Data'
+	lineageTag: 6f0b5845-ec46-4e9f-ac7f-87fc70cff5f4
+
+	measure 'Peer Average Admission Rate Elective' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Elective Inpatient Data'[ICB of Registration])),
+				CALCULATE(SUM('Elective Inpatient Data'[Admission Rate per 1000 (Crude)]))
+			)
+		lineageTag: 0b3f5f62-ac8d-4cce-bd6e-d3f1a2d4bf49
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer Average Admission Rate Variance to Glos Elecive' =
+			
+			(VAR __BASELINE_VALUE =
+				CALCULATE(
+					[Peer Average Admission Rate Elective],
+					'Elective Inpatient Data'[ICB of Registration]
+						IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+				)
+			VAR __MEASURE_VALUE = [Peer Average Admission Rate Elective]
+			RETURN
+				IF(NOT ISBLANK(__MEASURE_VALUE), __MEASURE_VALUE - __BASELINE_VALUE))*-1
+		lineageTag: ea1a153e-09ad-49bb-8d16-259c79542ede
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "DifferenceFrom"
+				}
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Tariff Elective' =
+			
+			DIVIDE(
+				SUM('Elective Inpatient Data'[Total Tariff (Admissions)]),
+				SUM('Elective Inpatient Data'[Number of Admissions])
+			)
+		formatString: 0
+		lineageTag: 011780d4-4d80-4d8c-8a0c-18e09d53bbd4
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+	measure 'Excess to Peer Average Admissions Elective' = ```
+			[Peer Average Admission Rate Variance to Glos Elecive]* 674.37 
+			```
+		formatString: #,0
+		lineageTag: 72fb49ef-ac6b-4c3f-b87b-392490f6d971
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Excess to Peer 1st Quartile £ Elective' =
+			
+			[Excess to Peer 1st Quartile Admissions Elective] * [Average Tariff Elective]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: a8242487-842b-4a13-9b5d-8140d09eaad7
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalMultiplication"
+				}
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Gloucestershire Admission Rate Elective' =
+			
+			CALCULATE(
+				SUM('Elective Inpatient Data'[Admission Rate per 1000 (Crude)]),
+				'Elective Inpatient Data'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		lineageTag: d0766ff4-4dc3-4590-a910-562f9697758d
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Gloucestershire Admissions Elective' =
+			
+			CALCULATE(
+				SUM('Elective Inpatient Data'[Number of Admissions]),
+				'Elective Inpatient Data'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		formatString: #,0
+		lineageTag: 04b36caa-1639-4116-bb28-6fadf7a0548d
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+	measure 'Peer 1st Decile Admission Rate Elective' =
+			
+			PERCENTILEX.INC(
+			    KEEPFILTERS(VALUES('Elective Inpatient Data'[ICB of Registration])),
+			    CALCULATE(SUM('Elective Inpatient Data'[Admission Rate per 1000 (Crude)]))
+			,.10)
+		lineageTag: 89c9441a-9d6b-4346-93b3-1a7c5bb4d19c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Quartile Admission Rate Elective' =
+			
+			PERCENTILEX.INC(
+			    KEEPFILTERS(VALUES('Elective Inpatient Data'[ICB of Registration])),
+			    CALCULATE(SUM('Elective Inpatient Data'[Admission Rate per 1000 (Crude)]))
+			,.25)
+		lineageTag: 73040bde-8a13-456b-b6b9-906f72934a85
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Quartile Admission Rate Variance to Glos Elective' =
+			
+			[Gloucestershire Admission Rate Elective] - [Peer 1st Quartile Admission Rate Elective]
+		lineageTag: 9bb28c67-bda9-4d84-aba2-71ba8591d1b1
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalSubtraction"
+				}
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer 1st Quartile Admissions Elective' = ```
+			[Peer 1st Quartile Admission Rate Variance to Glos Elective]* 674.37 
+			```
+		lineageTag: a596ea3a-e67a-4724-819f-fa81898cc9be
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer Average £ Elective' =
+			
+			[Excess to Peer Average Admissions Elective] * [Average Tariff Elective]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 305bee7d-99d4-4a55-b7a3-2bd45eb6aac0
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Peer 1st Decile Admission Rate Variance to Glos Elective' =
+			
+			[Gloucestershire Admission Rate Elective] - [Peer 1st Decile Admission Rate Elective]
+		lineageTag: 1e04000b-9e16-43a1-8d77-e9372b14b701
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer 1st Decile Admissions Elective' = ```
+			[Peer 1st Decile Admission Rate Variance to Glos Elective]* 674.37 
+			```
+		lineageTag: 62a64fa4-4740-47a7-a27b-0d46969f26ec
+
+	measure 'Excess to Peer 1st Decile £ Elective' =
+			
+			[Excess to Peer 1st Decile Admissions Elective] * [Average Tariff Elective]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 4a43dff0-25e5-48e9-ad9d-12b72e817e0e
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'ICB of Registration'
+		dataType: string
+		lineageTag: 51eb8ccb-76d7-4cf1-bf83-078cc3e0afa0
+		summarizeBy: none
+		sourceColumn: ICB of Registration
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Admissions'
+		dataType: int64
+		formatString: #,0
+		lineageTag: ef6f3b93-356f-43e2-870e-c5abe3764a04
+		summarizeBy: sum
+		sourceColumn: Number of Admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Tariff (Admissions)'
+		dataType: decimal
+		formatString: 0
+		lineageTag: 64894a90-4112-4583-a381-a6fc7b8f13ef
+		summarizeBy: sum
+		sourceColumn: Total Tariff (Admissions)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Bed Days'
+		dataType: int64
+		formatString: 0
+		lineageTag: 78766d5c-0b54-4c27-9add-ff04712f03e1
+		summarizeBy: sum
+		sourceColumn: Number of Bed Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Average Length of Stay'
+		dataType: double
+		lineageTag: 654f4db3-e8a0-4447-8a69-197f01c44788
+		summarizeBy: sum
+		sourceColumn: Average Length of Stay
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Registered Population'
+		dataType: decimal
+		formatString: #,0
+		lineageTag: 88d81ea1-e4cd-47d1-b14b-3613235d5bc3
+		summarizeBy: average
+		sourceColumn: Registered Population
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column 'Admission Rate per 1000 (Crude)'
+		dataType: double
+		lineageTag: 92c2dffd-e883-4a04-8013-c7dbf235c7df
+		summarizeBy: sum
+		sourceColumn: Admission Rate per 1000 (Crude)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: d0031656-88c0-48d2-85d6-9667031e3706
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 3-Code Group (diagnosing ep)'
+		dataType: string
+		lineageTag: f716e314-83c6-4942-a5d5-fc034adaea26
+		summarizeBy: none
+		sourceColumn: ICD10 3-Code Group (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Elective Inpatient Data-382af747-a8e3-436e-a841-cd2cc1f8189b' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\Elective\Comm_IP_Elective_live - Main.csv"),[Delimiter="	", Columns=9, Encoding=1200, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Number of Admissions", Int64.Type}, {"Total Tariff (Admissions)", Currency.Type}, {"Number of Bed Days", Int64.Type}, {"Average Length of Stay", type number}, {"Registered Population", Currency.Type}, {"Admission Rate per 1000 (Crude)", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,239 @@
+table 'Emergency Inpatient Data'
+	lineageTag: 5dea8586-4427-4aa0-a0f6-7d8110a965ea
+
+	measure 'Average Tariff Emergency' =
+			
+			DIVIDE(
+				SUM('Emergency Inpatient Data'[Total Tariff (Admissions)]),
+				SUM('Emergency Inpatient Data'[Number of Admissions])
+			)
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: c562e06e-b7dc-4295-8a3f-b089f597841f
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Gloucestershire Admission Rate Emergency' =
+			
+			CALCULATE(
+				SUM('Emergency Inpatient Data'[Admission Rate per 1000 (Crude)]),
+				'Emergency Inpatient Data'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		lineageTag: f50c2690-5c6c-4de7-be9a-fa29715b5d5c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Gloucestershire Admissions Emergency' =
+			
+			CALCULATE(
+				SUM('Emergency Inpatient Data'[Number of Admissions]),
+				'Emergency Inpatient Data'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		formatString: #,0
+		lineageTag: 9e73cb61-6a11-41c0-b9b8-d3f5e48724ea
+
+	measure 'Peer Average Admission Rate Emergency' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Emergency Inpatient Data'[ICB of Registration])),
+				CALCULATE(SUM('Emergency Inpatient Data'[Admission Rate per 1000 (Crude)]))
+			)
+		lineageTag: c9f7289e-b431-4a34-83fc-8f529f48e359
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer Average Admission Rate Variance to Glos Emergency' =
+			
+			(VAR __BASELINE_VALUE =
+			    CALCULATE(
+			        [Peer Average Admission Rate Emergency],
+			        'Emergency Inpatient Data'[ICB of Registration]
+			            IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			    )
+			VAR __MEASURE_VALUE = [Peer Average Admission Rate Emergency]
+			RETURN
+			    IF(NOT ISBLANK(__MEASURE_VALUE), __MEASURE_VALUE - __BASELINE_VALUE))*-1
+		lineageTag: e1bdaa17-2412-4663-afe8-712913fd0a57
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Decile Admission Rate Emergency' =
+			
+			PERCENTILEX.INC(
+			    KEEPFILTERS(VALUES('Emergency Inpatient Data'[ICB of Registration])),
+			    CALCULATE(SUM('Emergency Inpatient Data'[Admission Rate per 1000 (Crude)]))
+			,.10)
+		lineageTag: 77755426-a784-48d3-87a8-fefdad215c46
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Decile Admission Rate Variance to Glos Emergency' =
+			
+			[Gloucestershire Admission Rate Emergency] - [Peer 1st Decile Admission Rate Emergency]
+		lineageTag: 0ea1c431-f912-4a9c-bfed-6ff1b447ed41
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Quartile Admission Rate Emergency' =
+			
+			PERCENTILEX.INC(
+			    KEEPFILTERS(VALUES('Emergency Inpatient Data'[ICB of Registration])),
+			    CALCULATE(SUM('Emergency Inpatient Data'[Admission Rate per 1000 (Crude)]))
+			,.25)
+		lineageTag: 9a4f0c31-76f4-4c29-99c6-5bbd160cd3db
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Peer 1st Quartile Admission Rate Variance to Glos Emergency' =
+			
+			[Gloucestershire Admission Rate Emergency] - [Peer 1st Quartile Admission Rate Emergency]
+		lineageTag: 832806bc-eed9-4359-95d9-c2ab96b1f415
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer Average Admissions Emergency' = [Peer Average Admission Rate Variance to Glos Emergency]* 674.37
+		formatString: #,0
+		lineageTag: c25da4d2-b501-4585-944f-f7f06c1f23f3
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Excess to Peer Average £ Emergency' =
+			
+			[Excess to Peer Average Admissions Emergency] * [Average Tariff Emergency]
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: aa6f75dd-bf67-48b0-b876-4e0b2cdc639a
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Excess to Peer 1st Quartile Admissions Emergency' = [Peer 1st Quartile Admission Rate Variance to Glos Emergency]* 674.37
+		lineageTag: 73115e34-1436-47fd-afa8-9df53c49bd81
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer 1st Decile Admissions Emergency' = [Peer 1st Decile Admission Rate Variance to Glos Emergency]* 674.37
+		lineageTag: 39658d68-d4ef-4e5a-a73a-af906507c0b5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Excess to Peer 1st Quartile £ Emergency' =
+			
+			[Excess to Peer 1st Quartile Admissions Emergency] * [Average Tariff Emergency]
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: bd097ff3-bd78-40d2-9a8b-9031f22e8b62
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Excess to Peer 1st Decile £ Emergency' =
+			
+			[Excess to Peer 1st Decile Admissions Emergency] * [Average Tariff Emergency]
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: b20402dc-6583-4362-b5d0-049abd5d98b6
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Average Length of Stay Gloucestershire Emergency' =
+			
+			CALCULATE(
+				SUM('emergency Inpatient Data'[Average Length of Stay]),
+				'Emergency Inpatient Data'[ICB of Registration]
+					IN { "NHS GLOUCESTERSHIRE INTEGRATED CARE BOARD" }
+			)
+		lineageTag: 1f6f3c44-c668-471c-a795-8719d217c786
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: d80057e9-ce97-47e1-a525-7ff39bab6266
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB of Registration'
+		dataType: string
+		lineageTag: 5e721a51-b41d-4d7d-b425-c0170f063246
+		summarizeBy: none
+		sourceColumn: ICB of Registration
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 3-Code Group (diagnosing ep)'
+		dataType: string
+		lineageTag: 762d95cf-3a5c-4955-9485-8d4300d1aa39
+		summarizeBy: none
+		sourceColumn: ICD10 3-Code Group (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Admissions'
+		dataType: int64
+		formatString: #,0
+		lineageTag: 33b2ec3e-a3b3-4c6b-aacb-97f71f9dc42b
+		summarizeBy: sum
+		sourceColumn: Number of Admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Tariff (Admissions)'
+		dataType: decimal
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: b26c78c7-5509-4812-bacd-38911f80143f
+		summarizeBy: sum
+		sourceColumn: Total Tariff (Admissions)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Number of Bed Days'
+		dataType: int64
+		formatString: 0
+		lineageTag: 397c6ca7-9b61-44ee-b61b-6150fce8f85e
+		summarizeBy: sum
+		sourceColumn: Number of Bed Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Average Length of Stay'
+		dataType: double
+		lineageTag: 7d3f7697-3063-4076-bf53-94364a748303
+		summarizeBy: sum
+		sourceColumn: Average Length of Stay
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Registered Population'
+		dataType: int64
+		formatString: 0
+		lineageTag: a9165c20-7e2d-48ed-80c4-97d51e294264
+		summarizeBy: sum
+		sourceColumn: Registered Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission Rate per 1000 (Crude)'
+		dataType: double
+		lineageTag: 8cba5159-c3ab-40a6-a460-fe47a72da09c
+		summarizeBy: sum
+		sourceColumn: Admission Rate per 1000 (Crude)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Emergency Inpatient Data-7aad198a-6835-48ad-bdc5-2bc5dccd8841' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\Emergency\Comm_IP_Emergency_live - Main.csv"),[Delimiter="	", Columns=9, Encoding=1200, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Fiscal Year", type text}, {"ICB of Registration", type text}, {"ICD10 3-Code Group (diagnosing ep)", type text}, {"Number of Admissions", Int64.Type}, {"Total Tariff (Admissions)", Currency.Type}, {"Number of Bed Days", Int64.Type}, {"Average Length of Stay", type number}, {"Registered Population", Int64.Type}, {"Admission Rate per 1000 (Crude)", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

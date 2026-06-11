@@ -1,0 +1,91 @@
+table Query1
+	lineageTag: da2187cb-9cce-4414-9db2-2efc258fcd1e
+
+	column activity_type
+		dataType: string
+		lineageTag: cf5d911c-1c98-49bd-a001-4972ac1ec8a4
+		summarizeBy: none
+		sourceColumn: activity_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column pseudo_nhs_number
+		dataType: string
+		lineageTag: c19fedb0-fce9-4950-b459-51daaf4a3388
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 62b3e2d7-81c5-4194-b4cb-816b7468d79a
+		summarizeBy: none
+		sourceColumn: attendance_date
+
+		variation Variation
+			isDefault
+			relationship: 8e7fea6a-947f-4c94-bcec-be2722948850
+			defaultHierarchy: LocalDateTable_64fbc6cf-57c2-4f19-a720-71833bb13b51.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 54bc5d15-6e71-4778-8ed7-a293647c501e
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: 34de6944-9ee8-4421-9a3b-e1b6d8ff0c0e
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: fdbe43a1-403e-4e3d-81d4-0589d976f504
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["SortByColumn"]
+
+	column FinancialMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 1817d790-f48b-443c-84d2-e108a9090de9
+		summarizeBy: sum
+		sourceColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["DataType"]
+
+	column Counter
+		dataType: string
+		lineageTag: 68a3c120-67bc-4e32-9ab1-3265f4c4e00c
+		summarizeBy: none
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Query1-ddbe69b5-a2fe-4c3d-941f-ad36aa8192af = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="EXEC [dbo].[EOL_Activity_Table_SP]#(lf);#(lf)#(lf)  SELECT *#(lf)  FROM [PowerBI_Reporting].[dbo].[EOL_Activity_Table]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

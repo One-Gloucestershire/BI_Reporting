@@ -1,0 +1,453 @@
+table 'Measures - DEATH'
+	lineageTag: b5e0632d-f0d8-4d64-8535-44aaf3db3925
+
+	measure '% of Community Deaths' = [Community Deaths]/[All Places of Death]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5f4feaf9-cc80-48b8-8125-ce31452b37a8
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '% of Hospital Deaths' = [Hospital Deaths]/[All Places of Death]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 44228496-ac97-48ea-bdce-697647b0ea99
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '12 Months Rolling Average' = ```
+			
+			VAR STARTDATE = DATE (2022, 01, 01)
+			VAR ENDDATE = DATE ( 2022, 12, 31)
+			VAR NUMMONTHS = 12
+			VAR COMMUNITYDEATHS =
+			    CALCULATE(COUNT(EOL_Query[place_of_death]),EOL_Query[place_of_death] IN {"Care Home","Home","Hospice","Other Places","Unknown"})
+			VAR YEARTOTAL = 
+			    CALCULATE(
+			        COMMUNITYDEATHS,
+			DATESBETWEEN(Death_Date[date].[Date], STARTDATE, ENDDATE))
+			RETURN
+			YEARTOTAL/NUMMONTHS
+			```
+		lineageTag: 774f3593-8d1a-4b7f-8cde-342de16f2300
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'All Places of Death' = CALCULATE(COUNT(EOL_Query[place_of_death]),EOL_Query[place_of_death] IN {"Care Home","Home","Hospice","Hospital","Other Places","Unknown"})
+		formatString: 0
+		lineageTag: e35a771d-93da-4b9f-bb7f-de5e428f4399
+
+	measure 'Average of % of Community Deaths' =
+			
+			CALCULATE (
+			    AVERAGEX ( VALUES ('Death_Date'[year_month]), [% of Community Deaths] ),
+			    DATESINPERIOD( Death_Date[date], MAX (Death_Date[date] ), -3, MONTH)
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5d39ad36-017c-4053-a5cd-eb1d0bebca55
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Community Deaths' = CALCULATE(COUNT(EOL_Query[place_of_death]),EOL_Query[place_of_death] IN {"Care Home","Home","Hospice","Other Places","Unknown"})
+		formatString: 0
+		lineageTag: 78727eb6-2d5b-4314-b4a8-34bfac7cc698
+
+	measure 'Hospital Deaths' = CALCULATE ( COUNTROWS (EOL_Query), EOL_Query [place_of_death] = "Hospital")
+		formatString: 0
+		lineageTag: f1edadf1-d2d7-4151-940c-5a84407a0bd4
+
+	measure 'Moving Average Number of Deaths' = CALCULATE(AVERAGEX('EOL_Query', 'EOL_Query'[death_flag]),DATESINPERIOD('EOL_Query'[death_date],LASTDATE('EOL_Query'[death_date]),-3,MONTH))
+		formatString: 0
+		lineageTag: b9791234-0c61-4981-b6a9-efa2ea7d98e8
+
+	measure 'PCN Visual Invisible Filter' = CALCULATE(IF(ISFILTERED(EOL_Query[pcn]),1,0),ALLSELECTED(EOL_Query))
+		formatString: 0
+		lineageTag: 5e7bf3df-a3a9-442d-b369-ce274c15362c
+
+	measure 'Practice Visual Invisible Filter' = CALCULATE(IF(ISFILTERED(EOL_Query[practice]),1,0),ALLSELECTED(EOL_Query))
+		formatString: 0
+		lineageTag: 261fbc38-abed-4f56-8744-feeed7c9f4fb
+
+	measure 'Rolling Average for Deaths' = ```
+			
+			VAR NUMMONTHS = 3
+			VAR ROLLINGSUM = 
+			    CALCULATE(
+			        COUNT(EOL_Query[pseudo_nhs_number]),
+			DATESINPERIOD(Death_Date[date], LASTDATE(Death_Date[date]), -NUMMONTHS,MONTH)
+			    )
+			RETURN
+			IF(ROLLINGSUM/NUMMONTHS <6, 0, ROLLINGSUM/NUMMONTHS)
+			```
+		lineageTag: 64ed321f-f4f8-41fb-b69f-4d1db95234cc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rolling Average for Community Deaths' =
+			
+			CALCULATE(
+				[Rolling Average for Deaths],
+				'EOL_Query'[place_of_death]
+					IN { "Care Home", "Home", "Hospice", "Other Places", "Unknown" }
+			)
+		lineageTag: 910c0ed1-2119-47fa-8699-113458d2c6ef
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Small Number Suppression' = IF(COUNT(EOL_Query[pseudo_nhs_number])<6,0,COUNT(EOL_Query[pseudo_nhs_number]))
+		formatString: 0
+		lineageTag: 22a53f26-13b3-4110-99f5-aab9fd618985
+
+	measure 'YTDSumOfPatients DeathDate' = TOTALYTD([Small Number Suppression],Death_Date[date],ALL(Death_Date[date]),"31/03")
+		formatString: 0
+		lineageTag: bc8e60f7-4268-4a70-a660-b538ec6e1b68
+
+	measure 'Community Deaths Small Number Suppression' =
+			
+			VAR COMMUNITYDEATHS = CALCULATE(COUNT(EOL_Query[place_of_death]),EOL_Query[place_of_death] IN {"Care Home","Home","Hospice","Other Places","Unknown"})
+			VAR COUNTOF =
+			IF ( COMMUNITYDEATHS <6, 0, COMMUNITYDEATHS )
+			
+			RETURN
+			COUNTOF
+		formatString: 0
+		lineageTag: ee490bf8-7c95-46b1-ae72-e4eb97004c02
+
+	measure 'Rolling Average for Palliative Care' = ```
+			
+			VAR NUMMONTHS = 3
+			VAR ROLLINGSUM = 
+			    CALCULATE(
+			        COUNT(EOL_Query[pseudo_nhs_number]),
+			DATESINPERIOD(Palliative_Date[date], LASTDATE(Palliative_Date[date]), -NUMMONTHS,MONTH)
+			    )
+			RETURN
+			IF(ROLLINGSUM/NUMMONTHS <6, 0, ROLLINGSUM/NUMMONTHS)
+			```
+		lineageTag: 9c367f3c-cae3-4ece-ab2d-62e26728b30e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Month' = ```
+			
+			
+			VAR MaxDate = MAX ( Death_Date[Date] )
+			VAR SOMMaxDate = DATE ( YEAR ( MaxDate ) , MONTH ( MaxDate ) ,1 )
+			VAR EOMMaxDate = EOMONTH( MaxDate , 0 )
+			VAR Result =
+			CALCULATE( SUM('EOL_Query'[counter]) ,  
+			    FILTER (
+			        ALL ( 'Death_Date'[Date] ),
+			        'Death_Date'[Date] >= SOMMaxDate && 'Death_Date'[Date] <= EOMMaxDate) )
+			
+			RETURN
+			    IF(Result <6, "<6", Result)
+			```
+		lineageTag: 21cbe071-1c81-43b9-a37b-ecfd3f495427
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Month for Card' =
+			
+			
+			MAX ( 'Death_Date'[month_year_name] )
+		lineageTag: 5fb515d2-f583-4b7a-8d6c-775ae73b3929
+
+	measure 'LAST 12 MONTHS - Deaths' =
+			
+			VAR EndDate =
+			    MAX ( 'Death_Date'[date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'Death_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 043d1a70-93e6-4d90-af4c-afa3227e5f24
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - Deaths' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'Death_Date'[date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -12)
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'Death_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: c9f9f5e7-2d10-46a7-9f96-ea0579afe12f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths % Change' =
+			
+			
+			([LAST 12 MONTHS - Deaths]-[LAST 12 MONTHS (Previous Year) - Deaths])/[LAST 12 MONTHS (Previous Year) - Deaths]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 63a5e57c-9ed8-4d98-a1e6-fc8a0b54304f
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Rolling Average for RESPECT Forms' = ```
+			
+			VAR NUMMONTHS = 3
+			VAR ROLLINGSUM = 
+			    CALCULATE(
+			        COUNT(EOL_Query[pseudo_nhs_number]),
+			DATESINPERIOD(Respect_Form_Date[date], LASTDATE(Respect_Form_Date[date]), -NUMMONTHS,MONTH)
+			    )
+			RETURN
+			IF(ROLLINGSUM/NUMMONTHS <6, 0, ROLLINGSUM/NUMMONTHS)
+			```
+		lineageTag: 5c9ba7aa-a948-4ee7-b7ea-effa3160ed54
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rolling Average for PCSP' = ```
+			
+			VAR NUMMONTHS = 3
+			VAR ROLLINGSUM = 
+			    CALCULATE(
+			        COUNT(EOL_Query[pseudo_nhs_number]),
+			DATESINPERIOD('PCSP_Date'[date], LASTDATE('PCSP_Date'[date]), -NUMMONTHS,MONTH)
+			    )
+			RETURN
+			IF(ROLLINGSUM/NUMMONTHS <6, 0, ROLLINGSUM/NUMMONTHS)
+			```
+		lineageTag: 4864fea0-17a2-4f61-ba91-c00651125e5f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS - Palliative' =
+			
+			VAR EndDate =
+			    MAX ( 'Palliative_Date'[date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'Palliative_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 8ccd9692-8357-4b89-9b39-5d31fc5de361
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - Palliative' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'Palliative_Date'[date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -12)
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'Palliative_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 644e3e25-12d2-4672-b84f-05660627f7ba
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative % Change' =
+			
+			
+			([LAST 12 MONTHS - Palliative]-[LAST 12 MONTHS (Previous Year) - Palliative])/[LAST 12 MONTHS (Previous Year) - Palliative]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b652c387-5028-4c07-8b13-4aec01c2ea73
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Latest Month-Year for Card' =
+			
+			
+			CALCULATETABLE(
+			    { 'Measures - DEATH'[Latest Month for Card] } ,
+			    'Death_Date'[date] = MAX ( 'Death_Date'[date] ))
+		lineageTag: 500fa434-0c9b-45fb-9a61-4376f166605a
+
+	measure 'All patients with recorded place of death' = CALCULATE ( COUNT ( 'EOL_Query'[died_in_preferred_place_of_death_flag] ) , 'EOL_Query'[died_in_preferred_place_of_death_flag] IN { "Did not die in preferred place" , "Died in preferred place" } )
+		formatString: 0
+		lineageTag: 9b2de041-8cf3-49b2-be9c-b064187b0e28
+
+	measure 'Patients who died in preferred place of death' = CALCULATE ( COUNT ( 'EOL_Query'[died_in_preferred_place_of_death_flag] ) , 'EOL_Query'[died_in_preferred_place_of_death_flag] IN { "Died in preferred place" } )
+		formatString: 0
+		lineageTag: 0aa0e6d1-bc12-4552-ad12-c7a986f532ef
+
+	measure '% Died in preferred place' = [Patients who died in preferred place of death] / [All patients with recorded place of death]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ffec6060-f30c-47b2-a94b-b70575cab437
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '% Did not die in preferred place' = 1 - [% Died in preferred place]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2ad3b6b1-44a1-4243-8576-403d643493bd
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'LAST 12 MONTHS - ReSPECT Incidence' =
+			
+			VAR EndDate =
+			    MAX ( 'Respect_Form_Date'[date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'Respect_Form_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 996d6c2c-93c9-4ea0-b1a6-2d326b1084cb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - ReSPECT Incidence' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'Respect_Form_Date'[date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -12)
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'Respect_Form_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 6858dd40-e7aa-4a7e-8d3f-8144d5a4178a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT Incidence % Change' =
+			
+			
+			([LAST 12 MONTHS - ReSPECT Incidence]-[LAST 12 MONTHS (Previous Year) - ReSPECT Incidence])/[LAST 12 MONTHS (Previous Year) - ReSPECT]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ec4573fa-531e-49ce-87b5-3b8d68d869ad
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'LAST 12 MONTHS - PC&SP Incidence' =
+			
+			VAR EndDate =
+			    MAX ( 'PCSP_Date'[date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'PCSP_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 6bddc46a-f3b7-49aa-9a7c-f509b2940203
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - PC&SP Incidence' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'PCSP_Date'[date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -12)
+			VAR StartDate =
+			    EDATE ( EndDate, -12 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression],
+			        DATESBETWEEN(
+			            'PCSP_Date'[date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 6622ec7a-946f-4ba1-b3a0-bd49ca883c54
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC&SP Incidence % Change' =
+			
+			
+			([LAST 12 MONTHS - PC&SP Incidence]-[LAST 12 MONTHS (Previous Year) - PC&SP Incidence])/[LAST 12 MONTHS (Previous Year) - PC&SP Incidence]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: aaa8e899-7e01-437b-8d1e-0ad4447a1c23
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	partition 'Measures - DEATH-9070f2d4-f2ed-4524-8fc5-e25e54970187' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+
