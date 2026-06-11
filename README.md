@@ -2,13 +2,13 @@
 
 This repository contains the source-controlled definition of the **One Gloucestershire BI reporting estate** in Microsoft Fabric / Power BI format.
 
-The repository has multiple branches, but this document is intentionally focused on the **`live` branch** (the production-aligned content).
+The repository has multiple branches, but this document intentionally focuses on the **`live` branch** (production-aligned content).
 
 ---
 
 ## What this repository is
 
-On `live`, this is not a traditional application codebase (no web app, API service, or package-based build system).
+On `live`, this is not a traditional application codebase (for example, no web app, API service, or package-based build system).
 It is a collection of **Power BI artifacts stored as files**, mainly:
 
 - **Report items** (`*.Report`)
@@ -71,7 +71,7 @@ Typical contents:
 
 ---
 
-## Key technologies used (live branch)
+## Key technologies used on `live`
 
 The `live` branch is centered on **Microsoft Fabric / Power BI artifact serialization**:
 
@@ -94,7 +94,7 @@ The `live` branch is centered on **Microsoft Fabric / Power BI artifact serializ
 
 ---
 
-## How code/content is organized
+## How content is organized
 
 ### Pairing model
 
@@ -118,7 +118,7 @@ This enables cleaner diffs and targeted code review compared with monolithic bin
 
 ### Naming model
 
-Folder names represent subject-area products (for example: Planned Care, Frailty, Urgent Care, Mental Health, Prescribing, etc.), with archived/reworked variants under `01 Archive`.
+Folder names represent subject-area products (for example: Planned Care, Frailty, Urgent Care, Mental Health, and Prescribing), with archived/reworked variants under `01 Archive`.
 
 ---
 
@@ -147,6 +147,26 @@ Validation is therefore typically performed through Fabric/Power BI authoring an
    - `definition/relationships.tmdl`
    - `definition/tables/*.tmdl`
 5. Review report behavior/configuration in `report.json` and `StaticResources`.
+
+---
+
+## Contributor review checklist
+
+When reviewing a change in this repository, use this quick sequence:
+
+1. Confirm the changed item pair (`<Name>.Report` and/or `<Name>.SemanticModel`) and check each `.platform`.
+2. If a report changed, check `definition.pbir` for the semantic model path and inspect `report.json`/`StaticResources`.
+3. If a semantic model changed, prioritize `definition/expressions.tmdl`, `definition/relationships.tmdl`, and `definition/tables/*.tmdl`.
+4. Verify whether the change belongs in active content or in `01 Archive`.
+5. Confirm naming consistency between report and semantic model folder bases.
+
+---
+
+## Glossary
+
+- **PBIR**: Power BI report definition format used for report metadata files (such as `definition.pbir` and `report.json`).
+- **PBISM**: Power BI semantic model metadata format used by `definition.pbism`.
+- **TMDL**: Tabular Model Definition Language, the file-based format used under `definition/*.tmdl` for semantic model internals.
 
 ---
 
