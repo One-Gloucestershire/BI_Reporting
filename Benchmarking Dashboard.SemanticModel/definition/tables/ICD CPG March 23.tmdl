@@ -1,0 +1,65 @@
+table 'ICD CPG March 23'
+	lineageTag: 48da270d-e2a6-4486-bc12-ca8d2f9cc974
+
+	column Chapter
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d1d76aa-6f53-4ab3-9350-b3a7c27a1081
+		summarizeBy: sum
+		sourceColumn: Chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD Chapter'
+		dataType: string
+		lineageTag: 8aa5f011-6f59-4bfa-ba95-593632da5c4d
+		summarizeBy: none
+		sourceColumn: ICD Chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 Category (diagnosing ep)'
+		dataType: string
+		lineageTag: 99707941-ee6c-4074-8313-f46e9f3bf3ba
+		summarizeBy: none
+		sourceColumn: ICD10 Category (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 3-Code Group (diagnosing ep)'
+		dataType: string
+		lineageTag: e9eb7265-9ba0-4720-be96-5af4e17845b1
+		summarizeBy: none
+		sourceColumn: ICD10 3-Code Group (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 4-Code (diagnosing ep)'
+		dataType: string
+		lineageTag: e20d29f6-dd1e-470f-a31b-7391945ed7d2
+		summarizeBy: none
+		sourceColumn: ICD10 4-Code (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column CPG
+		dataType: string
+		lineageTag: c3a65649-94c4-4707-95ca-88ff371fd0eb
+		summarizeBy: none
+		sourceColumn: CPG
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ICD CPG March 23-844cc794-ce14-4e72-ba3c-8a48d07db019' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\ICD March 23.xlsx"), null, true),
+				    #"ICD CPG March 23_Sheet" = Source{[Item="ICD CPG March 23",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(#"ICD CPG March 23_Sheet", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Chapter", Int64.Type}, {"ICD Chapter", type text}, {"ICD10 Category (diagnosing ep)", type text}, {"ICD10 3-Code Group (diagnosing ep)", type text}, {"ICD10 4-Code (diagnosing ep)", type text}, {"CPG", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

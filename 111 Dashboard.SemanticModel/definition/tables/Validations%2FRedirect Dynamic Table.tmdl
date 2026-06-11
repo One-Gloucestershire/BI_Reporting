@@ -1,0 +1,51 @@
+table 'Validations/Redirect Dynamic Table'
+	lineageTag: c8485fd4-7b46-40da-8e39-f1fe7463e727
+
+	measure 'Validation Measure Value' = ```
+			SWITCH(
+										MIN('Validations/Redirect Dynamic Table'[Validation Measure ID]) ,
+										--------------------------------------
+										1,[% Ambulance validation proportions],
+										2,[% ED validation proportions],
+										3,[% of Ambulance Redirections],
+										4,[% of ED Redirections],
+										5,[Total Ambulance Validations Done],
+										6,[Total ED Validations Done]
+										
+									
+									
+										
+			
+										)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1a29c36d-4f28-4254-8b65-fbd02e93c0f9
+
+	column 'Validation Measure ID'
+		dataType: int64
+		formatString: 0
+		lineageTag: f42ad40f-c918-4e77-b733-0d3bec73aade
+		summarizeBy: count
+		sourceColumn: Validation Measure ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Validation Measure'
+		dataType: string
+		lineageTag: 393a878a-8ddf-4b63-8965-50a07cda4ce7
+		summarizeBy: none
+		sourceColumn: Validation Measure
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Validations/Redirect Dynamic Table-abfa05dc-adaa-4101-85f8-6f5faabe5446' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlTSUXLMTSrNScxLTlUoS8zJTEksyczPUygoyi/ILwIxi5VidaKVjIAKXV3wqTBGMaooNSWzKDW5BCJnAtGNJBgLAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Validation Measure ID" = _t, #"Validation Measure" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Validation Measure ID", Int64.Type}, {"Validation Measure", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

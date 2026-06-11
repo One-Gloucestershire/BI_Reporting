@@ -1,0 +1,367 @@
+table EoL_Population
+	lineageTag: bdad417d-aa29-4b9c-ac5f-f2833e7e668f
+
+	measure 'Small Number Suppression - EoL Population' = IF(SUM('EoL_Population'[eol_population])<6,0,SUM('EoL_Population'[eol_population]))
+		formatString: 0
+		lineageTag: 6d1fb284-59f2-4833-96f7-72279f1855f8
+
+	measure 'Small Number Suppression - ReSPECT Population' = IF(SUM('EoL_Population'[palliative_respect_population])<6,0,SUM('EoL_Population'[palliative_respect_population]))
+		formatString: 0
+		lineageTag: 75ba5e27-7000-410f-9272-1a3893c84929
+
+	measure '% ReSPECT' = CALCULATE ( [Small Number Suppression - ReSPECT Population] / [Small Number Suppression - EoL Population] )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1799b8bc-7dcc-4169-ae7d-fa9bf70452f6
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '% No ReSPECT' = CALCULATE (1 - ( [Small Number Suppression - ReSPECT Population] / [Small Number Suppression - EoL Population] ))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: cd416d2b-50ca-4254-9e97-60043d33140c
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Latest % ReSPECT' =
+			
+			
+			CALCULATETABLE (
+			    { 'EoL_Population'[% ReSPECT] } ,
+			    'EoL_Population'[start_date] = MAX( 'EoL_Population'[start_date] ))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d1918202-0269-4b46-ba15-ce0896e9d66e
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'Latest Palliative Care Population' = ```
+			
+			
+			CALCULATETABLE (
+			    { 'EoL_Population'[Small Number Suppression - EoL Population] } , 
+			    'EoL_Population'[start_date] = MAX ( 'EoL_Population'[start_date] ))
+			```
+		formatString: 0
+		lineageTag: 49f25988-59a9-4a7b-a638-6149832cdea3
+
+	measure 'Small Number Suppression - ReSPECT 65+ Population' = IF(SUM('EoL_Population'[respect_65+_population])<6,0,SUM('EoL_Population'[respect_65+_population]))
+		formatString: 0
+		lineageTag: 88b7d682-37c5-4482-9a09-09c6f248015e
+
+	measure 'Small Number Suppression - PC&SP Population' = IF(SUM('EoL_Population'[palliative_pc&sp_population])<6,0,SUM('EoL_Population'[palliative_pc&sp_population]))
+		formatString: 0
+		lineageTag: ab731a74-6792-4f6a-b254-d89636a85e30
+
+	measure 'LAST 12 MONTHS - EoL Population' =
+			
+			VAR EndDate =
+			    MAX ( 'EoL_Population'[start_date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -11 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression - EoL Population],
+			        DATESBETWEEN(
+			            'EoL_Population'[start_date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 90c0f0ef-7ccf-42ee-bc76-5b9a0e271501
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - EoL Population' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'EoL_Population'[start_date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -11)
+			VAR StartDate =
+			    EDATE ( EndDate, -11 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression - EoL Population],
+			        DATESBETWEEN(
+			            'EoL_Population'[start_date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 7355c041-efc5-47d0-9e8e-d135d4b6e86a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Palliative Register % Change' =
+			
+			
+			([LAST 12 MONTHS - EoL Population]-[LAST 12 MONTHS (Previous Year) - EoL Population])/[LAST 12 MONTHS (Previous Year) - EoL Population]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2f362636-8666-443d-af68-ebfb065a8327
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure '% PC&SP' = CALCULATE ( 'EoL_Population'[Small Number Suppression - PC&SP Population] / 'EoL_Population'[Small Number Suppression - EoL Population] )
+		lineageTag: 19772617-9ec3-418b-8764-3a0c95deab6e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% No PC&SP' = CALCULATE ( 1 - ('EoL_Population'[Small Number Suppression - PC&SP Population] / 'EoL_Population'[Small Number Suppression - EoL Population] ) )
+		lineageTag: db01b65a-6101-4b73-a57c-0cfd2f9f8ade
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS - ReSPECT Population' =
+			
+			VAR EndDate =
+			    MAX ( 'EoL_Population'[start_date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -11 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression - ReSPECT Population],
+			        DATESBETWEEN(
+			            'EoL_Population'[start_date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: 10b07711-95b2-4cde-9960-6a3f97ca6a21
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - ReSPECT' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'EoL_Population'[start_date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -11)
+			VAR StartDate =
+			    EDATE ( EndDate, -11 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression - ReSPECT Population],
+			        DATESBETWEEN(
+			            'EoL_Population'[start_date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: ea0425a2-74a3-40c1-8d09-cca633f34805
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ReSPECT % Change' =
+			
+			
+			([LAST 12 MONTHS - ReSPECT Population]-[LAST 12 MONTHS (Previous Year) - ReSPECT])/[LAST 12 MONTHS (Previous Year) - ReSPECT]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 73dc1d1c-b4f6-4676-b06c-4204619991b5
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure 'LAST 12 MONTHS - PC&SP Population' =
+			
+			VAR EndDate =
+			    MAX ( 'EoL_Population'[start_date] ) -- Retrieves MAX Date
+			VAR StartDate =
+			    EDATE ( EndDate, -11 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression - PC&SP Population],
+			        DATESBETWEEN(
+			            'EoL_Population'[start_date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: c85e1b8a-946b-41b8-ab95-dfac42196b8b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LAST 12 MONTHS (Previous Year) - PC&SP Population' =
+			
+			VAR EndDateEdit =
+			    MAX ( 'EoL_Population'[start_date] ) -- Retrieves MAX Date
+			VAR EndDate = EDATE (EndDateEdit, -11)
+			VAR StartDate =
+			    EDATE ( EndDate, -11 )
+			VAR Result =
+			    CALCULATE(
+			        [Small Number Suppression - PC&SP Population],
+			        DATESBETWEEN(
+			            'EoL_Population'[start_date],
+			            StartDate,
+			            EndDate
+			        )
+			    )
+			VAR AverageResult = ((Result)/12)
+			RETURN
+			 IF(AverageResult <6, "<6", AverageResult)
+		lineageTag: ce629fc1-26a7-42f3-9c47-13c795914e56
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PC&SP % Change' =
+			
+			
+			([LAST 12 MONTHS - PC&SP Population]-[LAST 12 MONTHS (Previous Year) - PC&SP Population])/[LAST 12 MONTHS (Previous Year) - PC&SP Population]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 17b4a635-745f-4466-9a6b-ab90a22f5724
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	column start_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7abe3a61-5df4-4dd5-a6e3-765a28459d45
+		summarizeBy: none
+		sourceColumn: start_date
+
+		variation Variation
+			isDefault
+			relationship: d123a3aa-6474-4103-bb9a-164693890897
+			defaultHierarchy: LocalDateTable_5356dfbb-1efb-46c8-8fb1-d50b42ed82a7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 45bc4400-bcc9-4dcc-baf0-602b9363b921
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: b58879ac-9b99-4621-8cd7-050498f56e65
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["SortByColumn"]
+
+	column eol_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 146084f0-3012-42fb-aecc-5028deae69ec
+		summarizeBy: sum
+		sourceColumn: eol_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column respect_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 2ad18d8f-9eba-4820-a97f-4d7dae10adbd
+		summarizeBy: sum
+		sourceColumn: respect_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column pc&sp_population
+		dataType: int64
+		formatString: 0
+		lineageTag: af748c83-01ca-4360-b490-9ca6a9379398
+		summarizeBy: sum
+		sourceColumn: pc&sp_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 1e852092-ab1a-4017-8471-4edc9fc9b725
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["DataType"]
+
+	column year_month
+		dataType: string
+		lineageTag: a1aeea55-85b4-43a8-b4b6-6c907ced57cb
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_respect_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 8b6ee0bc-d869-49bf-8a8e-80ee9eb31913
+		summarizeBy: sum
+		sourceColumn: palliative_respect_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_respect_65+_population
+		dataType: int64
+		formatString: 0
+		lineageTag: c039e86f-5ece-426e-a7db-2245c97ce4eb
+		summarizeBy: sum
+		sourceColumn: palliative_respect_65+_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_pc&sp_population
+		dataType: int64
+		formatString: 0
+		lineageTag: e8d29e05-89a9-4dd3-92a2-a9a90b18cac7
+		summarizeBy: sum
+		sourceColumn: palliative_pc&sp_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column respect_65+_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 57435fa2-b52c-4af1-bd79-1d0c502ae396
+		summarizeBy: sum
+		sourceColumn: respect_65+_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_preferred_pod_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b970c06-a2ec-4426-a404-75e01d697310
+		summarizeBy: sum
+		sourceColumn: palliative_preferred_pod_population
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_pc&sp_65+_population
+		dataType: int64
+		formatString: 0
+		lineageTag: d13511ca-8766-413c-8720-dde5233a7b8a
+		summarizeBy: sum
+		sourceColumn: palliative_pc&sp_65+_population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EoL_Population-fde7f805-b450-451a-a49a-1fd08a359d04 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[dbo].[EoL_Population_Over_Time]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

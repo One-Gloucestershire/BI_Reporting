@@ -1,0 +1,161 @@
+table 'Bespoke Metrics for Mapping'
+	lineageTag: af790194-eee2-4693-b2d2-79968fb24966
+
+	measure 'Rate Per 1000 (B)' = (sum('Bespoke Metrics'[MetricValue])/sum('Bespoke Metrics'[Population]))*1000
+		lineageTag: b91cb402-8572-4766-baa0-a5867b6dc5a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'DNA Rate' = SUM('Bespoke Metrics for Mapping'[MetricValue])/SUM('Bespoke Metrics for Mapping'[Total Booked Contacts])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d2395ad6-6f58-441d-8950-d58521216256
+
+	measure 'Correlation Coefficient'
+		lineageTag: aca302a3-5d8a-423e-8b6b-9a6fc72c7fa5
+
+	measure 'Correlation Coefficient2' =
+			
+			VAR Correlation_Table =
+			    FILTER (
+			        ADDCOLUMNS (
+			            VALUES ( 'Bespoke Metrics for Mapping' ),
+			            "Value_X", ,
+			            "Value_Y", [Measure_Y]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( [Value_X] ) ),
+			            NOT ( ISBLANK ( [Value_Y] ) )
+			        )
+			    )
+			VAR Count_Items =
+			    COUNTROWS ( Correlation_Table )
+			VAR Sum_X =
+			    SUMX ( Correlation_Table, [Value_X] )
+			VAR Sum_X2 =
+			    SUMX ( Correlation_Table, [Value_X] ^ 2 )
+			VAR Sum_Y =
+			    SUMX ( Correlation_Table, [Value_Y] )
+			VAR Sum_Y2 =
+			    SUMX ( Correlation_Table, [Value_Y] ^ 2 )
+			VAR Sum_XY =
+			    SUMX ( Correlation_Table, [Value_X] * [Value_Y] )
+			VAR Pearson_Numerator =
+			    Count_Items * Sum_XY - Sum_X * Sum_Y
+			VAR Pearson_Denominator_X =
+			    Count_Items * Sum_X2 - Sum_X ^ 2
+			VAR Pearson_Denominator_Y =
+			    Count_Items * Sum_Y2 - Sum_Y ^ 2
+			VAR Pearson_Denominator =
+			    SQRT ( Pearson_Denominator_X * Pearson_Denominator_Y )
+			RETURN
+			    DIVIDE ( Pearson_Numerator, Pearson_Denominator )
+		lineageTag: 4bd751b8-20c2-45ec-81f2-5cb71b425b90
+
+	column 'LSOA Code'
+		dataType: string
+		lineageTag: a4a2b2f0-3dea-48bb-801c-30c43913b6f3
+		summarizeBy: none
+		sourceColumn: LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric
+		dataType: string
+		lineageTag: a5f8b409-887f-445e-926c-4087914b6b8b
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricValue
+		dataType: int64
+		formatString: 0
+		lineageTag: 779a789e-8af6-4710-bfa9-e0455d46bf5d
+		summarizeBy: sum
+		sourceColumn: MetricValue
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column Metric_Type
+		dataType: string
+		lineageTag: 91e9d3ce-9a01-421f-8720-1da1fc5ebbbe
+		summarizeBy: none
+		sourceColumn: Metric_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward name'
+		dataType: string
+		lineageTag: 90f2f9c8-6809-4f7b-9148-c08bdaa877e6
+		summarizeBy: none
+		sourceColumn: Current District Ward name
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		lineageTag: 3eb011e3-79c6-4007-9711-d19f1fb20b96
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBandGroup
+		dataType: string
+		lineageTag: 639263c6-e9f8-4770-bdfc-347087baba3d
+		summarizeBy: none
+		sourceColumn: AgeBandGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column Financial_Year_of_Contact
+		dataType: string
+		lineageTag: a7397ed8-67cb-44f0-ad94-99f7a0626a2f
+		summarizeBy: none
+		sourceColumn: Financial_Year_of_Contact
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year_Month_of_Contact
+		dataType: int64
+		formatString: 0
+		lineageTag: c79405aa-fd8e-44a6-86f9-c122a0ee1c11
+		summarizeBy: sum
+		sourceColumn: Year_Month_of_Contact
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Booked Contacts'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8890dbf9-a779-493e-ba24-a9045a5e2993
+		summarizeBy: sum
+		sourceColumn: Total Booked Contacts
+
+		annotation SummarizationSetBy = Automatic
+
+	column treatment_function_description
+		dataType: string
+		lineageTag: b85bb70f-e3db-483f-b636-c942fec99cc0
+		summarizeBy: none
+		sourceColumn: treatment_function_description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Bespoke Metrics for Mapping-c4cdec16-d060-4fc7-9ebb-cd8792d48ffe' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIREPORTS", [Query="#(lf)IF OBJECT_ID('tempdb..#Temp_Base') IS NOT NULL DROP TABLE #Temp_Base;  #(lf)IF OBJECT_ID('tempdb..#Final_Output') IS NOT NULL DROP TABLE #Final_Output;  #(lf)#(lf)SELECT #(lf)[LSOA11CD] = o.lsoa ,#(lf)[AgeBand] = o.[10yr_age_band],#(lf)[AgeBandGroup] = case when cast(o.age as int) between 0 and 17 then 'Children and Young People (0-17)'#(lf)when cast(o.age as int) between 18 and 64 then 'Working Age Adults (18-64)'#(lf)when cast(o.age as int) >=65 then 'Older Adults (65+)' END ,#(lf)[attended_flag] = o.attended_flag,#(lf)[Attended_Contacts] = case when attended_flag = 'Attended' then 1 else 0 end ,#(lf)[DNA_Contacts] = case when attended_flag = 'Did Not Attend' then 1 else 0 end ,#(lf)[Total_Booked_Contacts] = counter,#(lf)o.treatment_function_description,#(lf)o.locality,#(lf)[Financial_Year_of_Contact] =O.financial_year,#(lf)[Year_Month_of_Contact] = O.year_month#(lf)INTO #Temp_Base#(lf)from  [PowerBI_Reporting].[dbo].[Outpatients] as o#(lf) LEFT join CCG_Reference.Reference.vw_AgeBand as a_ref on a_ref.Age = o.age#(lf)  #(lf) where attended_flag in ('Attended','Did Not Attend')#(lf)#(lf)#(lf) ---Final Output#(lf)#(lf) SELECT #(lf) [LSOA11CD] ,#(lf)[AgeBand] ,#(lf)[AgeBandGroup] ,#(lf)[attended_flag] ,#(lf)o.treatment_function_description,#(lf)o.locality,#(lf)[Financial_Year_of_Contact],#(lf)[Year_Month_of_Contact] ,#(lf)[Attended_Contacts] = sum(o.Attended_Contacts) ,#(lf)[DNA_Contacts] = sum(o.DNA_Contacts) ,#(lf)[Total_Booked_Contacts] = sum(o.Total_Booked_Contacts)#(lf)#(lf)into #Final_Output#(lf)#(lf) FROM #Temp_Base as o #(lf)#(lf) group by #(lf)  [LSOA11CD] ,#(lf)[AgeBand] ,#(lf)[AgeBandGroup] ,#(lf)[attended_flag] ,#(lf)o.treatment_function_description,#(lf)o.locality,#(lf)[Financial_Year_of_Contact],#(lf)[Year_Month_of_Contact] #(lf)#(lf)#(lf)SELECT [SUB].* ,#(lf)[WARD].[Current District Ward name]#(lf)FROM (#(lf)/*===============================================================================================================#(lf)METRIC LINES#(lf)===============================================================================================================*/#(lf)#(lf)SELECT #(lf)[LSOA11CD],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Financial_Year_of_Contact],#(lf)[Year_Month_of_Contact],#(lf)treatment_function_description,#(lf)[Metric] = 'Crude DNAs across Gloucestershire',#(lf)[MetricValue] = cast(sum([DNA_Contacts]) as int),#(lf)[Total Booked Contacts]= '',#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #Final_Output#(lf)#(lf)where attended_flag = 'Did Not Attend'#(lf)#(lf)group by #(lf)[LSOA11CD],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Financial_Year_of_Contact],#(lf)[Year_Month_of_Contact],#(lf)treatment_function_description#(lf)#(lf)UNION ALL #(lf)#(lf)#(lf)SELECT #(lf)[LSOA11CD],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Financial_Year_of_Contact],#(lf)[Year_Month_of_Contact],#(lf)treatment_function_description,#(lf)[Metric] = 'Crude DNA Gloucestershire Rates %',#(lf)[MetricValue] = cast(sum([DNA_Contacts]) as int),#(lf)[Total Booked Contacts]=cast(sum(Total_Booked_Contacts) as int) ,#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #Final_Output#(lf)#(lf)#(lf)#(lf)group by #(lf)[LSOA11CD],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Financial_Year_of_Contact],#(lf)[Year_Month_of_Contact],#(lf)treatment_function_description#(lf)#(lf)#(lf)#(lf)) as [sub]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT #(lf)[LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name],#(lf)[Rank] = ROW_NUMBER() OVER( PARTITION BY [LSOA code] ORDER BY COUNT(*)) #(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)AND [Current District Ward name] IS NOT NULL#(lf)GROUP BY [LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name]) AS [WARD]#(lf)ON [WARD].[LSOA code] = [SUB].[LSOA11CD]#(lf)AND [WARD].[Rank] = '1'#(lf)#(lf)Where [Metric_Type] = 'Bespoke Metrics'#(lf)#(lf)#(lf)#(lf)#(lf)--- Testing #(lf)#(lf)--select o.lsoa#(lf)--,o.financial_year#(lf)--,O.attended_code#(lf)--,o.attended_flag#(lf)#(lf)--from PowerBI_Reporting.dbo.Outpatients AS O  left join #(lf)#(lf)--(SELECT DISTINCT #(lf)--[LSOA code],#(lf)--[Current District Ward code],#(lf)--[Current District Ward name],#(lf)--[Rank] = ROW_NUMBER() OVER( PARTITION BY [LSOA code] ORDER BY COUNT(*)) #(lf)--FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)--WHERE [CCG_Of_Residence] = '11m'#(lf)--AND [LSOA code] IS NOT NULL #(lf)--AND [Current District Ward name] IS NOT NULL#(lf)--GROUP BY [LSOA code],#(lf)--[Current District Ward code],#(lf)--[Current District Ward name]) AS [WARD] ON O.lsoa = WARD.[LSOA code]#(lf)--AND [WARD].[Rank] = '1'#(lf)#(lf)--where attended_flag = 'Did not attend'#(lf)--AND financial_year = '2020/21'#(lf)--and WARD.[LSOA code] is not null #(lf)--and ward.[Current District Ward name] = 'Westgate'#(lf)#(lf)#(lf)#(lf)#(lf)--select o.lsoa#(lf)--,o.financial_year#(lf)--,O.attended_code#(lf)--,o.attended_flag#(lf)#(lf)--from PowerBI_Reporting.dbo.Outpatients AS O  left join #(lf)#(lf)--(SELECT DISTINCT #(lf)--[LSOA code],#(lf)--[Current District Ward code],#(lf)--[Current District Ward name],#(lf)--[Rank] = ROW_NUMBER() OVER( PARTITION BY [LSOA code] ORDER BY COUNT(*)) #(lf)--FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)--WHERE [CCG_Of_Residence] = '11m'#(lf)--AND [LSOA code] IS NOT NULL #(lf)--AND [Current District Ward name] IS NOT NULL#(lf)--GROUP BY [LSOA code],#(lf)--[Current District Ward code],#(lf)--[Current District Ward name]) AS [WARD] ON O.lsoa = WARD.[LSOA code]#(lf)--AND [WARD].[Rank] = '1'#(lf)#(lf)--where attended_flag IN  ('attended','Did not attend')#(lf)--AND financial_year = '2020/21'#(lf)--and WARD.[LSOA code] is not null #(lf)--and ward.[Current District Ward name] = 'Westgate'#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)--select *#(lf)-- from PowerBI_Reporting.dbo.Outpatients AS O  #(lf)-- where attended_flag = 'Did Not Attend'#(lf)--AND financial_year = '2020/21'#(lf)----and ward.[LSOA code]  IS Not null#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"LSOA11CD", "LSOA Code"}})
+				in
+				    #"Renamed Columns"
+
+	changedProperty = Name
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

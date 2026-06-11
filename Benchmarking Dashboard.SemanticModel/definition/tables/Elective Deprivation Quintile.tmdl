@@ -1,0 +1,69 @@
+table 'Elective Deprivation Quintile'
+	lineageTag: afc0237c-af4d-40d8-b418-f868761d5237
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: ad360cff-b5c1-4705-9083-ed21f6200281
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB of Registration'
+		dataType: string
+		lineageTag: 35519412-638d-472f-88eb-f7c5cb348af3
+		summarizeBy: none
+		sourceColumn: ICB of Registration
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Deprivation Quintile'
+		dataType: string
+		lineageTag: a3478b2c-85d3-44ad-a72f-4137524ae665
+		summarizeBy: none
+		sourceColumn: Deprivation Quintile
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 3-Code Group (diagnosing ep)'
+		dataType: string
+		lineageTag: 44633ece-23cd-4c8d-a283-92856e74960f
+		summarizeBy: none
+		sourceColumn: ICD10 3-Code Group (diagnosing ep)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of Admissions'
+		dataType: int64
+		formatString: 0
+		lineageTag: 424dce0e-3e66-4b13-aebc-15153b4ae6d9
+		summarizeBy: sum
+		sourceColumn: Number of Admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Year'
+		dataType: string
+		lineageTag: 748efea1-a9af-4a03-aa8b-11c951ef187e
+		summarizeBy: none
+		sourceColumn: Fiscal Year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Elective Deprivation Quintile-3361dd9d-11e6-4f36-85a6-34770df32ed9' = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files("M:\Finance\Business Intelligence\SYSTEM BENCHMARKING\23-24 Plan - benchmarking\23-24 PROG BENCHMARKING\Working Files\Dashboard Files\PHM Tabs\Elective\Elective Deprivation Quintile"),
+				    #"Filtered Hidden Files1" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),
+				    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File (4)", each #"Transform File (4)"([Content])),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
+				    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (4)"}),
+				    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (4)", Table.ColumnNames(#"Transform File (4)"(#"Sample File (4)"))),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"Source.Name", type text}, {"ICB of Registration", type text}, {"Deprivation Quintile", type text}, {"ICD10 3-Code Group (diagnosing ep)", type text}, {"Number of Admissions", Int64.Type}}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Changed Type", "Fiscal Year", each if [Source.Name] = "Elective Admissions Deprivation Quintile 1920.csv" then "2019/20" else if [Source.Name] = "Elective Admissions Deprivation Quintile 2021.csv" then "2020/21" else if [Source.Name] = "Elective Admissions Deprivation Quintile 2122.csv" then "2021/22" else if [Source.Name] = "Elective Admissions Deprivation Quintile 2223.csv" then "2022/23" else null)
+				in
+				    #"Added Conditional Column"
+
+	annotation PBI_ResultType = Table
+

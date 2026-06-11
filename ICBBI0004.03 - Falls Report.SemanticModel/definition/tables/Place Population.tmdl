@@ -1,0 +1,55 @@
+table 'Place Population'
+	lineageTag: e82408e1-d6a5-46f9-889c-2ff81f1f72f1
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 1873de2e-2324-4efe-8caa-00a64f82c1a7
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Primary Care Network'
+		dataType: string
+		lineageTag: c10d8b9e-4dd4-41de-aaff-964647a6b3b6
+		summarizeBy: none
+		sourceColumn: Primary Care Network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 4df671cb-d16b-43f4-83f2-ea801d1fe425
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 47ef9f7c-4cda-4b62-b9fc-b6ec14300bde
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Code'
+		dataType: string
+		lineageTag: 68f2a7e6-3421-4814-9639-8d5863e60b1b
+		summarizeBy: none
+		sourceColumn: Practice Code
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Place Population-8d48a121-6143-4b08-8736-14d7ae438563' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SET ANSI_WARNINGS OFF#(lf)SET NOCOUNT ON#(lf)#(lf)#(lf)#(lf)SELECT DISTINCT#(lf)[GP].OrganisationCode [Practice Code],#(lf)[GP].OrganisationName [Practice Name],#(lf)[GP].primarycarenetwork [Primary Care Network],#(lf)#(lf)[Locality] = CASE WHEN [GP].Locality LIKE '%Cotswold%' THEN 'Cotswolds' ELSE [GP].Locality END,#(lf)#(lf)[COUNTER] = COUNT([MPI].[DERIVED_PSEUDO_NHS])#(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] [GP] #(lf)#(tab)ON [MPI].PracticeCode = [GP].OrganisationCode#(lf)#(lf)#(lf)WHERE [MPI].Derived_Age >= '65'#(lf)and OrganisationName not like 'The Homeless Healthcare Team'#(lf)#(lf)GROUP BY [GP].OrganisationCode,#(lf)[GP].OrganisationName,#(lf)[GP].primarycarenetwork,#(lf)#(lf)CASE WHEN [GP].Locality LIKE '%Cotswold%' THEN 'Cotswolds' ELSE [GP].Locality END#(lf)#(lf)order by [Practice Code]#(lf)#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"COUNTER", "Population"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

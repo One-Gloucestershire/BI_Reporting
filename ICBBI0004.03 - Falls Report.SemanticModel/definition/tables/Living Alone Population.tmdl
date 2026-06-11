@@ -1,0 +1,31 @@
+table 'Living Alone Population'
+	lineageTag: 24d314a3-df98-4f1a-97b2-2f435bcc5c53
+
+	column 'Living Alone Status'
+		dataType: string
+		lineageTag: a73f0b09-d2fd-4195-9ba9-cb6d1374e920
+		summarizeBy: none
+		sourceColumn: Living Alone Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column COUNTER
+		dataType: int64
+		formatString: 0
+		lineageTag: ec0be2d9-1832-4441-941b-0a508b371270
+		summarizeBy: sum
+		sourceColumn: COUNTER
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Living Alone Population-eaac2395-ca79-43db-944a-8efed85bae68' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="SET ANSI_WARNINGS OFF#(lf)SET NOCOUNT ON#(lf)#(lf)#(lf)#(lf)SELECT DISTINCT#(lf)#(lf)[Not Living Alone] = case when [MPI].[Derived_IsLivingAlone] = '1' then 'Living Alone'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  else 'Not Living Alone' end,#(lf)#(lf)[COUNTER] = COUNT([MPI].[DERIVED_PSEUDO_NHS])#(lf)--[KEY] = cast([GP].[OrganisationCode]as varchar)+cast([MPI].[DementiaDerived]as varchar)+cast([MPI].[Derived_IsLivingAlone]as varchar)+cast([MPI].[Derived_IsLivingInCareHome]as varchar)+cast([MPI].[eFI_Catgory_derived]as varchar)+cast([AB].[10YR_Age_Band]as varchar)#(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)#(lf)#(lf)#(lf)WHERE [MPI].Derived_Age >= '65'#(lf)#(lf)GROUP BY #(lf)#(lf)case when [MPI].[Derived_IsLivingAlone] = '1' then 'Living Alone'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  else 'Not Living Alone' end#(lf)--cast([GP].[OrganisationCode]as varchar)+cast([MPI].[DementiaDerived]as varchar)+cast([MPI].[Derived_IsLivingAlone]as varchar)+cast([MPI].[Derived_IsLivingInCareHome]as varchar)+cast([MPI].[eFI_Catgory_derived]as varchar)+cast([AB].[10YR_Age_Band]as varchar)#(lf)#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Not Living Alone", "Living Alone Status"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

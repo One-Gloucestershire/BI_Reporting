@@ -1,0 +1,42 @@
+table Ref_Treatment_Fucntion
+	lineageTag: ba8761a0-2c97-44f2-83ef-b4cfc6a153db
+
+	measure 'TFC total heading  w/ current month' = " Average OP Indicative Wait Times ( in weeks) " & max('Indicative Wait Times'[Month_Year_Name_of_Referral])
+		lineageTag: cc980254-8ee8-4a50-a6d6-a46544774d9c
+
+	column TreatmentFunctionCode
+		dataType: string
+		lineageTag: 832c4be2-60db-424d-9c33-0341dca9d595
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentFunctionDescription
+		dataType: string
+		lineageTag: d604f289-205f-405e-bb4a-14afd72cca45
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsNational
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 5b22e93c-657e-4e28-ac5e-47c53b1d78ce
+		summarizeBy: none
+		sourceColumn: IsNational
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_Treatment_Fucntion-8c0edf59-9df6-449b-976c-22fc6e97f028 = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="#(tab)#(lf)#(tab)#(tab)set nocount on #(lf)#(lf)#(tab)/*------------------------------------------------------------#(lf)#(tab)Delete Temp Tables if exists#(lf)#(tab)/-------------------------------------------------------------*/#(lf)#(tab)#(lf)#(tab)IF OBJECT_ID('tempdb..#TFC') is not null#(lf)#(tab)drop table #TFC#(lf)#(lf)#(lf)#(lf)--Get all requested TFC's#(lf)#(tab)#(tab)CREATE TABLE #TFC (TFC INT);#(lf)#(lf)INSERT INTO #TFC (TFC)#(lf)VALUES #(lf)#(tab)(100),#(lf)#(tab)(101),#(lf)#(tab)(103),#(lf)#(tab)(104),#(lf)#(tab)(106),#(lf)#(tab)(107),#(lf)#(tab)(108),#(lf)#(tab)(110),#(lf)#(tab)(120),#(lf)#(tab)(130),#(lf)#(tab)(191),#(lf)#(tab)(301),#(lf)#(tab)(302),#(lf)#(tab)(303),#(lf)#(tab)(306),#(lf)#(tab)(307),#(lf)#(tab)(320),#(lf)#(tab)(330),#(lf)#(tab)(340),#(lf)#(tab)(410),#(lf)#(tab)(420),#(lf)#(tab)(502) ; #(lf)#(lf)#(lf)#(lf)--get list of required TFC's and their associated Descs#(lf)#(lf)select t.*#(lf)from CCG_Reference.Reference.vw_TreatmentFunction as t#(lf)inner join #TFC as tfc on t.TreatmentFunctionCode = cast(tfc.TFC as varchar)#(lf)#(lf)order by t.TreatmentFunctionCode#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

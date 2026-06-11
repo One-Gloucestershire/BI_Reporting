@@ -1,0 +1,23 @@
+expression 'Errors in 62_day' =
+		let
+		Source = #"62_day",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"standard_group", "first_seen_provider_code", "first_seen_provider", "first_seen_provider_group", "first_treatment_provider_code", "first_treatment_provider", "first_treatment_provider_group", "consultant_upgrade_provider_code", "consultant_upgrade_provider", "consultant_upgrade_provider_group", "tumour_type", "total_treated", "breaches", "target", "performance", "report_number", "report_name", "financial_year", "month_name", "financial_month"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "standard_group", "first_seen_provider_code", "first_seen_provider", "first_seen_provider_group", "first_treatment_provider_code", "first_treatment_provider", "first_treatment_provider_group", "consultant_upgrade_provider_code", "consultant_upgrade_provider", "consultant_upgrade_provider_group", "tumour_type", "total_treated", "breaches", "target", "performance", "report_number", "report_name", "financial_year", "month_name", "financial_month"})
+		in
+		  #"Reordered Columns"
+	lineageTag: ea51580c-595c-4042-a48c-a549c720ba0a
+	queryGroup: 'Query Errors - 07/02/2023 12:03:12'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

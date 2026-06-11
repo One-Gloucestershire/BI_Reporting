@@ -1,0 +1,173 @@
+table 31_day
+	lineageTag: 794b62f0-56de-4339-ac87-1382054e72b2
+
+	measure 31_day_performance = (SUM('31_day'[total_treated])-SUM('31_day'[breaches]))/SUM('31_day'[total_treated])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b6500975-cfcc-4809-bd6f-2b94f810fabf
+
+	measure 31_day_target_% = MIN('31_day'[target])
+		lineageTag: d060d015-bdd8-4b5c-a5ab-2cfa2b5e19ce
+
+	measure 31_day_target_checker = IF('31_day'[31_day_performance] >= '31_day'[31_day_target_%], "#63BE7B","#F8696B")
+		lineageTag: b1700e92-3256-4d87-9674-fcd3ed36c13d
+
+	column standard_group
+		dataType: string
+		lineageTag: 07706411-a422-40ad-b886-e396fd53544d
+		summarizeBy: none
+		sourceColumn: standard_group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column provider_code
+		dataType: string
+		lineageTag: 9c4bdc72-bdd6-459c-bd4e-ee214d3358f7
+		summarizeBy: none
+		sourceColumn: provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column provider_name
+		dataType: string
+		lineageTag: dfc17f1a-b20f-4895-9eed-d1cf224dd28d
+		summarizeBy: none
+		sourceColumn: provider_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column provider_group
+		dataType: string
+		lineageTag: bc76e1ea-0b3f-436c-94b4-fa9ceecfa459
+		summarizeBy: none
+		sourceColumn: provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column type
+		dataType: string
+		lineageTag: 1ee9a74b-cdac-4e5b-b6b7-121c6f3fefc1
+		summarizeBy: none
+		sourceColumn: type
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column total_treated
+		dataType: int64
+		formatString: 0
+		lineageTag: 35db91d5-9971-45be-b3c3-04b8e0d7b913
+		summarizeBy: sum
+		sourceColumn: total_treated
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+	column breaches
+		dataType: int64
+		formatString: 0
+		lineageTag: db1eeebb-3ef7-49ad-ac18-1ad2ce83b3ac
+		summarizeBy: sum
+		sourceColumn: breaches
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+	column target
+		dataType: double
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 4a0f2433-bc21-4c9c-9f8e-117069901d9f
+		summarizeBy: sum
+		sourceColumn: target
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = Double#####not a type
+
+	column performance
+		dataType: double
+		lineageTag: d31e843a-514e-42a6-9de1-d28c49ac2aa2
+		summarizeBy: sum
+		sourceColumn: performance
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+		annotation DataTypeAtRefresh = Double#####not a type
+
+	column report_number
+		dataType: string
+		lineageTag: e1f4f84e-9fb6-4004-ac48-6cb77902dfdf
+		summarizeBy: none
+		sourceColumn: report_number
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column report_name
+		dataType: string
+		lineageTag: 904d82e3-fbd1-4a34-a78f-9d965e3f4a22
+		summarizeBy: none
+		sourceColumn: report_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column financial_year
+		dataType: string
+		lineageTag: 1fc5b69a-277e-4b18-8ba8-c526db5cabb5
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column month_name
+		dataType: string
+		lineageTag: b1833457-909c-442d-9809-87ae908c1fbf
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 7fbb08fe-adef-4893-872e-fcdb67a82f14
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+	partition 31_day-1d1141dc-f726-464f-8bf1-10b6dc13753e = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Data_Mart_Performance", [Query="------------------------------------#(lf)--- 31 DAY TUMOUR GROUP STANDARD ---#(lf)------------------------------------#(lf)#(lf)select [standard_group] = '31 Day Tumour'#(lf)      ,[provider_code] #(lf)#(tab)  ,[b].[Name] [provider_name]#(lf)#(tab)  ,case when [provider_code] = 'RTE' then 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            else 'Other Provider' end as [provider_group]#(lf)      ,[tumour_type] [type]#(lf)#(tab)  ,[total_treated]#(lf)#(tab)  ,[Treated_After_31_Days] [breaches]#(lf)      ,case when [Report_Number] = '7.4' then '0.96'#(lf)#(tab)#(tab)#(tab)else 'error' end as [target]#(lf)      ,[%_Meeting_Standard] [performance]#(lf)      ,[report_number] #(lf)#(tab)  ,case when [report_number] = '7.4' then '7.4 - 31 Day First Treatment'#(lf)#(tab)#(tab)#(tab)else 'ERROR' end as [report_name]#(lf)#(tab)  ,[d].[FinancialYear] [financial_year]#(lf)      ,left([Report_Month],3) as [month_name]#(lf) #(tab)  ,[d].[FinancialMonth] [financial_month]#(lf) #(lf)  from [Data_Mart_Performance].[dbo].[Cancer_31_Day_Aggregate_Data] [a]#(lf)  left join  [CCG_Reference].[Reference].[vw_DateLookup] [d] on [a].[Report_Date] = [d].[Date]#(lf)  left join [CCG_Reference].[Reference].[vw_OrganisationTrust] [b] on [a].[Provider_Code] = [b].[OrganisationCode]#(lf)  where [Report_Date] > '20190331'#(lf)  and [Extract_Type] = 'Monthly'#(lf)#(lf)  union all#(lf)#(lf)---------------------------------------#(lf)--- 31 DAY TREATMENT GROUP STANDARD ---#(lf)---------------------------------------#(lf)#(lf)  select [standard_group] = '31 Day Treatment'#(lf)      ,[provider_code] #(lf)#(tab)  ,[b].[Name] [provider_name]#(lf)#(tab)  ,case when [Provider_Code] = 'RTE' then 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            else 'Other Provider' end as [provider_group]#(lf)      ,[Treatment_Group] [type]#(lf)#(tab)  ,[total_treated]#(lf)#(tab)  ,[Treated_After_31_Days] [breaches]#(lf)#(tab)  ,case when [Report_Number] = '7.11' AND [Treatment_Group] = 'Radiotherapy Treatments'then '94%'#(lf)#(tab)  #(tab)    when [Report_Number] = '7.11' AND [Treatment_Group] = 'Surgery' then '94%'#(lf)#(tab)        when [Report_Number] = '7.11' AND [Treatment_Group] = 'Drug Treatments' then '98%'#(lf)#(tab)#(tab)#(tab)else 'error' end as [target]#(lf)      ,[%_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [report_number]#(lf)#(tab)  ,case when [Report_Number] = '7.11' then '7.11 - 31 Day Subsequent Treatment'#(lf)#(tab)#(tab)#(tab)else 'error' end as [report_name]#(lf)#(tab)  ,[d].[FinancialYear] [financial_year]#(lf)      ,left([Report_Month],3) as [month_name]#(lf) #(tab)  ,[d].[FinancialMonth] [financial_month]#(lf)#(lf)  from [Data_Mart_Performance].[dbo].[Cancer_31_Day_Treatment_Aggregate_Data] [a]#(lf)  left join  [CCG_Reference].[Reference].[vw_DateLookup] [d] on [a].[Report_Date] = [d].[Date]#(lf)  left join [CCG_Reference].[Reference].[vw_OrganisationTrust] [b] on [a].[Provider_Code] = [b].[OrganisationCode]#(lf)  where [Report_Date] > '20190331'#(lf)  and [Extract_Type] = 'Monthly'"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"financial_month", Int64.Type}, {"target", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

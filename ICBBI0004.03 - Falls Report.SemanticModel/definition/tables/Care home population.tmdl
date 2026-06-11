@@ -1,0 +1,30 @@
+table 'Care home population'
+	lineageTag: 183ebc3e-fb7e-4628-87ee-278be7486060
+
+	column COUNTER
+		dataType: int64
+		formatString: 0
+		lineageTag: fa797949-f8df-4a86-b3f5-a9b088715eb9
+		summarizeBy: sum
+		sourceColumn: COUNTER
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_status
+		dataType: string
+		lineageTag: da5f246d-2bb5-45c4-becd-75262b19298e
+		summarizeBy: none
+		sourceColumn: Care_home_status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Care home population-31b0bb02-e8bf-4712-8c5a-7af173d5995f' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="SET ANSI_WARNINGS OFF#(lf)SET NOCOUNT ON#(lf)#(lf)#(lf)SET ANSI_WARNINGS OFF#(lf)SET NOCOUNT ON#(lf)if object_id ('tempdb..#Care_Home') is not null drop table #Care_Home#(lf)#(lf)SELECT DISTINCT#(lf) #(lf)#(tab)Derived_Pseudo_NHSNumber#(lf)      ,[Residential_or_Nursing_home_Location_Name]#(lf)#(tab)  ,[Nursing Care Homes ]#(lf)#(tab)  ,[Care Home Type]#(lf)#(tab)  ,[Date_of_incident] = cast([Time_Of_Incident] as date)#(lf)#(lf)#(tab)  INTO #Care_Home#(lf)#(lf)  FROM [CCG_Current].[SWASFT].[vw_AmbulanceServicePatient] [A]#(lf)#(lf)  LEFT JOIN [BIReports].[dbo].[CHLookup2022_Oct] [CH] ON [CH].[SWASFT Care Home Name] = [A].[Residential_or_Nursing_home_Location_Name]#(lf)   #(lf)  where #(lf)  #(lf)   [Residential_or_Nursing_home_Location] not like 'null'#(lf)#(lf)  and Derived_Pseudo_NHSNumber not like 'Null'#(lf)#(lf)  and [Care Home Type] not like 'NULL'#(lf)   #(lf)#(lf)SELECT DISTINCT#(lf)#(lf)#(lf)#(tab)[Care_home_status] = case when [mpi].Derived_IsLivingInCareHome like '1' and [CH].[Care Home Type] IS NULL then 'Unknown Care Home Type'#(lf)#(tab)#(tab)when ([CH].[Care Home Type] not like 'NULL') then [CH].[Care Home Type]#(lf)#(tab)#(tab)when ([mpi].Derived_IsLivingInCareHome IS NULL and [CH].[Care Home Type] not like 'null') then [CH].[Care Home Type]#(lf)#(tab)#(tab)when  ([mpi].Derived_IsLivingInCareHome IS NULL and [CH].[Care Home Type]  IS NULL) then 'Not Living in a Care Home'#(lf)#(tab)#(tab)when  ([mpi].Derived_IsLivingInCareHome like '0' and [CH].[Care Home Type]  IS NULL) then 'Not Living in a Care Home'#(lf)#(lf)#(tab)#(tab)end#(lf)#(lf)#(lf),[COUNTER] = COUNT([MPI].[DERIVED_PSEUDO_NHS])#(lf)#(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)#(lf)LEFT JOIN #Care_Home [CH] ON [CH].Derived_Pseudo_NHSNumber = [MPI].Derived_Pseudo_NHS#(lf)#(lf)WHERE [MPI].Derived_Age >= '65'#(lf)#(lf)#(lf)#(lf)GROUP BY #(lf)#(lf)#(tab)case when [mpi].Derived_IsLivingInCareHome like '1' and [CH].[Care Home Type] IS NULL then 'Unknown Care Home Type'#(lf)#(tab)#(tab)when ([CH].[Care Home Type] not like 'NULL') then [CH].[Care Home Type]#(lf)#(tab)#(tab)when ([mpi].Derived_IsLivingInCareHome IS NULL and [CH].[Care Home Type] not like 'null') then [CH].[Care Home Type]#(lf)#(tab)#(tab)when  ([mpi].Derived_IsLivingInCareHome IS NULL and [CH].[Care Home Type]  IS NULL) then 'Not Living in a Care Home'#(lf)#(tab)#(tab)when  ([mpi].Derived_IsLivingInCareHome like '0' and [CH].[Care Home Type]  IS NULL) then 'Not Living in a Care Home'#(lf)#(lf)#(tab)#(tab)end#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

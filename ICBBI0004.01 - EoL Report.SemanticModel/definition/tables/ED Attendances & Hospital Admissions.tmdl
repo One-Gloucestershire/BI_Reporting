@@ -1,0 +1,109 @@
+table 'ED Attendances & Hospital Admissions'
+	lineageTag: bdbe5064-7b06-4cb3-a4db-e805abc83ab5
+
+	measure 'Rolling Average ED Attendances / Hospital Admissions' = ```
+			
+			VAR NUMMONTHS = 3
+			VAR ROLLINGSUM = 
+			    CALCULATE(
+			        COUNT('ED Attendances & Hospital Admissions'[pseudo_nhs_number]),
+			DATESINPERIOD('ED Attendances & Hospital Admissions'[attendance_date], LASTDATE('ED Attendances & Hospital Admissions'[attendance_date]), -NUMMONTHS,MONTH)
+			    )
+			RETURN
+			IF(ROLLINGSUM/NUMMONTHS <6, 0, ROLLINGSUM/NUMMONTHS)
+			```
+		lineageTag: 16a7217d-b6f6-4ed2-9de9-e2a3f75fab0d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column activity_type
+		dataType: string
+		lineageTag: 5448e6d6-f605-43e0-8452-1203d88ba8c6
+		summarizeBy: none
+		sourceColumn: activity_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column pseudo_nhs_number
+		dataType: string
+		lineageTag: ad5ac7d2-8aec-47ba-b3af-e9b751ed612f
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 01a04318-c10c-4f2f-b179-5dce6a3c508e
+		summarizeBy: none
+		sourceColumn: attendance_date
+
+		variation Variation
+			isDefault
+			relationship: 7495a29c-56cb-4a42-9c37-b6f6a777f964
+			defaultHierarchy: LocalDateTable_d69b7267-82d1-494b-9bd2-1aab5cca469a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 200c3b4b-6071-410a-b55e-54baa592ee89
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: f6be0250-decb-464c-85c1-823c41fa9be2
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 1d3180e5-5d17-41aa-9af2-6367b6400049
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["SortByColumn"]
+
+	column FinancialMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: aa7579b7-7f55-413d-bfb2-e340b4e34534
+		summarizeBy: sum
+		sourceColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["DataType"]
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: ca3ded96-7ed6-4b2b-a09b-8f321dcae669
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["DataType"]
+
+	partition 'ED Attendances & Hospital Admissions-f42b7c01-0e1b-44df-86c5-2d7c6c41b651' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  SELECT *#(lf)  FROM [PowerBI_Reporting].[dbo].[EOL_Activity_Table]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
