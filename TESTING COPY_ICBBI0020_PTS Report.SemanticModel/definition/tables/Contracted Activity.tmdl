@@ -1,0 +1,86 @@
+table 'Contracted Activity'
+	lineageTag: ed0e441a-679f-4675-91cc-28f156f4e967
+
+	measure 'Completed (Main + GHT)' =
+			
+			[Completed: Counter (Main) minus Aborts or Cancel Flag] + [Completed: Counter (GHT) minus Aborts or Cancel Flag]
+		formatString: 0
+		lineageTag: 1d8a2184-7386-4993-911c-32c01391fd55
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalAddition"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Complete + Aborts (Main + GHT)' =
+			
+			[Complete + Aborts (Main)] + [Complete + Aborts (GHT)]
+		formatString: 0
+		lineageTag: b8c317ef-6675-4b39-bffa-7859856a8371
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalAddition"
+				}
+
+		changedProperty = FormatString
+
+	measure '% Use of Contracted activity (ALL journeys + Aborts)' =
+			
+			DIVIDE(
+				[Complete + Aborts (Main + GHT)],
+				SUM('Contracted Activity'[Contracted Activity])
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c3a3d8d2-19bc-4484-82a7-dc0f11b6969c
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+		changedProperty = FormatString
+
+	column Contracted_Activity_Month
+		dataType: string
+		lineageTag: b1de2ef9-7fb1-4b08-b570-98ff27dbfdb2
+		summarizeBy: none
+		sourceColumn: Contracted_Activity_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fin_Yr
+		dataType: string
+		lineageTag: 47cb5597-e702-4948-9662-e0d373767def
+		summarizeBy: none
+		sourceColumn: Fin_Yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Contracted Activity'
+		dataType: int64
+		formatString: #,0
+		lineageTag: d41fd58e-54f9-4f21-9be2-50e12a336034
+		summarizeBy: sum
+		sourceColumn: Contracted Activity
+
+		annotation SummarizationSetBy = User
+
+	partition 'Contracted Activity' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\PTS\Dashboard_development\Power BI dashboard_ FINAL\Scripts_AND_Upload to PBI files\09. Contracted Activity.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Contracted_Activity_Month", type text}, {"Fin_Yr", type text}, {"Contracted Activity", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

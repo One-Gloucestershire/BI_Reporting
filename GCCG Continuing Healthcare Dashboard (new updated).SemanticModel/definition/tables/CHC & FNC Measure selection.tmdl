@@ -1,0 +1,88 @@
+table 'CHC & FNC Measure selection'
+	lineageTag: e60de28f-11f2-4b05-bd67-21bc3861b96e
+
+	measure 'Target val' = AVERAGE ( 'CHC & FNC Measure selection'[TargetCol] )
+		lineageTag: 9ff4acbb-e66a-4b60-98a5-9a575f296d23
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Parameter
+		lineageTag: d025a555-519a-4e9f-8796-6e4879da9fe7
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: f141a95f-28a6-4aed-bfae-994b561bb9df
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 1593a0b6-7742-4b90-abdf-8adece0e36c4
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CHC Selection' =
+			
+			'CHC & FNC Measure selection'[Parameter]
+		displayFolder: _DAX_Columns
+		lineageTag: 1b100806-d864-4c9b-ae2f-6f4278831fae
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetCol =
+			
+			IF (
+			    'CHC & FNC Measure selection'[Parameter] = "Cases competed in hospital (%)",
+			    0.15,
+			    BLANK ()
+			)
+		formatString: 0.00
+		displayFolder: _DAX_Columns
+		lineageTag: 07016dde-27fb-4a00-9470-cae71385c0e5
+		summarizeBy: sum
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'CHC & FNC Measure selection-e7f79a3f-3be0-41db-913f-c0e3136a0e03' = calculated
+		mode: import
+		source = ```
+				{
+				    ("Positive Checklists",  NAMEOF([Checklists _ Pos]), 0),
+				    ("Newly Eligible Cases", NAMEOF('_Dax_KPIs'[Newly Eligible Cases]), 1 ),
+				    ("Completed in 28days%", NAMEOF('_Dax_KPIs'[Completed in 28days%]), 2),
+				    ("Referral Conversion Rate", NAMEOF('_Dax_KPIs'[Referral Conversion Rate]),3),
+				    ("3 Month Reviews Outstanding",   NAMEOF( '_Dax_KPIs'[Current Number of 3month reviews outstanding]),4),
+				    ("12 Month & Other Reviews Outstanding",   NAMEOF( '_Dax_KPIs'[Current Number of 12month reviews outstanding]),5),      
+				    ("Cases Completed in hospital (%)",   NAMEOF( '_Dax_KPIs'[Cases Completed in hospital (%)]),6) ,      
+				    ("Assessments Conversion Rate",   NAMEOF( '_Dax_KPIs'[Assessments Conversion Rate (%)]),7),      
+				    ("Open Cases exceeding 28 days",   NAMEOF( '_Dax_KPIs'[Open Cases exceeding 28 days]),8),
+				    ("FNC Patient Count",   NAMEOF( '_Dax_KPIs'[FNC Patient Count]),9)
+				  
+				} 
+				```
+
+	annotation PBI_Id = 70241e98abcc4c478aed43f5c365ef2f
+

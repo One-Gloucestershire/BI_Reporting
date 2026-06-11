@@ -1,0 +1,33 @@
+table Business_case
+	lineageTag: 67eae136-8b80-419a-93da-2286089d8f3c
+
+	column Financial_year
+		dataType: string
+		lineageTag: 97a34dfe-7e27-4ea4-96ed-112edd52b336
+		summarizeBy: none
+		sourceColumn: Financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Projected_total_cost
+		dataType: decimal
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: cec8ca86-63b5-4e19-bf60-9373ffd56e10
+		summarizeBy: none
+		sourceColumn: Projected_total_cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition Business_case = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("Nc3BDcAgDEPRXXK2FDAkgVlQp+smnawIkfP7stcSFlLZBPK9FT4qplV5cKQp+xGCrcCipHSlpcSAz0gxpV9pdIzdXXFlpETfP3vt+QE=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Financial_year = _t, Projected_total_cost = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Financial_year", type text}, {"Projected_total_cost", Currency.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

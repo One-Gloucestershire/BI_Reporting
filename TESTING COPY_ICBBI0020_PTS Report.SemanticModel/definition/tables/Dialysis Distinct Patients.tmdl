@@ -1,0 +1,57 @@
+table 'Dialysis Distinct Patients'
+	lineageTag: 0d3b8fc1-76a1-4d6c-8603-f38109a3f0b8
+
+	measure 'Main Dialysis Journeys divided by unique patients' =
+			
+			DIVIDE(
+				SUM('Main_Journeys'[Counter (Main)]),
+				SUM('Dialysis Distinct Patients'[counter Dialysis Distinct])
+			)
+		formatString: 0
+		lineageTag: 39855730-3380-4478-b117-d3869d2fcdc5
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+		changedProperty = FormatString
+
+	column activity_month
+		dataType: string
+		lineageTag: 936de2c0-7b79-4756-91bf-d64f449df23c
+		summarizeBy: none
+		sourceColumn: activity_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column passengerID
+		dataType: int64
+		formatString: 0
+		lineageTag: d5bebeb9-eba0-40e3-a943-a1ff36b08600
+		summarizeBy: count
+		sourceColumn: passengerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'counter Dialysis Distinct'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a39d822-d515-431e-9f15-846e4fc29851
+		summarizeBy: sum
+		sourceColumn: counter Dialysis Distinct
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dialysis Distinct Patients' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="--Dialysis Unique Patients:#(lf)#(lf)select distinct [activity_month]#(lf), [passengerID]#(lf), [counter] #(lf)from [CCG_Current].[EZec].[vw_PatientTransport_AllJourney]#(lf)where [Contract_Description] like '%Glou%'#(lf)and [Category_Mapped_Description] like 'Dial%'#(lf)and [Abort_Reason_Description] is NULL#(lf)and [Cancel_Reason_Description] is NULL#(lf)and [Activity_Month] > '2022/03'#(lf)group by [activity_month], [passengerID], [counter]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"counter", "counter Dialysis Distinct"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

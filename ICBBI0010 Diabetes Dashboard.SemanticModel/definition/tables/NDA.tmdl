@@ -1,0 +1,29 @@
+table NDA
+	lineageTag: c96c9a52-e44e-4168-a578-28ea3570a10c
+
+	column Derived_Pseudo_NHS_Number
+		dataType: string
+		lineageTag: d3f3c6ca-eb18-4cc4-a9a3-413ca986b73f
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Clean_Diabetes_Type
+		dataType: string
+		lineageTag: a8b42ee2-6fbd-49f7-a6c9-2f5f8fc404de
+		summarizeBy: none
+		sourceColumn: Derived_Clean_Diabetes_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition NDA = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT  DISTINCT Derived_Pseudo_NHS_Number,#(lf)Derived_Clean_Diabetes_Type#(lf)FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA]#(lf)WHERE [Audit_Year] LIKE '2022_23_E3'#(lf)ORDER BY [Derived_Pseudo_NHS_Number]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

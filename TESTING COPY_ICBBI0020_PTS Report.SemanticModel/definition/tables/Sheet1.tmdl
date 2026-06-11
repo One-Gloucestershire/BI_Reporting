@@ -1,0 +1,67 @@
+table Sheet1
+	excludeFromModelRefresh
+	lineageTag: 09adcae6-ada1-417b-ac1d-09472d4a947f
+
+	column Pseudo_Reference
+		dataType: string
+		lineageTag: b658bbf6-36fe-4c97-91cf-11ae097f9901
+		summarizeBy: none
+		sourceColumn: Pseudo_Reference
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Registration Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5d1f4196-4eb4-4f76-b19c-940f1381e0e8
+		summarizeBy: none
+		sourceColumn: Registration Date
+
+		variation Variation
+			isDefault
+			relationship: 983b6898-5b3b-4e12-9b22-0cc7cd38c741
+			defaultHierarchy: LocalDateTable_3f00a651-9569-4431-b865-0573bfc19d8b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Unit
+		dataType: string
+		lineageTag: efd443ed-7b98-4069-abe3-8a0c1600777e
+		summarizeBy: none
+		sourceColumn: Unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Updated to PBI Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 91d78fd8-9a9c-440f-a37d-28d9ef487789
+		summarizeBy: none
+		sourceColumn: Updated to PBI Date
+
+		variation Variation
+			isDefault
+			relationship: 6289a09a-7f0c-4d94-9d0a-2d35f453e6b7
+			defaultHierarchy: LocalDateTable_63fc5883-d77c-45c4-8887-61a7c88e0abf.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Sheet1 = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\PTS\Dashboard_development\Power BI dashboard_ FINAL\Scripts_AND_Upload to PBI files\DMRS\DMRS_Registrations_Flatfile.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Pseudo_Reference", type text}, {"Registration Date", type date}, {"Unit", type text}, {"Updated to PBI Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

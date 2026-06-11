@@ -1,0 +1,306 @@
+table Date
+	lineageTag: 6e58ccf6-d687-4b25-8a03-0154f5b8acc4
+	dataCategory: Time
+
+	measure 'Date Range' =
+			FORMAT ( MIN ( 'Date'[Date] ), "DD/MM/YYYY" ) & " - "
+			    & FORMAT ( MAX ( 'Date'[Date] ), "DD/MM/YYYY" )
+		lineageTag: 5a01de51-ce64-4b0a-ae6b-590ea7c1b294
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure PageFilter_2yearfilter = ```
+			EDATE( Date(
+			     Year(Now()),     
+			     (RoundUp(Month(Now())/3,0) * 3) - 2
+			    ,1
+			), -24)
+			```
+		lineageTag: 47d47665-f2e3-4142-a088-2f0fd37a1183
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current Q format flag' = sum('Date'[Current Q])
+		lineageTag: ce4d87c4-1ee5-46cc-8e88-4409906aa1e4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		isKey
+		formatString: General Date
+		lineageTag: bd05118a-c9f1-4214-81d0-7fda0ae10408
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column day
+		formatString: 0
+		lineageTag: 494025ba-5827-4a6a-a7d6-9b38fde1ff6e
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [day]
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column month
+		formatString: 0
+		lineageTag: 86a3b38f-ba5a-4ba0-8cdc-8f90f90c1d0d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [month]
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		formatString: 0
+		lineageTag: 9c1a8181-09bf-467a-a4f7-8483875f03c9
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [year]
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FY - Qr' =
+			
+			RIGHT (
+			    CONVERT (
+			        (
+			            YEAR (
+			                EDATE (
+			                    'Date'[Date],
+			                    9
+			                )
+			            ) - 1
+			        ),
+			        STRING
+			    ),
+			    2
+			) & "-"
+			    & RIGHT (
+			        CONVERT (
+			            YEAR (
+			                EDATE (
+			                    'Date'[Date],
+			                    9
+			                )
+			            ),
+			            STRING
+			        ),
+			        2
+			    ) & " Q"
+			    & QUARTER (
+			        EDATE (
+			            'Date'[Date],
+			            9
+			        )
+			    )
+		displayFolder: _DAX_Columns
+		lineageTag: 68a54c0d-08f5-488f-bbd4-248a6fdace5e
+		summarizeBy: none
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FY - Q filter' =
+			
+			VAR a =
+			    RIGHT (
+			        CONVERT (
+			            (
+			                YEAR (
+			                    EDATE (
+			                        'Date'[Date],
+			                        9
+			                    )
+			                ) - 1
+			            ),
+			            STRING
+			        ),
+			        2
+			    ) & "-"
+			        & RIGHT (
+			            CONVERT (
+			                YEAR (
+			                    EDATE (
+			                        'Date'[Date],
+			                        9
+			                    )
+			                ),
+			                STRING
+			            ),
+			            2
+			        ) & " Q"
+			        & QUARTER (
+			            EDATE (
+			                'Date'[Date],
+			                9
+			            )
+			        )
+			VAR b =
+			    RIGHT (
+			        CONVERT (
+			            (
+			                YEAR (
+			                    EDATE (
+			                        TODAY (),
+			                        6
+			                    )
+			                ) - 1
+			            ),
+			            STRING
+			        ),
+			        2
+			    ) & "-"
+			        & RIGHT (
+			            CONVERT (
+			                YEAR (
+			                    EDATE (
+			                        TODAY (),
+			                        9
+			                    )
+			                ),
+			                STRING
+			            ),
+			            2
+			        ) & " Q"
+			        & QUARTER (
+			            EDATE (
+			                TODAY (),
+			                6
+			            )
+			        )
+			RETURN
+			    IF (
+			        a = b,
+			        "Last Q",
+			        a
+			    )
+		displayFolder: _DAX_Columns
+		lineageTag: a6c4c208-e65c-47b6-bf15-2ab503e32839
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Months =
+			
+			YEAR ( 'Date'[Date] ) & "-"
+			    & FORMAT (
+			        'Date'[Date],
+			        "MM"
+			    )
+		displayFolder: _DAX_Columns
+		lineageTag: c49d9d80-e74e-40df-a4d0-389e63c54720
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Months Filter' =
+			
+			IF (
+			    AND (
+			        MONTH ( 'Date'[Months] )
+			            = MONTH (
+			                EDATE (
+			                    TODAY (),
+			                    -1
+			                )
+			            ),
+			        YEAR ( 'Date'[Months] )
+			            = YEAR (
+			                EDATE (
+			                    TODAY (),
+			                    -1
+			                )
+			            )
+			    ),
+			    "Last Month",
+			    'Date'[Months]
+			)
+		displayFolder: _DAX_Columns
+		lineageTag: b2d2b6ce-a4d8-45b2-81ed-b7dc0711e14e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column PageDateFilter = if('Date'[Date] >= [PageFilter_2yearfilter],1,0)
+		formatString: 0
+		lineageTag: 62578558-f5a3-4c24-90ab-1ce644a93f96
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current Q' =
+			
+			var currnt =
+			    RIGHT (
+			        CONVERT (
+			            (
+			                YEAR (
+			                    EDATE (
+			                        TODAY (),
+			                        9
+			                    )
+			                ) - 1
+			            ),
+			            STRING
+			        ),
+			        2
+			    ) & "-"
+			        & RIGHT (
+			            CONVERT (
+			                YEAR (
+			                    EDATE (
+			                        TODAY (),
+			                        12
+			                    )
+			                ),
+			                STRING
+			            ),
+			            2
+			        ) & " Q"
+			        & QUARTER (
+			            EDATE (
+			                TODAY (),
+			                9
+			            )
+			        )
+			
+			return if ( 'Date'[FY - Qr] = currnt , 1,0)
+		formatString: 0
+		lineageTag: b2e6a11b-a229-438a-8721-2ab07d236d54
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Date-4daba8c7-1c51-4a79-b4c3-20159e8cc555 = calculated
+		mode: import
+		source = ```
+				
+				var mindate = FIRSTDATE('A_ Main data'[checklistdate])
+				return
+				  GENERATE (
+				    CALENDAR(mindate,TODAY()),
+				    VAR currentDay = [Date]
+				    VAR day = DAY( currentDay )
+				    VAR month =  MONTH ( currentDay )
+				    VAR year =  YEAR ( currentDay )
+				  RETURN  ROW ( 
+				    "day", day,
+				    "month", month,
+				    "year", year )
+				  )
+				```
+
+	annotation PBI_Id = 2725825208b149b3884ad59d77a9b7bc
+

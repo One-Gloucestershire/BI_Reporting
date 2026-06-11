@@ -1,0 +1,54 @@
+table 'GP Practice Reference'
+	lineageTag: 0f934754-253c-469f-9ca1-00988d0b6cdc
+
+	column Locality
+		dataType: string
+		lineageTag: 51b5857d-205f-4843-bca7-d3888dd8b348
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Place
+		dataType: string
+		lineageTag: e165e329-67ea-4abd-afc7-8e1531322f51
+		summarizeBy: none
+		sourceColumn: Place
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN
+		dataType: string
+		lineageTag: abbb22cc-555b-438e-bf74-6994b3ab467f
+		summarizeBy: none
+		sourceColumn: PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: f55d53c7-2850-41e1-bd1b-2281b20b18e1
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 9f8edcd3-7e8e-4f7d-8390-0f623cb6ea35
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Practice Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT [Locality]#(lf)      ,[Place]#(lf)      ,[PrimaryCareNetwork]#(lf)      ,[OrganisationCode]#(lf)      ,[ReportingOrganisationName]#(lf)  FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)  where Commissioner LIKE '11M%'"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"PrimaryCareNetwork", "PCN"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

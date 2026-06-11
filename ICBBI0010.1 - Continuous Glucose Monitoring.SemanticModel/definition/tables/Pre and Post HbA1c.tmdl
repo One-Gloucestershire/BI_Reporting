@@ -1,0 +1,120 @@
+table 'Pre and Post HbA1c'
+	lineageTag: b7a907ae-fad8-471c-9886-144723deb3bf
+
+	measure 'Average HbA1c result pre CGM prescription (mmol/mol)' = CALCULATE ( AVERAGE ('Pre and Post HbA1c'[Value1] ), 'Pre and Post HbA1c'[Pre_Prescribed_Result] = 1 )
+		lineageTag: 78d0e35a-c6a5-4d6f-a93f-f3a415f2f0af
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average HbA1c result 3-5 months after initial CGM prescription (mmol/mol)' = CALCULATE ( AVERAGE ('Pre and Post HbA1c'[Value1] ), 'Pre and Post HbA1c'[Post_Prescribed_Result]=1)
+		lineageTag: a885f312-9ca0-441f-a673-afb1bd9d265f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average HbA1c result 6-11 months after initial CGM prescription (mmol/mol)' = CALCULATE ( AVERAGE ('Pre and Post HbA1c'[Value1] ), 'Pre and Post HbA1c'[Post_Prescribed_Result]=1)
+		lineageTag: 4af7d666-d6f2-4594-ad20-4ef16b7a0b01
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average HbA1c result 12-17 months after initial CGM prescription (mmol/mol)' = CALCULATE ( AVERAGE ('Pre and Post HbA1c'[Value1] ), 'Pre and Post HbA1c'[Post_Prescribed_Result]=1)
+		lineageTag: 2cc0df6c-ebf4-4a51-97d4-2720e97091e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PseudoNHSNo
+		dataType: string
+		lineageTag: 293ba031-44d1-477f-b166-f309f21942e8
+		summarizeBy: none
+		sourceColumn: PseudoNHSNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: 45bb7b02-5d84-4937-a17d-0dd8088f4bcf
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice
+		dataType: string
+		lineageTag: f52edf5a-1604-4238-9623-d5a8bb316ca6
+		summarizeBy: none
+		sourceColumn: Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diabetes Type'
+		dataType: string
+		lineageTag: 77af8748-8986-4024-97d1-c35831c5afff
+		summarizeBy: none
+		sourceColumn: Diabetes Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value1
+		dataType: double
+		lineageTag: 85f7a494-7b27-4e85-af31-ef6fae8bb0ec
+		summarizeBy: sum
+		sourceColumn: Value1
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Pre_Prescribed_Result
+		dataType: int64
+		formatString: 0
+		lineageTag: ce86f5c8-cfe2-4065-b6eb-d94aaa23d864
+		summarizeBy: sum
+		sourceColumn: Pre_Prescribed_Result
+
+		annotation SummarizationSetBy = Automatic
+
+	column Post_Prescribed_Result
+		dataType: int64
+		formatString: 0
+		lineageTag: 40b3eddc-4b4c-4edf-a17f-29bd893c215d
+		summarizeBy: sum
+		sourceColumn: Post_Prescribed_Result
+
+		annotation SummarizationSetBy = Automatic
+
+	column PostPrescribedresultperiod
+		dataType: string
+		lineageTag: ec02dcea-cee8-44f3-9f6c-f4d16e7e3243
+		summarizeBy: none
+		sourceColumn: PostPrescribedresultperiod
+
+		annotation SummarizationSetBy = Automatic
+
+	column Highestresult
+		dataType: int64
+		formatString: 0
+		lineageTag: 61341475-0763-4b53-9f4c-2ba6435a7dd2
+		summarizeBy: sum
+		sourceColumn: Highestresult
+
+		annotation SummarizationSetBy = Automatic
+
+	column ccg_of_registration
+		dataType: string
+		lineageTag: 76f6bf53-4060-4c30-91b3-773cfcb0d65a
+		summarizeBy: none
+		sourceColumn: ccg_of_registration
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Pre and Post HbA1c-151d9af3-794e-4e18-911f-16df3a8e6649' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="--DROP TABLE #TEMP1#(lf)--DROP TABLE #TEMP2#(lf)--First prescribed date#(lf)SELECT [A].[NHS_Number],#(lf)MIN([Processing_Period_Date]) as [FirstPrescribedDate]#(lf)into #TEMP1#(lf)  FROM [Data_Mart_Primary_Care_Meds].[Import].[Patient_Medication] as [A]   #(lf)   WHERE [Paid_BNF_Code] like '2148%'#(lf)  AND [PARTITION_KEY] >= '201904'#(lf)GROUP BY [NHS_Number]#(lf)#(lf) #(lf)#(lf)SELECT DISTINCT#(lf)[a].[PseudoNHSNo],#(lf)[c].[ccg_of_registration],#(lf)[c].[AgeBand5yr],#(lf)[c].[PracNameCurrent],#(lf)[d].[Derived_Clean_Diabetes_Type],#(lf)[a].[Value1],#(lf)[Pre_Prescribed_Result] = case when a.EventDate < b.[FirstPrescribedDate] then 1 else 0 end,#(lf)[Post_Prescribed_Result] = case when a.EventDate > b.[FirstPrescribedDate] then 1 else 0 end,#(lf)#(lf)CASE WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE])#(lf)BETWEEN 0 AND 2 THEN '<3'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 3 AND 5 THEN '3+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 6 AND 11 THEN '6+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 12 AND 17 THEN '12+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 18 AND 23 THEN '18+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) > 24 THEN '24+'#(lf)END AS [PostPrescribedresultperiod],#(lf)#(lf)ROW_NUMBER() OVER (PARTITION BY [PseudoNHSNo], CASE WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE])#(lf)BETWEEN 0 AND 2 THEN '<3'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 3 AND 5 THEN '3+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 6 AND 11 THEN '6+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 12 AND 17 THEN '12+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) BETWEEN 18 AND 23 THEN '18+'#(lf)WHEN DATEDIFF(MM,[FIRSTPRESCRIBEDDATE],[EVENTDATE]) > 24 THEN '24+'#(lf)END#(lf)ORDER BY VALUE1 DESC) AS 'Highestresult' INTO #TEMP2#(lf)#(lf)#(lf)FROM #TEMP1 [b]#(lf) left join CCG_Current.PrimaryCare.vw_Events as [a] on  [b].NHS_Number=[a].PseudoNHSNo #(lf) left join [BIReports].[MPI].[MPI_current] as [c] on [b].[NHS_Number]=[c].[Derived_Pseudo_NHS]#(lf) left join [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] as [d] on [b].[NHS_Number] = [D].[Derived_Pseudo_NHS_Number]#(lf)where (EventCodeOriginal like 'XaPbt'#(lf)  or EventCodeOriginal like '42W5')#(lf)  and [c].[ccg_of_registration] like '11M%'#(lf)#(lf)  SELECT * FROM #TEMP2 WHERE [Highestresult] =1#(lf)    ORDER BY Pre_Prescribed_Result, Post_Prescribed_Result, PseudoNHSNo#(lf)  --bins post prescription 3mnth 6mnth 12mnth 18mnth"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Value1", type number}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"AgeBand5yr", "Age"}, {"Derived_Clean_Diabetes_Type", "Diabetes Type"}, {"PracNameCurrent", "Practice"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

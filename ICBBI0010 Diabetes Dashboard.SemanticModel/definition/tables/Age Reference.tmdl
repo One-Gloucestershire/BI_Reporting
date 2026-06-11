@@ -1,0 +1,31 @@
+table 'Age Reference'
+	lineageTag: e8a728c2-c9bd-4001-b0a4-a5a4fa544116
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f900687-c563-4c72-a1da-cea484f927da
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Adult/Child
+		dataType: string
+		lineageTag: bc7a556f-f1cc-4ab2-b345-9faae7ce5f14
+		summarizeBy: none
+		sourceColumn: Adult/Child
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Age Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT [Age]#(lf)#(tab)   , CASE WHEN [Age] BETWEEN '0' AND '17' THEN '0-17'#(lf)#(tab)#(tab)#(tab)  WHEN [AGE] >= '18' THEN '18+'#(lf)#(tab)#(tab)#(tab)  END AS [Adult/Paeds]#(lf)  FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)  where [Age] between '0' and '130'"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Adult/Paeds", "Adult/Child"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

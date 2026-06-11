@@ -1,0 +1,1018 @@
+table _Dax_KPIs
+	lineageTag: 6ecfcc9f-82cf-44ef-be3e-0a83f24a694b
+
+	measure 'Patient Count' = DISTINCTCOUNT ( '28days_Referrals'[clientid] )
+		formatString: 0
+		displayFolder: Multi
+		lineageTag: c459cfc9-cc54-4c81-bbd0-ad1a1c9f5dcc
+
+		changedProperty = IsHidden
+
+	measure 'ClientID Count' = COUNT ( Ids_Aggregation[clientid] )
+		formatString: 0
+		displayFolder: Multi
+		lineageTag: 36893e1e-ea20-4094-b04f-3e1b4b0af42f
+
+		changedProperty = IsHidden
+
+	measure 'Newly Eligible Cases' = ```
+			CALCULATE (
+			    [Patient Count]
+			    ,'A_ Main data'[fasttrack] = "N"
+			, FILTER('A_ Main data' , 'A_ Main data'[outcome] = "Eligible" )) 
+			```
+		displayFolder: CHC
+		lineageTag: fd0b4102-aad9-4d29-84fb-19a6e986f964
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Cases Completed in hospital (%)' =
+			VAR a =
+			    DIVIDE (
+			        CALCULATE (
+			            '_Dax_KPIs'[Patient Count],
+			            '28days_Referrals'[dstsetting] = "acute"
+			        ),
+			        '_Dax_KPIs'[Patient Count],
+			        0
+			    )
+			RETURN
+			    IF ( ISBLANK ( a ), 0, a )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: CHC
+		lineageTag: fe9c905f-74c6-4095-98de-fcf86746c692
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Completed in 28days%' = ```
+			DIVIDE (
+			    CALCULATE (
+			        [Patient Count],
+			        '28days_Referrals'[Completed days] <= 28
+			            && '28days_Referrals'[Completed days] <> BLANK () ,'28days_Referrals'[fasttrack] = "N"
+			,'28days_Referrals'[carecat] <> "cht"
+			
+			    ),
+			    CALCULATE (
+			        [Patient Count],
+			        
+			             '28days_Referrals'[Completed days] <> BLANK () ,'28days_Referrals'[fasttrack] = "N" ,'28days_Referrals'[carecat] <> "cht"
+			    ) ,
+			    0
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: CHC
+		lineageTag: bdfe1da6-7477-4264-b45b-4d2eb9d9fb7a
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Current Outstanding over 12W count' =
+			CALCULATE (
+			    SUM ( '28days_Referrals'[current Outstanding over 12w] ),
+			    USERELATIONSHIP ( 'Date'[Date], '28days_Referrals'[checklist] ),
+			    ALLEXCEPT ( 'A_ Main data', 'A_ Main data'[clientid] ),
+			    '28days_Referrals'[funder] = "CHC Applied For"
+			        || '28days_Referrals'[funder] = "FNC"
+			        || '28days_Referrals'[funder] = "Joint Funded"
+			        || '28days_Referrals'[funder] = "Joint Funded (non CHC)"
+			)
+		displayFolder: Not Used
+		lineageTag: 1ed8128a-470d-4710-a390-8fdc0f9308f3
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Referral Conversion Rate' = ```
+			DIVIDE(
+			    CALCULATE (
+			        DISTINCTCOUNT ( '28days_Referrals'[clientid] ),
+			        '28days_Referrals'[checklist] <> BLANK (),
+			        '28days_Referrals'[outcome] = "eligible",
+			        '28days_Referrals'[fasttrack] = "N",
+			         USERELATIONSHIP ( 'Date'[Date], '28days_Referrals'[decision] )
+			    
+			     
+			    )  ,
+			  CALCULATE( DISTINCTCOUNT('28days_Referrals'[clientid]) , '28days_Referrals'[fasttrack] = "N" , '28days_Referrals'[carecat] <> "CHT"  ) ,
+			  0
+			  )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: CHC
+		lineageTag: 3c3b5efe-691d-488f-bf16-5bd755b6af7f
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Current Number of 3month reviews outstanding' =
+			CALCULATE (
+			    DISTINCTCOUNT ( B_Reviews[clientid] ),
+			    'B_Reviews'[review Outstanding] = 1,
+			    'B_Reviews'[reviewtype] = "3 Months Review",
+			    ALL ( 'Date' ),
+			    'B_Reviews'[carecategory] <> "Eol",
+			    B_Reviews[fundername] = "CHC Funded",
+			    B_Reviews[status] <> "RIP",
+			    B_Reviews[status] <> "Closed"
+			)
+		formatString: 0
+		displayFolder: CHC
+		lineageTag: 6b472157-5767-489c-a890-1d4e16e4347e
+
+		changedProperty = IsHidden
+
+	measure 'Current Number of 12month reviews outstanding' =
+			CALCULATE (
+			    DISTINCTCOUNT ( B_Reviews[clientid] ),
+			    'B_Reviews'[review Outstanding] = 1,
+			    'B_Reviews'[reviewtype] = "12 Months Review"
+			        || 'B_Reviews'[reviewtype] = "other review",
+			    ALL ( 'Date' ),
+			    'B_Reviews'[carecategory] <> "Eol",
+			    B_Reviews[fundername] = "CHC Funded",
+			    B_Reviews[status] <> "RIP",
+			    B_Reviews[status] <> "Closed"
+			)
+		formatString: 0
+		displayFolder: CHC
+		lineageTag: 5263d902-466a-4905-91b4-f5a4f4cf9876
+
+		changedProperty = IsHidden
+
+	measure '3 Month Reviews Completed' =
+			VAR calc =
+			    CALCULATE (
+			        DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			        'A_ Main data'[typeofreview] = "3 Months Review",
+			        'A_ Main data'[actualreview] <> BLANK (),
+			        'A_ Main data'[carecategory] <> "eol",
+			        USERELATIONSHIP ( 'A_ Main data'[actualreview], 'Date'[Date] )
+			    )
+			RETURN
+			    IF ( calc = BLANK (), 0, calc )
+		displayFolder: CHC
+		lineageTag: 1f5d009e-f4bf-4f27-9270-9111185bfe40
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '12 Month & Other Reviews Completed' =
+			CALCULATE (
+			    DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			    'A_ Main data'[typeofreview] = "12 Months Review"
+			        || 'A_ Main data'[typeofreview] = "other review",
+			    'A_ Main data'[carecategory] <> "eol",
+			    'A_ Main data'[actualreview] <> BLANK (),
+			    USERELATIONSHIP ( 'A_ Main data'[actualreview], 'Date'[Date] )
+			)
+		formatString: 0
+		displayFolder: CHC
+		lineageTag: 9db440d4-3453-4741-9b08-da0aa1716eed
+
+		changedProperty = IsHidden
+
+	measure 'Negative Checklist' =
+			CALCULATE (
+			    _Dax_KPIs[Patient Count],
+			    'A_ Main data'[negativechecklistdate] <> BLANK ()
+			)
+		formatString: 0
+		displayFolder: Dashboard
+		lineageTag: a7b4cc56-c405-4154-9781-fa05f97f19cf
+
+		changedProperty = IsHidden
+
+	measure 'Number of PHB''s' = CALCULATE ( DISTINCTCOUNT ( PHB[clientid] ), PHB[funder] = "PHB" )
+		formatString: 0
+		displayFolder: Not Used
+		lineageTag: 4888e73c-f7eb-431b-ac15-af01bac22916
+
+		changedProperty = IsHidden
+
+	measure 'Number of Appeals outstanding' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Appeals[clientid] ),
+			    Appeals[outcome] = BLANK (),
+			    Appeals[activationdate] <> BLANK ()
+			)
+		formatString: 0
+		displayFolder: Not Used
+		lineageTag: 9a19247d-9bcc-4bce-ad3f-c081ffcb98dd
+
+		changedProperty = IsHidden
+
+	measure 'Fast track % RIP of Ref (12 weeks)' =
+			DIVIDE (
+			    CALCULATE (
+			        [rip in 12w count],
+			        USERELATIONSHIP ( 'A_ Main data'[fasttrackactivationdate], 'Date'[Date] )
+			    ),
+			    CALCULATE (
+			        DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			        USERELATIONSHIP ( 'A_ Main data'[fasttrackactivationdate], 'Date'[Date] )
+			    ),
+			    0
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: FT
+		lineageTag: d5e2989d-d2b1-44b4-8ae5-f3f943085bdc
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Mean MDT assessment Days (Possitive)' =
+			CALCULATE (
+			    AVERAGE ( '28days_Referrals'[MDT assessment Days] ),
+			    '28days_Referrals'[checklist] <> BLANK ()
+			)
+		formatString: 0.0
+		displayFolder: Not Used
+		lineageTag: 36f162ec-4040-4711-9d4e-ec5ae3b59896
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Mean MDT assessment Days (Negative)' =
+			CALCULATE (
+			    AVERAGE ( '28days_Referrals'[MDT assessment Days] ),
+			    'A_ Main data'[negativechecklistdate] <> BLANK ()
+			)
+		displayFolder: Not Used
+		lineageTag: 6a78ab36-9b3a-4432-80e1-b41668c3094c
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Mean Verfication days (negative)' =
+			CALCULATE (
+			    AVERAGE ( '28days_Referrals'[Verification Days] ),
+			    'A_ Main data'[negativechecklistdate] <> BLANK ()
+			)
+		displayFolder: Not Used
+		lineageTag: d0038307-611a-493a-8376-aa1456343795
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Length of assessment (Possitive)' =
+			CALCULATE (
+			    AVERAGE ( '28days_Referrals'[Verification Days] ),
+			    '28days_Referrals'[checklist] <> BLANK ()
+			)
+		formatString: 0.0
+		displayFolder: Checklists
+		lineageTag: 45993256-5c9d-4aac-8f8b-fe4c7d10d2cd
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure '3 Month Review - in time %' =
+			CALCULATE (
+			    DIVIDE (
+			        SUM ( 'A_ Main data'[Reviews in time] ),
+			        COUNT ( 'A_ Main data'[clientid] ),
+			        BLANK ()
+			    ),
+			    'A_ Main data'[scheduledreviewdate] <> 0,
+			    'A_ Main data'[typeofreview] = "3 Months Review"
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Not Used
+		lineageTag: c67f8d57-05ef-4287-a984-36c50007b5ab
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure '12 Month Review - in time %' =
+			CALCULATE (
+			    DIVIDE (
+			        SUM ( 'A_ Main data'[Reviews in time] ),
+			        COUNT ( 'A_ Main data'[clientid] ),
+			        BLANK ()
+			    ),
+			    'A_ Main data'[scheduledreviewdate] <> 0,
+			    'A_ Main data'[typeofreview] = "12 Months Review"
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Not Used
+		lineageTag: ad5b93f5-e88d-4a1e-982b-6155bc31d301
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Mean days over 3 month' =
+			CALCULATE (
+			    AVERAGE ( 'A_ Main data'[Days Over] ),
+			    'A_ Main data'[typeofreview] = "3 Months Review",
+			    'A_ Main data'[scheduledreviewdate] <> BLANK ()
+			)
+		displayFolder: Not used
+		lineageTag: 3a4680b8-75d5-43d5-b47f-7fc145618532
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Mean days over 12 month' =
+			CALCULATE (
+			    AVERAGE ( 'A_ Main data'[Days Over] ),
+			    'A_ Main data'[typeofreview] = "12 Months Review",
+			    'A_ Main data'[scheduledreviewdate] <> BLANK ()
+			)
+		displayFolder: Not Used
+		lineageTag: 3a5d8409-1188-44c6-bfb3-cd3f2e60be9b
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current Conversion rate FT (%)' =
+			DIVIDE(
+			    CALCULATE(COUNT ( '28days_Referrals'[clientid] ),'28days_Referrals'[outcome] = "eligible" , USERELATIONSHIP ( '28days_Referrals'[decision], 'Date'[Date] )     ) ,
+			    CALCULATE(COUNT ( '28days_Referrals'[clientid] ),  USERELATIONSHIP ( '28days_Referrals'[decision], 'Date'[Date] )     ) ,
+			  0
+			  )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: FT
+		lineageTag: fb422040-a5cb-4abd-affb-26a142e79adc
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Assessments Conversion Rate (%)' = ```
+			DIVIDE (
+			    CALCULATE (
+			        DISTINCTCOUNT ( '28days_Referrals'[clientid] ),
+			        '28days_Referrals'[checklist] <> BLANK (),
+			        '28days_Referrals'[outcome] = "eligible",
+			        '28days_Referrals'[fasttrack] = "N",
+			        USERELATIONSHIP ( 'Date'[Date], '28days_Referrals'[decision] )
+			
+			      
+			    ),
+			    CALCULATE (
+			        DISTINCTCOUNT ( '28days_Referrals'[clientid] ),
+			        '28days_Referrals'[outcome] <> "discounted",
+			        '28days_Referrals'[decision] <> BLANK (),
+			        '28days_Referrals'[fasttrack] = "N",
+			        ALL ( 'A_ Main data'[fundername] ),
+			        USERELATIONSHIP ( 'Date'[Date], '28days_Referrals'[decision] )
+			
+			    ),
+			    0
+			)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: CHC
+		lineageTag: 70f8c2c2-9500-436f-b00f-c9b2645c79c0
+
+		changedProperty = FormatString
+
+		changedProperty = IsHidden
+
+	measure 'Number of 3month reviews outstanding FNC' =
+			CALCULATE (
+			    DISTINCTCOUNT ( B_Reviews[clientid] ),
+			    'B_Reviews'[review Outstanding] = 1,
+			    'B_Reviews'[reviewtype] = "3 Months Review",
+			    ALL ( 'Date' ),
+			    'B_Reviews'[carecategory] <> "Eol",
+			    B_Reviews[fundername] = "FNC",
+			    B_Reviews[status] <> "RIP",
+			    B_Reviews[status] <> "Closed"
+			)
+		displayFolder: FNC
+		lineageTag: efe03c8f-c334-4463-b47f-3f31fae1dc06
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Number of 12month reviews outstanding FNC' =
+			CALCULATE (
+			    DISTINCTCOUNT ( B_Reviews[clientid] ),
+			    'B_Reviews'[review Outstanding] = 1,
+			    'B_Reviews'[reviewtype] = "12 Months Review"
+			        || 'B_Reviews'[reviewtype] = "other review",
+			    ALL ( 'Date' ),
+			    'B_Reviews'[carecategory] <> "Eol",
+			    B_Reviews[fundername] = "FNC",
+			    B_Reviews[status] <> "RIP",
+			    B_Reviews[status] <> "Closed"
+			)
+		displayFolder: FNC
+		lineageTag: 3912b006-8c63-412b-8e1d-457910a2d7b1
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Q on Q Change' =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        OR ( sv IN { 0, 1, 4, 5, 9 }, SV2 IN { 0 } ),
+			            IFERROR (
+			                ( [QOQ_ CurrentQUARTER/Month] / [QOQ_PREVIOUSQUARTER Numberonly] ) - 1,
+			                0
+			            ),
+			        OR ( sv IN { 2, 3, 6, 7 }, SV2 IN { 1, 2 } ), ( [QOQ_ CurrentQUARTER/Month] - [QOQ_PREVIOUSQUARTER Numberonly] )
+			    )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: QoQ/MoM
+		lineageTag: 8784adb2-966a-40f0-9c39-00444263b7c9
+
+		changedProperty = FormatString
+
+	measure 'CHC Title' = "CHC - " & SELECTEDVALUE ( 'CHC & FNC Measure selection'[CHC Selection] )
+		displayFolder: Titles
+		lineageTag: 961f06f5-4e1b-47c4-aa85-71ede4949d5c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure QOQ_PREVIOUSQUARTER =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        SV = 0, CALCULATE ( [Checklists _ Pos], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV2 = 0 , CALCULATE ( [FT Newly Eligible Cases], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 1, CALCULATE ( [Newly Eligible Cases], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 2,
+			            FORMAT (
+			                CALCULATE ( [Completed in 28days%], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV = 3,
+			            FORMAT (
+			                CALCULATE ( [Referral Conversion Rate], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV = 4, CALCULATE ( [3 Month Reviews Completed], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 5,
+			            CALCULATE (
+			                [12 Month & Other Reviews Completed],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            ),
+			        SV = 6,
+			            FORMAT (
+			                CALCULATE (
+			                    [Cases Completed in hospital (%)],
+			                    PREVIOUSQUARTER ( 'Date'[Date] )
+			                ),
+			                "###.#%"
+			            ),
+			        SV = 7,
+			            FORMAT (
+			                CALCULATE (
+			                    [Assessments Conversion Rate (%)],
+			                    PREVIOUSQUARTER ( 'Date'[Date] )
+			                ),
+			                "###.#%"
+			            ),
+			        SV2 = 1,
+			            FORMAT (
+			                CALCULATE ( [Current Conversion rate FT (%)], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV2 = 2,
+			            FORMAT (
+			                CALCULATE (
+			                    [Fast track % RIP of Ref (12 weeks)],
+			                    PREVIOUSQUARTER ( 'Date'[Date] )
+			                ),
+			                "###.#%"
+			            ),
+			        SV = 9,
+			            CALCULATE (
+			                [FNC Patient Count],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            )
+			    )
+		formatString: 0
+		displayFolder: QoQ/MoM
+		lineageTag: 851dd105-d6dd-43f4-b283-91ceca3df2b6
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'QOQ_ CurrentQUARTER/Month' =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        SV = 0, [Checklists _ Pos],
+			        SV2 = 0 , [FT Newly Eligible Cases],
+			        SV = 1, [Newly Eligible Cases],
+			        SV = 2, [Completed in 28days%],
+			        SV = 3, [Referral Conversion Rate],
+			        SV = 4, [3 Month Reviews Completed],
+			        SV = 5, [12 Month & Other Reviews Completed],
+			        SV = 6, [Cases Completed in hospital (%)],
+			        SV = 7, [Assessments Conversion Rate (%)],
+			        sv2 = 1, [Current Conversion rate FT (%)],
+			        sv2 = 2, [Fast track % RIP of Ref (12 weeks)],
+			        SV = 9, [FNC Patient Count]
+			    )
+		displayFolder: QoQ/MoM
+		lineageTag: 93f674c7-805e-42c5-ac93-ca7b8ee27c14
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'QOQ_PREVIOUSQUARTER Numberonly' =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        SV = 0,CALCULATE ( [Checklists _ Pos], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV2 = 0 , CALCULATE ( [FT Newly Eligible Cases], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 1, CALCULATE ( [Newly Eligible Cases], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 2, CALCULATE ( [Completed in 28days%], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 3, CALCULATE ( [Referral Conversion Rate], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        sv = 4, CALCULATE ( [3 Month Reviews Completed], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        SV = 5,
+			            CALCULATE (
+			                [12 Month & Other Reviews Completed],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            ),
+			        sv = 6,
+			            CALCULATE (
+			                [Cases Completed in hospital (%)],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            ),
+			        sv = 7,
+			            CALCULATE (
+			                [Assessments Conversion Rate (%)],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            ),
+			        sv2 = 1, CALCULATE ( [Current Conversion rate FT (%)], PREVIOUSQUARTER ( 'Date'[Date] ) ),
+			        sv2 = 2,
+			            CALCULATE (
+			                [Fast track % RIP of Ref (12 weeks)],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            ),
+			        SV = 9,
+			            CALCULATE (
+			                [FNC Patient Count],
+			                PREVIOUSQUARTER ( 'Date'[Date] )
+			            )
+			    )
+		displayFolder: QoQ/MoM
+		lineageTag: f3a1b0c6-af06-46b0-b9a7-412bd9f9793d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure QOQ_currentQ/M =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        SV = 0, [Checklists _ Pos],
+			        SV2 = 0 , [FT Newly Eligible Cases],
+			        SV = 1, [Newly Eligible Cases],
+			        SV = 2, FORMAT ( [Completed in 28days%], "###.#%" ),
+			        SV = 3, FORMAT ( [Referral Conversion Rate], "###.#%" ),
+			        SV = 4, [3 Month Reviews Completed],
+			        SV = 5, [12 Month & Other Reviews Completed],
+			        SV = 6, FORMAT ( [Cases Completed in hospital (%)], "###.#%" ),
+			        SV = 7, FORMAT ( [Assessments Conversion Rate (%)], "###.#%" ),
+			        SV2 = 1, FORMAT ( [Current Conversion rate FT (%)], "###.#%" ),
+			        SV2 = 2, FORMAT ( [Fast track % RIP of Ref (12 weeks)], "###.#%" ),
+			        SV = 9, [FNC Patient Count]
+			    )
+		displayFolder: QoQ/MoM
+		lineageTag: 808f7eb7-aaad-4732-b51d-13e5bce275c3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current Number of 3month reviews outstanding FT' = ```
+			CALCULATE (
+			    DISTINCTCOUNT ( B_Reviews[clientid] ),
+			    'B_Reviews'[review Outstanding] = 1,
+			    ALL ( 'Date' ), 
+			    'B_Reviews'[carecategory] = "Eol",
+			    B_Reviews[fundername] = "CHC Funded",
+			    B_Reviews[status] <> "RIP",
+			    B_Reviews[status] <> "Closed"
+			)
+			```
+		displayFolder: FT
+		lineageTag: 72466ab4-9548-441a-86b6-d5737676a808
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure RIPs =
+			CALCULATE (
+			    DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			    USERELATIONSHIP ( 'A_ Main data'[dateofdeath], 'Date'[Date] )
+			)
+		displayFolder: FNC
+		lineageTag: b790cf5f-cd07-4cd1-91df-967339ab2392
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'FT Title' = "Fast Track - " & SELECTEDVALUE ( 'Fast Track Measure Selection'[FT Selection] )
+		displayFolder: Titles
+		lineageTag: 7841bf8b-40cb-4c5c-a3be-f5309630f180
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'In 28 Days' =
+			CALCULATE (
+			        [Patient Count],
+			        '28days_Referrals'[Completed days] <= 28
+			            && '28days_Referrals'[Completed days] <> BLANK () ,'28days_Referrals'[fasttrack] = "N"
+			    )
+		formatString: 0
+		displayFolder: CHC
+		lineageTag: ba8a345a-3213-471c-8deb-f80cb5f8a05d
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Exceeds 28 Days' = CALCULATE ( [Patient Count], '28days_Referrals'[Completed days] <> BLANK () ,'28days_Referrals'[Completed days] > 28, '28days_Referrals'[fasttrack] = "N" )
+		formatString: 0
+		displayFolder: CHC
+		lineageTag: 91f68ac4-d32b-4194-a328-29214a1879c9
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Target 28 days' = 0.8
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: CHC
+		lineageTag: 6354b102-c631-417e-b8c8-a06607458aab
+
+		changedProperty = FormatString
+
+	measure 'FNC Patient Count' =
+			CALCULATE (
+			    DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			    USERELATIONSHIP ( 'Date'[Date], 'A_ Main data'[fundersince] )
+			)
+		displayFolder: FNC
+		lineageTag: ef9538a8-e365-4dbb-8707-123e7e6dbe33
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'FNC Patient Current' =
+			CALCULATE (
+			    DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			    ALL ( 'Date' ),
+			    ISBLANK ( 'A_ Main data'[dateofdeath] )
+			,'A_ Main data'[status] <> "closed",  'A_ Main data'[clientid] <> blank()
+			)
+		displayFolder: FNC
+		lineageTag: e8b099dc-c969-45c4-afd1-edfdff6140cc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Checklists _ Pos' =
+			CALCULATE (
+			    DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			    'A_ Main data'[fasttrack] = "N",
+			 'A_ Main data'[carecategory] <> "EOL",
+			    NOT ( ISBLANK ( 'A_ Main data'[checklistdate] ) )
+			)
+		displayFolder: Checklists
+		lineageTag: 9ec8cb92-5f33-4e2d-89d2-62856b434405
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Checklists _ Neg' =
+			CALCULATE (
+			    DISTINCTCOUNT ( 'A_ Main data'[clientid] ),
+			    NOT ( ISBLANK ( 'A_ Main data'[negativechecklistdate] ) )
+			)
+		displayFolder: Checklists
+		lineageTag: 4dd7c029-ea7f-4453-a699-7fc730a87a64
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Open Cases exceeding 28 days' =
+			CALCULATE (
+			    COUNT ( '28days_Referrals'[Open Cases exceeding 28days breakdown] ),
+			    ALL ( 'Date'[Date] ),
+			    ALLEXCEPT (
+			        Ids_Aggregation,
+			        Ids_Aggregation[A_Main data.sourceofreferral],
+			        Ids_Aggregation[A_ Main data.carecategory],
+			        Ids_Aggregation[Age]
+			    )
+			)
+		displayFolder: CHC
+		lineageTag: d3d6cbe4-4c4d-41d0-8f8f-e54318d644ca
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Previous Q (28days Guage)' = CALCULATE ( [Completed in 28days%], PREVIOUSQUARTER ( 'Date'[Date] ) )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: CHC
+		lineageTag: 96e3e216-1415-44b8-8b8d-03c1fa38d84f
+
+		changedProperty = FormatString
+
+	measure 'New Package' = ```
+			CALCULATE (
+			    DISTINCTCOUNT ( B_Reviews[clientid] ),all('A_ Main data'), 
+			    USERELATIONSHIP ( B_Reviews[startdate], 'Date'[Date] ),
+			    B_Reviews[fundername] = "FNC" 
+			) --- taken out due to error in numbers
+			```
+		displayFolder: FNC
+		lineageTag: 807e40d8-bdc3-496a-a87f-69823d759394
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CHC Positive Checklist' =
+			CALCULATE (
+			    [Patient Count],
+			    'A_ Main data'[fundername] IN { "CHC Applied For", "CHC Funded" },
+			    'A_ Main data'[carecategory] <> "EoL"
+			)
+		formatString: 0
+		displayFolder: Dashboard
+		lineageTag: 8c60af41-ec85-4d5a-9f46-cc1f61485712
+
+		changedProperty = FormatString
+
+	measure PChecklist = CALCULATE ( [Referral Conversion Rate], PREVIOUSQUARTER ( 'Date'[Date] ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 5b4ffcb9-4275-4d3d-9922-fc59095ff06a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PQ pos checklists' = CALCULATE ( [Checklists _ Pos], PREVIOUSQUARTER ( 'Date'[Date] ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 6b654c49-2e4f-4868-9cc5-6194ca0370e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'QoQ pos checklists' =
+			[Checklists _ Pos]
+			    - CALCULATE ( [Checklists _ Pos], PREVIOUSQUARTER ( 'Date'[Date] ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 435dc21e-d56d-47d2-bd7a-a11b30e2709b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PQ neg checklists' = CALCULATE ( [Checklists _ Neg], PREVIOUSQUARTER ( 'Date'[Date] ) )
+		formatString: 0
+		displayFolder: QoQ/MoM
+		lineageTag: d2be1157-8dc7-49a5-b85f-a23f9e4abb7a
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'QoQ neg checklists' =
+			[Checklists _ Neg]
+			    - CALCULATE ( [Checklists _ Neg], PREVIOUSQUARTER ( 'Date'[Date] ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 1754e897-fea7-431b-a010-8e0bf18d5810
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'rip in 12w count' =
+			CALCULATE (
+			    [Patient Count],
+			    'A_ Main data'[RIP Groups]
+			        IN { "Within 28 Days", "Within 56 Days", "Within 12 weeks" }
+			)
+		displayFolder: FT
+		lineageTag: d856447f-300e-4a9e-bb79-d4945f9e68f8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure MOM_PREVIOUSMonth =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        SV = 0, CALCULATE ( [Checklists _ Pos], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV2 = 0 , CALCULATE ( [FT Newly Eligible Cases], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 1, CALCULATE ( [Newly Eligible Cases], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 2,
+			            FORMAT (
+			                CALCULATE ( [Completed in 28days%], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV = 3,
+			            FORMAT (
+			                CALCULATE ( [Referral Conversion Rate], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV = 4, CALCULATE ( [3 Month Reviews Completed], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 5,
+			            CALCULATE (
+			                [12 Month & Other Reviews Completed],
+			                PREVIOUSMONTH ( 'Date'[Date] )
+			            ),
+			        SV = 6,
+			            FORMAT (
+			                CALCULATE ( [Cases Completed in hospital (%)], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV = 7,
+			            FORMAT (
+			                CALCULATE ( [Assessments Conversion Rate (%)], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV2 = 1,
+			            FORMAT (
+			                CALCULATE ( [Current Conversion rate FT (%)], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			                "###.#%"
+			            ),
+			        SV2 = 2,
+			            FORMAT (
+			                CALCULATE (
+			                    [Fast track % RIP of Ref (12 weeks)],
+			                    PREVIOUSMONTH ( 'Date'[Date] )
+			                ),
+			                "###.#%"
+			            ),
+			        SV = 9,
+			            CALCULATE (
+			                [FNC Patient Count],
+			                PREVIOUSMONTH ( 'Date'[Date] )
+			            )
+			    )
+		displayFolder: QoQ/MoM
+		lineageTag: 3e21ab94-391d-4165-be6f-25e2e50fb702
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'MOM_PREVIOUSMonth Numberonly' =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        SV = 0, CALCULATE ( [Checklists _ Pos], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV2 = 0 , CALCULATE ( [FT Newly Eligible Cases], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 1, CALCULATE ( [Newly Eligible Cases], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 2, CALCULATE ( [Completed in 28days%], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 3, CALCULATE ( [Referral Conversion Rate], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        sv = 4, CALCULATE ( [3 Month Reviews Completed], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        SV = 5,
+			            CALCULATE (
+			                [12 Month & Other Reviews Completed],
+			                PREVIOUSMONTH ( 'Date'[Date] )
+			            ),
+			        sv = 6, CALCULATE ( [Cases Completed in hospital (%)], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        sv = 7, CALCULATE ( [Assessments Conversion Rate (%)], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        sv2 = 1, CALCULATE ( [Current Conversion rate FT (%)], PREVIOUSMONTH ( 'Date'[Date] ) ),
+			        sv2 = 2,
+			            CALCULATE (
+			                [Fast track % RIP of Ref (12 weeks)],
+			                PREVIOUSMONTH ( 'Date'[Date] )
+			            ),
+			        SV = 9,
+			            CALCULATE (
+			                [FNC Patient Count],
+			                PREVIOUSMONTH ( 'Date'[Date] )
+			            )
+			    )
+		displayFolder: QoQ/MoM
+		lineageTag: d332323d-7e4f-455e-b5f7-965553a8879f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'M on M Change' =
+			VAR SV =
+			    SELECTEDVALUE ( 'CHC & FNC Measure selection'[Parameter Order], 99 )
+			VAR SV2 =
+			    SELECTEDVALUE ( 'Fast Track Measure Selection'[Parameter Order], 99 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        OR ( sv IN { 0, 1, 4, 5, 9 }, SV2 IN { 0 } ),
+			            IFERROR (
+			                ( [QOQ_ CurrentQUARTER/Month] / [MoM_PREVIOUSMonth Numberonly] ) - 1,
+			                0
+			            ),
+			        OR ( sv IN { 2, 3, 6, 7 }, SV2 IN { 1, 2 } ), ( [QOQ_ CurrentQUARTER/Month] - [MoM_PREVIOUSMonth Numberonly] )
+			    )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: QoQ/MoM
+		lineageTag: bb710b74-73ac-4ea5-bf88-055c8a79bb6b
+
+		changedProperty = FormatString
+
+	measure 'Previous M (28days Guage)' = CALCULATE ( [Completed in 28days%], PREVIOUSMONTH ( 'Date'[Date] ) )
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: CHC
+		lineageTag: b50ae68f-8780-4693-9cce-4923722796ac
+
+		changedProperty = FormatString
+
+	measure 'MoM pos checklists' =
+			[Checklists _ Pos]
+			    - CALCULATE ( [Checklists _ Pos], PREVIOUSMONTH ( ( 'Date'[Date] ) ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 20495455-2340-434a-9e91-035a5fbea809
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PM pos checklists' = CALCULATE ( [Checklists _ Pos], PREVIOUSMONTH ( ( 'Date'[Date] ) ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 32f13cfa-8c70-4440-85bc-43dac3f49bbf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'MoM neg checklists' =
+			[Checklists _ Neg]
+			    - CALCULATE ( [Checklists _ Neg], PREVIOUSMONTH ( ( 'Date'[Date] ) ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 3d5f51a8-d995-4e55-8e4f-243416de932e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PM neg checklists' = CALCULATE ( [Checklists _ Neg], PREVIOUSMONTH ( ( 'Date'[Date] ) ) )
+		displayFolder: QoQ/MoM
+		lineageTag: 93804a8f-26c0-4403-9bca-06d35aa11f37
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Information Tooltip' = "_"
+		lineageTag: 070163c4-9bbb-4cad-8930-31c409f53592
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total = CALCULATE( DISTINCTCOUNT('28days_Referrals'[clientid]) , '28days_Referrals'[fasttrack] = "N" , '28days_Referrals'[carecat] <> "CHT"  )
+		lineageTag: 6ed164cd-b0f4-4198-87c3-1a83e0e9081d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Extract Date' = "Extract Date " & format(max('A_ Main data'[extractdate]),"DD/MM/YYYY")
+		lineageTag: 217e2c4c-76f2-4f3c-810f-9f257958367c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'FT Newly Eligible Cases' = CALCULATE(COUNT ( '28days_Referrals'[clientid] ),'28days_Referrals'[outcome] = "eligible" , '28days_Referrals'[fasttrack] = "Y" ,  USERELATIONSHIP ( '28days_Referrals'[decision], 'Date'[Date] )     )
+		lineageTag: e8fb3efe-35cc-49e7-b346-3481b1c8e11d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Assessment Conversion Rate' = 1
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 470f1f74-724b-47b8-aab4-b2ed2d9b6f1c
+
+		changedProperty = FormatString
+
+	partition _Dax_KPIs-ff39d0d5-9e94-4b0c-9c4e-b8e0c9c9e45e = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+

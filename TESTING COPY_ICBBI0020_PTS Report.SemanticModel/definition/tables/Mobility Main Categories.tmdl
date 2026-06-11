@@ -1,0 +1,33 @@
+table 'Mobility Main Categories'
+	lineageTag: ae13b46e-0726-406d-a087-db0aa0b488fe
+
+	column 'Main Mobility Group'
+		dataType: string
+		lineageTag: d3db9cb5-6170-42e4-ab81-b94574b89542
+		summarizeBy: none
+		sourceColumn: Main Mobility Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: 3cd42ee3-cef5-487f-a0b1-46352fe92c23
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Mobility Main Categories' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\PTS\Dashboard_development\Power BI dashboard_ FINAL\Scripts_AND_Upload to PBI files\11. Mobility List.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(Sheet1_Sheet,{{"Column1", type text}, {"Column2", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Main Mobility Group"}, {"Column2", "Description"}}),
+				    #"Removed Top Rows" = Table.Skip(#"Renamed Columns",1)
+				in
+				    #"Removed Top Rows"
+
+	annotation PBI_ResultType = Table
+
