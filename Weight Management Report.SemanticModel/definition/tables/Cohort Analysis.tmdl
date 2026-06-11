@@ -1,0 +1,1063 @@
+table 'Cohort Analysis'
+	lineageTag: 448fb546-6c8b-452c-8997-9531deaf76d8
+
+	measure 'Rate per 1,000 (CA)' = DIVIDE(sum('Cohort Analysis'[counter]),sum('population'[counter])) * 1000
+		displayFolder: Measures for Graphs
+		lineageTag: 7136b610-26e3-46a2-ba46-158b73a97182
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ICB_Data = calculate(sum('Cohort Analysis'[counter]),ALL('Cohort Analysis'[Obesity Class - adjusted],'Cohort Analysis'[BMI Group Adjusted]))/calculate(sum('Cohort Analysis'[counter]),ALL())
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Measures for Graphs
+		lineageTag: 8d189cb2-8780-4049-8d12-332c7ccaa6d4
+
+	measure Missing_BMI_% =
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        'Cohort Analysis'[BMI Group Adjusted] = "Not Recorded"
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        ALLSELECTED('Cohort Analysis')
+			    )
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Measures for Graphs
+		lineageTag: 5b8f21ab-7c3c-4ad2-b209-a5244fa9de63
+
+	measure Counter_Excl_NR_% =
+			
+			calculate(sum('Cohort Analysis'[counter]),'Cohort Analysis'[BMI Group Adjusted]<>"Not Recorded")/
+			calculate(sum('Cohort Analysis'[counter]),ALL('R. BMI Group Ref'),'Cohort Analysis'[BMI Group Adjusted]<>"Not Recorded")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: a1fd3711-1ee4-42d0-b516-ee342281343c
+
+	measure BMI_Rounded_Measure = calculate(sum('Cohort Analysis'[BMI Rounded]))
+		displayFolder: Measures for Graphs
+		lineageTag: cdcac900-f7a9-4a46-91eb-5be9930669b8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Counter_Ethnicity_% =
+			
+			sum('Cohort Analysis'[counter])/
+			calculate(sum('Cohort Analysis'[counter]),ALL('Ref - Ethnicity'))
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: 12ddebe9-708a-4917-a7ea-e3cd569ad814
+
+	measure ICB_Ethnicity = ```
+			
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])          -- denominator = total population
+			    )
+			)
+			
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: 983912ab-4524-4a0a-905e-541ce02b5067
+
+	measure Counter_Locality_% =
+			
+			sum('Cohort Analysis'[counter])/
+			calculate(sum('Cohort Analysis'[counter]),ALL('R. GP Ref'))
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: b98aa693-ac65-4297-acd0-2fe9f0f5ff5e
+
+	measure ICB_Locality =
+			
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])          -- ignore all other slicers for denominator
+			    )
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: 7314eb92-789a-482d-ab27-0c885c459f2e
+
+	measure Counter_Sex_% =
+			
+			sum('Cohort Analysis'[counter])/
+			calculate(sum('Cohort Analysis'[counter]),ALL('Ref - Gender'))
+		displayFolder: Measures for Graphs
+		lineageTag: 407c0219-2dd6-40a9-90c9-c616bc5371b5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ICB_Sex = ```
+			
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])      -- keep Gender context from visual
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])      -- denominator = total population
+			    )
+			)
+			
+			```
+		displayFolder: Measures for Graphs
+		lineageTag: a7924abb-4922-40f8-ba78-4408ecee1c17
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Counter_Age_% =
+			
+			sum('Cohort Analysis'[counter])/
+			calculate(sum('Cohort Analysis'[counter]),ALL('Ref - Age'))
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: 4d0456ef-223d-476a-aff2-2f57f9ae0169
+
+	measure ICB_Age = ```
+			
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])
+			        -- total population
+			    )
+			)
+			
+			```
+		displayFolder: Measures for Graphs
+		lineageTag: 15335b42-52c8-4918-ba18-784f8667a58f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Counter_Supressed = if(CALCULATE(sum('Cohort Analysis'[counter]))<5,0,CALCULATE(sum('Cohort Analysis'[counter])))
+		formatString: 0
+		displayFolder: Measures for Graphs
+		lineageTag: e73fb186-d2ec-4a01-983d-13880b2128f3
+
+	measure BMI_Within_5_Yr_% =
+			
+			VAR MaximumYear = YEAR(CALCULATE(MAX('Date Table (all dates)'[date]))) --2025
+			RETURN
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        MaximumYear - YEAR('Cohort Analysis'[BMI Group Date]) < 5
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('Cohort Analysis'[BMI Group Date])    // remove just this filter
+			    )
+			)
+		formatString: #,0%;-#,0%;#,0%
+		displayFolder: Measures for Graphs
+		lineageTag: 4e3859f7-f67e-4078-a3c2-ddc005627fae
+
+	measure LSOA_Rate_Per_1000 = ```
+			
+			VAR Numerator = sum('Cohort Analysis'[counter])
+			VAR Denominator = CALCULATE(sum('Cohort Analysis'[counter]),ALL(Population))
+			
+			RETURN 
+			(Numerator/Denominator)*1000
+			```
+		displayFolder: Measures for Graphs
+		lineageTag: 181e9aa3-2222-4b62-b11a-f32a8535459e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ICB_Deprivation = ```
+			
+			DIVIDE(
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])
+			    ),
+			    CALCULATE(
+			        SUM('Cohort Analysis'[counter]),
+			        REMOVEFILTERS('R. BMI Group Ref'),
+			        REMOVEFILTERS('R. GP Ref'),
+			        REMOVEFILTERS('Ref - Ethnicity'),
+			        REMOVEFILTERS('Ref - IMD'),
+			        REMOVEFILTERS('Ref - Age'),
+			        REMOVEFILTERS('Ref - Gender'),
+			        REMOVEFILTERS('Cohort Analysis'[LearningDisability]),
+			        REMOVEFILTERS('Cohort Analysis'[MentalIllness])
+			    )
+			)
+			
+			```
+		displayFolder: Measures for Graphs
+		lineageTag: 39df3a30-71b7-4868-8fed-91a47ffbdc4a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Counter_Deprivation_% =
+			
+			sum('Cohort Analysis'[counter])/
+			calculate(sum('Cohort Analysis'[counter]),ALL('Ref - IMD'))
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Graphs
+		lineageTag: 02b3ad08-2352-4a0f-b039-4645a4143bf3
+
+	measure BMI_Group_% = calculate(sum('Cohort Analysis'[counter]))/calculate(sum('Cohort Analysis'[counter]),all())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c3008dac-44e3-484c-b73c-8307846bf2af
+
+	measure Missing_BMI_No = calculate(sum('Cohort Analysis'[counter]),'Cohort Analysis'[BMI Group Adjusted] = "Not Recorded")
+		formatString: #,0
+		displayFolder: Measures for Graphs
+		lineageTag: ac95f815-7f89-4e45-aa16-9f7cda8af597
+
+	measure BMI_Group_No = calculate(sum('Cohort Analysis'[counter]))
+		formatString: 0
+		lineageTag: 4afdd325-42ff-47ed-a68e-bbe30e095eaa
+
+	measure BMI_Within_5_Yr =
+			
+			VAR MaximumYear = YEAR(CALCULATE(MAX('Date Table (all dates)'[date]))) --2025
+			RETURN
+			
+			CALCULATE(SUM('Cohort Analysis'[counter])
+			,MaximumYear-YEAR('Cohort Analysis'[BMI Group Date])<5)
+		formatString: #,0
+		displayFolder: Measures for Graphs
+		lineageTag: dea186c6-ab6f-4f02-8b7c-e1861cb8a9b1
+
+	measure Cohort_Cancer =
+			
+			DIVIDE(
+			    CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Cancer] = 1),
+			    SUM('Cohort Analysis'[counter])
+			)
+		lineageTag: 72866fbd-c98d-42cc-a2d5-3cd15fdc351e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Cohort Condition %' =
+			
+			SWITCH(
+			    SELECTEDVALUE(
+			        Conditions[Condition]),
+			    "Obesity",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Obesity] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Smoker",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Smoker] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Asthma",      DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Asthma] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "COPD",        DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[COPD] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Dementia",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Dementia] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Depression",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Depression] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Diabetes",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Diabetes] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "PalliativeCare",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[PalliativeCare] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "ChronicKidneyDisease",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[ChronicKidneyDisease] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Epilepsy",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Epilepsy] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "HeartFailure",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[HeartFailure] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Stroke",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Stroke] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "AtrialFibrillation",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[AtrialFibrillation] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Cancer",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Cancer] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "CoronaryHeartDisease",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[CoronaryHeartDisease] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "Hypertension",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[Hypertension] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "LearningDisability",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[LearningDisability] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])),
+			    "MentalIllness",    DIVIDE(SUMX(FILTER('Cohort Analysis', 'Cohort Analysis'[MentalIllness] = 1), 'Cohort Analysis'[counter]), SUM('Cohort Analysis'[counter])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: dab77f03-1f84-47f9-929c-7ab91defac81
+
+	measure 'ICB Condition %' =
+			
+			SWITCH(
+			    SELECTEDVALUE(Conditions[Condition]),
+			    "Obesity",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Obesity] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis') )
+			        ),
+			    "Smoker",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Smoker] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Asthma",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Asthma] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "COPD",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[COPD] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Dementia",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Dementia] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Depression",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Depression] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Diabetes",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Diabetes] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "PalliativeCare",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[PalliativeCare] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "ChronicKidneyDisease",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[ChronicKidneyDisease] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Epilepsy",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Epilepsy] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "HeartFailure",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[HeartFailure] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Stroke",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Stroke] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "AtrialFibrillation",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[AtrialFibrillation] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Cancer",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Cancer] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "CoronaryHeartDisease",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[CoronaryHeartDisease] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "Hypertension",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[Hypertension] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "LearningDisability",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[LearningDisability] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        ),
+			    "MentalIllness",
+			        DIVIDE(
+			            CALCULATE(SUM('Cohort Analysis'[counter]), 'Cohort Analysis'[MentalIllness] = 1, REMOVEFILTERS('Cohort Analysis')),
+			            CALCULATE(SUM('Cohort Analysis'[counter]), REMOVEFILTERS('Cohort Analysis'))
+			        )
+			)
+		lineageTag: a3c93ab3-427c-40c6-bde7-6a09cc7c9651
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Cohort1 = "Cohort 1"
+		lineageTag: 348d7486-60f2-4f8a-b6f5-7021e5c5c9fb
+
+	measure Cohort2 = "Cohort 2"
+		lineageTag: 2eb371c7-968f-459d-a779-54141ac67500
+
+	measure Cohort3 = "Cohort 3"
+		lineageTag: 10eb8d52-a946-48bb-8994-7f282b5f2157
+
+	column counter
+		dataType: int64
+		formatString: #,0
+		displayFolder: Measures for Graphs
+		lineageTag: 8374a2e6-b8e8-431e-8e16-9ffce5d90062
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: b3294506-7964-4a91-a572-122bcb391c73
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 3f7af0b4-dd5f-4dd2-9e28-7400e087baa7
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Age
+		dataType: int64
+		formatString: 0
+		displayFolder: Referenced in other tables
+		lineageTag: 9128b79d-d409-454a-bd68-d318e4f605e6
+		summarizeBy: none
+		sourceColumn: Derived_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand5yr
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: dc36d8cd-dc39-4fe3-850c-db80dd942753
+		summarizeBy: none
+		sourceColumn: AgeBand5yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand10yr
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: e08e8fcc-1908-4ecc-a4dd-f03dbab68ea2
+		summarizeBy: none
+		sourceColumn: AgeBand10yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: d2f8a8d8-ebfe-4e9f-89f5-b4a421fc3824
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginWiderGroups
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: ea167d84-db65-4717-a560-15a28241f894
+		summarizeBy: none
+		sourceColumn: EthnicOriginWiderGroups
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracNameCurrent
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 39c85dfc-61b0-4e9c-a3f7-50705c362ed1
+		summarizeBy: none
+		sourceColumn: PracNameCurrent
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA code'
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 36121196-79d5-4447-828c-18e55365b284
+		summarizeBy: none
+		sourceColumn: LSOA code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward code 2021'
+		dataType: int64
+		formatString: 0
+		displayFolder: Referenced in other tables
+		lineageTag: 994085f3-a126-4d3c-883a-90d696e7f444
+		summarizeBy: sum
+		sourceColumn: Current District Ward code 2021
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward name 2021'
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 312e27fd-0538-4f6b-8af5-e56b22ee22f8
+		summarizeBy: none
+		sourceColumn: Current District Ward name 2021
+
+		annotation SummarizationSetBy = Automatic
+
+	column District
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 41c6b056-eac0-4f7f-890c-6a28211c2287
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: string
+		lineageTag: d26a63bf-5441-4550-be15-fe69520dfbb7
+		summarizeBy: none
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyQuintile
+		dataType: int64
+		displayFolder: Referenced in other tables
+		lineageTag: 34390bd7-cf6c-40e4-a2b6-cc3d86dd9bcb
+		summarizeBy: sum
+		sourceColumn: IMDcountyQuintile
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column LocalityName
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 906c85e4-f999-4a51-9817-1d03f8e5cf02
+		summarizeBy: none
+		sourceColumn: LocalityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		displayFolder: Referenced in other tables
+		lineageTag: 3501b030-a90a-46bb-941b-161c39ee0630
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPapptTotalEstCost
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 4dd909f3-f7d9-45bd-b9a9-9f38216926ca
+		summarizeBy: sum
+		sourceColumn: GPapptTotalEstCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCCountDerived
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 4f987034-c896-4063-b829-d3bbe4a6bf12
+		summarizeBy: sum
+		sourceColumn: LTCCountDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column BMI
+		dataType: double
+		lineageTag: 89545c26-33cd-498e-bdf0-e94629626a8f
+		summarizeBy: sum
+		sourceColumn: BMI
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'BMI Group Adjusted'
+		dataType: string
+		lineageTag: 7a39ac0a-1f9c-4c2f-8160-45699f398723
+		summarizeBy: none
+		sourceColumn: BMI Group Adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Obesity Class 1 - adjusted'
+		dataType: int64
+		formatString: 0
+		lineageTag: 214dae81-e793-4455-8519-f0aaaa2d51a7
+		summarizeBy: sum
+		sourceColumn: Obesity Class 1 - adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Obesity Class 2 - adjusted'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1a2c1e10-edfe-42ad-beb5-01fa280ea732
+		summarizeBy: sum
+		sourceColumn: Obesity Class 2 - adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Obesity Class 3 - adjusted'
+		dataType: int64
+		formatString: 0
+		lineageTag: 23e66c49-ea7b-4d50-aa92-1b916431ac3c
+		summarizeBy: sum
+		sourceColumn: Obesity Class 3 - adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Obesity Class - adjusted'
+		dataType: string
+		lineageTag: 78a30f23-058b-4b46-9ce0-bb92f3f637f2
+		summarizeBy: none
+		sourceColumn: Obesity Class - adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BMI Rounded'
+		dataType: double
+		lineageTag: ec80875b-d9a4-4794-98ce-f3f00b641ce4
+		summarizeBy: sum
+		sourceColumn: BMI Rounded
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Year BMI' = year('Cohort Analysis'[BMI Group Date])
+		formatString: 0
+		lineageTag: 1b7a7de4-17ab-4535-8acc-ec16fcd13bb6
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedEthnicityDescription
+		dataType: string
+		lineageTag: 657a6d5d-4077-4b22-8721-36eeb5c1ac7a
+		summarizeBy: none
+		sourceColumn: DerivedEthnicityDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column EDAttendances
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: bde02273-81d8-45df-b19a-8bc1cdbf8148
+		summarizeBy: sum
+		sourceColumn: EDAttendances
+
+		annotation SummarizationSetBy = Automatic
+
+	column MIIUAttendances
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 8a319bea-7177-49d3-951f-76191e92ea73
+		summarizeBy: sum
+		sourceColumn: MIIUAttendances
+
+		annotation SummarizationSetBy = Automatic
+
+	column ElectiveAdmissions
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: f0755f0a-fd0a-4044-b86b-7d4865f958ff
+		summarizeBy: sum
+		sourceColumn: ElectiveAdmissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmergencyAdmissions
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 273afe09-b1f8-40a8-beb3-62b9a05e08f0
+		summarizeBy: sum
+		sourceColumn: EmergencyAdmissions
+
+		annotation SummarizationSetBy = Automatic
+
+	column OutpatientAppointments
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: b1250218-7f53-4703-a29c-a70ad3808b92
+		summarizeBy: sum
+		sourceColumn: OutpatientAppointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column OutpatientProcedures
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 092f8c6c-7370-4a39-b294-8a97e8e7095e
+		summarizeBy: sum
+		sourceColumn: OutpatientProcedures
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareAppointments
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 15207dad-941c-42e0-85e4-6b5b73ef4474
+		summarizeBy: sum
+		sourceColumn: PrimaryCareAppointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommunityCareContacts
+		dataType: int64
+		formatString: 0
+		lineageTag: 624cb536-4869-433d-b274-01fce2ce5abd
+		summarizeBy: sum
+		sourceColumn: CommunityCareContacts
+
+		annotation SummarizationSetBy = Automatic
+
+	column MentalHealthContacts
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 3fa93b89-3b22-4186-bbcd-a2a394e7d162
+		summarizeBy: sum
+		sourceColumn: MentalHealthContacts
+
+		annotation SummarizationSetBy = Automatic
+
+	column 111Contacts
+		dataType: int64
+		formatString: 0
+		displayFolder: Activity
+		lineageTag: 4a4a83b8-9a9e-4a1b-9a7e-4ee7fa375170
+		summarizeBy: sum
+		sourceColumn: 111Contacts
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFIScoreDerived
+		dataType: double
+		lineageTag: e3ef4b88-0197-4986-9c92-185b38628506
+		summarizeBy: sum
+		sourceColumn: eFIScoreDerived
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Obesity
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 6acb7407-1d5d-4b55-8c0e-e625612553c2
+		summarizeBy: sum
+		sourceColumn: Obesity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Smoker
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 3c6f130a-4da6-4ccd-81b0-311823996e12
+		summarizeBy: sum
+		sourceColumn: Smoker
+
+		annotation SummarizationSetBy = Automatic
+
+	column Asthma
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 3924aee7-7e1b-4979-a25b-d0c2765066e1
+		summarizeBy: sum
+		sourceColumn: Asthma
+
+		annotation SummarizationSetBy = Automatic
+
+	column COPD
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: b2083d60-aa6d-451b-b6d7-5d7ebb9e177f
+		summarizeBy: sum
+		sourceColumn: COPD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dementia
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 4cb04855-9772-4826-a7b3-ebda76ec08af
+		summarizeBy: sum
+		sourceColumn: Dementia
+
+		annotation SummarizationSetBy = Automatic
+
+	column Depression
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: c6ddfa19-0bd4-4b76-a105-08713417b55a
+		summarizeBy: sum
+		sourceColumn: Depression
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diabetes
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: d9f0693e-5b9f-4e75-89ec-9fb950c73f9c
+		summarizeBy: sum
+		sourceColumn: Diabetes
+
+		annotation SummarizationSetBy = Automatic
+
+	column PalliativeCare
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 548101ae-aa62-49bb-89c7-af811d772541
+		summarizeBy: sum
+		sourceColumn: PalliativeCare
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChronicKidneyDisease
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 75517608-7978-4acf-90ed-98bc3d33d1f1
+		summarizeBy: sum
+		sourceColumn: ChronicKidneyDisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column Epilepsy
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: fd620cc6-cce5-4f6e-a892-6f8e3954485e
+		summarizeBy: sum
+		sourceColumn: Epilepsy
+
+		annotation SummarizationSetBy = Automatic
+
+	column HeartFailure
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 549a060f-2521-4df4-935d-fd64dc5dcc9d
+		summarizeBy: sum
+		sourceColumn: HeartFailure
+
+		annotation SummarizationSetBy = Automatic
+
+	column Stroke
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: fd561b52-dee4-4a81-94c7-76c5e9a885b1
+		summarizeBy: sum
+		sourceColumn: Stroke
+
+		annotation SummarizationSetBy = Automatic
+
+	column AtrialFibrillation
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: ae70217b-c4cd-4d23-a3fe-4d251c719b27
+		summarizeBy: sum
+		sourceColumn: AtrialFibrillation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancer
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 85785fc0-d8ba-4135-a11e-284f5996e8a8
+		summarizeBy: sum
+		sourceColumn: Cancer
+
+		annotation SummarizationSetBy = Automatic
+
+	column CoronaryHeartDisease
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 4ca0243b-80a7-4723-8a6a-6e638f093302
+		summarizeBy: sum
+		sourceColumn: CoronaryHeartDisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hypertension
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: b6ee1c3a-3211-4d5d-8adf-e78dc7c1107a
+		summarizeBy: sum
+		sourceColumn: Hypertension
+
+		annotation SummarizationSetBy = Automatic
+
+	column LearningDisability
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 6ae79992-2f3b-4229-a0ae-0d9a126996e3
+		summarizeBy: sum
+		sourceColumn: LearningDisability
+
+		annotation SummarizationSetBy = Automatic
+
+	column MentalIllness
+		dataType: int64
+		formatString: 0
+		displayFolder: QOF
+		lineageTag: 17607900-1332-470a-8a74-187b32fa1ba4
+		summarizeBy: sum
+		sourceColumn: MentalIllness
+
+		annotation SummarizationSetBy = Automatic
+
+	column BMIGroup
+		dataType: string
+		lineageTag: 856f157b-9093-4b36-9cad-5be86884fd9e
+		summarizeBy: none
+		sourceColumn: BMIGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BMI Group Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 93f7bb71-ef74-4331-9eb3-e3436ae98556
+		summarizeBy: none
+		sourceColumn: BMI Group Date
+
+		variation Variation
+			isDefault
+			relationship: c192e037-9ac7-4f79-b922-372d1b091a7f
+			defaultHierarchy: LocalDateTable_312effd6-66dd-409c-ab24-b8b394a1ac09.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFICategoryDerived
+		dataType: string
+		lineageTag: 7aad621e-dcd5-421d-88ab-bc52d975bbbe
+		summarizeBy: none
+		sourceColumn: eFICategoryDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 4e8851ac-389a-4050-ac4e-1149771a2d73
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDNationalDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 234b9e80-16e3-4135-a7c3-8e832d30d1df
+		summarizeBy: sum
+		sourceColumn: IMDNationalDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'MPI BMI'
+		dataType: double
+		lineageTag: b9242cc5-5dfc-49f5-badb-2220b107b35f
+		summarizeBy: sum
+		sourceColumn: MPI BMI
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Cohort Analysis' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="select *#(lf)from [PowerBI_Reporting].[WeightManagement].[tbl01_Cohort]"]),
+				    #"Replaced Value" = Table.ReplaceValue(Source,null,"Unknown",Replacer.ReplaceValue,{"Gender"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value",null,"Unknown",Replacer.ReplaceValue,{"DerivedEthnicityDescription"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Replaced Value1",{{"IMDcountyDecile", type text}}),
+				    #"Replaced Value2" = Table.ReplaceValue(#"Changed Type",null,"Out of County",Replacer.ReplaceValue,{"IMDcountyDecile"})
+				in
+				    #"Replaced Value2"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,31 @@
+table 'Ethnicity Reference'
+	lineageTag: a1da2af2-bdf9-4ae9-8ea3-e00f5914c0c1
+
+	column PseudoNHSNo
+		dataType: string
+		lineageTag: e851bd32-708d-4d13-bbc2-df2cd74219b2
+		summarizeBy: none
+		sourceColumn: PseudoNHSNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnic Origin Grouped'
+		dataType: string
+		lineageTag: 17e5480a-2994-4ca6-bdae-3bd95b706c97
+		summarizeBy: none
+		sourceColumn: Ethnic Origin Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ethnicity Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT DISTINCT [PseudoNHSNo] = PseudoNHSNumber#(lf)               ,[Ethnic Origin Grouped] = DerivedEthnicityGroup#(lf)FROM PowerBI_Reporting.PLS.tbl01_Ethnicity#(lf)#(lf)where PseudoNHSNumber is not null"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

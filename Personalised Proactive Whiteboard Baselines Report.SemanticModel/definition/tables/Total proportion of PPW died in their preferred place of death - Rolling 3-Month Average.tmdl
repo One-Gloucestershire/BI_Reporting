@@ -1,0 +1,74 @@
+table 'Total proportion of PPW died in their preferred place of death - Rolling 3-Month Average'
+	lineageTag: 50e147aa-27fb-4a89-ba37-05b53eacdb70
+
+	column Date
+		formatString: General Date
+		lineageTag: b0a57818-b0e3-48d7-87cd-d5a1de198cb1
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: REF_Date_Ref[Date]
+
+		variation Variation
+			isDefault
+			relationship: 9fbb87fb-bf7e-4eae-9c38-1509b51f00dc
+			defaultHierarchy: LocalDateTable_6f6e53d0-cca6-40f3-8046-c8d336412fa0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total of ppw patients that died in their preferred place of death'
+		formatString: 0
+		lineageTag: ea04de45-d241-4588-8022-d43766c6685f
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total of ppw patients that died in their preferred place of death]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total of ppw patients that had a preferred place of death recorded'
+		formatString: 0
+		lineageTag: fed691ba-2949-4f73-b10f-36635ed86315
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total of ppw patients that had a preferred place of death recorded]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Total proportion of PPW died in their preferred place of death - Rolling 3-Month Average' = calculated
+		mode: import
+		source = ```
+				
+				VAR RollingPeriod =
+				    DATESINPERIOD(
+				        REF_Date_Ref[Date],
+				        MAX(REF_Date_Ref[Date]),
+				        -3,
+				        MONTH
+				    )
+				VAR DistinctMonths =
+				    COUNTROWS(
+				        DISTINCT(
+				            SELECTCOLUMNS(
+				                RollingPeriod,
+				                "YearMonth", FORMAT([Date], "YYYY-MM")
+				            )
+				        )
+				    )
+				VAR TableWithAggregates =
+				    ADDCOLUMNS(
+				        RollingPeriod,
+				        "Total of ppw patients that died in their preferred place of death", CALCULATE([Total PPW patients that died in their preferred place of death]),
+				        "Total of ppw patients that had a preferred place of death recorded", CALCULATE([Number of PPW deaths in cohort with a preferred place of death recorded])
+				    )
+				VAR TotalSum_PPW_deaths_that_died_in_their_preferred_place_of_death = 
+				    SUMX(TableWithAggregates, [Total of ppw patients that died in their preferred place of death])
+				
+				VAR TotalSum_PPW_deaths_that_had_a_preferred_place_of_death_recorded = 
+				    SUMX(TableWithAggregates, [Total of ppw patients that had a preferred place of death recorded])
+				
+				
+				RETURN
+				TableWithAggregates
+				```
+
+	annotation PBI_Id = 0374b167165449fb9447fa4e14185a1d
+

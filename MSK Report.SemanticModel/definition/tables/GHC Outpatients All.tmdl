@@ -1,0 +1,302 @@
+table 'GHC Outpatients All'
+	lineageTag: 9be819e8-72b7-4efb-a61e-38b996a9605c
+
+	measure 'Number of Months GHC OP All' = DISTINCTCOUNT('GHC Outpatients All'[YearMonth])
+		formatString: 0
+		lineageTag: a5988059-2b56-4dec-9c79-2212bb95685e
+
+	measure 'GHC OP All Mean' = CALCULATE (SUM('GHC Outpatients All'[Counter])/[Number of Months GHC OP All],ALLSELECTED('Date Table'))
+		lineageTag: e31f3b9f-5026-49ae-b46d-bfdd7ddeb9ed
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New Total GHC OP All' = SUM('GHC Outpatients All'[Counter])
+		formatString: 0
+		lineageTag: eb12bbcd-e881-47cc-9fb4-b5eaa2993986
+
+	measure 'GHC OP All STD DEV' =
+			
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P (VALUES ('GHC Outpatients All'[YearMonth]),[New Total GHC OP All]),ALLEXCEPT('Date Table','Date Table'[year_month]))
+			
+			RETURN IFERROR(STD_DEV,0)
+		lineageTag: f8cfaa59-c49a-4fb8-ae58-1265181bed41
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'GHC OP All LCL' = IF(([GHC OP All Mean]-(3*[GHC OP All STD DEV])) < 0, 0, ([GHC OP All Mean]-(3*[GHC OP All STD DEV])))
+		lineageTag: 2b7be246-9c4c-4b6e-aef5-57f4ed93ce09
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'GHC OP All UCL' = IF(([GHC OP All Mean]+(3*[GHC OP All STD DEV])) < 0, 0, ([GHC OP All Mean]+(3*[GHC OP All STD DEV])))
+		lineageTag: 6c8a3504-aaa3-4d13-a81f-e8b35046b732
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure First_appointments_GHC_OP_All = CALCULATE(COUNT('GHC Outpatients All'[Counter]),FILTER('GHC Outpatients All','GHC Outpatients All'[New or FollowUp App]="First Appointment"), FILTER('GHC Outpatients All','GHC Outpatients All'[Attend_Or_Not_Group]="Attended"))
+		formatString: 0
+		lineageTag: f5351d10-3d6d-4b35-912a-90a352087dc1
+
+	measure Follow_Up_appointments_GHC_OP_All = CALCULATE(COUNT('GHC Outpatients All'[Counter]),FILTER('GHC Outpatients All','GHC Outpatients All'[New or FollowUp App]="FollowUp Appointment"), FILTER('GHC Outpatients All','GHC Outpatients All'[Attend_Or_Not_Group]="Attended"))
+		formatString: 0
+		lineageTag: 136cd0fe-a28e-4159-9681-6d97a4c7e8e7
+
+	measure First_to_follow_up_Appointments_ratio = [Follow_Up_appointments_GHC_OP_All]/[First_appointments_GHC_OP_All]
+		lineageTag: 8ed66439-915a-4cdf-87c6-aa90cae3feec
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Seen_Within_2_Weeks_Count = CALCULATE(SUM('GHC Outpatients All'[Counter])-SUM('GHC Outpatients All'[2_Week_Breach_Flag]))
+		formatString: 0
+		lineageTag: 4169caa0-0207-4dbd-9d9a-b9e8622340c9
+
+	measure Seen_Within_8_Weeks_Count = CALCULATE(SUM('GHC Outpatients All'[Counter])-SUM('GHC Outpatients All'[8_Week_Breach_Flag]))
+		formatString: 0
+		lineageTag: f586c4fd-0133-4584-b45b-227d53c20137
+
+	column UniqueServiceRequestID
+		dataType: string
+		lineageTag: 2d7e5ef9-413d-43b5-ad20-6834cb0bc284
+		summarizeBy: none
+		sourceColumn: UniqueServiceRequestID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: c1baa7fa-436f-4831-a9cf-94d087678721
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column PriorityTypeDescription
+		dataType: string
+		lineageTag: e621c286-ae50-4f8a-9000-93c0d1cbe3f2
+		summarizeBy: none
+		sourceColumn: PriorityTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRequestReceivedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e4dad9af-0c36-4c3a-ad69-803c88f7d244
+		summarizeBy: none
+		sourceColumn: ReferralRequestReceivedDate
+
+		variation Variation
+			isDefault
+			relationship: 28e9c994-2f86-40b1-9a9d-4b9814ffc632
+			defaultHierarchy: LocalDateTable_bacb9546-6f33-42cb-96bc-53fa6acedee0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 88872340-0e88-48f7-948d-d8f77af26679
+		summarizeBy: none
+		sourceColumn: ContactDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day_Difference
+		dataType: int64
+		formatString: 0
+		lineageTag: a6c593ed-c73d-49df-8eb1-c4e869566c2c
+		summarizeBy: sum
+		sourceColumn: Day_Difference
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Seen within 2 weeks'
+		dataType: string
+		lineageTag: 5d31699c-3287-4041-a753-bc1391aa3259
+		summarizeBy: none
+		sourceColumn: Seen within 2 weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Seen within 8 weeks'
+		dataType: string
+		lineageTag: 3e038038-4841-4901-a742-0eee20da6b31
+		summarizeBy: none
+		sourceColumn: Seen within 8 weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsultationTypeDescription
+		dataType: string
+		lineageTag: 173ef5a3-5724-41c5-b09b-2f90df4b5f96
+		summarizeBy: none
+		sourceColumn: ConsultationTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attend_Or_Not_Flag
+		dataType: string
+		lineageTag: a1e80f20-a840-49e3-882d-a4ee1bd1003a
+		summarizeBy: none
+		sourceColumn: Attend_Or_Not_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column AttendOrNotDescription
+		dataType: string
+		lineageTag: 2d448e59-71c3-46a8-9309-2ddb72a64ef5
+		summarizeBy: none
+		sourceColumn: AttendOrNotDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Team
+		dataType: string
+		lineageTag: 1f2a4dc3-cf17-49b4-b995-b154a5b3ff2d
+		summarizeBy: none
+		sourceColumn: Team
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service
+		dataType: string
+		lineageTag: 3dc125db-639d-461a-b924-7b675cefee3d
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: b8b6dfbc-1c73-4bcb-b7a5-9e3209db4be8
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column DischargeDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4e36bb74-43a7-4e64-b5fd-508f4f1ed0c2
+		summarizeBy: none
+		sourceColumn: DischargeDate
+
+		variation Variation
+			isDefault
+			relationship: b67c6386-89b0-4123-b01b-8ecc652c0654
+			defaultHierarchy: LocalDateTable_bda81f46-5ba9-440a-9af7-6a57bc94f641.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attend_Or_Not_Group
+		dataType: string
+		lineageTag: 3cbca29f-2dac-454c-b766-5b5421536205
+		summarizeBy: none
+		sourceColumn: Attend_Or_Not_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: bfba8ff5-378b-4d1d-821d-53d2105251e9
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column SourceOfReferralDescription
+		dataType: string
+		lineageTag: b8f66a9e-e3bf-47ac-ab5d-e55018cbaf5b
+		summarizeBy: none
+		sourceColumn: SourceOfReferralDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column First
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f07536f-3e5d-4599-882b-b0edc46c4e23
+		summarizeBy: sum
+		sourceColumn: First
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 38fd9472-8b6d-4205-9f30-ea84553683e0
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 88e150f0-7a64-496f-98db-23b19782db66
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'New or FollowUp App' =
+			SWITCH(
+			    'GHC Outpatients All'[First],
+			    1, "First Appointment",
+			    "FollowUp Appointment"
+			)
+		lineageTag: 175c23f3-5c43-40f2-b00b-1fa0badf0539
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 2_Week_Breach_Flag = IF('GHC Outpatients All'[Seen within 2 weeks]="Not seen within 2 weeks",1,0)
+		formatString: 0
+		lineageTag: 9f1329ee-3d4c-4251-a616-3e1394cb9242
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 8_Week_Breach_Flag = IF('GHC Outpatients All'[Seen within 8 weeks] = "Not seen within 8 weeks",1,0)
+		formatString: 0
+		lineageTag: 79846bb2-fe12-44cf-ba5c-87e5775d0355
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column TeamIDLocal
+		dataType: string
+		lineageTag: 96799694-5ab9-4fb0-8756-d46c9fff4d0f
+		summarizeBy: none
+		sourceColumn: TeamIDLocal
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralCostCentre
+		dataType: string
+		lineageTag: 650b2cc9-9ebc-4d12-a8d8-677ad527d093
+		summarizeBy: none
+		sourceColumn: ReferralCostCentre
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPCode
+		dataType: string
+		lineageTag: fa809b61-9c58-433a-a030-9b6ff64a9fb9
+		summarizeBy: none
+		sourceColumn: GPCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GHC Outpatients All' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Processing", [Query="--EXEC [MSK].[sp04_MSK_GHC_All_Contacts]#(lf)--;#(lf)Select *#(lf)From [PowerBI_Reporting].[MSK].[tbl04_MSK_GHC_All_Contacts]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,88 @@
+table 'GHFT Referrals'
+	lineageTag: 5d32dbff-5f18-4057-9c49-a4db4e924de2
+
+	column Financial_Year
+		dataType: string
+		lineageTag: d5a02c54-7f17-4fc6-83b2-59b7a6e7f776
+		summarizeBy: none
+		sourceColumn: Financial_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5e7d3568-8b9b-4b42-ab1e-8979a2e1fd98
+		summarizeBy: none
+		sourceColumn: Month
+
+		variation Variation
+			isDefault
+			relationship: 91999d2b-0ff7-40f1-8499-356e6eee038f
+			defaultHierarchy: LocalDateTable_af3ce03d-ab2d-4fc7-bc18-2898e92b35c4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year_Month
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 4b158529-f22c-44db-85f1-fd61c6462833
+		summarizeBy: none
+		sourceColumn: Year_Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Service
+		dataType: string
+		lineageTag: 549c0698-1e79-4d71-b6a6-988dac68b331
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column Local_Treatment_Function_Code
+		dataType: string
+		lineageTag: 0c660958-99cf-40ad-877e-e58e806f5b22
+		summarizeBy: none
+		sourceColumn: Local_Treatment_Function_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority_Type
+		dataType: string
+		lineageTag: 6882f2eb-f603-4e42-8847-981bb1cced37
+		summarizeBy: none
+		sourceColumn: Priority_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: ca63492c-b3dc-45fb-a4a1-fbda922681f7
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GHFT Referrals' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\MSK\Dashboard\Power BI\Referrals\GHFT Referrals Backing data.xlsx"), null, true),
+				    Import_Sheet = Source{[Item="Import",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Import_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Financial_Year", type text}, {"Month", type date}, {"Year_Month", type date}, {"Service", type text}, {"Local_Treatment_Function_Code", type text}, {"Priority_Type", type text}, {"Counter", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,439 @@
+table 'Prescrbing (patient level)'
+	lineageTag: 33fd7b68-5ced-400a-8740-e823d675bd01
+
+	measure Items = if(sum('Prescrbing (patient level)'[Item_Count])=BLANK(),0,sum('Prescrbing (patient level)'[Item_Count]))
+		formatString: 0
+		lineageTag: 96e5d109-64f0-4d01-a8de-441e9ee0a3d7
+
+	measure Cost = if(sum('Prescrbing (patient level)'[Item_Actual_Cost])=BLANK(),0,sum('Prescrbing (patient level)'[Item_Actual_Cost]))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 47323277-ee3e-4813-92cc-8b3b9a0626ec
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure a1_Obese_Not_Diabetic =
+			
+			CALCULATE(
+			    SUM('Prescrbing (patient level)'[Item_Actual_Cost]),
+			    'Prescrbing (patient level)'[BMI Group] IN{"Obese (30+)","Obese (30-34.9)","Obese (35-39.9)","Severely Obese (40+)"},
+			    'Prescrbing (patient level)'[Diabetes Type] = "Not Diabetic",
+			    'Date table (month start)'[FinancialYear] = "2025/26"
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: ed4957de-b66e-46f3-b8aa-60ea7d8d9616
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure a2_Obese_Diabetic =
+			
+			CALCULATE(
+			    SUM('Prescrbing (patient level)'[Item_Actual_Cost]),
+			    'Prescrbing (patient level)'[BMI Group] IN{"Obese (30+)","Obese (30-34.9)","Obese (35-39.9)","Severely Obese (40+)"},
+			    'Prescrbing (patient level)'[Diabetes Type] <> "Not Diabetic",
+			    'Date table (month start)'[FinancialYear] = "2025/26"
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 2d2a0580-d7c2-4cfe-96b6-e5e64da3c19c
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure a3_Not_Obese_Diabetic =
+			
+			CALCULATE(
+			    SUM('Prescrbing (patient level)'[Item_Actual_Cost]),
+			    NOT'Prescrbing (patient level)'[BMI Group] IN{"Obese (30+)","Obese (30-34.9)","Obese (35-39.9)","Severely Obese (40+)"},
+			    'Prescrbing (patient level)'[Diabetes Type] <> "Not Diabetic",
+			    'Date table (month start)'[FinancialYear] = "2025/26"
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 09a8016b-5b38-4d7a-ae30-34c329c19e9c
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure a4_Not_Obese_Not_Diabetic =
+			
+			CALCULATE(
+			    SUM('Prescrbing (patient level)'[Item_Actual_Cost]),
+			    NOT'Prescrbing (patient level)'[BMI Group] IN{"Obese (30+)","Obese (30-34.9)","Obese (35-39.9)","Severely Obese (40+)"},
+			    'Prescrbing (patient level)'[Diabetes Type] = "Not Diabetic",
+			    'Date table (month start)'[FinancialYear] = "2025/26"
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 035b60f1-4788-442e-92a5-ee525cfd2ea7
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Cost per Patient' =
+			
+			VAR Total = CALCULATE(SUM('Prescrbing (patient level)'[Item_Actual_Cost]))
+			VAR Pop = CALCULATE(SUM('R. GP Ref'[Population]))
+			RETURN (Total/Pop)
+		formatString: 0
+		lineageTag: f07bf3b0-2f69-465e-9af7-7d2a11fe16a8
+
+	column date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a2a26b27-f0cd-412b-91e7-5b6290c64f90
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: c49831a6-d19e-4a41-9028-2129691cc4d2
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Item_Actual_Cost
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 1f3a5014-67ac-46ad-87d8-258e5ecec969
+		summarizeBy: sum
+		sourceColumn: Item_Actual_Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Item_Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 44299c63-c1ac-4524-9821-9791a5142ec5
+		summarizeBy: sum
+		sourceColumn: Item_Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column Paid_BNF_Name
+		dataType: string
+		lineageTag: 56a6cf09-7b51-4072-b2f7-b1e5d07d5f9b
+		summarizeBy: none
+		sourceColumn: Paid_BNF_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column paid_BNF_code
+		dataType: string
+		lineageTag: 73b1a9a8-0706-4490-a438-bd89fd2790f7
+		summarizeBy: none
+		sourceColumn: paid_BNF_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Prescribed_BNF_Name
+		dataType: string
+		lineageTag: 19c63a89-e815-40f2-b938-079f018782af
+		summarizeBy: none
+		sourceColumn: Prescribed_BNF_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Prescribed_BNF_code
+		dataType: string
+		lineageTag: d4a459cc-6543-49a3-b3a9-b32a885bea88
+		summarizeBy: none
+		sourceColumn: Prescribed_BNF_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Paid_Formulation
+		dataType: int64
+		formatString: 0
+		lineageTag: 756bfd2a-7f77-429f-b06d-87d087ef4646
+		summarizeBy: sum
+		sourceColumn: Paid_Formulation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Paid_Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: d8a2e04d-14bb-44c3-9df8-b959b9c8c3b2
+		summarizeBy: sum
+		sourceColumn: Paid_Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Prescribed_Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: 37a75306-8f0f-4f4b-b0b8-25ada2a417ce
+		summarizeBy: sum
+		sourceColumn: Prescribed_Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diabetes Type'
+		dataType: string
+		lineageTag: f95f3586-fc33-42a6-aa41-7331703224a7
+		summarizeBy: none
+		sourceColumn: Diabetes Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BMI Group'
+		dataType: string
+		lineageTag: 9521a75f-a6bc-4afe-80cc-3a4c0783c04d
+		summarizeBy: none
+		sourceColumn: BMI Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Distinct
+		dataType: int64
+		formatString: 0
+		lineageTag: ab3ff921-13dd-4d5f-a412-f1db787e72cb
+		summarizeBy: sum
+		sourceColumn: Distinct
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Grouped BNF Name'
+		dataType: string
+		lineageTag: db3f67cb-9146-47b0-8989-8deb4502b529
+		summarizeBy: none
+		sourceColumn: Grouped BNF Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 83585480-476b-4ef2-b576-8ed1b4d54697
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 35027b97-094f-4438-9cb5-f6b08841f84b
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 41a22778-7201-4c45-b275-40e3833c4091
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_GP_ODS
+		dataType: string
+		lineageTag: 4eb9aa3c-6ae2-4852-b966-f44680a923c9
+		summarizeBy: none
+		sourceColumn: Patient_GP_ODS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cohort
+		dataType: string
+		lineageTag: 86b5c5a2-f36d-4266-902c-9e0024b81da8
+		summarizeBy: none
+		sourceColumn: Cohort
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 8aac33cd-d91c-4d30-a137-2814a3109597
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BMI Value'
+		dataType: double
+		lineageTag: 6b29a6db-c88b-4cd0-8863-e8005ba308c1
+		summarizeBy: sum
+		sourceColumn: BMI Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'BMI Value - Adjusted'
+		dataType: double
+		lineageTag: 4db355ad-a02b-4799-9fed-7d140a27ee56
+		summarizeBy: sum
+		sourceColumn: BMI Value - Adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Obesity Group'
+		dataType: string
+		lineageTag: 6d571eb7-5118-4a9d-ab18-ba1f8599f57f
+		summarizeBy: none
+		sourceColumn: Obesity Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnic Origin Wider Groups'
+		dataType: string
+		lineageTag: 06c92bd0-8d96-45b0-9e36-b29e366e51a4
+		summarizeBy: none
+		sourceColumn: Ethnic Origin Wider Groups
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 32b08882-a860-4861-88ef-5a6b9141a1cf
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: afb0ce0b-51a5-4dd4-960a-e3731df74db5
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 83c61084-0313-4685-84bb-c43924de58cd
+		summarizeBy: sum
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareProvider
+		dataType: string
+		lineageTag: 16a4e327-1eab-46ca-bc52-b6059126318a
+		summarizeBy: none
+		sourceColumn: PrimaryCareProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareProvider_description
+		dataType: string
+		lineageTag: 48d57ac2-ad18-4f40-a418-8a24b554dc39
+		summarizeBy: none
+		sourceColumn: PrimaryCareProvider_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hypertension
+		dataType: int64
+		formatString: 0
+		lineageTag: 373dedf0-84be-48f3-96ff-724f8156e980
+		summarizeBy: sum
+		sourceColumn: Hypertension
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dyslipidemia - LLT or Out of Threshold'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f600579-c53e-4677-a27e-762394e565f2
+		summarizeBy: sum
+		sourceColumn: Dyslipidemia - LLT or Out of Threshold
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Obstructive sleep apnoea'
+		dataType: int64
+		formatString: 0
+		lineageTag: b2811445-5b9c-4524-80d1-0082975aa815
+		summarizeBy: sum
+		sourceColumn: Obstructive sleep apnoea
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Athelerosclerotic Cardiovascular disease'
+		dataType: int64
+		formatString: 0
+		lineageTag: da83218b-14a8-4373-9b1b-03d47130450f
+		summarizeBy: sum
+		sourceColumn: Athelerosclerotic Cardiovascular disease
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Type 2 Diabetes Mellitus'
+		dataType: int64
+		formatString: 0
+		lineageTag: 68416a6d-db1a-4890-9ccd-20770a6e7042
+		summarizeBy: sum
+		sourceColumn: Type 2 Diabetes Mellitus
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Hypertension - Not TTT'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6df88be2-c4c0-435a-b728-8be8ab645f29
+		summarizeBy: sum
+		sourceColumn: Hypertension - Not TTT
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Already on WL Drug'
+		dataType: string
+		lineageTag: 2fd91f2f-34a1-4c0f-9f2c-c6a8a7535339
+		summarizeBy: none
+		sourceColumn: Already on WL Drug
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Already on WL Drug Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 62867d72-1a51-4690-b735-f182133b08e6
+		summarizeBy: sum
+		sourceColumn: Already on WL Drug Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthStart
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b5f3757e-f788-4892-9db8-3a60b4fdf8f7
+		summarizeBy: none
+		sourceColumn: MonthStart
+
+		variation Variation
+			isDefault
+			relationship: cfc1bc14-21d2-4479-b435-52e5b32b136c
+			defaultHierarchy: LocalDateTable_53cef8f1-e557-48dd-9f3d-3d395c0e0f58.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthEnd
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5c366243-6545-45cc-bbab-63be7357bd44
+		summarizeBy: none
+		sourceColumn: MonthEnd
+
+		variation Variation
+			isDefault
+			relationship: 56148c83-a0b2-473d-95af-3a3ef6d11c9b
+			defaultHierarchy: LocalDateTable_26dd7937-d65b-4834-8286-191df075ead3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Prescrbing (patient level)' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select [a].*,#(lf)[b].*#(lf)from [PowerBI_Reporting].[WeightManagement].[tbl03_Patient_Level_Prescribing] [a]#(lf)left join [PowerBI_Reporting].[WeightManagement].[tbl05_Tirzepatide_Cohorts] [b] on [a].NHS_Number = [b].Derived_NHS_Number and [a].[date] = [b].MonthStart"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

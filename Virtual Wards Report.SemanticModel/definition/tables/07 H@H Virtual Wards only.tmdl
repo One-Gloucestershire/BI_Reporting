@@ -1,0 +1,658 @@
+table '07 H@H Virtual Wards only'
+	lineageTag: 742d9ce4-eab6-43d9-9f00-6c90f8a5df31
+
+	measure 'VW H@H LATEST WEEK' = CALCULATE(SUM('07 H@H Virtual Wards only'[Counter]), '07 H@H Virtual Wards only'[Latest_Full_Week_flag] = 1, '07 H@H Virtual Wards only'[Contact_during_stay_flag] = 1) +0
+		formatString: 0
+		lineageTag: 6ab54478-a1bc-40a8-a0fa-9a650ec09deb
+
+	measure 'VW H@H LATEST 4WEEK' = (CALCULATE(SUM('07 H@H Virtual Wards only'[Counter]), '07 H@H Virtual Wards only'[Latest_4Full_Week_flag] = 1, '07 H@H Virtual Wards only'[Contact_during_stay_flag] = 1) /4) +0
+		lineageTag: 3a01e43c-7a1a-4556-a401-d819bb646cd8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'VW H@H PREVIOUS 4WEEK' = (CALCULATE(SUM('07 H@H Virtual Wards only'[Counter]), '07 H@H Virtual Wards only'[Previous_4Full_Week_flag] = 1, '07 H@H Virtual Wards only'[Contact_during_stay_flag] = 1) /4) +0
+		lineageTag: 34f431dc-b131-4624-8961-3f046c93bd1e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure H@H_Contacts_for_VW_Patients_Time_Series_Title = ```
+			
+			VAR _TypeHasOne     = HASONEVALUE ( '07 H@H Virtual Wards only'[Virtual_Ward_Type])
+			VAR _TypeIsFiltered = ISFILTERED ( '07 H@H Virtual Wards only'[Virtual_Ward_Type] )
+			VAR _WardHasOne     = HASONEVALUE ( '07 H@H Virtual Wards only'[admitting_ward] )
+			VAR _WardIsFiltered = ISFILTERED ( '07 H@H Virtual Wards only'[admitting_ward] )
+			
+			VAR _TypeName = SELECTEDVALUE ( '07 H@H Virtual Wards only'[Virtual_Ward_Type], "Unknown" )
+			VAR _WardName = SELECTEDVALUE ( '07 H@H Virtual Wards only'[admitting_ward], "Unknown" )
+			
+			RETURN
+			SWITCH (
+			    TRUE(),
+			
+			    // 1) If a single ward is selected (regardless of type selection), show the ward name
+			    _WardHasOne,
+			        "Trend of Hospital @ Home Contacts for " & _WardName & "patients only" ,
+			
+			    // 2) A single type selected and wards NOT filtered: show that type )
+			    _TypeHasOne && NOT _WardIsFiltered,
+			        "Trend of Hospital @ Home Contacts for " & _TypeName & " patients only" ,
+			
+			    // 3) A single type selected AND wards filtered (multiple): selected wards within that type
+			    _TypeHasOne && _WardIsFiltered && NOT _WardHasOne,
+			        "Trend of Hospital @ Home Contacts for " & _TypeName & "patients only",
+			
+			    // 4) Multiple types selected (any ward state): generic selected
+			    _TypeIsFiltered && NOT _TypeHasOne,
+			        "Trend of Hospital @ Home Contacts for selected Virtual Ward patients only",
+			
+			    // 5) Wards filtered (multiple) but type not filtered: generic selected
+			    _WardIsFiltered && NOT _WardHasOne,
+			        "Trend of Hospital @ Home Contacts for selected Virtual Ward patients only",
+			
+			    // 6) No filters at all
+			    "Trend of Hospital @ Home Contacts for all Virtual Ward patients only"
+			)
+			
+			
+			```
+		lineageTag: 93429bfc-9bbc-480d-8897-a1a2051bb0c1
+
+	column UniqueServiceRequestID
+		dataType: string
+		lineageTag: a39206b7-def7-4d70-b07a-63f4bd8f6859
+		summarizeBy: none
+		sourceColumn: UniqueServiceRequestID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Visitcount
+		dataType: int64
+		formatString: 0
+		lineageTag: 12a91e95-a5c7-4fc2-8efe-244d1fcb7f69
+		summarizeBy: sum
+		sourceColumn: Visitcount
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqueCareContactID
+		dataType: string
+		lineageTag: d1686cd9-20dd-4365-9d07-4f9e4228df3d
+		summarizeBy: none
+		sourceColumn: UniqueCareContactID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: 19acc788-309a-4c79-b40a-a80a73e754c0
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrgIDCommissioner
+		dataType: string
+		lineageTag: 41ca54f3-6034-4dc6-af68-70777c7b90fb
+		summarizeBy: none
+		sourceColumn: OrgIDCommissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrgIDCommissionerDescription
+		dataType: string
+		lineageTag: 003e5587-1164-4e39-9363-f9b78d29baac
+		summarizeBy: none
+		sourceColumn: OrgIDCommissionerDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrgIDProvider
+		dataType: string
+		lineageTag: b842646f-4bab-42c6-86f3-fcfb60f77cd2
+		summarizeBy: none
+		sourceColumn: OrgIDProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrgIDProviderDescription
+		dataType: string
+		lineageTag: 8174164a-7b57-42d2-b14a-df7c0f7f9e75
+		summarizeBy: none
+		sourceColumn: OrgIDProviderDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_ward
+		dataType: string
+		lineageTag: 9338b92d-6e66-4180-a12f-cd2da720c1da
+		summarizeBy: none
+		sourceColumn: admitting_ward
+
+		annotation SummarizationSetBy = Automatic
+
+	column VW_Admitted
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f03db1e-e1cf-4362-8f1e-2170ca44d9f8
+		summarizeBy: sum
+		sourceColumn: VW_Admitted
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_datetime
+		dataType: string
+		lineageTag: 3f4a7f70-c35c-425b-9d61-e51543c6ea66
+		summarizeBy: none
+		sourceColumn: admission_datetime
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_datetime
+		dataType: string
+		lineageTag: f1b6339c-55fa-4d0b-805b-efe9ac29c765
+		summarizeBy: none
+		sourceColumn: discharge_datetime
+
+		annotation SummarizationSetBy = Automatic
+
+	column Contact_during_stay_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: beafda4c-2521-49d9-9873-640ad97a56e5
+		summarizeBy: sum
+		sourceColumn: Contact_during_stay_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ee2613c2-9732-424f-ba3d-e374affd8acf
+		summarizeBy: none
+		sourceColumn: ContactDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactTime
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: ddb94394-334b-4ec7-b25f-21a61b9dfa59
+		summarizeBy: none
+		sourceColumn: ContactTime
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column AdminCategory
+		dataType: string
+		lineageTag: 572581d5-094b-4bb9-a1a6-ac78adda045d
+		summarizeBy: none
+		sourceColumn: AdminCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column AdminCategoryDescription
+		dataType: string
+		lineageTag: 05993d21-8171-4c98-b4f9-f64c81f3e876
+		summarizeBy: none
+		sourceColumn: AdminCategoryDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareContactDuration
+		dataType: string
+		lineageTag: 1fc7ead8-cec2-49a3-a907-241ea9995521
+		summarizeBy: none
+		sourceColumn: CareContactDuration
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsultationType
+		dataType: string
+		lineageTag: 2d4900b5-98f1-4378-94e2-32142b40e72e
+		summarizeBy: none
+		sourceColumn: ConsultationType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsultationTypeDescription
+		dataType: string
+		lineageTag: aad76af5-c85c-4bf2-9634-6d70a60a8fea
+		summarizeBy: none
+		sourceColumn: ConsultationTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareContactSubject
+		dataType: string
+		lineageTag: e0be0ea0-0f61-491c-b402-44bdbde09999
+		summarizeBy: none
+		sourceColumn: CareContactSubject
+
+		annotation SummarizationSetBy = Automatic
+
+	column CareContactSubjectDescription
+		dataType: string
+		lineageTag: b460cf7b-aee1-4631-898a-283db9c72953
+		summarizeBy: none
+		sourceColumn: CareContactSubjectDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsultationMediumUsed
+		dataType: string
+		lineageTag: ae95416c-ddfe-4677-b26e-c1226f282b3d
+		summarizeBy: none
+		sourceColumn: ConsultationMediumUsed
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsultationMediumUsedDescription
+		dataType: string
+		lineageTag: 6f957301-3a04-4d1b-b929-6287897b5544
+		summarizeBy: none
+		sourceColumn: ConsultationMediumUsedDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityLocationType
+		dataType: string
+		lineageTag: 1278ef39-698e-4115-81d0-5b3a7e3c5ece
+		summarizeBy: none
+		sourceColumn: ActivityLocationType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityLocationTypeDescription
+		dataType: string
+		lineageTag: d3bfabdc-a86a-4c87-885f-ab8fc92aac9f
+		summarizeBy: none
+		sourceColumn: ActivityLocationTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentOrgSiteID
+		dataType: string
+		lineageTag: 5ff3ab38-ee88-4178-9954-65dd822d7c72
+		summarizeBy: none
+		sourceColumn: TreatmentOrgSiteID
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentOrgSiteIDDescription
+		dataType: string
+		lineageTag: 6b171501-f851-4678-96e1-05351d83dec9
+		summarizeBy: none
+		sourceColumn: TreatmentOrgSiteIDDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralCostCentre
+		dataType: string
+		lineageTag: 4b8539db-e8b0-435d-8c48-4e96783fb4a3
+		summarizeBy: none
+		sourceColumn: ReferralCostCentre
+
+		annotation SummarizationSetBy = Automatic
+
+	column AllCostCentresOnReferral
+		dataType: string
+		lineageTag: c575b7f9-2df5-427d-b979-b6288625f41b
+		summarizeBy: none
+		sourceColumn: AllCostCentresOnReferral
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRequestReceivedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: bb340222-0e81-4776-a9bf-a0c7689fdca4
+		summarizeBy: none
+		sourceColumn: ReferralRequestReceivedDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClinicalContactFlag
+		dataType: int64
+		formatString: 0
+		lineageTag: 5cb4b071-1007-4b11-9b6b-4454bc02bdf0
+		summarizeBy: sum
+		sourceColumn: ClinicalContactFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column AttendOrNot
+		dataType: string
+		lineageTag: 2c5b0ff8-d727-4f46-aa73-e8e6280888a1
+		summarizeBy: none
+		sourceColumn: AttendOrNot
+
+		annotation SummarizationSetBy = Automatic
+
+	column AttendOrNotDescription
+		dataType: string
+		lineageTag: 5c849e4c-766c-4181-80c0-d68f99f705bc
+		summarizeBy: none
+		sourceColumn: AttendOrNotDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: b45c352d-95c7-4f51-8dfb-1dc6b03e720c
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialMonth
+		dataType: string
+		lineageTag: 149c23a8-b7bd-47e7-aa18-d522cb324a39
+		summarizeBy: none
+		sourceColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: be45ff17-345e-420d-b656-2cc8d4306bd3
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week_Ending_Sunday
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a86780b3-a454-4cc2-8151-125f04265962
+		summarizeBy: none
+		sourceColumn: Week_Ending_Sunday
+
+		annotation SummarizationSetBy = Automatic
+
+	column Team
+		dataType: string
+		lineageTag: bc332a33-053b-448f-a511-0d6dfca09523
+		summarizeBy: none
+		sourceColumn: Team
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service
+		dataType: string
+		lineageTag: 1efc1e1d-6032-4c53-86a4-dfab6b5a15c8
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 76f35fd7-2928-4fcf-a38e-f0833c181435
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand5yr
+		dataType: string
+		lineageTag: bcf7d670-5a3c-446c-af0e-e5a57d04059e
+		summarizeBy: none
+		sourceColumn: AgeBand5yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 97ca0d78-88b1-43a7-b67a-676561f402cc
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalityName
+		dataType: string
+		lineageTag: aafa88ea-4a17-4ea9-91ea-a640b6ef41b4
+		summarizeBy: none
+		sourceColumn: LocalityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginDescription
+		dataType: string
+		lineageTag: 8c996905-d279-4e1b-bc78-4132915ca388
+		summarizeBy: none
+		sourceColumn: EthnicOriginDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralUrbanClass
+		dataType: string
+		lineageTag: 7a1fbfca-b228-4c23-a3c9-7219c4c68c46
+		summarizeBy: none
+		sourceColumn: RuralUrbanClass
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Catgory_derived
+		dataType: string
+		lineageTag: 40305acb-6ca1-4b72-a5bf-51ba40651215
+		summarizeBy: none
+		sourceColumn: eFI_Catgory_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: string
+		lineageTag: 9584650b-986c-45a6-9e6e-f71ef373d26a
+		summarizeBy: none
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA Code'
+		dataType: string
+		lineageTag: 37e8abd0-dbe2-46e0-8319-1658ac0a44d1
+		summarizeBy: none
+		sourceColumn: LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rural_Urban
+		dataType: string
+		lineageTag: 135ea642-72f8-49e8-89e3-d268326e9a4e
+		summarizeBy: none
+		sourceColumn: Rural_Urban
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactHour = ```
+			HOUR('07 H@H Virtual Wards only'[ContactTime]) 
+			```
+		formatString: 0
+		lineageTag: 186de1a5-bc2b-49fe-970c-553ea5f9555b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column SeenorNot
+		dataType: string
+		lineageTag: c797b463-122f-4d6f-ba99-f4d2c070b23e
+		summarizeBy: none
+		sourceColumn: SeenorNot
+
+		annotation SummarizationSetBy = Automatic
+
+	column Is_Complete_Latest_Week_Flag =
+			
+			VAR MaxWeek =
+			    CALCULATE(
+			        MAX('07 H@H Virtual Wards only'[Week_Ending_Sunday]),
+			        ALL('07 H@H Virtual Wards only')
+			    )
+			VAR NumDaysInMaxWeek =
+			    CALCULATE(
+			        DISTINCTCOUNT('07 H@H Virtual Wards only'[ContactDate]),
+			        FILTER(
+			            ALL('07 H@H Virtual Wards only'),
+			            '07 H@H Virtual Wards only'[Week_Ending_Sunday] = MaxWeek
+			        )
+			    )
+			RETURN
+			    IF (
+			        '07 H@H Virtual Wards only'[Week_Ending_Sunday] = MaxWeek && NumDaysInMaxWeek < 7,
+			        0,
+			        1
+			    )
+		formatString: 0
+		lineageTag: 4af209d5-7e0d-49d0-ba93-fdded951aedf
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Full_Week_flag = ```
+			
+			VAR MaxFullWeek = 
+			    CALCULATE(
+			        MAX('07 H@H Virtual Wards only'[Week_Ending_Sunday]),
+			        FILTER(
+			            '07 H@H Virtual Wards only',
+			            '07 H@H Virtual Wards only'[Is_Complete_Latest_Week_Flag] = 1
+			        )
+			    )
+			
+			RETURN 
+			IF('07 H@H Virtual Wards only'[Week_Ending_Sunday] = MaxFullWeek, 1, 0)
+			
+			
+			```
+		formatString: 0
+		lineageTag: 4c41a85a-42d9-4953-8aee-d28decbf67dd
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Previous_Full_Week_Flag =
+			
+			VAR LatestFullWeek =
+			    CALCULATE(
+			        MAX('07 H@H Virtual Wards only'[Week_Ending_Sunday]),
+			        FILTER(
+			            '07 H@H Virtual Wards only',
+			            '07 H@H Virtual Wards only'[Is_Complete_Latest_Week_Flag] = 1
+			        )
+			    )
+			VAR PreviousWeek = LatestFullWeek - 7
+			RETURN
+			IF('07 H@H Virtual Wards only'[Week_Ending_Sunday] = PreviousWeek, 1, 0)
+		formatString: 0
+		lineageTag: 150cd5d4-07b6-4050-9565-65f2a6510147
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'VW H@H PREVIOUS WEEK' = CALCULATE(SUM('07 H@H Virtual Wards only'[Counter]), '07 H@H Virtual Wards only'[Previous_Full_Week_Flag] = 1, '07 H@H Virtual Wards only'[Contact_during_stay_flag] = 1) +0
+		formatString: 0
+		lineageTag: a1913999-19bc-4118-86f0-9673d587fa5c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_4Full_Week_flag = ```
+			
+			VAR LatestWeek = 
+			    CALCULATE(
+			        MAX('07 H@H Virtual Wards only'[Week_Ending_Sunday]),
+			        '07 H@H Virtual Wards only'[Is_Complete_Latest_Week_Flag] = 1,
+			        ALL('07 H@H Virtual Wards only') 
+			    )
+			VAR PreviousWeek = LatestWeek - 7
+			VAR TwoWeeksAgo = LatestWeek - 14
+			VAR ThreeWeeksAgo = LatestWeek - 21
+			RETURN
+			    IF (
+			        '07 H@H Virtual Wards only'[Week_Ending_Sunday] IN {LatestWeek, PreviousWeek, TwoWeeksAgo, ThreeWeeksAgo},
+			        1,
+			        0
+			    )
+			```
+		formatString: 0
+		lineageTag: da7bf50d-09ef-4ad6-9b8a-eeb183c8c594
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Previous_4Full_Week_flag = ```
+			
+			VAR LatestWeek = 
+			    CALCULATE(
+			        MAX('07 H@H Virtual Wards only'[Week_Ending_Sunday]),
+			        '07 H@H Virtual Wards only'[Is_Complete_Latest_Week_Flag] = 1,
+			        ALL('07 H@H Virtual Wards only') 
+			    )
+			VAR Fourweeksago = LatestWeek - 28
+			VAR FiveWeeksAgo = LatestWeek - 35
+			VAR SixWeeksAgo = LatestWeek - 42
+			VAR SevenWeeksAgo = LatestWeek - 49
+			RETURN
+			    IF (
+			        '07 H@H Virtual Wards only'[Week_Ending_Sunday] IN {Fourweeksago, FiveWeeksAgo, SixWeeksAgo, SevenWeeksAgo},
+			        1,
+			        0
+			    )
+			```
+		formatString: 0
+		lineageTag: 45801899-88e0-4c08-a877-249e6916c793
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_referral
+		dataType: int64
+		formatString: 0
+		lineageTag: aed9dfff-74f6-40c2-b554-472cb82d25ab
+		summarizeBy: sum
+		sourceColumn: Age_at_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e79a279e-9347-4d79-bd7a-4cb2cae5f15e
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_ward_code
+		dataType: string
+		lineageTag: 5910c329-36ed-48de-9809-c496f748f8b4
+		summarizeBy: none
+		sourceColumn: admitting_ward_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Virtual_Ward_Type
+		dataType: string
+		lineageTag: d0d1f26a-700a-4f20-af28-073d4a9db090
+		summarizeBy: none
+		sourceColumn: Virtual_Ward_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '07 H@H Virtual Wards only' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[SecondaryCare].[tbl02_Hospital_at_Home_Virtual_Wards]"]),
+				    #"Added Conditional Column" = Table.AddColumn(Source, "SeenorNot", each if [AttendOrNot] = "5" then "Seen" else if [AttendOrNot] = "6" then "Not Seen" else "Unknown")
+				in
+				    #"Added Conditional Column"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

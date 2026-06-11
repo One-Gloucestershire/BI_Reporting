@@ -1,0 +1,679 @@
+table '01 Admissions'
+	lineageTag: c2a935b6-0518-41d8-85de-90220658f33c
+
+	measure ADMISSION_TOTAL =
+			CALCULATE(
+			    COUNTROWS('01 Admissions'))
+		formatString: 0
+		lineageTag: 5ca020cd-7a8b-4403-9fbb-ddea5d18a2e3
+
+	measure ADM_LATEST_WEEK = ```
+			
+			    CALCULATE(COUNTROWS('01 Admissions'), 
+			    '01 Admissions'[FLAG_latest_weekend_adm] = 1) +0
+			```
+		formatString: 0
+		lineageTag: 3e6cc030-45e0-4dfe-b584-77d3d91b4b71
+
+	measure ADM_PREVIOUS_WEEK = ```
+			
+			    CALCULATE(COUNTROWS('01 Admissions'), 
+			    '01 Admissions'[FLAG_previous_weekend_adm] = 1) +0
+			```
+		formatString: 0
+		lineageTag: 8bf2cb6a-e319-4a59-88d6-8c7229b830d6
+
+	measure ADM_PREVIOUS_4WEEK = ```
+			
+			   ( CALCULATE(COUNTROWS('01 Admissions'), 
+			    '01 Admissions'[FLAG_previous_4week_adm] = 1) / 4 ) +0
+			```
+		formatString: 0
+		lineageTag: ce31d2bb-24b0-4bda-b734-6451e9487e0b
+
+	measure ADM_LATEST_4WEEK = ```
+			
+			   ( CALCULATE(COUNTROWS('01 Admissions'), 
+			    '01 Admissions'[FLAG_latest_4week_adm] = 1) / 4 ) +0
+			```
+		formatString: 0
+		lineageTag: d6bb35cb-f996-477d-959c-506cde8dbbd7
+
+	measure ADM_DIAGNOSIS% = ```
+			(SUM('01 Admissions'[primary_diagnosis_counter]) / SUM('01 Admissions'[Counter]) ) 
+			```
+		lineageTag: 2eec76ed-5e3f-43c9-adcd-1febcd1208c2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LATEST_WEEK_END = FORMAT(MAX('01 Admissions'[Admission_Week_Ending_Sunday]), "DD/MM/YYYY")
+		lineageTag: 02fbb8ba-e667-4b7a-ba5e-83b8dd870735
+
+	measure ADM_TFC% = ```
+			(SUM('01 Admissions'[primary_diagnosis_counter]) / SUM('01 Admissions'[Counter]) ) 
+			```
+		lineageTag: deadefc8-59e1-4c9b-a818-abc555166cc9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure admission_TFC_% = ```
+			(SUM('01 Admissions'[admission_tfc_count]) / SUM('01 Admissions'[Counter]) ) 
+			```
+		lineageTag: d8a91d3e-0cf6-489d-b7f3-fe47d5b5a7d2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure HRG_% = ```
+			(SUM('01 Admissions'[HRG_Counter]) / SUM('01 Admissions'[Counter]) ) 
+			```
+		lineageTag: d5e1baad-691a-4b9f-bf9a-97661b0b77f2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Current_Month_Year = FORMAT(TODAY(), "MMMM YYYY")
+		lineageTag: 2ae04af2-30b9-46e3-a04a-c1e58bdee74c
+
+	measure VW_Admission_Time_Series_Title = ```
+			
+			VAR _TypeHasOne     = HASONEVALUE ( '01 Admissions'[Virtual_Ward_Type] )
+			VAR _TypeIsFiltered = ISFILTERED ( '01 Admissions'[Virtual_Ward_Type] )
+			VAR _WardHasOne     = HASONEVALUE ( '01 Admissions'[admitting_ward] )
+			VAR _WardIsFiltered = ISFILTERED ( '01 Admissions'[admitting_ward] )
+			
+			VAR _TypeName = SELECTEDVALUE ( '01 Admissions'[Virtual_Ward_Type], "Unknown" )
+			VAR _WardName = SELECTEDVALUE ( '01 Admissions'[admitting_ward], "Unknown" )
+			
+			RETURN
+			SWITCH (
+			    TRUE(),
+			
+			    // 1) If a single ward is selected (regardless of type selection), show the ward name
+			    _WardHasOne,
+			        "Trend of admissions to " & _WardName ,
+			
+			    // 2) A single type selected and wards NOT filtered: show that type )
+			    _TypeHasOne && NOT _WardIsFiltered,
+			        "Trend of admissions to " & _TypeName,
+			
+			    // 3) A single type selected AND wards filtered (multiple): selected wards within that type
+			    _TypeHasOne && _WardIsFiltered && NOT _WardHasOne,
+			        "Trend of admissions to selected " & _TypeName,
+			
+			    // 4) Multiple types selected (any ward state): generic selected
+			    _TypeIsFiltered && NOT _TypeHasOne,
+			        "Trend of admissions to selected Virtual Wards",
+			
+			    // 5) Wards filtered (multiple) but type not filtered: generic selected
+			    _WardIsFiltered && NOT _WardHasOne,
+			        "Trend of admissions to selected Virtual Wards",
+			
+			    // 6) No filters at all
+			    "Trend of admissions to all Virtual Wards"
+			)
+			
+			
+			```
+		lineageTag: efb0ca68-1758-44fa-bd6e-0df35aed9e37
+
+	measure VW_Admission_Admission_Method_Title = ```
+			
+			VAR _TypeHasOne     = HASONEVALUE ( '01 Admissions'[Virtual_Ward_Type] )
+			VAR _TypeIsFiltered = ISFILTERED ( '01 Admissions'[Virtual_Ward_Type] )
+			VAR _WardHasOne     = HASONEVALUE ( '01 Admissions'[admitting_ward] )
+			VAR _WardIsFiltered = ISFILTERED ( '01 Admissions'[admitting_ward] )
+			
+			VAR _TypeName = SELECTEDVALUE ( '01 Admissions'[Virtual_Ward_Type], "Unknown" )
+			VAR _WardName = SELECTEDVALUE ( '01 Admissions'[admitting_ward], "Unknown" )
+			
+			RETURN
+			SWITCH (
+			    TRUE(),
+			
+			    // 1) If a single ward is selected (regardless of type selection), show the ward name
+			    _WardHasOne,
+			        "Admission method to " & _WardName ,
+			
+			    // 2) A single type selected and wards NOT filtered: show that type )
+			    _TypeHasOne && NOT _WardIsFiltered,
+			        "Admission method to " & _TypeName,
+			
+			    // 3) A single type selected AND wards filtered (multiple): selected wards within that type
+			    _TypeHasOne && _WardIsFiltered && NOT _WardHasOne,
+			        "Admission method to " & _TypeName,
+			
+			    // 4) Multiple types selected (any ward state): generic selected
+			    _TypeIsFiltered && NOT _TypeHasOne,
+			        "Admission method for selected Virtual Wards",
+			
+			    // 5) Wards filtered (multiple) but type not filtered: generic selected
+			    _WardIsFiltered && NOT _WardHasOne,
+			        "Admission method to selected Virtual Wards",
+			
+			    // 6) No filters at all
+			    "Admission method to all Virtual Wards"
+			)
+			
+			
+			```
+		lineageTag: 816c1628-ddab-411d-be6a-233b9c0610f8
+
+	column nhs_number
+		dataType: string
+		lineageTag: cdccefcf-c624-4ddc-9c8e-4f49d5f41fd5
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column hospital_episode_number
+		dataType: string
+		lineageTag: 3f29c74c-c421-4ae4-a5e9-9f06b3be5aa7
+		summarizeBy: none
+		sourceColumn: hospital_episode_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisation_code_of_commissioner
+		dataType: string
+		lineageTag: fdad6bb3-4516-466d-892d-75cf76c8ded5
+		summarizeBy: none
+		sourceColumn: organisation_code_of_commissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_datetime
+		dataType: string
+		lineageTag: 6281028f-a4bc-4ba7-a123-fb2a6a4f11d8
+		summarizeBy: none
+		sourceColumn: admission_datetime
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_dateonly
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d61bd135-e810-4e18-8a19-db1ebb9ff190
+		summarizeBy: none
+		sourceColumn: admission_dateonly
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Week_Ending_Sunday
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a42e08a9-973f-4072-9468-6477949d5504
+		summarizeBy: none
+		sourceColumn: Admission_Week_Ending_Sunday
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method_code
+		dataType: string
+		lineageTag: 3d54c1f8-a1a3-4111-9bb8-43ab4bb195ad
+		summarizeBy: none
+		sourceColumn: admission_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method
+		dataType: string
+		lineageTag: e7b5ed83-61ad-481a-be46-bc3306d04946
+		summarizeBy: none
+		sourceColumn: admission_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_treatment_function_code
+		dataType: string
+		lineageTag: 9e5f064d-e9ba-44df-b657-41f4f9bc6db0
+		summarizeBy: none
+		sourceColumn: admission_treatment_function_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_treatment_function
+		dataType: string
+		lineageTag: de74faf3-044a-471e-a495-a474dd274e88
+		summarizeBy: none
+		sourceColumn: admission_treatment_function
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_ward_code
+		dataType: string
+		lineageTag: aa0a601c-d09b-4aa9-bb78-c014986cc215
+		summarizeBy: none
+		sourceColumn: admitting_ward_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_ward
+		dataType: string
+		lineageTag: a19ae3a6-53ff-411e-b2f1-30b341c573cc
+		summarizeBy: none
+		sourceColumn: admitting_ward
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_datetime
+		dataType: string
+		lineageTag: 7ea11cbb-872a-416d-a3a5-8f3514d246cf
+		summarizeBy: none
+		sourceColumn: discharge_datetime
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_dateonly
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a8a86173-bd89-46b5-8d11-38bca9639206
+		summarizeBy: none
+		sourceColumn: discharge_dateonly
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_code
+		dataType: string
+		lineageTag: 1a5e8cbe-08de-4f6f-9d71-d599f55e3cfd
+		summarizeBy: none
+		sourceColumn: discharge_destination_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination
+		dataType: string
+		lineageTag: 3796566f-012a-4fea-b703-c7f0e2673353
+		summarizeBy: none
+		sourceColumn: discharge_destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_method
+		dataType: string
+		lineageTag: 8d42e2a2-8a11-4faa-b945-621e58e023c5
+		summarizeBy: none
+		sourceColumn: discharge_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_method_code
+		dataType: string
+		lineageTag: 64525cb2-afa2-4219-8d44-7e33838866ba
+		summarizeBy: none
+		sourceColumn: discharge_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_pathway
+		dataType: string
+		lineageTag: 1569b0d1-9b8d-4cc4-b8a6-2f4dc7fb610d
+		summarizeBy: none
+		sourceColumn: discharge_pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	column length_of_stay_days
+		dataType: int64
+		formatString: 0
+		lineageTag: c52cff8c-1be1-441e-af0b-70fe9b539227
+		summarizeBy: sum
+		sourceColumn: length_of_stay_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column readmission_30_day
+		dataType: string
+		lineageTag: fc7067e9-e50f-4b0c-8ab1-c17dd02ae3b8
+		summarizeBy: none
+		sourceColumn: readmission_30_day
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpellHRG
+		dataType: string
+		lineageTag: 37ae3ddf-8048-43b3-8d8a-c4de340c6f79
+		summarizeBy: none
+		sourceColumn: SpellHRG
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRGCodeDescription
+		dataType: string
+		lineageTag: 239666bc-8dc4-408b-98ac-d09db5f8c111
+		summarizeBy: none
+		sourceColumn: HRGCodeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG_Chapter_Description
+		dataType: string
+		lineageTag: 5dfaaa35-5ee9-4f64-82b4-4cc473bbeffe
+		summarizeBy: none
+		sourceColumn: HRG_Chapter_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG_SubChapter_Description
+		dataType: string
+		lineageTag: 963c4565-05d1-452c-b322-bbc9e0e8b537
+		summarizeBy: none
+		sourceColumn: HRG_SubChapter_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_P_diag
+		dataType: string
+		lineageTag: d36859d5-940f-4b97-a195-f1bf3130cc71
+		summarizeBy: none
+		sourceColumn: spell_P_diag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10Code
+		dataType: string
+		lineageTag: 14435003-4287-4cb2-848c-28cfd5352abd
+		summarizeBy: none
+		sourceColumn: ICD10Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_diagnosis
+		dataType: string
+		lineageTag: 54a642b8-462f-42b5-99cc-a3c950e7f987
+		summarizeBy: none
+		sourceColumn: Primary_diagnosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_diagnosis_counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 29cfa9bd-f2cf-490a-a1a3-0cd8dd6b3d75
+		summarizeBy: sum
+		sourceColumn: primary_diagnosis_counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column frailty_proxy
+		dataType: string
+		lineageTag: 03a1134c-0cc0-4d19-8263-5538d84cf4b5
+		summarizeBy: none
+		sourceColumn: frailty_proxy
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_admission
+		dataType: string
+		lineageTag: d40676ab-c879-470a-9314-2a9356fd8865
+		summarizeBy: none
+		sourceColumn: age_at_admission
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 79657e4a-fa66-41dd-bacd-ae20a0f5269d
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginDescription
+		dataType: string
+		lineageTag: 6d75d956-4656-4b66-855e-9185fb4e8453
+		summarizeBy: none
+		sourceColumn: EthnicOriginDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracNameCurrent
+		dataType: string
+		lineageTag: 4f06622f-4541-49a6-91b2-612f3ffb2fe7
+		summarizeBy: none
+		sourceColumn: PracNameCurrent
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralUrbanClass
+		dataType: string
+		lineageTag: 6a98b1de-b1ca-4647-9ea2-85cc0d869437
+		summarizeBy: none
+		sourceColumn: RuralUrbanClass
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		lineageTag: 2fbbffe9-e4da-4564-b3f5-b130dc4ef789
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalityName
+		dataType: string
+		lineageTag: 2cf1528d-9234-4b6b-b112-1fe918e59d7e
+		summarizeBy: none
+		sourceColumn: LocalityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 8ecff566-5eda-4af2-9f52-6d9e976581af
+		summarizeBy: sum
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand5yr
+		dataType: string
+		lineageTag: 28f5ddb2-be0c-4857-8ccf-36866d4d7773
+		summarizeBy: none
+		sourceColumn: AgeBand5yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA Code'
+		dataType: string
+		lineageTag: d222fffe-9bd9-4b20-a738-fb1b7c576d0f
+		summarizeBy: none
+		sourceColumn: LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 9cf59b99-be09-4e93-8a23-c49201761198
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column death_flag
+		dataType: string
+		lineageTag: e4e87bce-a045-42ab-8e95-d738160087a1
+		summarizeBy: none
+		sourceColumn: death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column place_of_death
+		dataType: string
+		lineageTag: b570acc5-992f-44b6-845f-28e6f04f5322
+		summarizeBy: none
+		sourceColumn: place_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rural_Urban
+		dataType: string
+		lineageTag: 6d2905f9-2ab5-4e7f-a47b-b6fb58fec1b9
+		summarizeBy: none
+		sourceColumn: Rural_Urban
+
+		annotation SummarizationSetBy = Automatic
+
+	column length_of_stay_groups
+		dataType: string
+		lineageTag: b69249db-1966-42c8-a569-27a4131d210e
+		summarizeBy: none
+		sourceColumn: length_of_stay_groups
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Destination_Short
+		dataType: string
+		lineageTag: 5e12d2e2-f838-4ab2-a137-6dfd1976a15d
+		summarizeBy: none
+		sourceColumn: Discharge_Destination_Short
+
+		annotation SummarizationSetBy = Automatic
+
+	column FLAG_latest_weekend_adm =
+			
+			IF('01 Admissions'[Admission_Week_Ending_Sunday] = MAX('01 Admissions'[Admission_Week_Ending_Sunday]), 1, 0 )
+		formatString: 0
+		lineageTag: cca87221-99a7-456a-9f6c-2a14504e55a1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column FLAG_latest_4week_adm =
+			
+			VAR LatestWeek = MAX('01 Admissions'[Admission_Week_Ending_Sunday])
+			VAR PreviousWeek = LatestWeek - 7
+			VAR TwoWeeksAgo = LatestWeek - 14
+			VAR ThreeWeeksAgo = LatestWeek - 21
+			RETURN
+			    IF (
+			        '01 Admissions'[Admission_Week_Ending_Sunday] IN {LatestWeek, PreviousWeek, TwoWeeksAgo, ThreeWeeksAgo},
+			        1,
+			        0
+			    )
+		formatString: 0
+		lineageTag: 2a5fa5a0-ae89-466f-b05e-46a0feef49e8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column FLAG_previous_4week_adm =
+			
+			VAR LatestWeek = MAX('01 Admissions'[Admission_Week_Ending_Sunday])
+			VAR FourWeekAgo = LatestWeek - 28
+			VAR FiveWeekAgo = LatestWeek - 35
+			VAR SixWeeksAgo = LatestWeek - 42
+			VAR SevenWeeksAgo = LatestWeek - 48
+			RETURN
+			    IF (
+			        '01 Admissions'[Admission_Week_Ending_Sunday] IN {FourWeekAgo, FiveWeekAgo, SixWeeksAgo, SevenWeeksAgo},
+			        1,
+			        0
+			    )
+		formatString: 0
+		lineageTag: 6b432e5c-5523-4b5f-8add-f022892f846c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_hour = ```
+			HOUR('01 Admissions'[admission_datetime]) 
+			```
+		formatString: 0
+		lineageTag: a95d8c85-c724-4d7e-aff6-a5a2c0690921
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Method_Short
+		dataType: string
+		lineageTag: f50816bf-c3e5-4c2f-8021-00317275a154
+		summarizeBy: none
+		sourceColumn: Admission_Method_Short
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_month_year = FORMAT('01 Admissions'[admission_dateonly], "MMMM yyyy")
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: bcbe7948-ab75-4db8-9c13-c543585c7de7
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column FLAG_previous_weekend_adm =
+			
+			IF('01 Admissions'[Admission_Week_Ending_Sunday] = MAX('01 Admissions'[Admission_Week_Ending_Sunday]) - 7, 1, 0 )
+		formatString: 0
+		lineageTag: acb3a146-10c7-46e6-b262-68d4961f454c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Catgory_derived
+		dataType: string
+		lineageTag: 947fb64d-0b55-4f4a-9386-9bfab04f0fc1
+		summarizeBy: none
+		sourceColumn: eFI_Catgory_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_tfc_count = ```
+			
+			    IF('01 Admissions'[admission_treatment_function_code] <> "", 1, 0)
+			```
+		formatString: 0
+		lineageTag: e4bf15bb-a76a-4c12-b268-f4e70b7fee95
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG_Counter = ```
+			
+			    IF('01 Admissions'[SpellHRG] <> "UZ01Z", 1, 0)
+			```
+		formatString: 0
+		lineageTag: 6b7807ef-9275-425f-97bf-5164b5aac4eb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e842008f-2a1d-459a-9036-7ad601a5ca81
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		annotation SummarizationSetBy = Automatic
+
+	column Virtual_Ward_Type
+		dataType: string
+		lineageTag: d8d9ebbb-4761-4299-a3fa-846e823ced74
+		summarizeBy: none
+		sourceColumn: Virtual_Ward_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '01 Admissions' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[SecondaryCare].[tbl01_VirtualWards]"]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"Discharge_Week_Ending_Sunday"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"discharge_counter", "Counter"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

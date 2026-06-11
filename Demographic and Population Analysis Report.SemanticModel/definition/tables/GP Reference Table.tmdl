@@ -1,0 +1,71 @@
+table 'GP Reference Table'
+	lineageTag: 77f03ead-41af-411f-8a99-ffb3a31dfcaa
+
+	column Locality
+		dataType: string
+		lineageTag: 25bf48be-2d58-4ad9-a18f-2f65c9af0c9b
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 8fb22a06-251f-4b1c-826f-ce26006e914c
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: f9c0ca1b-dbb2-49ef-a71c-3c525c170dda
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: a8586dc1-7afc-4333-9b15-db9805b87071
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 58d8a262-5f2a-40b7-8d93-e13cbeb4d2ae
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: fd85deaf-b9f0-4385-9cdb-2ba86cdd34a1
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: da11c417-c7d0-4086-956d-fd134f2cdff1
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Reference Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)#(lf)SELECT [Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)                         WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Locality] LIKE 'Tewkesbury Newent and Staunton' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)      ,[PrimaryCareNetwork] = CASE WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)                               WHEN [PrimaryCareNetwork] LIKE 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   ELSE [PrimaryCareNetwork] END#(lf)#(tab)  ,[OrganisationCode]#(lf)#(tab)  ,[ReportingOrganisationCode] = CASE WHEN [ReportingOrganisationCode] LIKE 'L84073' THEN 'L84075' /*Acorn Practice*/#(lf)#(tab)                                      WHEN [ReportingOrganisationCode] LIKE 'L84017' THEN 'L84018' /*Cirencester Health Group*/#(lf)#(tab)                                      ELSE [ReportingOrganisationCode] END #(lf)#(tab)  ,[ReportingOrganisationName] = CASE WHEN [ReportingOrganisationName] LIKE 'Acorn Practice' THEN 'May Lane Surgery' #(lf)#(tab)                                      WHEN [ReportingOrganisationName] LIKE 'Regent Street Surgery' THEN 'The Willow Tree Practice'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [ReportingOrganisationName] LIKE 'Coleford Family Doctors' THEN 'Coleford Medical Practice'#(lf) #(tab)                                      ELSE [ReportingOrganisationName] END#(lf)#(lf)INTO #TEMP#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)#(lf)#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)AND [Locality] IS NOT NULL#(lf);#(lf)#(lf)SELECT [GP].*#(lf)#(tab)  ,[COORD].[GPLatitude]#(lf)#(tab)  ,[COORD].[GPLongitude]#(lf)#(lf)FROM #TEMP AS [GP]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT [GP_Practice_Code], [GPLatitude], [GPLongitude]#(lf)           FROM [PowerBI_Reporting].[PHM].[tbl02_DemographicsOverview]) [COORD] ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

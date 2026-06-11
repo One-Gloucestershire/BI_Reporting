@@ -1,0 +1,106 @@
+table 'Prevalence COPD_Asthma'
+	lineageTag: fe9f28ce-9aa1-4bc8-a165-97956a6f6107
+
+	column 'Financial Year'
+		dataType: string
+		lineageTag: 5529d788-1c87-4b6a-8bf4-149db15941c1
+		summarizeBy: none
+		sourceColumn: Financial Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Last Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2384f347-8f1e-425f-bca3-3eaf1a9d9c58
+		summarizeBy: none
+		sourceColumn: Last Date
+
+		variation Variation
+			isDefault
+			relationship: 36d95812-4654-4bfd-8b11-b2133a95ecd4
+			defaultHierarchy: LocalDateTable_37b886db-6a43-42ad-aa77-9c76c3c6a6e0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'COPD: QOF prevalence (All Ages)'
+		dataType: int64
+		formatString: 0
+		lineageTag: ce71fc8a-44c0-40fc-97c0-842cdb7279cd
+		summarizeBy: sum
+		sourceColumn: COPD: QOF prevalence (All Ages)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'COPD: QOF prevalence % (All Ages)'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b3e68f57-5ff0-43fe-be0a-3a4ed56b5648
+		summarizeBy: sum
+		sourceColumn: COPD: QOF prevalence % (All Ages)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Asthma: QOF prevalence (Age 6 +)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2d398804-311b-4e12-8b29-677ae2469f70
+		summarizeBy: sum
+		sourceColumn: Asthma: QOF prevalence (Age 6 +)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Asthma: QOF prevalence % (Age 6 +)'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b8554173-35df-40d3-97fe-36300a5bfda5
+		summarizeBy: sum
+		sourceColumn: Asthma: QOF prevalence % (Age 6 +)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column7
+		dataType: string
+		lineageTag: cf5deafd-068a-455e-b269-9dc14be0f874
+		summarizeBy: none
+		sourceColumn: Column7
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Population'
+		dataType: double
+		lineageTag: 9e6cc10f-f5a7-421e-95f9-d3cf34e15079
+		summarizeBy: sum
+		sourceColumn: Total Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Population - 6+'
+		dataType: double
+		lineageTag: c5229863-e95f-4eea-9a6e-42c979eed784
+		summarizeBy: sum
+		sourceColumn: Population - 6+
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Prevalence COPD_Asthma' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\Respiratory\CPG Dashboard\Power BI\Primary Care\Asthma_COPD Prevalence_Import.xlsx"), null, true),
+				    Import_Sheet = Source{[Item="Import",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Import_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Financial Year", type text}, {"Last Date", type date}, {"COPD: QOF prevalence (All Ages)", Int64.Type}, {"COPD: QOF prevalence % (All Ages)", type number}, {"Asthma: QOF prevalence (Age 6 +)", Int64.Type}, {"Asthma: QOF prevalence % (Age 6 +)", type number}, {"Column7", type any}, {"Total Population", type number}, {"Population - 6+", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

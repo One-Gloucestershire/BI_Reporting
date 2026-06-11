@@ -1,0 +1,98 @@
+table GHFT_Ref_Seen_Not_Seen
+	lineageTag: 5f0c33d1-0526-4c73-8ee8-ba59e11b79c7
+
+	column Financial_Year
+		dataType: string
+		lineageTag: e3681599-c56b-42f0-aabd-3dccb07debd1
+		summarizeBy: none
+		sourceColumn: Financial_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2a9a49bd-a2ae-41eb-8bea-cae502e64653
+		summarizeBy: none
+		sourceColumn: Month
+
+		variation Variation
+			isDefault
+			relationship: 133ca970-8f20-4a75-acf6-ebe35975204c
+			defaultHierarchy: LocalDateTable_498292a9-69a0-48eb-93a2-4ea32beb1a2e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year_Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 58ffa3d1-ec47-47d0-ae3a-9081b8a697f1
+		summarizeBy: none
+		sourceColumn: Year_Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Service
+		dataType: string
+		lineageTag: 7c69b8ef-a83b-4436-bd27-2b79718f262d
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column '% Urgent seen in 2 weeks'
+		dataType: double
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 628f643c-1e8a-4366-ad4d-65240830e043
+		summarizeBy: sum
+		sourceColumn: % Urgent seen in 2 weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column '% Urgent Not seen in 2 weeks'
+		dataType: double
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cfb9bad6-f7f4-4bca-88a0-766510e237b1
+		summarizeBy: sum
+		sourceColumn: % Urgent Not seen in 2 weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column '% Routine seen in 8 weeks'
+		dataType: double
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bbf9dadd-be38-47a8-a2fb-1c9f427a52d6
+		summarizeBy: sum
+		sourceColumn: % Routine seen in 8 weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column '% Routine Not seen in 8 weeks'
+		dataType: double
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 973a863e-f71d-4786-9d8f-4a370048d463
+		summarizeBy: sum
+		sourceColumn: % Routine Not seen in 8 weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GHFT_Ref_Seen_Not_Seen = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\MSK\Dashboard\Power BI\Referrals\GHFT Referrals Backing data.xlsx"), null, true),
+				    #"Import 2_Sheet" = Source{[Item="Import 2",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Import 2_Sheet", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Financial_Year", type text}, {"Month", type date}, {"Year_Month", type date}, {"Service", type text}, {"% Urgent seen in 2 weeks", type number}, {"% Urgent Not seen in 2 weeks", type number}, {"% Routine seen in 8 weeks", type number}, {"% Routine Not seen in 8 weeks", type number}}),
+				    #"Removed Blank Rows" = Table.SelectRows(#"Changed Type", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null})))
+				in
+				    #"Removed Blank Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

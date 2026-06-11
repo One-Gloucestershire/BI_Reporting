@@ -1,0 +1,35 @@
+expression 'BMI 25+' =
+		let
+		    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="SELECT distinct 1 as [counter], *#(lf)#(lf),case when ([Ethnic Origin Group] not like 'white' or [Ethnic Origin Group] != null) and ([BMI] BETWEEN 23 AND 27.4999999999) THEN 'Overweight (25 - 30)'#(lf)#(tab)  when ([Ethnic Origin Group] not like 'white' or [Ethnic Origin Group] != null) and ([BMI] >= 27.5) THEN 'Obese (30+)'#(lf)#(tab)  else [BMI Group] END AS [BMI Group Adjusted]#(lf)#(lf),case when ([Ethnic Origin Group] not like 'white' or [Ethnic Origin Group] != null) and ([BMI] BETWEEN 27.5 AND 32.49999999) THEN 1#(lf)#(tab)  when ([Ethnic Origin Group] like 'white%' or [Ethnic Origin Group] is null) and ([BMI] BETWEEN 30 AND 34.99999999) THEN 1#(lf)#(tab)  else 0 end as [Obesity Class 1 - adjusted]#(lf)#(lf),case when ([Ethnic Origin Group] not like 'white' or [Ethnic Origin Group] != null) and ([BMI] BETWEEN 32.5 AND 37.49999999) THEN 1#(lf)#(tab)  when ([Ethnic Origin Group] like 'white%' or [Ethnic Origin Group] is null) and ([BMI] BETWEEN 35 AND 39.99999999) THEN 1#(lf)#(tab)  else 0 end as [Obesity Class 2 - adjusted]#(lf)#(lf),case when ([Ethnic Origin Group] not like 'white' or [Ethnic Origin Group] != null) and ([BMI] >= 37.5) THEN 1#(lf)#(tab)  when ([Ethnic Origin Group] like 'white%' or [Ethnic Origin Group] is null) and ([BMI] >= 40) THEN 1#(lf)#(tab)  else 0 end as [Obesity Class 3 - adjusted]#(lf)#(lf)#(lf)  FROM [BIReports].[dbo].[Obesity_Demographics_Activity]#(lf)  where [Registered ICB] = '11M'#(lf)  and (bmi is not null or [BMI Group] is not null)#(lf)  order by [Ethnic Origin Group], BMI#(lf)#(lf)#(lf)"]),
+		    #"Filtered Rows" = Table.SelectRows(Source, each ([BMI Group Adjusted] = "Obese (30+)" or [BMI Group Adjusted] = "Overweight (25 - 30)")),
+		    #"Added Conditional Column" = Table.AddColumn(#"Filtered Rows", "Age Sort", each if [AgeBand5yr] = "0-4" then 1 else if [AgeBand5yr] = "5-9" then 2 else if [AgeBand5yr] = "10-14" then 3 else if [AgeBand5yr] = "15-19" then 4 else if [AgeBand5yr] = "20-24" then 5 else if [AgeBand5yr] = "25-29" then 6 else if [AgeBand5yr] = "30-34" then 7 else if [AgeBand5yr] = "35-39" then 8 else if [AgeBand5yr] = "40-44" then 9 else if [AgeBand5yr] = "45-49" then 10 else if [AgeBand5yr] = "50-54" then 11 else if [AgeBand5yr] = "55-59" then 12 else if [AgeBand5yr] = "60-64" then 13 else if [AgeBand5yr] = "65-69" then 14 else if [AgeBand5yr] = "70-74" then 15 else if [AgeBand5yr] = "75-79" then 16 else if [AgeBand5yr] = "80-84" then 17 else if [AgeBand5yr] = "85+" then 18 else null),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Added Conditional Column",{"Deprivation Decile - Glos", Int64.Type}),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Changed Type",{{"Age Sort", Int64.Type}, {"Deprivation Decile - Glos", type text}}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Changed Type1",{{"Obesity Class 1 - adjusted", "Obesity Class I"}, {"Obesity Class 2 - adjusted", "Obesity Class II"}, {"Obesity Class 3 - adjusted", "Obesity Class III"}}),
+		    #"Added Conditional Column1" = Table.AddColumn(#"Renamed Columns", "Overweight", each if [BMI Group Adjusted] = "Overweight (25 - 30)" then 1 else 0),
+		    #"Reordered Columns" = Table.ReorderColumns(#"Added Conditional Column1",{"counter", "NHS Number (Pseudo)", "Gender","Age", "AgeBand5yr", "AgeBand10yr", "Ethnic Origin Group", "Ethnic Origin - Detailed Group", "Registered ICB", "Residence ICB", "GP Practice Code", "GP Practice Name", "Locality", "Primary Care Network", "LSOA Code", "Ward Code", "Ward Name", "Local Authority", "Deprivation Decile - Glos", "Easting", "Northing", "BMI", "BMI Value Date", "BMI Group", "BMI Group Date", "Referred to diet team", "Referred to diet team - latest DATE", "Referred for exercise", "Referred for exercise - latest DATE", "Given diet advice", "Given diet advice - latest DATE", "Given exercise advice", "Given exercise advice - latest DATE", "Referred for Weight Management", "Referred for Weight Management - first DATE", "BMI Group Adjusted", "Obesity Class I", "Obesity Class II", "Obesity Class III", "Overweight", "Age Sort"}),
+		    #"Changed Type2" = Table.TransformColumnTypes(#"Reordered Columns",{{"Overweight", Int64.Type}}),
+		    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Changed Type2", {"counter", "NHS Number (Pseudo)", "Gender", "Age", "AgeBand5yr", "AgeBand10yr","Ethnic Origin Group", "Ethnic Origin - Detailed Group", "Registered ICB", "Residence ICB", "GP Practice Code", "GP Practice Name", "Locality", "Primary Care Network", "LSOA Code", "Ward Code", "Ward Name", "Local Authority", "Deprivation Decile - Glos", "Easting", "Northing", "BMI", "BMI Value Date", "BMI Group", "BMI Group Date", "Referred to diet team", "Referred to diet team - latest DATE", "Referred for exercise", "Referred for exercise - latest DATE", "Given diet advice", "Given diet advice - latest DATE", "Given exercise advice", "Given exercise advice - latest DATE", "Referred for Weight Management", "Referred for Weight Management - first DATE", "BMI Group Adjusted", "Age Sort"}, "Attribute", "Value"),
+		    #"Renamed Columns1" = Table.RenameColumns(#"Unpivoted Columns",{{"Value", "Overweight/Obese Flag"}}),
+		    #"Filtered Rows1" = Table.SelectRows(#"Renamed Columns1", each ([#"Overweight/Obese Flag"] = 1)),
+		    #"Renamed Columns2" = Table.RenameColumns(#"Filtered Rows1",{{"Attribute", "Adjusted BMI Category"}})
+		in
+		    #"Renamed Columns2"
+	lineageTag: 2f1b6fa4-1688-4a68-97c0-db3f967fbb54
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Prescribing =
+		let
+		    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT [YearMonth]#(lf)#(tab)  ,[BNFSection]#(lf)#(tab)  ,[BNFParagraph]#(lf)#(tab)  ,[BNFChemicalSubstance]#(lf)      ,[Items] = SUM([Items])#(lf)#(tab)  ,[ActualCost] = SUM([ActualCost])#(lf)      ,[FiveYearsAgeBand]#(lf)#(tab)  ,[HSPracticeCode]#(lf) #(lf)  FROM [CCG_Current].[ePACT2].[vw_Extract]#(lf)#(lf)  Where (bnfpresentation like '%Semaglutide%'#(lf)or bnfpresentation like '%Orlistat%' #(lf)or BNFPresentation like '%Liraglutide%') --NICE Guideline Weight Loss Drugs#(lf)  and YearMonth >=202104#(lf)  and HSCommissioner_or_ProviderCode like '11m%'#(lf)#(lf)  GROUP BY [YearMonth]#(lf)#(tab)#(tab)  ,[BNFSection]#(lf)#(tab)#(tab)  ,[BNFParagraph]#(lf)#(tab)#(tab)  ,[BNFChemicalSubstance]#(lf)#(tab)#(tab)  ,[FiveYearsAgeBand]#(lf)#(tab)#(tab)  ,[HSPracticeCode]#(lf)#(tab)#(tab)  #(lf)#(lf)  Order by YearMonth#(lf)#(lf)#(lf)"]),
+		    #"Inserted Literal" = Table.AddColumn(Source, "Literal", each "2021/04", type text)
+		in
+		    #"Inserted Literal"
+	lineageTag: 4ecc42e8-6c3b-4221-92c2-1975e2ee24d2
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

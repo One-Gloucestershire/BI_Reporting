@@ -1,0 +1,226 @@
+table 'Metric Index'
+	excludeFromModelRefresh
+	lineageTag: b8bcc393-1be7-4049-85dd-8fbcb503b5e0
+
+	measure 'Metric Description - Outputted Text' = ```
+			
+			
+			
+			
+			IF (
+			    ISFILTERED('Metric Index'[Metric ID]) 
+			        || ISFILTERED('Metric Index'[Payable_activity_group]) 
+			        || ISFILTERED('Metric Index'[Payable_activity_subgroup]),
+			    IF (
+			        DISTINCTCOUNT('Metric Index'[Metric Description]) = 1,
+			        MAX('Metric Index'[Metric Description]), // One metric is selected
+			        "Multiple metrics are selected, please refer to the slicer" // More than one metric is selected
+			    ),
+			    "Multiple metrics are selected, please refer to the slicer" // Nothing is selected
+			)
+			
+			
+			
+			```
+		lineageTag: 8047d652-dce2-45fe-808e-c44128791f62
+
+	measure 'Metrics - Switch Values in view' = ```
+			
+			VAR SelectedMetric = SELECTEDVALUE('Metric Index'[Metric ID])
+			VAR MetricsInScope = VALUES('Metric Index'[Metric ID])
+			RETURN
+			
+			IF(
+			    ISINSCOPE('Metric Index'[Metric ID]),
+			    // Row level, do your SWITCH logic as usual
+			    SWITCH(
+			        SelectedMetric,
+			        "1a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "2a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "2b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "1b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "2c", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        --"706", [Metrics - Matrix Table Total Counts],
+			        --"707", [Metrics - Matrix Table Total Counts],
+			        "5a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5c", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5d", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5f", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5e", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "3a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        --"706ab", [Metrics - Matrix Table Total Counts],
+			        "3b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "4a", COALESCE(CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "4a"),0),
+			        "4b", COALESCE(CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "4b"),0),
+			        BLANK()
+			    ),
+			    // Total/subtotal level, sum across all visible metric IDs in this context
+			    SUMX(
+			        MetricsInScope,
+			        SWITCH(
+			            [Metric ID],
+			        "1a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "2a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "2b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "1b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "2c", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        --"706", [Metrics - Matrix Table Total Counts],
+			        --"707", [Metrics - Matrix Table Total Counts],
+			        "5a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5c", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5d", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5f", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5e", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "5b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "3a", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        --"706ab", [Metrics - Matrix Table Total Counts],
+			        "3b", COALESCE([Metrics - Matrix Table Total Counts],0),
+			        "4a", COALESCE(CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "4a"),0),
+			        "4b", COALESCE(CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "4b"),0),
+			        BLANK()
+			        )
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 11a1756b-da75-4f75-ac46-08ccc3d87e1b
+
+	measure ShowActivityGroup = ```
+			
+			
+			CALCULATE(
+			    COUNTROWS('Metric Data Table'),
+			    REMOVEFILTERS('GP Reference'),
+			    REMOVEFILTERS('Metric Index'[Metric_ID_and_Description]
+			) 
+			)
+			```
+		formatString: 0
+		lineageTag: 69573283-f36c-40e2-a790-63960e46b73b
+
+	measure 'Measure 2'
+		lineageTag: ce821a9b-4224-4836-85da-0ee9f47f8a53
+
+	column 'Metric ID'
+		dataType: string
+		lineageTag: 129cb16c-e10d-43d4-b2ce-c190205bc9bd
+		summarizeBy: none
+		sourceColumn: Metric ID
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Description'
+		dataType: string
+		lineageTag: 0b257672-a5e8-4e46-af40-ae889ffd0a21
+		summarizeBy: none
+		sourceColumn: Metric Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'What does Diagnosis or Event Date Mean'
+		dataType: string
+		lineageTag: 31d6e5a7-af80-4e67-a2cf-96422db3db7a
+		summarizeBy: none
+		sourceColumn: What does Diagnosis or Event Date Mean
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Page Grouping'
+		dataType: string
+		lineageTag: 33a4d1db-5440-4635-b4dd-09bc4350ad11
+		summarizeBy: none
+		sourceColumn: Page Grouping
+		sortByColumn: 'Page Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Page Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: dbfb9407-bb68-49b2-98a5-43b1449c17d5
+		summarizeBy: none
+		sourceColumn: Page Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric_ID_and_Description =
+			
+			FORMAT('Metric Index'[Metric ID], "") & "-" & 'Metric Index'[Metric Description]
+		lineageTag: 7861ac6c-15e2-4e4a-97ff-bde45266fadb
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Other considerations/comments'
+		dataType: string
+		lineageTag: 48180267-98f3-4aa1-b159-c4b6f014c010
+		summarizeBy: none
+		sourceColumn: Other considerations/comments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Payable_activity_group
+		dataType: string
+		lineageTag: 9b3cc4a5-f950-4e8d-aa0a-bfeb9716a93a
+		summarizeBy: none
+		sourceColumn: Payable_activity_group
+		sortByColumn: Payable_activity_group_order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Payable_activity_subgroup
+		dataType: string
+		lineageTag: 5db719df-abc2-4782-a4f5-45c44fc60d9a
+		summarizeBy: none
+		sourceColumn: Payable_activity_subgroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column Payable_activity_group_order
+		dataType: int64
+		formatString: 0
+		lineageTag: bc60b2e5-8436-499c-9d52-d095fcbef65d
+		summarizeBy: none
+		sourceColumn: Payable_activity_group_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Payable Activity Group.'
+		dataType: string
+		lineageTag: c38ee017-c62d-48cd-be96-f2d39dd53dfd
+		summarizeBy: none
+		sourceColumn: Payable Activity Group.
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Payable_activity_subgroup Hierarchy'
+		lineageTag: 273ca5c0-9ada-4066-9953-124ffcee4ece
+
+		level Payable_activity_subgroup
+			lineageTag: a0e20dc4-abac-426d-9c14-162b62fa7e9e
+			column: Payable_activity_subgroup
+
+		level Payable_activity_group
+			lineageTag: 8950eaca-6487-4336-971e-637bf0b03a3b
+			column: Payable_activity_group
+
+	partition 'Metric Index' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT  [Page Grouping]#(lf)      ,[Metric ID]#(lf)      ,[Metric Description]#(lf)      ,[What does Diagnosis or Event Date Mean]#(lf)      ,[Other considerations/comments]#(lf)      ,[Payable_activity_group]#(lf)      ,[Payable_activity_subgroup]#(lf)      ,[Payable Activity Group.] = [Payable_activity_group]#(lf)      ,[Payable_activity_group_order]#(lf)      ,[Page Order]#(lf)  FROM [PowerBI_Reporting].[Respiratory].[FenoSpiroMetricIndex]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,345 @@
+table 'Tier 3/4'
+	lineageTag: c332429a-7da0-49e7-98a2-9d73623ba420
+
+	measure 'No. Unique Patients' = calculate(sum('Tier 3/4'[Counter]),'Tier 3/4'[Unique Patients (Per FY)] = 1)
+		formatString: 0
+		lineageTag: babe4689-3998-4d34-8541-97b2d47afc85
+
+	measure 'Avg Activity Per Patient' =
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+			VAR Denominator = calculate(DISTINCTCOUNT('Tier 3/4'[NHS Number]),'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+			
+			RETURN Numerator/Denominator
+		lineageTag: 04baa8c2-fa11-4ead-bc70-08c70d329c50
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Treatments Per Patient' =
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Procedure Type] = "Treatment",'Tier 3/4'[Attendance Flag] = "Attended")
+			VAR Denominaotr = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Unique Patients (Per FY)] = 1)
+			
+			RETURN Numerator/Denominaotr
+		lineageTag: 9b4c452d-ad77-4fe5-bb5f-1dfa1457a365
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Last Year Activity' =
+			
+			CALCULATE(
+			    SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1
+			)
+		formatString: 0
+		lineageTag: 8112639e-ca5b-45fa-8af8-1ebbb76bce74
+
+	measure 'Last Year Unique Patients' =
+			
+			CALCULATE(
+			    calculate(sum('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Per FY)] = 1
+			))
+		formatString: 0
+		lineageTag: 804d51fb-66ac-4f71-be4d-ed39b80f0447
+
+	measure 'Last Year Avg Activity Per Patient' = ```
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,'Tier 3/4'[Attendance Flag] = "Attended")
+			
+			VAR Denominator = calculate(DISTINCTCOUNT('Tier 3/4'[NHS Number]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Activity Type)] = 1,
+			    'Tier 3/4'[Attendance Flag] = "Attended")
+			
+			RETURN Numerator/Denominator
+			
+			
+			```
+		lineageTag: e48e54f3-225f-47b1-a110-996a7d861e82
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Last Year Avg Treatments Per Patient' = ```
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Per FY)] = 1,
+			    'Tier 3/4'[Procedure Type] = "Treatment",'Tier 3/4'[Attendance Flag] = "Attended")
+			VAR Denominator = calculate(SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1,
+			    'Tier 3/4'[Unique Patients (Per FY)] = 1)
+			
+			RETURN Numerator/Denominator
+			
+			
+			```
+		lineageTag: 25a3e6d1-06e6-49c3-a746-e17be4467fcc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'DNA %' =
+			
+			VAR Numerator = calculate(sum('Tier 3/4'[Counter]),'Tier 3/4'[Attendance Flag]="DNA")
+			VAR Denominator = calculate(sum('Tier 3/4'[Counter]))
+			
+			RETURN
+			Numerator/Denominator
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b499a6d6-b2f7-4393-89c4-9d5a2ac49111
+
+	measure 'Last Year DNA %' = ```
+			
+			VAR Numerator = 
+			CALCULATE(
+			    SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[Attendance Flag] = "DNA",
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1
+			)
+			
+			VAR Denominator = 
+			CALCULATE(
+			    SUM('Tier 3/4'[Counter]),
+			    ALL('Date Table (all dates)'),
+			    'Tier 3/4'[YTD]=1,
+			    'Tier 3/4'[Previous Year Flag] = 1
+			)
+			
+			RETURN
+			Numerator/Denominator
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bd83fa06-7c8f-45e9-b63e-301e4cc0663e
+
+	measure 'TESTAvg Assessments Per Patient' =
+			
+			VAR Numerator = calculate(SUM('Tier 3/4'[Counter]),'Tier 3/4'[Procedure Type] = "Assessment",'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+			
+			RETURN Numerator
+		formatString: 0
+		lineageTag: 4d14b44a-734a-417b-a937-cff2e4fccd60
+
+	measure Denominator = calculate(DISTINCTCOUNT('Tier 3/4'[NHS Number]),'Tier 3/4'[Procedure Type] = "Assessment",'Tier 3/4'[Attendance Flag] = "Attended", 'Tier 3/4'[YTD] = 1)
+		formatString: 0
+		lineageTag: a65b1a7a-8ecb-4653-99a4-ee94b260bdfa
+
+	column 'Start Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0743bf53-3692-43bf-9fa3-5cc575e3a587
+		summarizeBy: none
+		sourceColumn: Start Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'End Date'
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: ee99d4e5-10e2-4dc9-9608-0f23289042d6
+		summarizeBy: none
+		sourceColumn: End Date
+
+		variation Variation
+			isDefault
+			relationship: 5e1cec38-56c2-4267-ba0c-c3962f45e6a8
+			defaultHierarchy: LocalDateTable_9dafd001-23e7-438b-90f3-c432f4b7dfc8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS Number'
+		dataType: string
+		lineageTag: d35434e3-d537-4e8b-b7fa-83810bd6afa8
+		summarizeBy: none
+		sourceColumn: NHS Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 41489164-962f-4b26-8179-4a59467e5da2
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Code'
+		dataType: string
+		lineageTag: 160fedd5-7cd5-4641-bc2d-fdefeb5d40cb
+		summarizeBy: none
+		sourceColumn: Provider Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sector Flag'
+		dataType: string
+		lineageTag: eed2c07c-7599-4d6b-aefc-5a81af9c0620
+		summarizeBy: none
+		sourceColumn: Sector Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Procedure Type'
+		dataType: string
+		lineageTag: 61c17d54-10ca-44c9-b637-9d47363d23b3
+		summarizeBy: none
+		sourceColumn: Procedure Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Procedure Description'
+		dataType: string
+		lineageTag: 07d9860f-70d9-4f9a-afd4-89ee78670576
+		summarizeBy: none
+		sourceColumn: Procedure Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Attendance Flag'
+		dataType: string
+		lineageTag: 35aba411-a1b6-40c7-908e-a6160c3e7b1d
+		summarizeBy: none
+		sourceColumn: Attendance Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unique Patients'
+		dataType: int64
+		formatString: 0
+		lineageTag: aceb2995-c29d-476b-925f-78b134880cd5
+		summarizeBy: sum
+		sourceColumn: Unique Patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice'
+		dataType: string
+		lineageTag: 902923ed-8a76-466d-8e33-694de20687f2
+		summarizeBy: none
+		sourceColumn: GP Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 85ad9d2c-8073-441e-ba0c-94af74cda397
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 025a002c-e9ad-434d-b258-c68e21b31f45
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age at Event'
+		dataType: int64
+		formatString: 0
+		lineageTag: c4a642e8-de02-4c20-ae47-a9ecb90ef42c
+		summarizeBy: sum
+		sourceColumn: Age at Event
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Activity Type'
+		dataType: string
+		lineageTag: 960e50a6-a781-474d-8e38-33679a2c22bf
+		summarizeBy: none
+		sourceColumn: Activity Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column TFC
+		dataType: string
+		lineageTag: 33a3f9b5-03bb-492f-b16b-7e828ccb7bf7
+		summarizeBy: none
+		sourceColumn: TFC
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unique Patients (Activity Type)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 52e62dd0-c562-4f60-866b-c5fa0aae292b
+		summarizeBy: sum
+		sourceColumn: Unique Patients (Activity Type)
+
+		annotation SummarizationSetBy = Automatic
+
+	column YTD
+		dataType: int64
+		formatString: 0
+		lineageTag: 7f59746c-14e9-4d54-be74-4ca50fd28b2a
+		summarizeBy: sum
+		sourceColumn: YTD
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Previous Year Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 78681cd3-caac-41de-bbad-55468c2e0447
+		summarizeBy: sum
+		sourceColumn: Previous Year Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 5a63d3d5-cde2-40f1-b5d6-1294fcab0ef4
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unique Patients (Per FY)'
+		dataType: int64
+		formatString: 0
+		lineageTag: cdd1ebc9-3506-4587-9710-86e3c3e603b3
+		summarizeBy: sum
+		sourceColumn: Unique Patients (Per FY)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Provider_Name
+		dataType: string
+		lineageTag: 5647c2db-f803-40ac-bebd-efe534d45f5e
+		summarizeBy: none
+		sourceColumn: Derived_Provider_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Tier 3/4' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[WeightManagement].[tbl02_Tier3_Tier4]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

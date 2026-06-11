@@ -1,0 +1,96 @@
+table Query1
+	lineageTag: b9b9bc3e-f13d-4cf3-b255-e7c4c520799c
+
+	column Metric
+		dataType: string
+		lineageTag: c69e5dfe-2d52-4dee-b4dc-e58ee13abe7d
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 36008bae-7b34-422c-af53-ba35edb4ec26
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: ed643bc7-3b1b-485f-bd5e-177d2413922c
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: 115a301d-1cd8-4150-894e-f3e1e28e8f7f
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column CYP_Flag
+		dataType: string
+		lineageTag: 85348764-e571-4e35-83a2-a3b30bc1dbe7
+		summarizeBy: none
+		sourceColumn: CYP_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: c3c7e5c1-c0a5-477f-99b1-420ecd5e9701
+		summarizeBy: sum
+		sourceColumn: Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: c3cf0812-05dd-4989-bf76-6580c0a3401a
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 3b363c84-2016-4b55-b0dc-60302487f05c
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: e799c818-d8ee-4ceb-a717-e0b2e7205fc7
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_LD_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 47ac1690-1a49-4bd4-b4ab-f5eb9703840e
+		summarizeBy: sum
+		sourceColumn: QOF_LD_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Query1 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query=" SELECT [Metric] = 'Population'#(lf)        ,[Value] = COUNT(*)#(lf)#(tab)#(tab),[POP].[Gender]#(lf)#(tab)#(tab),[Age] = [AGE].[5YR_Age_Band]#(lf)#(tab)#(tab),[AGE].[CYP_Flag]#(lf)#(tab)#(tab),[Deprivation] = [POP].[IMDNationalDecile]#(lf)#(tab)#(tab),[Ethnicity] = [ETH].[Ethnic Origin Grouped]#(lf)#(tab)#(tab),[Practice_Code] = [POP].[PrimaryCareProvider]#(lf)#(tab)#(tab),[YearMonth] = [DATE].[YearMonth]#(lf)#(tab)#(tab),[POP].[QOF_LD_Flag]#(lf)#(lf)  FROM [PowerBI_Reporting].[AgeingWell].[tbl02_Proactive_Whiteboard_Registered_Population_Over_Time] AS [POP]#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [Age]#(lf)             ,[5YR_Age_Band]#(lf)             ,[CYP_Flag] = CASE WHEN [Age] BETWEEN 0 AND 17 THEN '0-17'#(lf)                                WHEN [Age] >= 18 THEN '18+'#(lf)#(tab)#(tab)#(tab)  ELSE NULL END#(lf)             FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)             WHERE [Age] BETWEEN 0 AND 120#(lf)#(tab)  ) AS [AGE]#(lf)  ON [AGE].[Age] = [POP].[Age_at_census] /* Joining in Age Banding */#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [Ethnic Origin]#(lf)#(tab)#(tab)#(tab)                ,[Ethnic Origin Grouped]#(lf)#(tab)#(tab)#(tab) FROM [BIReports].[MPI].[Ethnicity_Table]#(lf)#(tab)#(tab)#(tab) ) AS [ETH]#(lf)  ON [ETH].[Ethnic Origin] = [POP].[Ethnicity_code] /* Joining in Ethnicity grouping */#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [date]#(lf)#(tab)#(tab)#(tab)                ,[YearMonth]#(lf)#(tab)#(tab)#(tab) FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(tab)#(tab)#(tab) ) AS [DATE]#(lf)  ON [DATE].[Date] = [POP].[Census_Date] /* Joining in YearMonth */#(lf)#(lf)  WHERE [POP].[Derived_Registered_CCG] = '11M'#(lf)  AND [POP].[Census_Date] >= '20190401'#(lf)#(lf)  GROUP BY [POP].[Gender], [AGE].[5YR_Age_Band], [AGE].[CYP_Flag], [POP].[IMDNationalDecile] #(lf)          ,[ETH].[Ethnic Origin Grouped], [POP].[PrimaryCareProvider], [DATE].[YearMonth], [POP].[QOF_LD_Flag]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,844 @@
+table 'Population Overview'
+	lineageTag: 79ff387f-1547-4a91-b64c-d910e31bae71
+
+	measure 'Under 18''s' = Sum('Population Overview'[Under_18])/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 5670edaa-00ae-4974-86e1-5ad03695e15f
+
+	measure '65 and Over' = Sum('Population Overview'[65_and_Over])/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3a880e1c-fa84-4fe4-84c6-ab2b351b0c66
+
+	measure 'Ethnic Minorities' = Sum('Population Overview'[EthnicMinority])/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 851eefe3-8d13-4453-a6de-0531963aacaf
+
+	measure 'Core 20' = Sum('Population Overview'[Core20])/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a33400d6-b7cc-4959-886b-c5a19b6bd3f0
+
+	measure 'Care Home' = Sum('Population Overview'[Care_Home])/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d30be8c7-7b2c-4184-b961-3e1b5db2195b
+
+	measure 'LTC POPULATION MEASURE' = CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Health Overview'[Attribute]))
+		formatString: 0
+		lineageTag: 2648b71a-d346-4af9-9b3d-c37507aa6ab6
+
+	measure FilterVisualAttribute = ISFILTERED('Health Overview'[Attribute])
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 1c68bc32-fe64-4b6e-bbe0-d8f594a3de8a
+
+	measure HideVisualAttribute = if([FilterVisualAttribute],1,0)
+		formatString: 0
+		lineageTag: 7e4dc80d-36af-48f4-a93c-2972e4dd8783
+
+	measure Denominator = CALCULATE(SUM('Population Overview'[Population_Counter]), ALLEXCEPT('Population Overview','Population Overview'[LSOA_Code],'Population Overview'[District_Name],'Population Overview'[Ward_Name],'Population Overview'[GP_Practice_Name],'Population Overview'[PrimaryCareNetwork],'Population Overview'[Locality],'Population Overview'[Age],'Population Overview'[Care_Home],'Population Overview'[Ethnicity]))
+		formatString: 0
+		lineageTag: 5a2bffd9-e7d5-41df-9eba-07ad10f104f5
+
+	measure PyramidAge = DIVIDE( SUM('Population Overview'[Population_Counter]), CALCULATE( SUM('Population Overview'[Population_Counter]), ALLSELECTED('Population Overview'[Age],'Population Overview'[Age_Rank])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0894b826-eaf7-47df-9092-a6ac606c9846
+
+	measure PyramidEthnicity = sum('Population Overview'[Population_Counter])/CALCULATE(SUM('Population Overview'[Population_Counter]), ALLEXCEPT('Population Overview','Population Overview'[LSOA_Code],'Population Overview'[District_Name],'Population Overview'[Ward_Name],'Population Overview'[GP_Practice_Name],'Population Overview'[PrimaryCareNetwork],'Population Overview'[Locality],'Population Overview'[Care_Home],'Population Overview'[Age],'Population Overview'[IMD_Decile_England],'Population Overview'[IMD_Decile_Gloucester]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 4f9bd5c3-c238-4c12-b4de-9c4cdb1eb0db
+
+	measure PyramidIMD = sum('Population Overview'[Population_Counter])/CALCULATE(SUM('Population Overview'[Population_Counter]), ALLEXCEPT('Population Overview','Population Overview'[LSOA_Code],'Population Overview'[District_Name],'Population Overview'[Ward_Name],'Population Overview'[GP_Practice_Name],'Population Overview'[PrimaryCareNetwork],'Population Overview'[Locality],'Population Overview'[Care_Home],'Population Overview'[Age],'Population Overview'[IMD_Decile_England],'Population Overview'[Ethnicity]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c67abadd-1644-4d56-b604-b438ec61c436
+
+	measure SelectedGroup =
+			CALCULATE(
+			    SUM('Population Overview'[Population_Counter]),
+			    TREATAS(
+			        VALUES('Attribute'[attribute]),
+			        'Health Overview'[attribute]
+			    )
+			)
+		formatString: 0
+		lineageTag: 36d75980-8e9d-4e33-aade-12033dd10ecf
+
+	measure WholePopulation = CALCULATE(SUM('Population Overview'[Population_Counter]), ALLEXCEPT('Population Overview','Population Overview'[GPLatitude],'Population Overview'[GPLongitude]))
+		formatString: 0
+		lineageTag: 08c54f7a-035c-4d2a-b51f-68ab555605c3
+
+	measure 'Proportion - National Deprivation' = DIVIDE( SUM('Population Overview'[Population_Counter]), CALCULATE( SUM('Population Overview'[Population_Counter]), ALLSELECTED('Population Overview'[IMD_Decile_England])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d7256879-3a5f-4cb9-96ae-d85637f2dc58
+
+	measure 'Proportion - Ethnicity' = DIVIDE( SUM('Population Overview'[Population_Counter]), CALCULATE( SUM('Population Overview'[Population_Counter]), ALLSELECTED('Population Overview'[Ethnicity])))
+		formatString: 0%;-0%;0%
+		lineageTag: afaa9933-eef4-47ef-abe6-58f00fbb88a1
+
+	measure 'Proportion - eFI' = DIVIDE( SUM('Population Overview'[Population_Counter]), CALCULATE( SUM('Population Overview'[Population_Counter]), ALLSELECTED('Population Overview'[EFi_Category])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: fe521b5b-d2b1-4e66-bba8-3c17a14844b0
+
+	measure 'Working Age' = 1-[Under 18's]-[65 and Over]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3ddcaa21-668c-4ee5-9ffe-3aeb0c70e44c
+
+	measure UrbanCount =
+			
+			SUMX(
+			    'Population Overview',
+			    IF('Population Overview'[RuralUrbanClass] = "Urban", 1, 0))
+		formatString: 0
+		lineageTag: bcc2b857-2f00-441b-9c26-91e7faae4ce2
+
+	measure RuralCount =
+			
+			SUMX(
+			    'Population Overview',
+			    IF(
+			        CONTAINSSTRING('Population Overview'[RuralUrbanClass], "Rural"),
+			        1,
+			        0
+			    )
+			)
+		formatString: 0
+		lineageTag: 2ebf63b8-08a1-4f80-af94-4ce6dabe8d52
+
+	measure Rural% = [RuralCount]/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 752951ba-3e0e-4126-a07e-18c52be14b14
+
+	measure Urban% = [UrbanCount]/Sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3a329d9a-39b7-4614-a37f-91b6798c11a6
+
+	measure ICBCareHome = CALCULATE(SUM('Population Overview'[Care_Home]),ALLEXCEPT('Population Overview','Population Overview'[Care_Home]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a0379c6e-27db-4d11-9142-b822df3a6832
+
+	measure ComparisonCareHome = IF([Care Home]>[ICBCareHome], "↑",IF([Care Home]=[ICBCareHome],"","↓"))
+		lineageTag: edf7309c-29ec-4a29-a2d8-8434384debf0
+
+	measure ICBRural =
+			CALCULATE(SUMX(
+			    'Population Overview',
+			    IF(
+			        CONTAINSSTRING('Population Overview'[RuralUrbanClass], "Rural hamlets and isolated dwellings") ||
+			        CONTAINSSTRING('Population Overview'[RuralUrbanClass], "Rural town and fringe") ||
+			        CONTAINSSTRING('Population Overview'[RuralUrbanClass], "Rural village"),
+			        1,
+			        0
+			    )
+			),ALLEXCEPT('Population Overview','Population Overview'[Care_Home]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 4794a00b-2082-4476-8acf-194a97a13416
+
+	measure ComparisonRural = IF([Rural%]>[ICBRural], "↑",IF([Rural%]=[ICBRural],"", "↓"))
+		lineageTag: fbe93f82-bd0d-4f05-957f-ac2736af9360
+
+	measure ICBUrban =
+			CALCULATE(SUMX(
+			    'Population Overview',
+			    IF('Population Overview'[RuralUrbanClass] = "Urban city and town", 1, 0)),ALLEXCEPT('Population Overview','Population Overview'[Care_Home]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 41e5beee-44d7-4892-afa8-ec500bb6cdd4
+
+	measure ComparisonUrban = IF([Urban%]>[ICBUrban], "↑",IF([Urban%]=[ICBUrban],"", "↓"))
+		lineageTag: 2d5e739a-3481-4f19-b254-3bb32c46d81a
+
+	measure ICBCOver65 = CALCULATE(SUM('Population Overview'[65_and_Over]),ALLEXCEPT('Population Overview','Population Overview'[65_and_Over]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 11c23602-883c-437b-a8ba-1f7b1aff9dda
+
+	measure ComparisonOver65 = IF([65 and Over]>[ICBCOver65], "↑",iF([65 and Over]=[ICBCOver65],"", "↓"))
+		lineageTag: 565cf994-6900-4629-98a0-a3b0ca27f721
+
+	measure ICBCUnder18 = CALCULATE(SUM('Population Overview'[Under_18]),ALLEXCEPT('Population Overview','Population Overview'[Under_18]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 72a3ac62-6f6e-40ab-beee-9fac3f0640ba
+
+	measure ComparisonUnder18 = IF([Under 18's]>[ICBCUnder18], "↑",IF([Under 18's]=[ICBCUnder18],"", "↓"))
+		lineageTag: 895353f3-4b59-47a4-963d-95c653c18571
+
+	measure ICBCore20 = CALCULATE(SUM('Population Overview'[Core20]),ALLEXCEPT('Population Overview','Population Overview'[Core20]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f9782e20-965b-44bf-b630-d181337690fe
+
+	measure ComparisonCore20 = IF([Core 20]>[ICBCore20], "↑",IF([Core 20]=[ICBCore20],"", "↓"))
+		lineageTag: 19c9f2d9-e341-496a-81dc-2d63c8fa7293
+
+	measure ICBCEthnicMinority = CALCULATE(SUM('Population Overview'[EthnicMinority]),ALLEXCEPT('Population Overview','Population Overview'[EthnicMinority]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1235e556-a4eb-49ec-98b8-85146de8a425
+
+	measure ComparisonEthnicMinority = IF([Ethnic Minorities]>[ICBCEthnicMinority], "↑",iF([Ethnic Minorities]=[ICBCEthnicMinority],"", "↓"))
+		lineageTag: debd086b-60bb-484a-b0a4-c0744bbc582e
+
+	measure ICBWorkingAge = CALCULATE(SUM([WorkingAge]),ALLEXCEPT('Population Overview','Population Overview'[WorkingAge]))/CALCULATE(SUM('Population Overview'[Population_Counter]),ALL('Population Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 68a3e346-6243-4976-aaa5-b293320b6a5e
+
+	measure ComparisonWorkingAge = IF([Working Age]>[ICBWorkingAge], "↑",IF([Working Age]=[ICBWorkingAge],"", "↓"))
+		lineageTag: 9c945faf-b9f7-4a38-ac35-a42fe3302c72
+
+	measure NationalDeprivationICBComparator = ```
+			
+			VAR CurrentDecile = SELECTEDVALUE('Population Overview'[IMD_Decile_England])
+			VAR TotalOverall = CALCULATE(COUNTROWS('Population Overview'), ALL('Population Overview'))
+			VAR TotalInDecile = 
+			    CALCULATE(
+			        COUNTROWS('Population Overview'),
+			        ALL('Population Overview'),
+			        'Population Overview'[IMD_Decile_England] = CurrentDecile
+			    )
+			RETURN
+			DIVIDE(TotalInDecile, TotalOverall)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 6d8ec06b-2619-41c6-9697-5e61474f6704
+
+	measure EthnicityICBComparator =
+			
+			VAR TotalOverall = CALCULATE(COUNTROWS('Population Overview'), ALL('Population Overview'))
+			VAR TotalByDecile = CALCULATE(COUNTROWS('Population Overview'), ALL('Population Overview'), VALUES('Population Overview'[Ethnicity]))
+			RETURN
+			DIVIDE(TotalByDecile, TotalOverall)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 2f8933f7-e127-469a-8eb5-018ee469f5cf
+
+	measure Population_With_Attribute =
+			
+			CALCULATE(
+			    SUM('Population Overview'[Population_Counter]),
+			    TREATAS(
+			        VALUES('Attribute'[attribute]),
+			        'Health Overview'[attribute]
+			    )
+			)
+		formatString: 0
+		lineageTag: bd034844-8faa-47c9-ab71-cf744bb231f6
+
+	measure 'Proportion - County Deprivation' = DIVIDE( SUM('Population Overview'[Population_Counter]), CALCULATE( SUM('Population Overview'[Population_Counter]), ALLSELECTED('Population Overview'[IMD_Decile_Gloucester])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 42a82792-364d-49d2-8d4c-59a3cc50de50
+
+	measure CountyDeprivationICBComparator = ```
+			
+			VAR CurrentDecile = SELECTEDVALUE('Population Overview'[IMD_Decile_Gloucester])
+			VAR TotalOverall = CALCULATE(COUNTROWS('Population Overview'), ALL('Population Overview'))
+			VAR TotalInDecile = 
+			    CALCULATE(
+			        COUNTROWS('Population Overview'),
+			        ALL('Population Overview'),
+			        'Population Overview'[IMD_Decile_Gloucester] = CurrentDecile
+			    )
+			RETURN
+			DIVIDE(TotalInDecile, TotalOverall)
+			```
+		lineageTag: fbdb47bf-4b80-443f-8140-4b3efd039c9a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Map Distribution - Proportion' = ```
+			
+			
+			VAR _NUMERATOR = SUM('Population Overview'[Population_Counter])
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('Population Overview'[Population_Counter]),
+			    ALL('Population Overview'[LSOA_2021])
+			)
+			
+			RETURN
+			
+			(_NUMERATOR / _DENOMINATOR) * 1000
+			```
+		lineageTag: 017e32ac-0569-4597-8021-df06fcc1db93
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Proportion - LSOA' =
+			
+			DIVIDE(
+			    SUM('Population Overview'[Population_Counter]),
+			    CALCULATE(
+			        SUM('Population Overview'[Population_Counter]),
+			        ALLEXCEPT('Population Overview', 'Population Overview'[LSOA_2021])
+			    )
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a46d414b-b620-4c80-a323-d44f3ff8aa57
+
+	measure LSOATotalPopulation =
+			CALCULATE(
+			        SUM('Population Overview'[Population_Counter]),
+			        ALLEXCEPT('Population Overview', 'Population Overview'[LSOA_2021])
+			    )
+		formatString: 0
+		lineageTag: 0414c366-41e6-4f46-9b3c-6c9ed4d992ef
+
+	measure ProportionLSOAMax =
+			
+			MAXX(
+			    VALUES('Population Overview'[LSOA_2021]),
+			    [Proportion - LSOA]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3dbd4ba5-d4d4-463d-a042-1eddebe33e1e
+
+	measure ProportionLSOAMin =
+			
+			MINX(
+			    VALUES('Population Overview'[LSOA_2021]),
+			    [Proportion - LSOA]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 340ee3b4-6697-4190-bb4d-79f55b5b8f21
+
+	measure 'Proportion - Practice' =
+			
+			DIVIDE(
+			    SUM('Population Overview'[Population_Counter]),
+			    CALCULATE(
+			        SUM('Population Overview'[Population_Counter]),
+			        ALLEXCEPT('Population Overview', 'Population Overview'[GP_Practice_Name])
+			    )
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a95df3c5-6a43-418e-b84d-550dfc6bea1d
+
+	column QOF_Hypertension
+		dataType: int64
+		formatString: 0
+		lineageTag: 873135b4-42d4-43e2-8441-d8fd7a2aeef3
+		summarizeBy: sum
+		sourceColumn: QOF_Hypertension
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Depression
+		dataType: int64
+		formatString: 0
+		lineageTag: 57020a95-5081-4180-9e23-ca068d9c1880
+		summarizeBy: sum
+		sourceColumn: QOF_Depression
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Asthma
+		dataType: int64
+		formatString: 0
+		lineageTag: a1b06a89-d2ff-449c-b002-aa73996dd8dc
+		summarizeBy: sum
+		sourceColumn: QOF_Asthma
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Diabetes
+		dataType: int64
+		formatString: 0
+		lineageTag: 5bbe46a1-05b3-43d0-9afc-19c92104ada4
+		summarizeBy: sum
+		sourceColumn: QOF_Diabetes
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_CoronaryHeartDisease
+		dataType: int64
+		formatString: 0
+		lineageTag: db9fbd16-0a6b-4fb2-9854-6e1bfe78c538
+		summarizeBy: sum
+		sourceColumn: QOF_CoronaryHeartDisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Cancer
+		dataType: int64
+		formatString: 0
+		lineageTag: 53284481-9604-44a2-b1bf-1fa1b149b7d9
+		summarizeBy: sum
+		sourceColumn: QOF_Cancer
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_AtrialFibrilation
+		dataType: int64
+		formatString: 0
+		lineageTag: 6338db94-29a5-492e-9f8c-2309d35e9188
+		summarizeBy: sum
+		sourceColumn: QOF_AtrialFibrilation
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Osteoporosis
+		dataType: int64
+		formatString: 0
+		lineageTag: 35f05cb6-e734-4d29-b374-28f40905817f
+		summarizeBy: sum
+		sourceColumn: QOF_Osteoporosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_HeartFailure
+		dataType: int64
+		formatString: 0
+		lineageTag: 538cefdd-4a33-4e14-bfeb-abc116bba426
+		summarizeBy: sum
+		sourceColumn: QOF_HeartFailure
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_ChronicKidneyDisease
+		dataType: int64
+		formatString: 0
+		lineageTag: 97eed197-f046-43e2-b466-425f22150a1d
+		summarizeBy: sum
+		sourceColumn: QOF_ChronicKidneyDisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_PeripheralArterialDisease
+		dataType: int64
+		formatString: 0
+		lineageTag: ba25082b-175e-42c3-aff3-d5cfeca1c775
+		summarizeBy: sum
+		sourceColumn: QOF_PeripheralArterialDisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Dementia
+		dataType: int64
+		formatString: 0
+		lineageTag: b8303606-9ed5-48f4-b524-0f86bd88189c
+		summarizeBy: sum
+		sourceColumn: QOF_Dementia
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Epilepsy
+		dataType: int64
+		formatString: 0
+		lineageTag: 915519d5-7229-42ca-bcdf-a562f8e69cb1
+		summarizeBy: sum
+		sourceColumn: QOF_Epilepsy
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_RheumatoidArthritis
+		dataType: int64
+		formatString: 0
+		lineageTag: b6971e0a-3333-4314-a630-e0485b5efaa8
+		summarizeBy: sum
+		sourceColumn: QOF_RheumatoidArthritis
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_LearningDisability
+		dataType: int64
+		formatString: 0
+		lineageTag: 203e511a-d962-4063-9cd1-3858ddb2007f
+		summarizeBy: sum
+		sourceColumn: QOF_LearningDisability
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 585a8a6d-a1b6-4030-a9b0-1bd4aeeb5993
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population_Counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: 8e5d77a9-f52e-4a12-beb4-ca52876b416b
+		summarizeBy: sum
+		sourceColumn: Population_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: bbba745e-059d-4708-9e23-5c4d3b724185
+		summarizeBy: none
+		sourceColumn: Age
+		sortByColumn: Age_Rank
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_Rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 378df633-f76d-4934-a557-f7e84cda9c8d
+		summarizeBy: sum
+		sourceColumn: Age_Rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ageband
+		dataType: string
+		lineageTag: 15580401-0c35-4e90-b7c2-350de6d02776
+		summarizeBy: none
+		sourceColumn: Ageband
+
+		annotation SummarizationSetBy = Automatic
+
+	column Under_18
+		dataType: int64
+		formatString: 0
+		lineageTag: d663db8e-0754-4609-8954-ef2cd0f7b587
+		summarizeBy: sum
+		sourceColumn: Under_18
+
+		annotation SummarizationSetBy = Automatic
+
+	column 65_and_Over
+		dataType: int64
+		formatString: 0
+		lineageTag: 7c8571d2-eda1-4406-a161-f670618d05ed
+		summarizeBy: sum
+		sourceColumn: 65_and_Over
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: f46e8d57-a372-4710-a1f7-22ab456eade2
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_Home
+		dataType: int64
+		formatString: 0
+		lineageTag: d455c25a-a5e2-422f-bc5c-30898e42542e
+		summarizeBy: sum
+		sourceColumn: Care_Home
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: d820b008-de42-432d-821c-fdd030761682
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicMinority
+		dataType: int64
+		formatString: 0
+		lineageTag: 95df6977-f5c9-4b59-b4d2-97b49915052d
+		summarizeBy: sum
+		sourceColumn: EthnicMinority
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_Decile_England
+		dataType: int64
+		formatString: 0
+		lineageTag: fee44adb-377e-4531-b7d1-58d36ee50bd9
+		summarizeBy: none
+		sourceColumn: IMD_Decile_England
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_Decile_Gloucester
+		dataType: int64
+		formatString: 0
+		lineageTag: 0b0694c5-89d9-478c-a598-3060907577f9
+		summarizeBy: sum
+		sourceColumn: IMD_Decile_Gloucester
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20
+		dataType: int64
+		formatString: 0
+		lineageTag: 6dd6a1f5-a0e5-4559-a608-29f7b857513f
+		summarizeBy: sum
+		sourceColumn: Core20
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice_Code
+		dataType: string
+		lineageTag: 2a4c8241-e19e-4003-bd0a-501933f2273f
+		summarizeBy: none
+		sourceColumn: GP_Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice_Name
+		dataType: string
+		lineageTag: cf0471de-45dd-4694-8f01-539881bfbe95
+		summarizeBy: none
+		sourceColumn: GP_Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: e0f03d09-77d5-451b-818d-c3b3c8c678bd
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Registered
+		dataType: int64
+		formatString: 0
+		lineageTag: 8dab7921-5e35-44eb-b917-550d9a0be9bd
+		summarizeBy: sum
+		sourceColumn: Registered
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resident
+		dataType: int64
+		formatString: 0
+		lineageTag: 152203a1-db82-480c-8756-117863018958
+		summarizeBy: sum
+		sourceColumn: Resident
+
+		annotation SummarizationSetBy = Automatic
+
+	column Registered_Text
+		dataType: string
+		lineageTag: 943eacf9-533c-4876-a225-448e281ded0b
+		summarizeBy: none
+		sourceColumn: Registered_Text
+
+		annotation SummarizationSetBy = Automatic
+
+	column Resident_Text
+		dataType: string
+		lineageTag: 8caa4b3e-f551-4f40-ac72-b6b83de85d32
+		summarizeBy: none
+		sourceColumn: Resident_Text
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_Code
+		dataType: string
+		lineageTag: 3e4f08a8-6b71-4863-9f0c-63a90c0a4aac
+		summarizeBy: none
+		sourceColumn: LSOA_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_Name
+		dataType: string
+		lineageTag: 52eb5001-4720-4c29-8b6a-edf47459e491
+		summarizeBy: none
+		sourceColumn: LSOA_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ward_Code
+		dataType: string
+		lineageTag: ab8f037a-de0b-486e-bc44-cf01ad2565f4
+		summarizeBy: none
+		sourceColumn: Ward_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ward_Name
+		dataType: string
+		lineageTag: 07d1a8a9-ae8e-4ebe-868a-1b4780a90711
+		summarizeBy: none
+		sourceColumn: Ward_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column District_Code
+		dataType: string
+		lineageTag: 22dfa2ee-4d3d-4c15-a998-cabbe7809bdb
+		summarizeBy: none
+		sourceColumn: District_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column District_Name
+		dataType: string
+		lineageTag: 7096fe0d-3897-4785-97c8-6a7e64c060c0
+		summarizeBy: none
+		sourceColumn: District_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Postcode_Key
+		dataType: string
+		lineageTag: 1b139fac-2117-4e8b-8e04-3e377da99617
+		summarizeBy: none
+		sourceColumn: Derived_Postcode_Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 1424c18e-ee30-4b69-a24d-b52187cfd968
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual_Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 83f60584-97cb-45cf-a6aa-04a8345cae45
+		summarizeBy: sum
+		sourceColumn: Actual_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: 18019226-7cc3-4ffb-878a-6427162a8f27
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: 29cb093e-22f8-49e8-9a91-b434d794c569
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_MentalHealth
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f02331c-a501-4617-80b3-ab18a5d68d11
+		summarizeBy: sum
+		sourceColumn: QOF_MentalHealth
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_NonDiabeticHyperglycaemia
+		dataType: int64
+		formatString: 0
+		lineageTag: c69cb8b7-11ad-4b53-9c72-b884a0bbbd7b
+		summarizeBy: sum
+		sourceColumn: QOF_NonDiabeticHyperglycaemia
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Obesity
+		dataType: int64
+		formatString: 0
+		lineageTag: 2d79f34d-ee07-4f18-833c-9131da65d429
+		summarizeBy: sum
+		sourceColumn: QOF_Obesity
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_PalliativeCare
+		dataType: int64
+		formatString: 0
+		lineageTag: e00c55ab-b1cd-429d-a3b1-ada997863221
+		summarizeBy: sum
+		sourceColumn: QOF_PalliativeCare
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_StrokeAndTIA
+		dataType: int64
+		formatString: 0
+		lineageTag: ab80af7d-d6e5-4d04-8f1e-726de23ded17
+		summarizeBy: sum
+		sourceColumn: QOF_StrokeAndTIA
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_COPD
+		dataType: int64
+		formatString: 0
+		lineageTag: 684aa0f0-99da-4a23-822a-47530e502e61
+		summarizeBy: sum
+		sourceColumn: QOF_COPD
+
+		annotation SummarizationSetBy = Automatic
+
+	column EFi_Category
+		dataType: string
+		lineageTag: 79bd74c7-e106-4566-917f-3d3cf6b59fea
+		summarizeBy: none
+		sourceColumn: EFi_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralUrbanClass
+		dataType: string
+		lineageTag: ea14dd9c-fd0e-451e-ac32-a997d239689a
+		summarizeBy: none
+		sourceColumn: RuralUrbanClass
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkingAge
+		dataType: int64
+		formatString: 0
+		lineageTag: b13600d7-c040-45b5-b50b-bfa885ea5850
+		summarizeBy: sum
+		sourceColumn: WorkingAge
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 13ccee96-c1a3-4cd7-aeb7-f4d3a6a05673
+		summarizeBy: none
+		sourceColumn: ActivityDate
+
+		variation Variation
+			isDefault
+			relationship: afcbdd9f-1bf5-4647-a8cf-cde8d6fa1d6e
+			defaultHierarchy: LocalDateTable_20b746d4-84e1-4b50-84b1-b0182fda4712.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_2021
+		dataType: string
+		lineageTag: fb1149a8-aacd-4da8-95b7-d6236d890dcd
+		summarizeBy: none
+		sourceColumn: LSOA_2021
+
+		annotation SummarizationSetBy = Automatic
+
+	column NON_QOF_Smoker
+		dataType: int64
+		formatString: 0
+		lineageTag: b8860ac2-3856-4098-8a9a-12e5eef6d61d
+		summarizeBy: sum
+		sourceColumn: NON_QOF_Smoker
+
+		annotation SummarizationSetBy = Automatic
+
+	column PatientNeedsGroup
+		dataType: string
+		lineageTag: 1ed07ee1-ad6a-43c2-9c35-ccd0a9107159
+		summarizeBy: none
+		sourceColumn: PatientNeedsGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Population Overview' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT * FROM [PowerBI_Reporting].[PHM].[tbl02_DemographicsOverview]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

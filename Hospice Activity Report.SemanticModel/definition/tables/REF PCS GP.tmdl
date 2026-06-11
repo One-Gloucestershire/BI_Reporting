@@ -1,0 +1,47 @@
+table 'REF PCS GP'
+	lineageTag: d196788b-cb79-4481-a04d-bf9a235ca5a4
+
+	column Locality
+		dataType: string
+		lineageTag: 8b0f63c5-6e2a-4aa1-a208-d9a54a5426d4
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: b0f34f03-61e2-4410-b89c-94f91880d283
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 5fa39ef3-f9e4-4630-a4e8-3f14495b7176
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: f44ba67c-39e9-4a7e-ac17-208026d23e47
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'REF PCS GP' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)                         WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)      ,[PrimaryCareNetwork]#(lf)#(tab)  ,[OrganisationCode]#(lf)#(tab)  ,[OrganisationName]#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)AND [Locality] IS NOT NULL#(lf)--AND [StatusDescription] = 'Active'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

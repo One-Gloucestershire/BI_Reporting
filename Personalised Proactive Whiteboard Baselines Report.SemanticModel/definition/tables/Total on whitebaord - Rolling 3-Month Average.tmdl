@@ -1,0 +1,58 @@
+table 'Total on whitebaord - Rolling 3-Month Average'
+	lineageTag: c6f07620-3d16-4f0c-8655-a46fc4b38405
+
+	column Date
+		formatString: General Date
+		lineageTag: 711a113b-f4a0-4616-ac34-5277fe649e26
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: REF_Date_Ref[Date]
+
+		variation Variation
+			isDefault
+			relationship: ae6e41d5-fd05-4f69-b10d-3db82b999cbe
+			defaultHierarchy: LocalDateTable_fa4cc7a6-3afe-4da0-b1b5-e029a2144bf9.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Aggregate'
+		formatString: 0
+		lineageTag: 851eb976-a676-4ea1-a101-41e1d3add231
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total Aggregate]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Total on whitebaord - Rolling 3-Month Average' = calculated
+		mode: import
+		source = ```
+				
+				VAR RollingPeriod = 
+				    DATESINPERIOD(
+				        REF_Date_Ref[Date],
+				        MAX(REF_Date_Ref[Date]),
+				        -3,
+				        MONTH
+				    )
+				VAR DistinctMonths =
+				    COUNTROWS(
+				        DISTINCT(
+				            SELECTCOLUMNS(
+				                RollingPeriod,
+				                "YearMonth", FORMAT(REF_Date_Ref[Date], "YYYY-MM") // Creates a virtual table with a single column "YearMonth" that combines the year and month from REF_Date_Ref[Date].
+				            )
+				        )
+				    )
+				
+				    var RollingPeriodFinal =    ADDCOLUMNS(
+				            RollingPeriod,
+				            "Total Aggregate", 
+				                CALCULATE(SUM('1.Baselines'[In_Cohort_Flag]))
+				        )
+				RETURN
+				RollingPeriodFinal
+				```
+
+	annotation PBI_Id = c590bde1176d42fdbb704a3b43acfa8b
+

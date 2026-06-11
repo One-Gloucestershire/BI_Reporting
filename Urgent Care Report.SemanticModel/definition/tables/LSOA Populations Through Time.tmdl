@@ -1,0 +1,57 @@
+table 'LSOA Populations Through Time'
+	lineageTag: 27fe6efc-30b6-45e9-8d46-8a86e4463f3d
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 610ad046-615b-44aa-9d80-70f301f48fdb
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa
+		dataType: string
+		lineageTag: 6f4daeba-0ea3-47d8-96f4-cdc4c385a360
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column census_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7c5486b0-afd7-4a26-bbf2-3270c58c7b14
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column census_financial_year
+		dataType: string
+		lineageTag: 1d92b9f6-db9e-4ce2-b701-6b235d79bd79
+		summarizeBy: none
+		sourceColumn: census_financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column financialmonth
+		dataType: string
+		lineageTag: e6e8fd7a-8652-4576-bc38-f50e0a0715c1
+		summarizeBy: none
+		sourceColumn: financialmonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'LSOA Populations Through Time' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_Reporting", [Query="select count(derived_nhs_number) as [Population],#(lf)lsoa,#(lf)census_date,#(lf)census_financial_year,#(lf)[dat].financialmonth#(lf)from PowerBI_Reporting.AgeingWell.tbl02_Proactive_Whiteboard_Registered_Population_Over_Time [a]#(lf)left join ccg_reference.reference.vw_datelookup [dat] on [a].census_date = [dat].[date]#(lf)where financialmonth = 1#(lf)group by lsoa,#(lf)census_date,#(lf)census_financial_year,#(lf)[dat].financialmonth"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

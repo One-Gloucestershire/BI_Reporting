@@ -1,0 +1,51 @@
+table '1. Ambulance. SWASFT - Activity QOF'
+	lineageTag: 22a42cd3-a6bf-4382-bbed-ab4804cc6c8b
+
+	column nhs_number
+		dataType: string
+		lineageTag: 71305bb1-d821-4f23-9f29-f1ae84b67b20
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column incident_number
+		dataType: string
+		lineageTag: abb4efa7-fe9d-457e-9a65-3f18227534b1
+		summarizeBy: none
+		sourceColumn: incident_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: f6e19d29-19cc-4b8c-ad5b-75ac1eee5e50
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: f77e64e9-ad23-462b-8b61-623204ac12de
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1. Ambulance. SWASFT - Activity QOF' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from [PowerBI_Reporting].[UrgentCare].[tbl02_SWASFT_Activity_Grouped]"]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"counter", "data_set", "incident_datetime", "incident_date", "incident_time", "incident_hour", "call_date", "call_time", "call_hour", "category_flag", "outcome", "outcome_location", "First_Hospital_Attended", "Hospital Type", "Symptom_Group_Chief_Complaint_grouped", "financial_year", "month_name", "financial_month", "year_month", "census_date", "weekday_name", "gender", "age_at_activity_date", "local_authority", "postcode_sector", "residential_nursing_flag", "residential_nursing_name", "cqc_residential_nursing_name", "cqc_residential_nursing_type", "ward_code", "ward_2021_name", "5yr_age_band", "10yr_age_band", "working_age_band", "ethnic_origin_code", "ethnic_origin", "ethnic_origin_group", "efi_category", "YTD Flag"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Columns", each ([nhs_number] <> null)),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Filtered Rows", {"incident_number", "nhs_number"}, "Attribute", "Value")
+				in
+				    #"Unpivoted Other Columns"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

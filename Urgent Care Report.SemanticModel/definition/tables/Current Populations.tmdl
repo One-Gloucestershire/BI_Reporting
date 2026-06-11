@@ -1,0 +1,32 @@
+table 'Current Populations'
+	lineageTag: c992add6-2969-4642-9782-8568d0eb13f2
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 06ef2a13-1c5a-40a4-a809-cd3750f8ebc7
+		summarizeBy: none
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column WardName
+		dataType: string
+		lineageTag: 84995ec0-c795-4ca1-8c68-32ecb0c99f09
+		summarizeBy: none
+		sourceColumn: WardName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Current Populations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select WardName, sum(1) as 'Counter'#(lf)from [ICB_Products].[Patient].[vw_Summary] [a]#(lf)WHERE WardName IS NOT NULL AND A.ICBOfRegistration = '11m'#(lf)group by WardName"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

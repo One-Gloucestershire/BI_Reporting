@@ -1,0 +1,40 @@
+table PulmonaryRehab_data
+	lineageTag: 6dcf5166-a9e6-403d-bf0f-5bee9b31f716
+
+	column Referral_Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 02cbead9-7ec1-4f30-84b3-9adb9a00a132
+		summarizeBy: none
+		sourceColumn: Referral_Month
+
+		variation Variation
+			isDefault
+			relationship: 3d916752-5ad3-49c4-a89a-12e8dfec6109
+			defaultHierarchy: LocalDateTable_fc65f40a-1be4-498e-9cb0-87af394c81dc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Referrals
+		dataType: int64
+		formatString: 0
+		lineageTag: c4db70b9-8a3a-44ac-bf56-8e147c4d65af
+		summarizeBy: sum
+		sourceColumn: Referrals
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PulmonaryRehab_data-1671b4eb-ac12-44d1-aa4b-c26238455329 = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\Respiratory\CPG Dashboard\Power BI\Pivots for PBI metrics\Resp 2a.xlsx"), null, true),
+				    PulmonaryRehab_data_Table = Source{[Item="PulmonaryRehab_data",Kind="Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(PulmonaryRehab_data_Table,{{"Referral_Month", type date}, {"Referrals", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

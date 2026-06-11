@@ -1,0 +1,273 @@
+table Triage_Outcome
+	lineageTag: eae9435c-500c-4b40-bd0a-756270023f4b
+
+	measure 'Number of Months Triage' = DISTINCTCOUNT('Triage_Outcome'[Year_Month])
+		lineageTag: a0e4e00d-da3e-4591-8757-9363dccadbb2
+
+	measure 'Triage Mean' = CALCULATE (SUM('Triage_Outcome'[TriageCounter])/[Number of Months Triage],ALLSELECTED('Date Table'))
+		lineageTag: 32f4958d-aebf-4359-a636-89e5e58f0625
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New Total Triage' = SUM('Triage_Outcome'[TriageCounter])
+		formatString: 0
+		lineageTag: 45a4434c-405c-4b4c-ad4c-77cf03b63905
+
+	measure 'Triage STD DEV' =
+			
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P (VALUES ('Triage_Outcome'[Year_Month]),[New Total Triage]),ALLEXCEPT('Date Table','Date Table'[year_month]))
+			
+			RETURN IFERROR(STD_DEV,0)
+		lineageTag: 0cd38fb2-e4b5-4b39-b73a-f2fa625cbb8c
+
+	measure 'Triage LCL' = IF(([Triage Mean]-(3*[Triage STD DEV])) < 0, 0, ([Triage Mean]-(3*[Triage STD DEV])))
+		lineageTag: 70dac87b-f2ff-4a53-ad3f-02467022ac42
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Triage UCL' = IF(([Triage Mean]+(3*[Triage STD DEV])) < 0, 0, ([Triage Mean]+(3*[Triage STD DEV])))
+		lineageTag: 815636ad-3ee5-425d-bb6c-a5a70cb2ba8a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column source_of_request
+		dataType: string
+		lineageTag: 6ff553eb-fc44-4233-8a59-958ca6c081a3
+		summarizeBy: none
+		sourceColumn: source_of_request
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality_flag
+		dataType: string
+		lineageTag: 41a99bd8-bda5-4967-be72-e88e465e3a0e
+		summarizeBy: none
+		sourceColumn: locality_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column paediatric_flag
+		dataType: string
+		lineageTag: 71582125-8135-4989-b0ac-8e51f60f8523
+		summarizeBy: none
+		sourceColumn: paediatric_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column age
+		dataType: int64
+		formatString: 0
+		lineageTag: c73fb0ea-ea4b-4b12-94a2-07b8a0f07ca5
+		summarizeBy: sum
+		sourceColumn: age
+
+		annotation SummarizationSetBy = Automatic
+
+	column triage_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a45515a3-b1de-4c22-baeb-a213d37c719b
+		summarizeBy: none
+		sourceColumn: triage_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column appointment_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cad0b703-703b-4d6a-8ff6-117ac70f27c2
+		summarizeBy: none
+		sourceColumn: appointment_date
+
+		variation Variation
+			isDefault
+			relationship: 0ab8f04d-f736-48c4-a0e0-c4264dbc5d80
+			defaultHierarchy: LocalDateTable_d876c086-6a6e-4211-806e-52cad4a07b8c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column pathway_outcome
+		dataType: string
+		lineageTag: ac5a8ab6-10a4-4790-92d9-ad340135e127
+		summarizeBy: none
+		sourceColumn: pathway_outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column booked_service_name
+		dataType: string
+		lineageTag: 2b770e2c-872a-4c90-b1c4-bf43dd0d9d83
+		summarizeBy: none
+		sourceColumn: booked_service_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 256473a2-a148-4749-9b40-7c3fe8f2d2ae
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 60dcb2ba-5601-4e16-8e2c-bf34003b94de
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 8df452f1-245c-4852-b28f-ad85ebf27dbc
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column triage_service_name
+		dataType: string
+		isHidden
+		lineageTag: 43b54c30-9dbb-491c-b7a2-88f8aeedba95
+		summarizeBy: none
+		sourceColumn: triage_service_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancelled_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 56b3138d-89fd-4027-be7a-ff1d8d865099
+		summarizeBy: sum
+		sourceColumn: cancelled_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancelled_description
+		dataType: string
+		lineageTag: c9ae6878-1664-4082-ba69-e15ef34df9e9
+		summarizeBy: none
+		sourceColumn: cancelled_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column triage_service
+		dataType: string
+		lineageTag: 6bf0ba41-39a4-411b-b01d-4adf0863ed55
+		summarizeBy: none
+		sourceColumn: triage_service
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date_Triage_Actioned
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e14c44bb-2bca-48c9-8ef2-17716b6f1142
+		summarizeBy: none
+		sourceColumn: Date_Triage_Actioned
+
+		variation Variation
+			isDefault
+			relationship: 87b32b59-b772-4dc1-bbe9-fd30e22a20a2
+			defaultHierarchy: LocalDateTable_70da4b39-fb9e-4f2a-90db-701b7e05eb18.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Triage_actioned_within_2_days
+		dataType: string
+		lineageTag: 1f03e29e-9966-43d4-b197-d8f68e08050d
+		summarizeBy: none
+		sourceColumn: Triage_actioned_within_2_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column turnaround_time
+		dataType: int64
+		formatString: 0
+		lineageTag: d9006c20-074a-450f-bdbd-5e104ae66d6d
+		summarizeBy: sum
+		sourceColumn: turnaround_time
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome_date_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 030031ec-71e6-45c2-bc8c-f0eb13f99553
+		summarizeBy: none
+		sourceColumn: outcome_date_time
+
+		variation Variation
+			isDefault
+			relationship: 37a3324c-cc18-4ab4-97cb-280bcd9fe4ae
+			defaultHierarchy: LocalDateTable_7cb8f179-54a3-4b08-9292-ce39f655d8d9.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column rejection_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a23bf5e-36a2-419c-b8a8-07f131d096ee
+		summarizeBy: sum
+		sourceColumn: rejection_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Outcome_of_Triage
+		dataType: string
+		lineageTag: db7d371e-aeb1-4384-a202-858253749145
+		summarizeBy: none
+		sourceColumn: Outcome_of_Triage
+
+		annotation SummarizationSetBy = Automatic
+
+	column TriageCounter
+		dataType: int64
+		formatString: #,0
+		lineageTag: 697d52a6-a9d3-412d-945b-9e1de40bcc3b
+		summarizeBy: sum
+		sourceColumn: TriageCounter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year_Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 8f9096ba-15f4-4ad6-8175-508f2357fb27
+		summarizeBy: sum
+		sourceColumn: Year_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column clinic_type
+		dataType: string
+		lineageTag: 6f31cced-115d-4ae6-b4d1-1c2ea7e04411
+		summarizeBy: none
+		sourceColumn: clinic_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location of Triage'
+		dataType: string
+		lineageTag: 7b08be5c-a517-4d5c-9549-11ae480e58d1
+		summarizeBy: none
+		sourceColumn: Location of Triage
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Triage_Outcome = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Processing", [Query="--EXEC [MSK].[sp03_MSKTriage_GHFT_GHC]#(lf)--;#(lf)Select *#(lf)From [PowerBI_Reporting].[MSK].[tbl03_MSKTriage_GHFT_GHC]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

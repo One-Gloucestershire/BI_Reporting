@@ -1,0 +1,68 @@
+table 'Onward Referrals from Triage_GHFT'
+	lineageTag: ce4559a7-8ba6-43bd-90a0-4277d2f80d45
+
+	column Financial_Year
+		dataType: string
+		lineageTag: f4d5a1be-8bb3-4cd3-9b0b-c74376f54f1d
+		summarizeBy: none
+		sourceColumn: Financial_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 8a404621-ef0f-4e0d-a5d9-a62ece7ca880
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year_Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2e418f59-601a-437f-b8a0-d9a60532f71d
+		summarizeBy: none
+		sourceColumn: Year_Month
+
+		variation Variation
+			isDefault
+			relationship: d08a6aeb-9e29-4a07-972c-e4f454632cf5
+			defaultHierarchy: LocalDateTable_52da48c3-682c-4daa-a17b-0dbb57f863fc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Referred to Service'
+		dataType: string
+		lineageTag: e23a1e59-8068-4317-bbd5-194ed3986ed8
+		summarizeBy: none
+		sourceColumn: Referred to Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: int64
+		formatString: 0
+		lineageTag: 8a1a66fc-9f6e-4f3f-92d0-7fff753a22ac
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Onward Referrals from Triage_GHFT' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\MSK\Dashboard\Power BI\Referrals\GHFT_Onward_Referrals_Import.xlsx"), null, true),
+				    Import_Sheet = Source{[Item="Import",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Import_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Financial_Year", type text}, {"Month", type date}, {"Year_Month", type date}, {"Referred to Service", type text}, {"Activity", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

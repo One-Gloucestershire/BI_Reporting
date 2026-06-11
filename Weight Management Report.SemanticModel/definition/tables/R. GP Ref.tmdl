@@ -1,0 +1,80 @@
+table 'R. GP Ref'
+	lineageTag: 45c246c5-fbf7-437e-83bf-65f056bf9696
+
+	column PCN
+		dataType: string
+		lineageTag: 9bd7f727-20f9-4acf-87ca-c487af5997dd
+		summarizeBy: none
+		sourceColumn: PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: af9c9850-1e90-4887-acef-369841598b70
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 0b32666a-8ac0-441f-bba7-ce045fb1654d
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: cc7d7ce1-3172-464a-8b86-4a95f1e4b97a
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 21484ce2-fe55-4b51-a274-7e6478a65a09
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: 61714a8f-84fe-4c92-853b-0f8b36e9a6c3
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: 4e3ed520-f3c5-4caa-b9ff-6de7ec38c502
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a16963b-85be-4bd8-8751-30b63804d174
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'R. GP Ref' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="WITH GP_CTE AS#(lf)#(lf)(#(lf)#(lf)SELECT [PCN] = CASE WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'TWNS'#(lf)#(lf)#(tab)          WHEN [PrimaryCareNetwork] LIKE 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS'#(lf)#(lf)                    ELSE [PrimaryCareNetwork] END#(lf)#(lf)      ,[Locality] = CASE WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'Tewkesbury Newent and Staunton'#(lf)#(lf)                         ELSE [Locality] END#(lf)#(lf)      ,[OrganisationCode]#(lf)#(lf)      ,[ReportingOrganisationCode] = CASE WHEN [ReportingOrganisationCode] LIKE 'L84073' THEN 'L84075' /*Acorn Practice*/#(lf)#(lf)#(tab)                                WHEN [ReportingOrganisationCode] LIKE 'L84017' THEN 'L84018' /*Cirencester Health Group*/#(lf)#(lf)#(tab)                                ELSE [ReportingOrganisationCode] END #(lf)#(lf)      ,[ReportingOrganisationName] = CASE WHEN [ReportingOrganisationName] LIKE 'Acorn Practice' THEN 'May Lane Surgery' #(lf)#(lf)#(tab)                                WHEN [ReportingOrganisationName] LIKE 'Regent Street Surgery' THEN 'The Willow Tree Practice'#(lf)#(lf)#(tab)                                WHEN [ReportingOrganisationName] LIKE 'Coleford Family Doctors' THEN 'Coleford Medical Practice'#(lf)#(lf)#(tab)                                ELSE [ReportingOrganisationName] END#(lf)#(tab)#(tab),[Population]#(lf) #(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice] [a]#(lf)LEFT JOIN (select sum([Total]) as [Population], OrganisationCode as OrganisationCode2#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)from [CCG_Reference].[Reference].[vw_GPPracticePopulation] [a]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)left join [CCG_Reference].[Reference].[vw_DateLookup] [dat] on left([a].CensusDate,3) = left([dat].MonthYearName,3) and #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)right([a].CensusDate,2) = right([dat].[Year],2) and#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[dat].[day] = 1#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)where AgeGroupType = 'Group 1' and [dat].[FirstDateofMonth] = #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)(select max([FirstDateofMonth]) #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)from [CCG_Reference].[Reference].[vw_GPPracticePopulation] [a]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)left join [CCG_Reference].[Reference].[vw_DateLookup] [dat] on left([a].CensusDate,3) = left([dat].MonthYearName,3) and #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)right([a].CensusDate,2) = right([dat].[Year],2) and#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[dat].[day] = 1#(lf)#(tab)#(tab)#(tab)#(tab)#(tab))#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)group by OrganisationCode) [pop] on [a].OrganisationCode = [pop].OrganisationCode2#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)#(lf)AND [Locality] IS NOT NULL#(lf)#(lf))#(lf)#(lf)SELECT [GP].*#(lf)#(lf)      ,[COORD].[GPLatitude]#(lf)#(lf)      ,[COORD].[GPLongitude]#(lf) #(lf)FROM GP_CTE AS [GP]#(lf) #(lf)LEFT JOIN (#(lf)#(lf)           SELECT DISTINCT [GP_Practice_Code]#(lf)#(lf)                          ,[GPLatitude]#(lf)#(lf)#(tab)#(tab)      ,[GPLongitude]#(lf)#(lf)           FROM [PowerBI_Reporting].[PHM].[tbl02_DemographicsOverview]#(lf)#(lf)#(tab)) AS [COORD] #(lf)#(lf)ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]#(lf) "])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

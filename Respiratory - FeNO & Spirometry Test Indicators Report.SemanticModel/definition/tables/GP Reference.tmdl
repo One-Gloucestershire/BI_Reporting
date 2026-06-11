@@ -1,0 +1,98 @@
+table 'GP Reference'
+	lineageTag: 452ab777-7585-412d-a067-a71dea78be4b
+
+	measure Matrix_Primary_Care_Network_Header = ```
+			
+			
+			VAR OrgCode = SELECTEDVALUE('GP Reference'[OrganisationCode])
+			RETURN
+			IF(
+			    ISBLANK(OrgCode),
+			    "Residing in county but registered out of county at the time of test",
+			    OrgCode
+			)
+			
+			
+			```
+		lineageTag: 46625cc8-fabe-405f-8fe9-97fca9d2fa1a
+
+	column Locality
+		dataType: string
+		lineageTag: 24e05231-00e2-4888-85d9-68ccc3bc096c
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: a24f1700-7b11-4ee5-b7c6-0b3135ff7fc8
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 3c2bb596-f916-4b67-8f06-c1fad0f7fcef
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 2bdc77f2-826c-417b-b87b-eb115593521c
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 3b9f0897-d536-43b5-bd35-c0a614b74a5e
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: double
+		lineageTag: bc471d5f-4d61-447f-ad71-5e46c7cd7439
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column GPLongitude
+		dataType: double
+		lineageTag: a9204579-2c3d-42db-b53e-c091558edb59
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ReportingOrganisation_codeanddescription
+		dataType: string
+		lineageTag: a9757336-247b-42db-b177-17cfed852034
+		summarizeBy: none
+		sourceColumn: ReportingOrganisation_codeanddescription
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="--first obtain practices and their location coordinates#(lf)#(lf)#(lf)IF OBJECT_ID ('tempdb..#gp_practice_coordinates') IS NOT NULL DROP TABLE #gp_practice_coordinates#(lf);#(lf)#(tab)#(tab)   SELECT DISTINCT [GP_Practice_Code]#(lf)#(tab)#(tab)   ,  [GPLongitude] #(lf)#(tab)#(tab)   ,[GPLatitude] #(lf)#(tab)#(tab)   #(lf)#(tab)#(tab)   into #gp_practice_coordinates#(lf)#(lf)           FROM [PowerBI_Reporting].[PHM].[tbl02_DemographicsOverview]#(lf)#(lf)#(tab)#(tab) WHERE GPLongitude is not null #(lf)#(lf)#(lf)-- Create a GP location temp table with adjusted coordinates#(lf)#(lf)IF OBJECT_ID('tempdb..#gp_practice_map') IS NOT NULL #(lf)    DROP TABLE #gp_practice_map;#(lf)#(lf)SELECT #(lf)    gp.GP_Practice_Code,  -- Select all original columns#(lf)#(tab)#(lf)    -- Add a tiny random offset (less than 1 metre) to avoid overlapping points in Power BI#(lf)    [GPLongitude] = [GPLongitude] + ((RAND(CHECKSUM(NEWID())) - 0.5) * 0.000018),#(lf)    [GPLatitude]  = [GPLatitude]  + ((RAND(CHECKSUM(NEWID())) - 0.5) * 0.000009)#(lf)INTO #gp_practice_map#(lf)FROM #gp_practice_coordinates AS gp;#(lf)#(lf);#(lf)#(lf)#(lf)-- Create base gp reference temp table #(lf)  IF OBJECT_ID ('tempdb..#TEMP') IS NOT NULL DROP TABLE #TEMP#(lf)#(lf)SELECT [Locality] =[Locality]#(lf)      ,[PrimaryCareNetwork] = [PrimaryCareNetwork]#(lf)#(tab)  ,[OrganisationCode]#(lf)#(tab)  ,[ReportingOrganisationCode] =  [ReportingOrganisationCode] #(lf)#(tab)  ,[ReportingOrganisationName] =  [ReportingOrganisationName] #(lf)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),[ReportingOrganisation_codeanddescription] = cast(NULL as varchar(max)) -- UPDATE AFTER #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  #(lf)INTO #TEMP#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)AND [Locality] IS NOT NULL#(lf);#(lf)#(lf)#(lf)---update [ReportingOrganisation_codeanddescription]#(lf)#(lf)UPDATE #TEMP#(lf)SET [ReportingOrganisation_codeanddescription] = t.ReportingOrganisationCode + ' - ' + t.ReportingOrganisationName#(lf)#(lf)from #TEMP as t#(lf)#(lf)#(lf)---FINAL ouput #(lf)SELECT [GP].*#(lf)#(tab)  ,[COORD].[GPLatitude]#(lf)#(tab)  ,[COORD].[GPLongitude]#(lf)#(lf)FROM #TEMP AS [GP]#(lf)#(lf)LEFT JOIN #gp_practice_map [COORD] ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]#(lf)#(lf)#(tab)#(tab)   where GP.OrganisationCode <> 'L84609' -- remove St Luke's Medical Centre#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

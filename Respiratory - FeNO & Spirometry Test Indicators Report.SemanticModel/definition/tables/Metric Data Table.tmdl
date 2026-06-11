@@ -1,0 +1,564 @@
+table 'Metric Data Table'
+	lineageTag: 0684f710-b758-4961-8933-9ecd830c4ae4
+
+	measure 'Metrics - % In Care Home' =
+			
+			
+			IF(
+			    ISBLANK([Metrics - Latest Month Total in Care Home] / [Metrics - Total Unique Patient Tests]),
+			    0,
+			    [Metrics - Latest Month Total in Care Home] / [Metrics - Total Unique Patient Tests]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9cb3440c-d8fd-4c42-94f2-a85bdd8d8011
+
+	measure 'Metrics - Ethnicity %' =
+			
+			
+			[Metrics - Matrix Table Total Counts]
+			/
+			CALCULATE(
+			    [Metrics - Matrix Table Total Counts],
+			    ALL('Ethnicity Reference')
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 47a1bca7-1cf0-4489-bda7-b525097cf3e7
+
+	measure 'Metrics - Female Total Count' =
+			
+			
+			CALCULATE(
+			    [Metrics - Total Unique Patient Tests],
+			    'Metric Data Table'[Gender_Desc] = "Female"
+			)
+		formatString: #,0
+		lineageTag: 477f277b-6f0f-44a3-9e7f-0fd91c8e97ef
+
+	measure 'Metrics - Male Total Count' =
+			
+			
+			CALCULATE(
+			    [Metrics - Total Unique Patient Tests],
+			    'Metric Data Table'[Gender_Desc] = "Male"
+			)
+		formatString: #,0
+		lineageTag: 53090009-b117-49bf-9ec9-5b9192870586
+
+	measure 'Metrics - Latest Month Total in Care Home' =
+			
+			
+			VAR LatestDate = MAX('Date Reference'[date])
+			VAR StartOfLatestMonth = CALCULATE(STARTOFMONTH('Date Reference'[date]), 'Date Reference'[date] = LatestDate)
+			VAR EndOfLatestMonth = CALCULATE(ENDOFMONTH('Date Reference'[date]), 'Date Reference'[date] = LatestDate)
+			
+			RETURN
+			CALCULATE(
+			    DISTINCTCOUNT('Metric Data Table'[Pseudo_NHS_Number])
+			    ,'Metric Data Table'[Derived_IsLivingInCareHome] = 1
+			)
+		formatString: #,0
+		lineageTag: b2e9c867-f0de-4b30-85e3-d22f366f930e
+
+	measure 'Metrics - % Female' =
+			
+			
+			CALCULATE(
+			    [Metrics - Matrix Table Total Counts],
+			    'Metric Data Table'[Gender_Desc] = "Female"
+			)
+			
+			/
+			
+			CALCULATE(
+			    [Metrics - Matrix Table Total Counts],
+			    'Metric Data Table'[Gender_Desc] = "Female",
+			    ALL('Age Band Reference')
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7572fda8-2368-4cec-918a-4f509ca1ef99
+
+	measure 'Metrics - % Male' =
+			
+			CALCULATE(
+			    [Metrics - Matrix Table Total Counts],
+			    'Metric Data Table'[Gender_Desc] = "Male"
+			)
+			
+			/
+			
+			CALCULATE(
+			    [Metrics - Matrix Table Total Counts],
+			    'Metric Data Table'[Gender_Desc] = "Male",
+			    ALL('Age Band Reference')
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: adfdffad-ae7c-4f8e-9916-04f6bc1878d1
+
+	measure 'Metrics - Trendline Count' = ```
+			
+			
+			VAR MonthlyMetricTable =
+			    SUMMARIZE(
+			        'Metric Data Table',
+			        'Date Reference'[year_month],
+			        'Metric Data Table'[Metric_ID],
+			        "MonthlyCount", calculate(DISTINCTCOUNT('Metric Data Table'[Pseudo_NHS_Number])
+			    )
+			
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[Month_Number] ),
+			            "Value_x", 'Date Reference'[Month_Number],
+			            "Value_y", 'Metric Data Table'[Metrics - Matrix Table Total Counts]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(
+			        SUMX (
+			        DISTINCT ( 'Date Reference'[Month_Number] ),
+			        Intercept + Slope * 'Date Reference'[Month_Number]
+			    ) < 0,
+			    0,
+			        SUMX (
+			        DISTINCT ( 'Date Reference'[Month_Number] ),
+			        Intercept + Slope * 'Date Reference'[Month_Number]
+			                )
+			    )
+			```
+		lineageTag: 4c853370-fc7f-43fd-b69a-eba189029e06
+
+	measure 'Metrics - Trendline Total Tests' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+			                         'Date Reference'[month_name], 'Date Reference'[Month_Number] ),
+			            "Value_x", 'Date Reference'[Month_Number],
+			            "Value_y", 'Metric Data Table'[Metrics - Total Unique Patient Tests]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(
+			        SUMX (
+			        DISTINCT ( 'Date Reference'[Month_Number] ),
+			        Intercept + Slope * 'Date Reference'[Month_Number]
+			    ) < 0,
+			    0,
+			        SUMX (
+			        DISTINCT ( 'Date Reference'[Month_Number] ),
+			        Intercept + Slope * 'Date Reference'[Month_Number]
+			                )
+			    )
+			```
+		lineageTag: f3fa6b74-be76-45ad-8ad1-438f5f3a0d11
+
+	measure 'Metrics - % Female - ICB' =
+			
+			
+			CALCULATE(
+			    [Metrics - Total Unique Patient Tests],
+			    'Metric Data Table'[Gender_Desc] = "Female",
+			    ALL('Ethnicity Reference'),
+			    ALL('GP Reference')
+			)
+			
+			/
+			
+			CALCULATE(
+			    [Metrics - Total Unique Patient Tests],
+			    'Metric Data Table'[Gender_Desc] = "Female",
+			    ALL('Ethnicity Reference'),
+			    ALL('GP Reference'),
+			    ALL('Age Band Reference')
+			)
+		lineageTag: c70897d3-bd79-4bfc-bb26-9c7c3cca4415
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metrics - % Male - ICB' =
+			
+			
+			CALCULATE(
+			    [Metrics - Total Unique Patient Tests],
+			    'Metric Data Table'[Gender_Desc] = "Male",
+			    ALL('Ethnicity Reference'),
+			    ALL('GP Reference')
+			)
+			
+			/
+			
+			CALCULATE(
+			    [Metrics - Total Unique Patient Tests],
+			    'Metric Data Table'[Gender_Desc] = "Male",
+			    ALL('Ethnicity Reference'),
+			    ALL('GP Reference'),
+			    ALL('Age Band Reference')
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8e7f9bf3-758f-40d6-baeb-3a0d616d065b
+
+	measure 'Metrics - Total Unique Patient Tests' = ```
+			
+			
+			    DISTINCTCOUNT('Metric Data Table'[Pseudo_NHS_Number])
+			
+			
+			```
+		formatString: 0
+		lineageTag: 78f8aab1-cbe1-489c-a3ad-a0a019ce90b0
+
+	measure 'Metrics - Average Age' = ```
+			
+			
+			
+			
+			CALCULATE(
+			    AVERAGE('Metric Data Table'[Age])
+			)
+			
+			
+			```
+		lineageTag: f7c7eb06-1212-4fca-aca2-4c160e801025
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Last Updated Text' = max('Date Reference'[Last_Updated])
+		formatString: dd/mm/yy h:nn
+		lineageTag: 98a1452c-0e0a-4990-a127-5ae08bab9642
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	measure Measure
+		lineageTag: 21938ded-63b3-49a3-9a54-5f0da086c36e
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure 'Total Unique Test Values' = ```
+			
+			CALCULATE(
+			   DISTINCTCOUNT('Metric Data Table'[UniqueTestValueID]),
+			   FILTER(
+			       'Metric Data Table',
+			      NOT(ISBLANK('Metric Data Table'[UniqueTestValueID]))
+			    )
+			)
+			
+			
+			```
+		formatString: 0
+		lineageTag: 438db8b0-305f-4933-b9d7-49bef11f830b
+
+	measure 'Metrics - Matrix Table Total Counts' = ```
+			
+			VAR MonthlyMetricTable =
+			    SUMMARIZE(
+			        'Metric Data Table',
+			        'Date Reference'[year_month],
+			        'Metric Data Table'[Metric_ID],
+			        "MonthlyCount", DISTINCTCOUNT('Metric Data Table'[Pseudo_NHS_Number])
+			    )
+			RETURN
+			IF (
+			    ISINSCOPE('Date Reference'[year_month]),
+			    DISTINCTCOUNT('Metric Data Table'[Pseudo_NHS_Number]),
+			    SUMX(MonthlyMetricTable, [MonthlyCount])
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 6209c699-d516-4929-b6c4-79bf8485a314
+
+	measure 'Total Tests (4a and 4b)' = ```
+			
+			
+			sum('Metric Data Table'[UniqueTestValueID]) 
+			```
+		formatString: 0
+		lineageTag: 9e91fe6a-43a8-4e32-910d-885838ce0265
+
+	measure 'Metrics - Trendline Total Tests (712&713)' = ```
+			
+			
+			VAR MonthsTable =
+			    ADDCOLUMNS(
+			        FILTER(
+			            ALLSELECTED('Date Reference'),
+			            NOT(ISBLANK('Metric Data Table'[Metrics - Total Unique Patient Tests]))
+			        ),
+			        "Value_y", 'Metric Data Table'[Metrics - Total Unique Patient Tests]
+			    )
+			
+			VAR RankedMonths =
+			    ADDCOLUMNS(
+			        MonthsTable,
+			        "Value_x",
+			        RANKX(
+			            MonthsTable,
+			            [year_month], , ASC, DENSE
+			        )
+			    )
+			
+			VAR Temp_Table =
+			    SELECTCOLUMNS(
+			        RankedMonths,
+			        "Value_x", [Value_x],
+			        "Value_y", [Value_y]
+			    )
+			
+			VAR LINESTX_Table =
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope =
+			    MAXX(LINESTX_Table, [Slope1])
+			VAR Intercept =
+			    MAXX(LINESTX_Table, [Intercept])
+			
+			VAR CurrentYearMonth = SELECTEDVALUE('Date Reference'[year_month])
+			
+			VAR CurrentValueX =
+			    MAXX(
+			        FILTER(RankedMonths, [year_month] = CurrentYearMonth),
+			        [Value_x]
+			    )
+			
+			VAR TrendlineValue = Intercept + Slope * CurrentValueX
+			
+			RETURN IF(TrendlineValue < 0, 0, TrendlineValue)
+			
+			```
+		lineageTag: ee20e3bd-bdae-483f-8efd-8ae67d21048d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Data_exist_in_metric_table = ```
+			Countrows('Metric Data Table') 
+			```
+		formatString: 0
+		lineageTag: c3229b0a-95cd-40c1-a034-8cac8e48ea33
+
+	measure '712 - Feno Count' = calculate(sum('Metric Data Table'[UniqueTestValueID]),'Metric Data Table'[Metric_ID] = "712")
+		formatString: 0
+		lineageTag: 0d666d83-2060-4b24-92ea-dd5abb0fe5f8
+
+	measure '713 - Spiro Count' = calculate(sum('Metric Data Table'[UniqueTestValueID]),'Metric Data Table'[Metric_ID] = "713")
+		formatString: 0
+		lineageTag: db8d321c-4be5-4757-8353-a4200f56f35d
+
+	measure 'Total Uniqe Patients' =
+			
+			
+			DISTINCTCOUNT('Metric Data Table'[Pseudo_NHS_Number])
+		formatString: 0
+		lineageTag: 8b694007-48cd-4e1b-97fb-3a81187beca8
+
+	measure 'Metrics - Trendline Count (701)' = ```
+			
+			
+			
+			
+			VAR Temp_Table = 
+			   ADDCOLUMNS(
+			        FILTER(
+			            ALLSELECTED('Date Reference'),
+			            NOT(ISBLANK([Total Tests (4a and 4b)]))
+			        ),
+			        "Value_x", 'Date Reference'[Month_Number],
+			        "Value_y", [Total Tests (4a and 4b)]
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(
+			        SUMX (
+			        DISTINCT ( 'Date Reference'[Month_Number] ),
+			        Intercept + Slope * 'Date Reference'[Month_Number]
+			    ) < 0,
+			    0,
+			        SUMX (
+			        DISTINCT ( 'Date Reference'[Month_Number] ),
+			        Intercept + Slope * 'Date Reference'[Month_Number]
+			                )
+			    )
+			```
+		lineageTag: 8c6a8815-1c7f-43dd-a0cb-839b9fb1b982
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure test = ```
+			
+			DISTINCTCOUNT('Metric Index'[Metric Description])
+			
+			```
+		formatString: 0
+		lineageTag: d8899564-0105-4797-b5d1-cc241f14385a
+
+	measure 'Latest Data Up To Full Date' =
+			
+			
+			CALCULATE(MAX('Date Reference'[date]))
+		formatString: dd/mm/yyyy
+		lineageTag: 9d727751-537f-40dd-8682-439c5e1fa638
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure 'Latest Month of Selection' =
+			
+			
+			VAR _LATEST = MAX('Date Reference'[year_month])
+			
+			RETURN
+			
+			CALCULATE(MAX('Date Reference'[month_year]), 'Date Reference'[year_month] = _LATEST)
+		lineageTag: fd97578e-758d-4fcf-9ff8-ba6c98de06bd
+
+	column Metric_ID
+		dataType: string
+		lineageTag: a253f83c-c580-411a-883a-df541fa30582
+		summarizeBy: none
+		sourceColumn: Metric_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pseudo_NHS_Number
+		dataType: string
+		lineageTag: 75df1920-e44c-4fc2-988f-dfe8c9c84f56
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: e1302017-c215-4fb7-9a78-13a66d599beb
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: e26dbb26-7e50-4edd-a0ac-59b7385004da
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Desc
+		dataType: string
+		lineageTag: f9715441-c82b-4b8f-b34c-012d1c2b36fe
+		summarizeBy: none
+		sourceColumn: Gender_Desc
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateOfDeath
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 65faf558-aa58-49bc-8c55-34cc18aa33c3
+		summarizeBy: none
+		sourceColumn: DateOfDeath
+
+		variation Variation
+			isDefault
+			relationship: cb8fe421-a87f-4fa3-a62b-74737157d744
+			defaultHierarchy: LocalDateTable_fd9cf356-8b02-49c9-a08b-6918d5694aab.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResidentialNursingHomeFlag
+		dataType: int64
+		formatString: 0
+		lineageTag: cfc02b98-b69b-4cac-b6a6-2e5b9113c2f3
+		summarizeBy: sum
+		sourceColumn: ResidentialNursingHomeFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_IsLivingInCareHome
+		dataType: int64
+		formatString: 0
+		lineageTag: e4571b19-94b3-4eeb-bb2b-8af02fcee870
+		summarizeBy: sum
+		sourceColumn: Derived_IsLivingInCareHome
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis_or_Event_Date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: abf5b7e0-22aa-4d4e-a4eb-1e7ab989f9d0
+		summarizeBy: none
+		sourceColumn: Diagnosis_or_Event_Date
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Test_Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 1870b6ae-0075-4193-9e69-bf0fb3950ca9
+		summarizeBy: sum
+		sourceColumn: Test_Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqueTestValueID
+		dataType: int64
+		formatString: 0
+		lineageTag: 4c924adf-b2b4-44a1-b580-0090cb3f903a
+		summarizeBy: count
+		sourceColumn: UniqueTestValueID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Metric Data Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query=" #(lf)SELECT [Metric_ID] ='1a'  --- '701'#(lf)#(tab)--#(tab),[Payable_activity_group] = 'Payable FeNo Activity'#(lf)#(tab)#(tab)--,[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([Feno_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath]#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl01_Respiratory_1a]#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] ='2a' --'702'#(lf)--,[Payable_activity_group] = 'Payable Spiro Activity'#(lf)--,[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([Spiro_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath]#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl02_Respiratory_2a]#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] ='2b' --'703'#(lf)--,[Payable_activity_group] = 'Payable Spiro Activity'#(lf)--#(tab)#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([COPD_Diagnosis_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath]#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl03_Respiratory_2b]#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] = '1b'--'704'#(lf)--#(tab)#(tab),[Payable_activity_group] = 'Payable FeNo Activity'#(lf)--#(tab)#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([Asthma_Resolved_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath]#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl04_Respiratory_1b]#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] = '2c'--'705'#(lf)--,[Payable_activity_group] = 'Payable Spiro Activity'#(lf)--#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([COPD_Resolved_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath]#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl05_Respiratory_2c]#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '706'#(lf)--,[Payable_activity_group]  = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([FENO_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath]#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl06_Respiratory_706]#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] = '3a'--'706a'#(lf)--,[Payable_activity_group]  = 'FeNO Patient Count (max. 1 test per patient/per month)'#(lf)--#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number] = [a].[PseudoNHSNumber]#(lf)#(tab)  ,[a].[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([a].[feno_EventDate] as date)#(lf)#(tab)  ,[PracticeCode] = [a].[PracticeCode]#(lf)#(tab)  ,[a].[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath] = NULL#(lf)#(tab)  ,[a].[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[a].[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl06_Respiratory_3a] as a#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '706ab'#(lf)--,[Payable_activity_group] = 'Non-Payable Activity'#(lf)--      ,[Pseudo_NHS_Number] = [a].[PseudoNHSNumber]#(lf)--#(tab)  ,[a].[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([a].[feno_EventDate] as date)#(lf)--#(tab)  ,[PracticeCode] = [a].[PracticeCode]#(lf)--#(tab)  ,[a].[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath] = NULL#(lf)--#(tab)  ,[a].[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[a].[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = a.[Feno_Value] --- CURRENTLY ONLY FOR 706a and 707a#(lf)--#(tab)  ,[UniqueTestValueID] = a.[UniqueFenoTestID] --- CURRENTLY ONLY FOR 706a and 707a#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl06_Respiratory_706a] as a#(lf)#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '707'#(lf)--,[Payable_activity_group]  = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([SPIRO_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath]#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl07_Respiratory_707]#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] = '3b'--'707a'#(lf)--,[Payable_activity_group]  = 'Spiro Patient Count (max. 1 test per patient/per month)'#(lf)--#(tab)#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number] = [PseudoNHSNumber]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([Spiro_EventDate] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath] = NULL#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl07_Respiratory_3b] as a#(lf)#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '707ab'#(lf)--,[Payable_activity_group] = 'Non-Payable Activity'#(lf)--      ,[Pseudo_NHS_Number] = [PseudoNHSNumber]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Spiro_EventDate] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath] = NULL#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = a.[Spiro_Value] --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = a.[UniqueSpiroTestID] --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl07_Respiratory_707a] as a#(lf)#(lf)#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '708'#(lf)--,[Payable_activity_group]  = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Event_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath]#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl08_Respiratory_708_and_709]#(lf)#(lf)--WHERE [AGE] >= 5#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '709'#(lf)--,[Payable_activity_group]  = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Event_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath]#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl08_Respiratory_708_and_709]#(lf)#(lf)--WHERE [AGE] BETWEEN 5 AND 17#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '710'#(lf)--,[Payable_activity_group]  = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Event_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath]#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl09_Respiratory_710_and_710a]#(lf)#(lf)--WHERE [AGE] BETWEEN 5 AND 17#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '710a'#(lf)--,[Payable_activity_group]  = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Event_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath]#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)     #(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl09_Respiratory_710_and_710a]#(lf)#(lf)--WHERE [AGE] >= 5#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '5a'--'NEW @ 23/07/2025'#(lf)--,[Payable_activity_group] = 'All Other Activity Metrics'#(lf)--      ,[Pseudo_NHS_Number]#(lf)--#(tab)  ,[Age]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Diagnosis_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath] = NULL#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl25_Respiratory_5a]#(lf)#(lf)#(lf)--UNION ALL#(lf)#(lf)--SELECT [Metric_ID] = '5b'--'711'#(lf)----,[Payable_activity_group] = 'All Other Activity Metrics'#(lf)--      ,[Derived_NHS_Number]#(lf)--#(tab)  ,[AGE]#(lf)--#(tab)  ,[Diagnosis_or_Event_Date] = cast([Diagnosis_Date] as date)#(lf)--#(tab)  ,[PracticeCode]#(lf)--#(tab)  ,[Gender_Desc]#(lf)--#(tab)  ,[DateOfDeath] = NULL#(lf)--#(tab)  ,[ResidentialNursingHomeFlag]#(lf)--#(tab)  ,[Derived_IsLivingInCareHome]#(lf)--#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)--#(tab)  ,[UniqueTestValueID] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)--FROM [PowerBI_Reporting].[Respiratory].[tbl10_Respiratory_5b]#(lf)#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT [Metric_ID] ='4a' --'712'#(lf)--,[Payable_activity_group] = 'FeNO main code applied'#(lf)--#(tab)#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([Feno_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath] = NULL#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = cast(1 as int) --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)FROM [PowerBI_Reporting].[Respiratory].[tbl15_Respiratory_4a]#(lf)#(lf)#(lf)UNION ALL#(lf)SELECT [Metric_ID] = '4b'--'713'#(lf)--,[Payable_activity_group] = 'Spiro main code applied'#(lf)--#(tab)#(tab),[Payable_activity_subgroup] = 'All FeNO Spiro Metrics'#(lf)      ,[Pseudo_NHS_Number]#(lf)#(tab)  ,[Age]#(lf)#(tab)  ,[Diagnosis_or_Event_Date] = cast([Spiro_Date] as date)#(lf)#(tab)  ,[PracticeCode]#(lf)#(tab)  ,[Gender_Desc]#(lf)#(tab)  ,[DateOfDeath] = NULL#(lf)#(tab)  ,[ResidentialNursingHomeFlag]#(lf)#(tab)  ,[Derived_IsLivingInCareHome]#(lf)#(tab)  ,[Test_Value] = NULL --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(tab)  ,[UniqueTestValueID] = cast(1 as int) --- CURRENTLY ONLY FOR 706ab and 707ab#(lf)#(lf)#(lf)#(tab)  FROM [PowerBI_Reporting].[Respiratory].[tbl16_Respiratory_4b]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

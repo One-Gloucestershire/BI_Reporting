@@ -1,0 +1,79 @@
+table Sheet1
+	lineageTag: 633d55ed-9bb8-483e-a343-1fbad4442a29
+
+	measure 'List of RAG values' =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('Sheet1'[RAG])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(__MAX_VALUES_TO_SHOW, VALUES('Sheet1'[RAG]), 'Sheet1'[RAG], ASC),
+							'Sheet1'[RAG],
+							", ",
+							'Sheet1'[RAG],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(VALUES('Sheet1'[RAG]), 'Sheet1'[RAG], ", ", 'Sheet1'[RAG], ASC)
+				)
+		lineageTag: 456350d8-960a-45bc-a42c-84d9c290928b
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Title Text District' = "Number of Cases (District) - " &Sheet1[List of RAG values]
+		lineageTag: 9025edef-597e-4da4-90db-e60dbf3eef65
+
+	measure ZeroCount = IF(ISBLANK(COUNT('Sheet1'[Output LSOA Code])), 0, COUNT('Sheet1'[Output LSOA Code]))
+		formatString: 0
+		lineageTag: 4f1fc886-3dcc-4cd5-bfa9-561c34c9bcd1
+
+	measure 'Title Text LSOA' = "Number of Cases (District) - " &Sheet1[List of RAG values]
+		lineageTag: 3656361d-3a86-4441-a331-2be9fa7cfeba
+
+	column 'Output LSOA Code'
+		dataType: string
+		lineageTag: 8650484e-231f-45c1-b6ff-2f51daf63d2b
+		summarizeBy: none
+		sourceColumn: Output LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column RAG
+		dataType: string
+		lineageTag: c79fafc4-fc4a-4375-afcd-f41dd6c86568
+		summarizeBy: none
+		sourceColumn: RAG
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Sheet1 = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Projects\GIS\Projects\DSR\260320_DSR Postcode data Q4.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(Sheet1_Sheet,{{"Column1", type text}, {"Column2", type text}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([Column1] <> null)),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Filtered Rows", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Output LSOA Code", type text}, {"RAG", type text}}),
+				    #"Removed Errors" = Table.RemoveRowsWithErrors(#"Changed Type1"),
+				    #"Removed Errors1" = Table.RemoveRowsWithErrors(#"Removed Errors", {"RAG"}),
+				    #"Removed Errors2" = Table.RemoveRowsWithErrors(#"Removed Errors1", {"Output LSOA Code", "RAG"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Removed Errors2", each ([Output LSOA Code] <> null and [Output LSOA Code] <> ""))
+				in
+				    #"Filtered Rows1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

@@ -1,0 +1,260 @@
+table Outpatient_MSK
+	lineageTag: b4a694f4-6a8b-4a28-a1ac-eb45de6acf20
+
+	measure first_attendances_MSK = CALCULATE(COUNT('Outpatient_MSK'[Counter]),FILTER('Outpatient_MSK','Outpatient_MSK'[First or Follow Up]="First"),FILTER('Outpatient_MSK','Outpatient_MSK'[Attendance Group]="Attended"),NOT 'Date Table'[year_month] IN {"202004","202005","202006"})
+		formatString: 0
+		lineageTag: cc715ece-db20-436e-b0d3-c84a67637652
+
+	measure first_to_follow_up_ratio_MSK = [follow_up_attendances_MSK]/[first_attendances_MSK]
+		formatString: 0.00
+		lineageTag: 72fc7d91-603b-4068-a0eb-af6905f28ea0
+
+	measure follow_up_attendances_MSK = ```
+			
+			 
+			CALCULATE( COUNT ( 'Outpatient_MSK' [Counter] ),
+			    CONTAINSSTRING('Outpatient_MSK'[First or Follow Up], "Follow Up" ),
+			       'Outpatient_MSK'[Attendance Group] = "Attended", NOT 'Date Table'[year_month] IN {"202004","202005", "202006"})
+			```
+		formatString: 0
+		lineageTag: c0620638-9d59-43a0-ab77-f53a09471a66
+
+	measure 'Number of Months MSK' = DISTINCTCOUNT('Outpatient_MSK'[YearMonth])
+		lineageTag: 2739a022-6a5e-4cf0-a5e0-30b6b8f238be
+
+	measure 'OP MSK Mean' = CALCULATE (SUM('Outpatient_MSK'[Counter])/[Number of Months MSK],ALLSELECTED('Date Table'))
+		lineageTag: 7749eac6-9ab6-4f2c-86f4-9595d27e5b3a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'New Total OP MSK' = SUM('Outpatient_MSK'[Counter])
+		formatString: 0
+		lineageTag: 07402e4d-cd13-4003-9d14-6ac9d0f29325
+
+	measure 'OP MSK STD DEV' =
+			
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P (VALUES ('Outpatient_MSK'[YearMonth]),[New Total OP MSK]),ALLEXCEPT('Date Table','Date Table'[year_month]))
+			
+			RETURN IFERROR(STD_DEV,0)
+		lineageTag: f8259a58-0376-4787-a0c7-eeafec6c0e4e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'OP MSK LCL' = IF(([OP MSK Mean]-(3*[OP MSK STD DEV])) < 0, 0, ([OP MSK Mean]-(3*[OP MSK STD DEV])))
+		lineageTag: d3d0a498-b5fc-42fe-8f31-a30ea99477c1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'OP MSK UCL' = IF(([OP MSK Mean]+(3*[OP MSK STD DEV])) < 0, 0, ([OP MSK Mean]+(3*[OP MSK STD DEV])))
+		lineageTag: fe259bc8-d046-4b31-9493-b7358db94402
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: d5f238a4-666e-439d-9c04-9b785f9cec94
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column local_treatment_function_code
+		dataType: string
+		lineageTag: eaff9603-1d1d-4e62-9b58-bcf96d25c2c7
+		summarizeBy: none
+		sourceColumn: local_treatment_function_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_number
+		dataType: string
+		lineageTag: fed2389f-12de-4370-9973-e9ee70d62f57
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column cds_unique_identifier
+		dataType: string
+		lineageTag: 2c1616e0-39dd-432e-b12b-c1eaa4791dc7
+		summarizeBy: none
+		sourceColumn: cds_unique_identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column OutcomeOfAttendance
+		dataType: string
+		lineageTag: fbce7d17-0e50-45ef-9fe0-5782f08e69ae
+		summarizeBy: none
+		sourceColumn: OutcomeOfAttendance
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppointmentDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 530a2e82-bcb5-4f21-a1d4-27c8e10043bc
+		summarizeBy: none
+		sourceColumn: AppointmentDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Routine or Urgent'
+		dataType: string
+		lineageTag: 33c9a58b-64bc-421e-a111-eb2606a95312
+		summarizeBy: none
+		sourceColumn: Routine or Urgent
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Referred By'
+		dataType: string
+		lineageTag: ca812505-e8fc-437e-9a65-f27ca01cc800
+		summarizeBy: none
+		sourceColumn: Referred By
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReferralRequestReceivedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 342b3acb-b57e-4d5f-8fb9-582308eb4ebd
+		summarizeBy: none
+		sourceColumn: ReferralRequestReceivedDate
+
+		variation Variation
+			isDefault
+			relationship: f98c2822-2bdc-41d7-89b1-bd776649c27d
+			defaultHierarchy: LocalDateTable_b017cc7e-517e-4fca-8729-019922b7635f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_Band
+		dataType: string
+		lineageTag: 52a60fa0-b701-4685-8198-e89e2bde8038
+		summarizeBy: none
+		sourceColumn: Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPPractice_Derived
+		dataType: string
+		lineageTag: 77f98292-7b72-4cb0-af0f-3ca1cb0ff58d
+		summarizeBy: none
+		sourceColumn: GPPractice_Derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'First or Follow Up'
+		dataType: string
+		lineageTag: 04e4ca6b-50e3-4414-ae94-c9264237dbb9
+		summarizeBy: none
+		sourceColumn: First or Follow Up
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Attendance Group'
+		dataType: string
+		lineageTag: 230fdef5-9ce6-4ca7-b6d5-cd228da8cf19
+		summarizeBy: none
+		sourceColumn: Attendance Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisationname
+		dataType: string
+		lineageTag: 8c5ffbe9-66c1-4fe6-8659-eb3f9809ab3e
+		summarizeBy: none
+		sourceColumn: Organisationname
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 649cca2a-8f1e-42a6-b1aa-da723b81ca59
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 37b7b229-ac1a-4129-900e-673a0b866951
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column DNA_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 04fb379f-379a-4e95-9bb8-37d97eb72b59
+		summarizeBy: sum
+		sourceColumn: DNA_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ATTENDED_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 0c594c0a-b25a-4ec0-b354-b961fba34a2f
+		summarizeBy: sum
+		sourceColumn: ATTENDED_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attendance_Type
+		dataType: string
+		lineageTag: 56d6f588-f5f4-4b8d-98e8-fd8057b46368
+		summarizeBy: none
+		sourceColumn: Attendance_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeatCDSActivityDate
+		dataType: int64
+		formatString: 0
+		lineageTag: ee000a88-2ecd-46c5-abd7-f34dd5d3b65c
+		summarizeBy: sum
+		sourceColumn: AgeatCDSActivityDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column appointment_type
+		dataType: string
+		lineageTag: 27492d27-054e-408d-bb09-a416261b3c8d
+		summarizeBy: none
+		sourceColumn: appointment_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentFunctionCode
+		dataType: string
+		lineageTag: 9a575820-6d70-47ca-91b3-87a5eda3a75e
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTFC_appointment_type
+		dataType: string
+		lineageTag: 3baa9542-48a5-4693-9f6a-288bf4011177
+		summarizeBy: none
+		sourceColumn: LTFC_appointment_type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Outpatient_MSK = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Processing", [Query="--EXEC [MSK].[sp01_MSKOP_GHFT]#(lf)--;#(lf)Select *#(lf)From [PowerBI_Reporting].[MSK].[tbl01_MSKOP_GHFT]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

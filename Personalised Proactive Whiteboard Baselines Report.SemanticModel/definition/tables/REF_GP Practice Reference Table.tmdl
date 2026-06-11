@@ -1,0 +1,64 @@
+table 'REF_GP Practice Reference Table'
+	lineageTag: 2deb9a60-b086-4ab5-998b-2452c3fce4fa
+
+	column practice_code
+		dataType: string
+		lineageTag: 68ef932d-6120-423c-931f-074daabd4271
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 4aca2f29-2553-404b-8641-a07413c0147b
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 3564b918-6dcc-4750-8186-630bae01f13d
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 195e1d6f-b04f-4c7f-9b88-f9517fbe9cd9
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Using_Whiteboard_Flag
+		dataType: string
+		lineageTag: 52e9b928-9e6a-4000-a856-a088a20a81d3
+		summarizeBy: none
+		sourceColumn: Using_Whiteboard_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Evaluation_Status
+		dataType: string
+		lineageTag: 0ce5a77c-d863-4572-928d-3eaa68af9a16
+		summarizeBy: none
+		sourceColumn: Practice_Evaluation_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'REF_GP Practice Reference Table' = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT DISTINCT [practice_code] = gp.OrganisationCode#(lf),[practice_name] = gp.ReportingOrganisationName#(lf),[primary_care_network] = gp.Reporting_PrimaryCareNetwork#(lf),[Locality] = gp.Reporting_Locality#(lf),[Using_Whiteboard_Flag] = case when gp.OrganisationCode in (#(lf)SELECT distinct Practice_Code FROM PowerBI_Reporting.AgeingWell.tbl04_Ref_PPW_Practice_List) then 'Yes' else 'No' end #(lf),pl.Practice_Evaluation_Status#(lf)#(lf)#(lf)FROM PowerBI_Reporting.dbo.GP_Practice_Ref as gp#(lf)left join PowerBI_Reporting.AgeingWell.tbl04_Ref_PPW_Practice_List as pl on gp.OrganisationCode = pl.Practice_Code#(lf)#(lf)where gp.OrganisationCode  IN (SELECT DISTINCT  p.practice_code FROM PowerBI_Reporting.AgeingWell.tbl01_Proactive_Whiteboard_Cohort as p) #(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
