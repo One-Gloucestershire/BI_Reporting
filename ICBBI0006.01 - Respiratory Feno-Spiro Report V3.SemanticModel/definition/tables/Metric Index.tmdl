@@ -1,0 +1,160 @@
+table 'Metric Index'
+	lineageTag: b8bcc393-1be7-4049-85dd-8fbcb503b5e0
+
+	measure 'Metric Description - Outputted Text' =
+			
+			
+			IF(
+			    ISFILTERED('Metric Index'[Metric ID])
+			    && DISTINCTCOUNT('Metric Index'[Metric Description]) = 1,
+			    MAX('Metric Index'[Metric Description]), // One Metric is Selected //
+			        IF(
+			            ISFILTERED('Metric Index'[Metric ID]) || ISFILTERED('Metric Data Table'[Payable_activity_group])
+			            && DISTINCTCOUNT('Metric Index'[Metric Description]) > 1, // More than One metric is selected //
+			            "Multiple metrics are selected, please refer to the slicer",
+			            "Multiple metrics are selected, please refer to the slicer" // Nothing is Selected at all //
+			        )
+			)
+		lineageTag: 8047d652-dce2-45fe-808e-c44128791f62
+
+	measure 'Metrics - Switch Values in view' = ```
+			
+			VAR SelectedMetric = SELECTEDVALUE('Metric Index'[Metric ID])
+			VAR MetricsInScope = VALUES('Metric Index'[Metric ID])
+			RETURN
+			
+			IF(
+			    ISINSCOPE('Metric Index'[Metric ID]),
+			    // Row level, do your SWITCH logic as usual
+			    SWITCH(
+			        SelectedMetric,
+			        "701", [Metrics - Matrix Table Total Counts],
+			        "702", [Metrics - Matrix Table Total Counts],
+			        "703", [Metrics - Matrix Table Total Counts],
+			        "704", [Metrics - Matrix Table Total Counts],
+			        "705", [Metrics - Matrix Table Total Counts],
+			        "706", [Metrics - Matrix Table Total Counts],
+			        "707", [Metrics - Matrix Table Total Counts],
+			        "708", [Metrics - Matrix Table Total Counts],
+			        "709", [Metrics - Matrix Table Total Counts],
+			        "710", [Metrics - Matrix Table Total Counts],
+			        "710a", [Metrics - Matrix Table Total Counts],
+			        "711", [Metrics - Matrix Table Total Counts],
+			        "706a", [Metrics - Matrix Table Total Counts],
+			        "706ab", [Metrics - Matrix Table Total Counts],
+			        "707a", [Metrics - Matrix Table Total Counts],
+			        "712", CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "712"),
+			        "713", CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "713"),
+			        BLANK()
+			    ),
+			    // Total/subtotal level, sum across all visible metric IDs in this context
+			    SUMX(
+			        MetricsInScope,
+			        SWITCH(
+			            [Metric ID],
+			            "701", [Metrics - Matrix Table Total Counts],
+			            "702", [Metrics - Matrix Table Total Counts],
+			            "703", [Metrics - Matrix Table Total Counts],
+			            "704", [Metrics - Matrix Table Total Counts],
+			            "705", [Metrics - Matrix Table Total Counts],
+			            "706", [Metrics - Matrix Table Total Counts],
+			            "707", [Metrics - Matrix Table Total Counts],
+			            "708", [Metrics - Matrix Table Total Counts],
+			            "709", [Metrics - Matrix Table Total Counts],
+			            "710", [Metrics - Matrix Table Total Counts],
+			            "710a", [Metrics - Matrix Table Total Counts],
+			            "711", [Metrics - Matrix Table Total Counts],
+			            "706a", [Metrics - Matrix Table Total Counts],
+			            "706ab", [Metrics - Matrix Table Total Counts],
+			            "707a", [Metrics - Matrix Table Total Counts],
+			            "712", CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "712"),
+			            "713", CALCULATE(SUM('Metric Data Table'[UniqueTestValueID]), 'Metric Data Table'[Metric_ID] = "713"),
+			            BLANK()
+			        )
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 11a1756b-da75-4f75-ac46-08ccc3d87e1b
+
+	column 'Metric ID'
+		dataType: string
+		lineageTag: 129cb16c-e10d-43d4-b2ce-c190205bc9bd
+		summarizeBy: none
+		sourceColumn: Metric ID
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Description'
+		dataType: string
+		lineageTag: 0b257672-a5e8-4e46-af40-ae889ffd0a21
+		summarizeBy: none
+		sourceColumn: Metric Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'What does Diagnosis or Event Date Mean'
+		dataType: string
+		lineageTag: 31d6e5a7-af80-4e67-a2cf-96422db3db7a
+		summarizeBy: none
+		sourceColumn: What does Diagnosis or Event Date Mean
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Page Grouping'
+		dataType: string
+		lineageTag: 33a4d1db-5440-4635-b4dd-09bc4350ad11
+		summarizeBy: none
+		sourceColumn: Page Grouping
+		sortByColumn: 'Page Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Page Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: dbfb9407-bb68-49b2-98a5-43b1449c17d5
+		summarizeBy: none
+		sourceColumn: Page Order
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric_ID_and_Description =
+			
+			FORMAT('Metric Index'[Metric ID], "") & "-" & 'Metric Index'[Metric Description]
+		lineageTag: 7861ac6c-15e2-4e4a-97ff-bde45266fadb
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Other considerations/comments'
+		dataType: string
+		lineageTag: 48180267-98f3-4aa1-b159-c4b6f014c010
+		summarizeBy: none
+		sourceColumn: Other considerations/comments
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Metric Index' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Projects\Power BI\Respiratory_Spiro-FeNO\New Working\Respiratory - Feno and Spiro Report - Metric Index.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Metric ID", type any}, {"Metric Description", type text}, {"What does Diagnosis or Event Date Mean", type text}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([Metric ID] <> 708 and [Metric ID] <> 709 and [Metric ID] <> 710 and [Metric ID] <> 711 and [Metric ID] <> "706ab" and [Metric ID] <> "707ab" and [Metric ID] <> "710a"))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,254 @@
+table 'Measures - Latest 12 Months Growth'
+	lineageTag: d1b794a5-af7a-4a50-9ebc-89b44d27eb96
+
+	measure 'Latest 12 Months - EPACT Total Cost' =
+			
+			
+			CALCULATE(SUM('EPACT'[ActualCost]), 'DateReference'[Latest_12_Months] = 1)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 3d8a6847-e9a1-4728-a890-88cf9fd7c994
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Previous 12 Months - EPACT Total Cost' =
+			
+			
+			CALCULATE(SUM('EPACT'[ActualCost]), 'DateReference'[Previous_12_Months] = 1)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: fee28178-fc25-4e2a-a761-a3e01bb1714f
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Latest 12 Months - Cost Growth' =
+			
+			
+			IFERROR(([Latest 12 Months - EPACT Total Cost] - [Previous 12 Months - EPACT Total Cost])/[Previous 12 Months - EPACT Total Cost], 0)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f6aa0d11-2c35-4205-b63f-aa1c7d4d8198
+
+	measure 'Latest 12 Months - EPACT Total Items' =
+			
+			
+			CALCULATE(SUM('EPACT'[Items]), 'DateReference'[Latest_12_Months] = 1)
+		formatString: #,0
+		lineageTag: ecdc27a3-2544-4977-94c5-6950d0f0191b
+
+	measure 'Previous 12 Months - EPACT Total Items' =
+			
+			
+			CALCULATE(SUM('EPACT'[Items]), 'DateReference'[Previous_12_Months] = 1)
+		formatString: #,0
+		lineageTag: 93cb0c49-1a43-485b-8c4a-e9a208c8d8fc
+
+	measure 'Latest 12 Months - Item Growth' =
+			
+			
+			IFERROR(([Latest 12 Months - EPACT Total Items] - [Previous 12 Months - EPACT Total Items])/[Previous 12 Months - EPACT Total Items], 0)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f2a1559c-ade1-4a07-b74d-e99b8d0100c9
+
+	measure 'Latest 12 Months - Previous Year Variation Cost' =
+			
+			
+			[Latest 12 Months - EPACT Total Cost] - [Previous 12 Months - EPACT Total Cost]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 6968d7fd-0d0c-43af-8ce0-ad0f008bf07d
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Latest 12 Months - Average Item Cost' =
+			
+			
+			[Latest 12 Months - EPACT Total Cost]/[Latest 12 Months - EPACT Total Items]
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: f3c383db-22c9-47b1-a62c-1ff1bedaff97
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Previous 12 Months - Average Item Cost' =
+			
+			
+			[Previous 12 Months - EPACT Total Cost]/[Previous 12 Months - EPACT Total Items]
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 0be2ffcc-d5b1-40b9-9962-3ec316f8c066
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Latest 12 Months - Previous Year Variation Items' =
+			
+			
+			[Latest 12 Months - EPACT Total Items] - [Previous 12 Months - EPACT Total Items]
+		formatString: #,0
+		lineageTag: f6bed7ce-f07d-4a12-aac9-f40133009c1d
+
+	measure 'Latest EPACT Month' =
+			
+			
+			CALCULATE(DISTINCT('DateReference'[MonthYearName]), 'DateReference'[YearMonth] = MAX('DateReference'[YearMonth]))
+		lineageTag: 9d2cb73e-5a0d-4da9-a8bf-68887816c7ed
+
+	measure 'Latest EPACT Month (Previous 12 Months)' =
+			
+			
+			VAR LATEST_MONTH_PREVIOUS = CALCULATE(MAX('DateReference'[Date]), 'DateReference'[Previous_12_Months] = 1)
+			
+			RETURN CALCULATE(DISTINCT('DateReference'[MonthYearName]), 'DateReference'[Date] = LATEST_MONTH_PREVIOUS)
+		lineageTag: ec979d20-7fc6-456a-ac33-df9a5755fcd5
+
+	measure 'Latest EPACT Month (Start Month)' =
+			
+			
+			VAR EARLIEST_MONTH_LATEST = CALCULATE(MIN('DateReference'[Date]), 'DateReference'[Latest_12_Months] = 1)
+			
+			RETURN CALCULATE(DISTINCT('DateReference'[MonthYearName]), 'DateReference'[Date] = EARLIEST_MONTH_LATEST)
+		lineageTag: b763af6a-16e6-4dc2-9522-a8ee6847fd75
+
+	measure 'Previous EPACT Month (Start Month)' =
+			
+			
+			VAR EARLIEST_MONTH_PREVIOUS = CALCULATE(MIN('DateReference'[Date]), 'DateReference'[Previous_12_Months] = 1)
+			
+			RETURN CALCULATE(DISTINCT('DateReference'[MonthYearName]), 'DateReference'[Date] = EARLIEST_MONTH_PREVIOUS)
+		lineageTag: 5defff4f-93de-41f2-b566-5f2e9362f1d3
+
+	measure 'Increase in Cost due to Volume' = ([Previous 12 Months - Average Item Cost] * [Latest 12 Months - Previous Year Variation Items])
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: f4101de7-490a-4d40-9846-fe9dfa85f424
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Increase in Cost due to Price Increase' = ([Latest 12 Months - Previous Year Variation Cost] - [Increase in Cost due to Volume])
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 5e431529-e7f5-44b6-85f8-85e04688c24b
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Items - Latest 12 Months Rolling' =
+			
+			CALCULATE(
+			    SUM('EPACT'[Items]),
+			    DATESINPERIOD('DateReference'[Date],
+			        MAX('DateReference'[Date]),
+			        -12,
+			        MONTH
+			    )
+			)
+		formatString: #,0
+		lineageTag: 01f1a717-318e-4bae-918e-19720f8b0642
+
+	measure 'Items - Previous 12 Months Rolling' =
+			
+			
+			CALCULATE(
+			    SUM('EPACT'[Items]),
+			    DATESINPERIOD('DateReference'[Date],
+			        MAXX(DATEADD('DateReference'[Date], -12, MONTH), 'DateReference'[Date]),
+			        -12,
+			        MONTH
+			    )
+			)
+		formatString: 0
+		lineageTag: d33c7b44-a0b9-47a5-abee-4e1fe39a8bdf
+
+	measure 'Rolling Item Variance' =
+			
+			
+			IFERROR(([Items - Latest 12 Months Rolling] - [Items - Previous 12 Months Rolling])/[Items - Latest 12 Months Rolling], 0)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7f0c3cee-b560-44fd-bef5-90aea21c1d00
+
+	measure 'Costs - Latest 12 Months Rolling' =
+			
+			CALCULATE(
+			    SUM('EPACT'[ActualCost]),
+			    DATESINPERIOD('DateReference'[Date],
+			        MAX('DateReference'[Date]),
+			        -12,
+			        MONTH
+			    )
+			)
+		lineageTag: fde22f31-6584-4b99-8558-c0984e222f05
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Costs - Previous 12 Months Rolling' =
+			
+			
+			CALCULATE(
+			    SUM('EPACT'[ActualCost]),
+			    DATESINPERIOD('DateReference'[Date],
+			        MAXX(DATEADD('DateReference'[Date], -12, MONTH), 'DateReference'[Date]),
+			        -12,
+			        MONTH
+			    )
+			)
+		lineageTag: 1ebb9cd3-4516-4fe7-9f69-19f46a260fbe
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rolling Cost Variance' =
+			
+			
+			IFERROR(([Costs - Latest 12 Months Rolling] - [Costs - Previous 12 Months Rolling])/[Costs - Latest 12 Months Rolling], 0)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8ed07451-4980-464e-9417-e8eb778a9797
+
+	measure 'Average Cost - Previous 12 Months Rolling' =
+			
+			
+			[Costs - Previous 12 Months Rolling] / [Items - Previous 12 Months Rolling]
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 21a95500-ee62-44b7-9698-12d2fda798ca
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Item Variation - Previous 12 Months Rolling' =
+			
+			
+			[Items - Latest 12 Months Rolling] - [Items - Previous 12 Months Rolling]
+		formatString: 0
+		lineageTag: 5803ebcb-8edf-4373-bd64-58fcc27b97ff
+
+	measure 'Rolling 12 Months - Increase due to Volume' =
+			
+			
+			[Average Cost - Previous 12 Months Rolling]*[Item Variation - Previous 12 Months Rolling]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: c46bbef8-1136-4a02-afe8-82e3d4b32425
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Cost Variation - Previous 12 Months Rolling' =
+			
+			
+			[Costs - Latest 12 Months Rolling] - [Costs - Previous 12 Months Rolling]
+		lineageTag: 09659ea3-9fbc-492f-804a-c4106a062281
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rolling 12 Months - Increase due to Cost' =
+			
+			
+			[Cost Variation - Previous 12 Months Rolling] - [Rolling 12 Months - Increase due to Volume]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: f94b8a5c-cdda-4498-9927-c28b958465b7
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Column
+		formatString: 0
+		lineageTag: 0c2d98ee-0d8b-42d9-a602-c9069f535c67
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Measures - Latest 12 Months Growth' = calculated
+		mode: import
+		source = Row("Column", BLANK())
+
+	annotation PBI_Id = 7088b96b815b4f4ba3645d85be4c7981
+
+	annotation 436ba87b-9c83-4389-a31b-ebd06a36be98 = {"Expression":""}
+

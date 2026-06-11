@@ -1,0 +1,965 @@
+table 'H@H monthly SP'
+	lineageTag: f23f5dc6-8741-4a47-8609-b79037436129
+
+	measure Referrals_accepted =
+			
+			CALCULATE(
+				COUNTA('H@H monthly SP'[Counter]),
+				'H@H monthly SP'[Referral_Accepted] IN { "Yes" }
+			)
+		formatString: #,0
+		lineageTag: a55284de-9a65-48f7-811c-05d5876f9479
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+	measure Referrals = sum([Counter])
+		formatString: #,0
+		lineageTag: bca61a9d-72e7-4e6f-97bf-49fe0956e8ac
+
+	measure counter_small_number_suppression = if(and(count('H@H monthly SP'[Counter])<5,count('H@H monthly SP'[Counter])>0),"<5",count('H@H monthly SP'[Counter]))
+		formatString: 0
+		lineageTag: 21b35212-b5c5-4bcb-903e-af6c117f8149
+
+	measure practice_%_of_total =
+			DIVIDE(
+			                            CALCULATE(
+			                                COUNT('H@H monthly SP'[Practice])
+			                            ),
+			                            CALCULATE(
+			                                COUNT('H@H monthly SP'[Practice]),
+			                                ALL('H@H monthly SP')
+			                                )
+			                            )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d52fc973-332f-49e7-bf7c-37ab3ded349f
+
+		changedProperty = FormatString
+
+	measure %_of_total = ```
+			
+			        divide(
+			            sum('H@H monthly SP'[Counter]),
+			                calculate(
+			                    sum('H@H monthly SP'[Counter]),
+			                    allselected('H@H monthly SP')
+			                    ))
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 839e0d9d-34be-4f40-807f-e9d7a8de4216
+
+		changedProperty = FormatString
+
+	measure %_accepted =
+			
+			DIVIDE(
+			    CALCULATE(
+				COUNTA('H@H monthly SP'[Counter]),	'H@H monthly SP'[Referral_Accepted] IN { "Yes" }),
+			    CALCULATE(COUNTA('H@H monthly SP'[Counter]),ALL('H@H monthly SP'[Referral_Accepted]))
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 984333ad-662e-4fdd-8c2d-f5ebf1a0779c
+
+	measure nhs_no_completion = ```
+			
+			        divide(
+			            sum('H@H monthly SP'[nhs_no_flag]),
+			                calculate(
+			                    sum('H@H monthly SP'[Counter])
+			                    
+			                    ))
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 94521b07-e71d-41ae-8a96-256dfbccecd6
+
+	measure %_cancer =
+			
+			DIVIDE(
+			    CALCULATE(
+				COUNTA('H@H monthly SP'[Counter]),	'H@H monthly SP'[Primary_Diagnosis] IN { "Cancer" }),
+			    CALCULATE(COUNTA('H@H monthly SP'[Counter]),ALL('H@H monthly SP'[Primary_Diagnosis]))
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c3df058d-7a7f-4732-aa64-b1292c3469f6
+
+	measure 'Sum of Hospice Referrals' = CALCULATE(SUM('H@H monthly SP'[Counter]))
+		formatString: 0
+		lineageTag: ed7613ba-b315-46e0-9e78-d954c1862108
+
+	measure 'H@H Referrals Rate per 1000 - By Month' =
+			
+			
+			VAR HAHRef = CALCULATE ( SUM ('H@H monthly SP'[Counter]) )
+			VAR POP = CALCULATE ( SUM ( 'REF Population'[population] ) )
+			
+			RETURN (HAHREF/POP*1000)
+		lineageTag: ca7bc70f-e442-4c6f-be1c-0715b6e91628
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'H@H Referrals - By Year' =
+			
+			
+			VAR HAHREF = CALCULATE ( SUM ('H@H monthly SP'[Counter] ) )
+			VAR POP = CALCULATE ( SUM ( 'REF Population'[population] ) , 'REF date_table'[month_name] IN {"Apr"} )
+			
+			RETURN (HAHREF/POP*1000)
+		lineageTag: fa23b422-ff43-48fb-b37d-950406d53e00
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Average Acccepted H@H Referrals with Funding in Place per Day' = ```
+			
+			var max_date = ENDOFMONTH('H@H monthly SP'[Referral_Date])
+			var min_date = STARTOFMONTH('H@H monthly SP'[Referral_Date])
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('H@H monthly SP'[Counter]),'H@H monthly SP'[Referral_accepted_–_funding_in_place] = "Yes")
+			RETURN total_hours / diff 
+			```
+		formatString: 0.00
+		lineageTag: 929bfc7b-bcc5-4158-863a-d0a7c106d5dc
+
+	measure 'Total Average H@H Referrals per Day' =
+			
+			var max_date = ENDOFMONTH('H@H monthly SP'[Referral_Date])
+			var min_date = STARTOFMONTH('H@H monthly SP'[Referral_Date])
+			var diff = DATEDIFF(min_date, max_date, DAY) +1
+			var total_hours = sum('H@H monthly SP'[Counter])
+			RETURN total_hours / diff
+		lineageTag: f7ac5783-7a47-4c55-84ac-0eb4cb132af9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure eom = STARTOFMONTH('H@H monthly SP'[Referral_Date])
+		formatString: General Date
+		lineageTag: 7b293302-0853-4cca-b55b-6c55c43ede38
+
+	measure 'Total Average Acccepted H@H Referrals per Day' =
+			
+			var max_date = ENDOFMONTH('H@H monthly SP'[Referral_Date])
+			var min_date = STARTOFMONTH('H@H monthly SP'[Referral_Date])
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('H@H monthly SP'[Counter]),'H@H monthly SP'[Referral_Accepted] = "Yes")
+			RETURN total_hours / diff
+		lineageTag: 5cad9e5b-e13e-4662-ac39-fe55087081c4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average H@H Refferals per Day' =
+			
+			CALCULATE((AVERAGEX(
+				KEEPFILTERS(VALUES('REF date_table'[day_month_year])),
+				CALCULATE(sum('H@H monthly SP'[Counter])) +0
+			)  ))
+		lineageTag: f4bf7cab-d38e-47f0-9495-83b5d9f27f9e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Accepted H@H Refferals per Day' =
+			
+			CALCULATE((AVERAGEX(
+				KEEPFILTERS(VALUES('REF date_table'[day_month_year])),
+				CALCULATE(sum('H@H monthly SP'[Counter]), 'H@H monthly SP'[Referral_Accepted] = "Yes") +0
+			)  ))
+		lineageTag: fea943e3-a784-4cf3-84cc-3254f0072762
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Accepted H@H Refferals with Funding in Place per Day' = ```
+			
+			
+			
+			CALCULATE((AVERAGEX(
+			    KEEPFILTERS(VALUES('REF date_table'[day_month_year])),
+			    CALCULATE(sum('H@H monthly SP'[Counter]), 'H@H monthly SP'[Referral_accepted_–_funding_in_place] = "Yes") +0
+			)  )) 
+			
+			```
+		lineageTag: 96449f07-e49a-4124-8fb9-f24ca6f4a0bd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Hospice at Home Referrals per Month correct' =
+			
+			var max_date = ENDOFMONTH('H@H monthly SP'[Referral_Date])
+			var min_date = STARTOFMONTH('H@H monthly SP'[Referral_Date])
+			var diff = DATEDIFF(min_date, max_date, MONTH) + 1
+			var total_hours = sum('H@H monthly SP'[Counter])
+			RETURN total_hours / diff
+		lineageTag: 658faaec-c67a-491e-8592-c732216df779
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Number of Patients Died within 3 Days of Referral' = CALCULATE(SUM('H@H monthly SP'[Counter]),'H@H monthly SP'[Days between referral and death] <= 3)
+		formatString: 0
+		lineageTag: 6fed9000-0f45-4150-b4a7-030cb4189e16
+
+	measure '% of Patients Died within 3 Days of Referral' = [Number of Patients Died within 3 Days of Referral] / CALCULATE(SUM('H@H monthly SP'[Counter]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0203a8e2-6e56-4529-adc2-df98d398136c
+
+	measure 'Referrals 2023/24 YTD' = CALCULATE(SUM('H@H monthly SP'[Counter]),'REF date_table'[financial_year] = "2023/24", 'REF YTD'[YTD] = "Year to Date")
+		formatString: 0
+		lineageTag: df53b9ea-eb62-42c6-b7da-7e03183ce3fc
+
+	measure 'Referrals 2024/25 YTD' = CALCULATE(SUM('H@H monthly SP'[Counter]),'REF date_table'[financial_year] = "2024/25", 'REF YTD'[YTD] = "Year to Date")
+		formatString: 0
+		lineageTag: 16117517-b4d0-495a-a5c4-33df2d999293
+
+	measure 'Max referral date' = MAX('H@H monthly SP'[Referral_Date])
+		formatString: mmmm yyyy
+		lineageTag: 5ca59d1a-0066-4283-bb66-d89b17546b0a
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Provider
+		dataType: string
+		lineageTag: e0613d71-9bdf-4fb9-882e-0caa32896fde
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Local_Patient_Identifier
+		dataType: string
+		lineageTag: 771f2da3-aff5-4fc3-8595-8ddb0b1b5c2c
+		summarizeBy: none
+		sourceColumn: Local_Patient_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: c10f9adc-f226-4f28-8d02-679301fe9fc1
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: b306c121-8594-4937-9699-956826ea3e2e
+		summarizeBy: none
+		sourceColumn: Referral_Date
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Referral_Date_YearMonth
+		dataType: string
+		lineageTag: a38975b3-9865-4bee-b945-dd8655048071
+		summarizeBy: none
+		sourceColumn: Referral_Date_YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Date_FinancialYear
+		dataType: string
+		lineageTag: 92a11aa8-7ca2-4c00-88dc-36ceff61cdfb
+		summarizeBy: none
+		sourceColumn: Referral_Date_FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column Registration_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6e419107-73e7-4788-af26-fa9478f930f7
+		summarizeBy: none
+		sourceColumn: Registration_Date
+
+		variation Variation
+			isDefault
+			relationship: 5667b112-d578-4acc-bc1e-84f0b6ba742b
+			defaultHierarchy: LocalDateTable_eb26c3c1-b254-402b-abbe-9af7f1c7365c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a2305d13-3244-439c-9a70-bae73cc4d240
+		summarizeBy: none
+		sourceColumn: Discharge_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_of_Referral
+		dataType: string
+		lineageTag: a19c92b8-01ca-4028-b669-49273ccb6cbe
+		summarizeBy: none
+		sourceColumn: Source_of_Referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Accepted
+		dataType: string
+		lineageTag: 0687280d-254c-4e49-b564-e05d0bc08c3a
+		summarizeBy: none
+		sourceColumn: Referral_Accepted
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reason_for_not_accepting
+		dataType: string
+		lineageTag: cf1ec644-299f-4219-bb03-8d7384ccd1bb
+		summarizeBy: none
+		sourceColumn: Reason_for_not_accepting
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_accepted_–_funding_in_place
+		dataType: string
+		lineageTag: 83a6c807-3ada-416e-b80c-ffcbe9bf2158
+		summarizeBy: none
+		sourceColumn: Referral_accepted_–_funding_in_place
+
+		annotation SummarizationSetBy = Automatic
+
+	column Responded_to_referral_within_4_hours
+		dataType: string
+		lineageTag: 9fc88925-0f4d-46ff-8318-8c6b7ed19323
+		summarizeBy: none
+		sourceColumn: Responded_to_referral_within_4_hours
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice
+		dataType: string
+		lineageTag: cf5347b8-9d4d-4503-ba60-26d1e1b61895
+		summarizeBy: none
+		sourceColumn: GP_Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice
+		dataType: string
+		lineageTag: 119e5e5f-ba3d-4481-b37d-3af8069bb37d
+		summarizeBy: none
+		sourceColumn: Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Code'
+		dataType: string
+		lineageTag: 5e55a0bf-b9f1-430e-aea6-5f26f4f43a28
+		summarizeBy: none
+		sourceColumn: Practice Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_referral
+		dataType: string
+		lineageTag: 8307dff5-248f-41f2-927c-1b4330558a5a
+		summarizeBy: none
+		sourceColumn: Age_at_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age band'
+		dataType: string
+		lineageTag: 2e05c8a0-4b02-4956-ba8e-3425e8dfc842
+		summarizeBy: none
+		sourceColumn: Age band
+		sortByColumn: age_band_order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: ba2c2247-fa58-46f7-8d2d-d4eb17683e5a
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnicity Indicator'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0a3a69db-bd1d-4567-958a-0ec1a8ddd610
+		summarizeBy: sum
+		sourceColumn: Ethnicity Indicator
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: dbf96448-10e3-477a-9e4d-63fa926a7d5b
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Religious/personal_belief
+		dataType: string
+		lineageTag: 7981799a-1121-402c-b4f6-1132e8c4985a
+		summarizeBy: none
+		sourceColumn: Religious/personal_belief
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_Diagnosis
+		dataType: string
+		lineageTag: 6031cd1f-30a0-4710-85a7-6e489ab96293
+		summarizeBy: none
+		sourceColumn: Primary_Diagnosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_died
+		dataType: string
+		lineageTag: 2ff95d4c-3da9-46da-99ac-f45b0f256a91
+		summarizeBy: none
+		sourceColumn: Patient_died
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_in_preferred_place_of_care
+		dataType: string
+		lineageTag: e9fa9ab7-07c5-4aa3-b076-fa4e8a4e9da8
+		summarizeBy: none
+		sourceColumn: Death_in_preferred_place_of_care
+
+		annotation SummarizationSetBy = Automatic
+
+	column Location_of_discharge
+		dataType: string
+		lineageTag: e9a9735c-7b4a-437d-9be1-6640528af040
+		summarizeBy: none
+		sourceColumn: Location_of_discharge
+
+		annotation SummarizationSetBy = Automatic
+
+	column FileName
+		dataType: string
+		lineageTag: 56e4f05f-e59d-485d-b4e6-64b347be154d
+		summarizeBy: none
+		sourceColumn: FileName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1e66ea6c-3e7d-4878-a917-0debf193e2a0
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: 59ca3b6a-df70-4270-af89-7173980aaee4
+			defaultHierarchy: LocalDateTable_b19e6413-6cf6-4dba-8dc1-30f3902a6cb9.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: e44595f5-1c8a-4f3e-8602-7d02109d65f4
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band_order
+		dataType: string
+		lineageTag: 4e8f2b32-3b8c-4c8a-bac5-67775aef05e4
+		summarizeBy: none
+		sourceColumn: age_band_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_id
+		dataType: string
+		lineageTag: c10b7403-3147-44e2-af97-fc11368f5de8
+		summarizeBy: none
+		sourceColumn: patient_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCCountDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 318f1de2-770b-4bef-866e-1876a72adb27
+		summarizeBy: sum
+		sourceColumn: LTCCountDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObesityDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: f122ce0b-7449-4a0e-88f2-8de8d465d7fe
+		summarizeBy: sum
+		sourceColumn: ObesityDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column SmokerDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 40eff77e-20a6-45df-a175-2157c4530028
+		summarizeBy: sum
+		sourceColumn: SmokerDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column AsthmaDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 8b2454b2-6c10-4ddd-b4c7-e0948a24ce96
+		summarizeBy: sum
+		sourceColumn: AsthmaDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column COPDDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 83d05338-7e07-400c-af63-040fb48b40f7
+		summarizeBy: sum
+		sourceColumn: COPDDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column DementiaDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f3cdc66-d57b-41ac-a9ad-39d655af9229
+		summarizeBy: sum
+		sourceColumn: DementiaDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column DepressionDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 0279adfb-866e-45fb-881b-88e4b5644087
+		summarizeBy: sum
+		sourceColumn: DepressionDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiabetesDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 2b925899-4335-45e0-a7da-c4c162182fc5
+		summarizeBy: sum
+		sourceColumn: DiabetesDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column PalliativeCareDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 98408351-5666-4c56-89c5-f55b4df25343
+		summarizeBy: sum
+		sourceColumn: PalliativeCareDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChronicKidneyDiseaseDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: caa1d67c-f805-471a-b266-2cc002e84a7b
+		summarizeBy: sum
+		sourceColumn: ChronicKidneyDiseaseDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column EpilepsyDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: b2427a93-d90e-46b7-b0b8-65696519c5ac
+		summarizeBy: sum
+		sourceColumn: EpilepsyDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column HeartFailureDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: a5936477-8bfd-4415-95aa-857630bb2e8a
+		summarizeBy: sum
+		sourceColumn: HeartFailureDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column StrokeDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: f668fb50-20e1-4cb9-9774-70e5fc9680e6
+		summarizeBy: sum
+		sourceColumn: StrokeDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column AtrialFibrillationDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 0e77e231-23fc-42b9-9c0d-db622b27859b
+		summarizeBy: sum
+		sourceColumn: AtrialFibrillationDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column CancerDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: f154fbf9-72ee-4078-97aa-48cb666de898
+		summarizeBy: sum
+		sourceColumn: CancerDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column CoronaryHeartDiseaseDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: f42de5b1-0ec2-4bf8-847d-6e14045d56e0
+		summarizeBy: sum
+		sourceColumn: CoronaryHeartDiseaseDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column HypertensionDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 951e4ab7-b578-4cbe-847a-840e1954eaca
+		summarizeBy: sum
+		sourceColumn: HypertensionDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column HypothyroidismDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: 602b701a-a7f3-4d8b-943e-d8cd832c60a5
+		summarizeBy: sum
+		sourceColumn: HypothyroidismDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column LearningDisabilityDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: a92ba8f2-dcf0-46b0-b759-8ff8347fde5d
+		summarizeBy: sum
+		sourceColumn: LearningDisabilityDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column MentalIllnessDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: bfd3b285-f30b-4477-b95a-6863782ead08
+		summarizeBy: sum
+		sourceColumn: MentalIllnessDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Catgory_derived
+		dataType: string
+		lineageTag: f8e4d0a2-9215-4225-ab9b-4a6d8f64b42f
+		summarizeBy: none
+		sourceColumn: eFI_Catgory_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_no_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 88778c2c-8cc9-4027-9b5a-57c643354fff
+		summarizeBy: sum
+		sourceColumn: nhs_no_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_up_to
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: 2400db9c-9877-432d-99b9-a1709420e28f
+		summarizeBy: none
+		sourceColumn: data_up_to
+
+		variation Variation
+			isDefault
+			relationship: c3de506d-487a-4a2a-b733-5f2aa3ad8427
+			defaultHierarchy: LocalDateTable_a6225891-636e-4317-88d7-2da28c333cea.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column date_refreshed
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: c856ae6e-499a-4e90-b3b7-6750bc2e025f
+		summarizeBy: none
+		sourceColumn: date_refreshed
+
+		variation Variation
+			isDefault
+			relationship: 7ed818e5-df01-4870-a20b-500a6df65837
+			defaultHierarchy: LocalDateTable_4fa54ca4-775d-47b0-83ad-05ea08035f78.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column DateOfDeath
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5a670f33-9c44-4be0-b68b-f46ff070c40a
+		summarizeBy: none
+		sourceColumn: DateOfDeath
+
+		variation Variation
+			isDefault
+			relationship: 37aabfb5-8c28-462a-8a3c-a43ad9cc722c
+			defaultHierarchy: LocalDateTable_a169ff9d-0201-49a1-b2df-5e80c7085d65.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column days_of_care
+		dataType: int64
+		formatString: 0
+		lineageTag: db83d769-c03c-4940-8a5e-956e8d445c7d
+		summarizeBy: sum
+		sourceColumn: days_of_care
+
+		annotation SummarizationSetBy = Automatic
+
+	column days_of_care_flag
+		dataType: string
+		lineageTag: 0ab6b094-02a0-4133-99a8-236cb448414f
+		summarizeBy: none
+		sourceColumn: days_of_care_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column up_to_financial_quarter
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4f5652ab-a669-4c63-9b4f-358bfb9ea9ac
+		summarizeBy: none
+		sourceColumn: up_to_financial_quarter
+
+		variation Variation
+			isDefault
+			relationship: 9cab3d00-3d0b-44aa-9191-ec3ed69604a7
+			defaultHierarchy: LocalDateTable_7599fb8c-7dd7-4e57-b8d1-d7e5f1b3cf14.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Financial_quarter_flag
+		dataType: string
+		lineageTag: 198bff91-022e-4867-9afa-25b45fc1b7de
+		summarizeBy: none
+		sourceColumn: Financial_quarter_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_time_stamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7b90ee61-2f6c-473c-8092-75473193a48b
+		summarizeBy: none
+		sourceColumn: max_time_stamp
+
+		variation Variation
+			isDefault
+			relationship: 195917ac-4b56-4867-aafe-5d9dffaf5b33
+			defaultHierarchy: LocalDateTable_80054ebc-5f81-49d6-9d21-81ecf9137b89.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChangeTimeStamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 957a476e-e914-426f-9ec7-dc75a24fef40
+		summarizeBy: none
+		sourceColumn: ChangeTimeStamp
+
+		variation Variation
+			isDefault
+			relationship: 4d023346-81df-47bd-b51f-b6b74d57e508
+			defaultHierarchy: LocalDateTable_52cec4b1-ba43-48d8-85b5-5524b1a242d6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: bae8598f-8d49-4d36-b76f-58b447278528
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Postcode
+		dataType: string
+		lineageTag: 19892ccb-b24d-42ec-9d78-7827f36b5cc2
+		summarizeBy: none
+		sourceColumn: Derived_Postcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOACode
+		dataType: string
+		lineageTag: 1fc3d63d-8ea8-4c19-be85-682a069b2f83
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentDistrictWardCode
+		dataType: string
+		lineageTag: 31d8fe17-651f-4cdf-81b9-d5fc8cab0401
+		summarizeBy: none
+		sourceColumn: CurrentDistrictWardCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentDistrictWardName
+		dataType: string
+		lineageTag: f6072232-375b-4aa5-bfcd-2c5915595a74
+		summarizeBy: none
+		sourceColumn: CurrentDistrictWardName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Postcode_Key
+		dataType: int64
+		formatString: 0
+		lineageTag: bdf7c2bb-24b2-4938-9aa0-367716925388
+		summarizeBy: count
+		sourceColumn: Derived_Postcode_Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column District
+		dataType: string
+		lineageTag: 03f71960-b91b-4704-8754-d375cc8ec584
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_stay
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e459265-c9da-4279-8baa-2a28125b61dc
+		summarizeBy: sum
+		sourceColumn: Length_of_stay
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date_Amended
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cfc853fd-d30e-4f27-b494-5da957f57521
+		summarizeBy: none
+		sourceColumn: Discharge_Date_Amended
+
+		variation Variation
+			isDefault
+			relationship: 2c17b8d2-f43d-4165-a68a-3a77cb1b5351
+			defaultHierarchy: LocalDateTable_d63f3985-7501-41c4-9e63-1446438e1ce0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'H&H YTD' =
+			
+			
+			VAR current_month = MONTH('H@H monthly SP'[Referral_Date])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			
+			VAR max_month = CALCULATE(MONTH(MAX('H@H monthly SP'[Referral_Date])),ALLEXCEPT('H@H monthly SP','H@H monthly SP'[Provider]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 0f826dd0-2395-4795-b4aa-0899d4894221
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days between referral and death' = DATEDIFF('H@H monthly SP'[Referral_Date],'H@H monthly SP'[DateOfDeath],DAY)
+		formatString: 0
+		lineageTag: 3011dc34-56f8-48ab-9cf2-63215d439645
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_month = CALCULATE(MONTH(MAX('H@H monthly SP'[Referral_Date])),ALLEXCEPT('H@H monthly SP','H@H monthly SP'[Provider]))
+		formatString: 0
+		lineageTag: 5343caa8-12a3-4b50-9739-bc9c5a972370
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Provider Hierarchy'
+		lineageTag: dbbc5270-550f-4d98-ad96-53875e214932
+
+		level Provider
+			lineageTag: f33e2eff-fae2-4635-80cc-6a4c1c77eeb5
+			column: Provider
+
+		level Source_of_Referral
+			lineageTag: 2cc1454c-b148-49b7-b177-f02820971062
+			column: Source_of_Referral
+
+	partition 'H@H monthly SP-e187f935-e874-4ade-bbe4-ec8c324ac58f' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="EXEC [AgeingWell].[sp13_HospiceatHome_Monthly]#(lf)#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[AgeingWell].[tbl13_HospiceatHome_Monthly]"]),
+				    #"Added Counter column" = Table.AddColumn(Source, "Counter", each 1),
+				    #"Added age_band_order column" = Table.AddColumn(#"Added Counter column", "age_band_order", each if [Age band] = "<40" then 1 else if [Age band] = "40-49" then 2 else if [Age band] = "50-59" then 3 else if [Age band] = "60-69" then 4 else if [Age band] = "70-79" then 5 else if [Age band] = "80-89" then 6 else if [Age band] = "90-99" then 7 else if [Age band] = "100+" then 8 else null),
+				    #"Added patient_id column" = Table.AddColumn(#"Added age_band_order column", "patient_id", each if [NHS_Number] = "" then [Local_Patient_Identifier] else [NHS_Number]),
+				    #"Added nhs_no_flag" = Table.AddColumn(#"Added patient_id column", "nhs_no_flag", each if [NHS_Number] <> "" then 1 else 0),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added nhs_no_flag",{{"nhs_no_flag", Int64.Type}}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Changed Type", "days_of_care_flag", each if [days_of_care] >= 0 then 1 else 0),
+				    #"Replaced Errors" = Table.ReplaceErrorValues(#"Added Conditional Column", {{"days_of_care_flag", 0}})
+				in
+				    #"Replaced Errors"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

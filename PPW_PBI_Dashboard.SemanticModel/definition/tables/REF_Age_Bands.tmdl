@@ -1,0 +1,119 @@
+table REF_Age_Bands
+	lineageTag: 9d783b81-c00d-4419-86f5-07666a3df7e1
+
+	measure Only_relevant_records_Baselines = COUNTROWS('1.Baselines')
+		formatString: 0
+		lineageTag: affbce91-ca57-456a-b514-55e3d282a934
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 357892b1-6f2f-4688-b995-defff966c1a3
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 0d0dfe89-bdf6-42c2-8caa-a45a4cff97fc
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: 4d09b301-62aa-4162-8f61-d827835fc463
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column PBR_Age_Band
+		dataType: string
+		lineageTag: 1729af67-cf6b-41eb-9f65-b24bf0933899
+		summarizeBy: none
+		sourceColumn: PBR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Standard_Age_Band
+		dataType: string
+		lineageTag: 74a352dc-ab79-4043-b179-fa1c7ccc6418
+		summarizeBy: none
+		sourceColumn: Standard_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Risk_Strat_Age_Band
+		dataType: string
+		lineageTag: 3bcac391-78a0-4f18-83ae-5abd61b15a12
+		summarizeBy: none
+		sourceColumn: Risk_Strat_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Risk_Strat_Age_BandInt
+		dataType: int64
+		formatString: 0
+		lineageTag: 2edf83a3-57ca-44cc-b16d-7e47cf0154ae
+		summarizeBy: sum
+		sourceColumn: Risk_Strat_Age_BandInt
+
+		annotation SummarizationSetBy = Automatic
+
+	column Adult_Age_Band
+		dataType: string
+		lineageTag: 309cd0db-7f29-4893-a3b3-a64bf8492f70
+		summarizeBy: none
+		sourceColumn: Adult_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: f3e7f642-2c34-44f4-8e0c-63290ea2af9a
+		summarizeBy: sum
+		sourceColumn: 5YR_Age_Band_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band_Revised
+		dataType: string
+		lineageTag: f785a8d7-904e-4a97-b8aa-1134f7944eeb
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band_Revised
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_group_for_Average_LOS
+		dataType: string
+		lineageTag: ee0647ab-ad7d-469a-aad4-f8656572d793
+		summarizeBy: none
+		sourceColumn: Age_group_for_Average_LOS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_Group_CAMHS_Adults
+		dataType: string
+		lineageTag: 8cf5f4fa-5038-483d-b9e6-c985d6b677ff
+		summarizeBy: none
+		sourceColumn: Age_Group_CAMHS_Adults
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Age_Bands = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="#(tab)select *#(lf)#(tab),[5YR_Age_Band_Revised] = case when [5YR_Age_Band] = '5-9' THEN '05-9' ELSE [5YR_Age_Band] end #(lf)#(tab),[Age_group_for_Average_LOS] = case when Age between 0 and 17 then '0-17' #(lf)#(tab)when age between 18 AND 64 then '18-64'#(lf)#(tab)when age >=65 then '65+' end #(lf)#(lf)#(tab),[Age_Group_CAMHS_Adults] = case when Age between 0 and 17 then 'CAMHS(0-17)'  #(lf)#(tab)WHEN Age BETWEEN 18 and 200 then 'Adults(18+)' end#(lf)#(lf)#(lf)#(tab)from CCG_Reference.Reference.vw_AgeBand#(lf)#(lf)#(tab)where Age <= 200#(lf)#(tab)AND Age <> -1#(lf)#(lf)#(tab)ORDER BY Age"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

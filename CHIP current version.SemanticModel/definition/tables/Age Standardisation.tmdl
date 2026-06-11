@@ -1,0 +1,153 @@
+table 'Age Standardisation'
+	lineageTag: 679edccc-8122-45aa-bb73-869cf2e0f673
+
+	measure 'Incidence Local events' =
+			
+			CALCULATE(SUM('Cancer data'[Counter]))
+		formatString: #,0
+		lineageTag: 948a3c99-1ba3-4907-bffb-65e7ed70d3a2
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Incidence Local population' =
+			
+			CALCULATE(SUM('MPI'[Counter]))
+		formatString: 0
+		lineageTag: 03caa9cd-40ee-403f-883d-445ed34f83d1
+
+	measure 'Incidence Reference events' =
+			
+			CALCULATE(sum('Cancer data'[Counter]),ALL('Core 20 ref'[Core20Flag]),ALL('LD ref'[LD_flag]),all('Locality ref'[Locality]), all('MH ref'[MH_flag]), all('Table'[Ethnicity]))
+		formatString: #,0
+		lineageTag: 47e9efd1-f195-4c53-bc8a-9d15d21a6fea
+
+	measure 'Incidence Reference population' =
+			
+			CALCULATE(SUM('MPI'[Counter]), ALL('Core 20 ref'[Core20Flag]), all('LD ref'[LD_flag]),all('Locality ref'[Locality]), all('MH ref'[MH_flag]), all('Table'[Ethnicity]))
+		formatString: 0
+		lineageTag: 4cdcd68f-83ae-4655-b757-ff9014295fd6
+
+	measure 'Incidence Reference rate' = ([Incidence Reference events]/[Incidence Reference population])
+		formatString: 0.00000
+		lineageTag: 51831a4c-5616-4828-999b-59cd6214e0b2
+
+	measure 'Incidence incorrect Local expected events' = [Incidence Reference rate]*[Incidence Local population]
+		lineageTag: fefcb99e-751b-4add-a046-bb8667cbd351
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Reference rate per 1000' = [Incidence Reference events]/[Incidence Reference population]*1000
+		formatString: 0.00
+		lineageTag: 05c9a2cd-9290-4d1e-857e-d66515d8b95f
+
+	measure 'Incidence Local rate per 1000 AS' = [Incidence Local events]/[Incidence Correct local expected events]*[Incidence Reference rate per 1000]
+		lineageTag: 0d71d97a-f7dd-4177-abb5-06f1a701ac26
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Correct local expected events' = sumx(VALUES('Age ref'[AgeBand5yr]),[Incidence incorrect Local expected events])
+		formatString: #,0.0
+		lineageTag: 15199019-8c87-4e8e-81f4-0e69ca60f806
+
+	measure 'Incidence Rate per 1000 difference' = [Incidence Local rate per 1000 AS] - [Incidence Reference rate per 1000]
+		lineageTag: e99b0e66-44d9-4b5c-9810-5c9f4612b7f7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Raw Local Rate per 1000' = [Incidence Local events]/[Incidence Local population]*1000
+		lineageTag: 4689245f-8026-4f14-91ee-f1237b262bde
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Incidence Difference in events' = [Incidence Correct local expected events]-[Incidence Local events]
+		formatString: #,0.0
+		lineageTag: f392c7d4-cad6-495e-a856-f029dbcbd5d5
+
+	measure 'Deaths Local events' =
+			
+			CALCULATE(SUM('Cancer data'[Counter]), 'Cancer data'[Death_from_treatment_within_one_year] = 1)
+		formatString: #,0
+		lineageTag: 63ba96b6-e7c9-4c89-9294-0b0079bf05b6
+
+	measure 'Deaths Local population' =
+			
+			CALCULATE(SUM('Cancer data'[Counter]))
+		formatString: 0
+		lineageTag: c7abcec8-9577-46b1-b88c-46d9877988bb
+
+	measure 'Deaths Reference events' =
+			
+			CALCULATE(sum('Cancer data'[Counter]),ALL('Core 20 ref'[Core20Flag]),ALL('LD ref'[LD_flag]),all('Locality ref'[Locality]), all('MH ref'[MH_flag]), all('Table'[Ethnicity]), 'Cancer data'[Death_from_treatment_within_one_year] = 1)
+		formatString: 0
+		lineageTag: 0f7d76f9-64a6-43fb-b68a-0fd2df780c66
+
+	measure 'Deaths Reference population' =
+			
+			CALCULATE(SUM('Cancer data'[Counter]), ALL('Core 20 ref'[Core20Flag]), all('LD ref'[LD_flag]),all('Locality ref'[Locality]), all('MH ref'[MH_flag]), all('Table'[Ethnicity]))
+		formatString: 0
+		lineageTag: 98a488bc-d2c4-431f-b14e-cbe2aa1473c6
+
+	measure 'Deaths Reference rate' = ([Deaths Reference events]/[Deaths Reference population])
+		lineageTag: ab412f16-dafe-4d2a-91c0-faa05f42b2dd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths Incorrect Local expected events' = [Deaths Reference rate]*[Deaths Local population]
+		lineageTag: e5fa80c4-7f5c-4c50-9dda-baa885dd2dbc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths Correct local expected events' = sumx(VALUES('Age ref'[AgeBand5yr]),[Deaths Incorrect Local expected events])
+		formatString: #,0.0
+		lineageTag: 422de20d-3ac4-4adc-97d1-b7e47693aaba
+
+	measure 'Deaths Local rate per 1000 AS' = [Deaths Local events]/[Deaths Correct local expected events]*[Deaths Reference rate per 1000]
+		lineageTag: d1e153fb-a17b-4014-9ba4-690ebc395806
+
+	measure 'Deaths Reference rate per 1000' = [Deaths Reference events]/[Deaths Reference population]*1000
+		lineageTag: 2e58fc54-c87e-4655-adde-d269326312b3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths Rate per 1000 difference' = [Deaths Local rate per 1000 AS] - [Deaths Reference rate per 1000]
+		lineageTag: fd554c7c-450d-4e32-8df9-6063cb55074d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths Raw Local Rate per 1000' = [Deaths Local events]/[Deaths Local population]*1000
+		lineageTag: 951a0c6e-40dc-4b24-95d8-1be09fbe3c74
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Deaths Difference in events' = [deaths Correct local expected events]-[deaths Local events]
+		formatString: #,0.00
+		lineageTag: 86170b12-0ba9-485e-ad95-22b4c37c05b5
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 9f3c0a08-6719-403a-b112-88fddd7d5451
+		summarizeBy: none
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Age Standardisation' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSK1YlWMlCKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Core20Flag = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Core20Flag", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

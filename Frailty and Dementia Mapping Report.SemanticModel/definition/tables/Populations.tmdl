@@ -1,0 +1,51 @@
+table Populations
+	lineageTag: c4a80210-dcb2-4761-b4cc-ee4441e709c3
+
+	measure 'Rate per 1000' =
+			
+			
+			VAR Cohort = CALCULATE ( COUNT ('FoD Cohorts'[Derived_Pseudo_NHS] ))
+			VAR Population = CALCULATE ( SUM (Populations[Population] ) )
+			
+			RETURN ((Cohort/Population)*1000)
+		lineageTag: 0e8b4d85-74a2-47cc-83e1-7d1df956496e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a39aa2b-90c1-4a09-966b-f58fc03e0fca
+		summarizeBy: none
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA code'
+		dataType: string
+		lineageTag: fb62c816-70c7-4687-a5ab-166e90155f00
+		summarizeBy: none
+		sourceColumn: LSOA code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward name 2021'
+		dataType: string
+		lineageTag: edfc5c95-7f44-4bfd-988d-850287e2560e
+		summarizeBy: none
+		sourceColumn: Current District Ward name 2021
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Populations = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="  SELECT DISTINCT [Population] = COUNT([Derived_Pseudo_NHS])#(lf)                 ,[LSOA code]#(lf)                 ,[Current District Ward name 2021]#(lf)  #(lf)  FROM [BIReports].[MPI].[MPI_current]#(lf)#(lf)  WHERE [LSOA code] IS NOT NULL#(lf)  AND [CCG_Of_Registration] = '11M'#(lf)#(lf)  GROUP BY [LSOA code], [Current District Ward name 2021]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

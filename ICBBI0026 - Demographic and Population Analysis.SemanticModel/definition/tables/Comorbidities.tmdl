@@ -1,0 +1,72 @@
+table Comorbidities
+	lineageTag: c29b925c-2127-4a0e-844e-b831664d84d0
+
+	measure Comorbidity% = Sum(Comorbidities[Value])/sum('Population Overview'[Population_Counter])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b6ca730e-80c5-4f71-9e88-8dfa695b9742
+
+	column NumberOfLTC
+		dataType: int64
+		formatString: 0
+		lineageTag: 4b65d10a-bc3d-4405-9463-9caaa6be60ca
+		summarizeBy: sum
+		sourceColumn: NumberOfLTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column Healthy_Well
+		dataType: int64
+		formatString: 0
+		lineageTag: b9397c3a-2ecb-4f7a-82a5-24b9d86aa52d
+		summarizeBy: sum
+		sourceColumn: Healthy_Well
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 98a3f6dc-308c-473a-a4b1-239d32636b0e
+		summarizeBy: sum
+		sourceColumn: Population_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 9727b11c-9438-4e1d-9616-818407d21b32
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: b5ba5375-d483-4efb-ad51-568da7744db3
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 6d661688-09c3-4de2-8f1c-23b72a786a39
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Comorbidities = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="SELECT * FROM [PowerBI_Reporting].[dbo].[tbl_Demographics_Health_Overview]"]),
+				    #"Reordered Columns" = Table.ReorderColumns(Source,{"NumberOfLTC", "Healthy_Well", "Population_Counter", "Derived_NHS_Number", "QOF_Asthma", "QOF_AtrialFibrilation", "QOF_Cancer", "QOF_ChronicKidneyDisease", "QOF_COPD", "QOF_CoronaryHeartDisease", "QOF_Dementia", "QOF_Depression", "QOF_Diabetes", "QOF_Epilepsy", "QOF_HeartFailure", "QOF_Hypertension", "QOF_LearningDisability", "QOF_MentalHealth", "QOF_NonDiabeticHyperglycaemia", "QOF_Obesity", "QOF_Osteoporosis", "QOF_PalliativeCare", "QOF_PeripheralArterialDisease", "QOF_RheumatoidArthritis", "QOF_StrokeAndTIA"}),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Reordered Columns", {"NumberOfLTC", "Healthy_Well", "Population_Counter", "Derived_NHS_Number"}, "Attribute", "Value"),
+				    #"Filtered Rows" = Table.SelectRows(#"Unpivoted Columns", each ([Value] = 1))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+

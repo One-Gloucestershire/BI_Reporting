@@ -1,0 +1,107 @@
+table 'SPC Measures'
+	lineageTag: 3c52746b-997a-4f3e-93f2-8a1a79f79b2c
+
+	measure 'LCL SPC' = ```
+			
+			
+			var spc_selected = SELECTEDVALUE('SPC Measures'[SPC type])
+			
+			var time_frmae = SELECTEDVALUE('Metrics'[Monthly or Daily Data])
+			
+			var data_points = SELECTEDVALUE('Metrics'[Number of data points per metric])
+			
+			return SWITCH(TRUE(),
+			    data_points < 13, BLANK(),
+			    spc_selected = "I/XmR chart" && time_frmae = "Monthly", [XmR LCL], 
+			    spc_selected = "I/XmR chart" && time_frmae = "Daily", [XmR LCL Daily], 
+			    spc_selected = "P Prime chart" && time_frmae = "Monthly", [Laney P Prime LCL],
+			    spc_selected = "P Prime chart" && time_frmae = "Daily", [Laney P Prime LCL Daily],
+			    spc_selected = "U Prime chart" && time_frmae = "Monthly", [Laney U Prime LCL],
+			    spc_selected = "U Prime chart" && time_frmae = "Daily", [Laney U Prime LCL Daily],
+			
+			    spc_selected = "C Chart", [C LCL],
+			
+			    
+			
+			    BLANK())
+			    
+			```
+		lineageTag: deedda48-d70e-4dd9-a824-8cd4aeb3288d
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				var decimal_places = MAX('Metrics'[Decimal Places])
+				
+				return 
+				SWITCH(TRUE(),
+				percentage_check = 1 && decimal_places = "1 DP", "0.0%",
+				percentage_check = 1 && decimal_places = "2 DP", "0.00%",
+				percentage_check = 0 && decimal_places = "0 DP", "0",
+				percentage_check = 0 && decimal_places = "1 DP", "0.0",
+				percentage_check = 0 && decimal_places = "2 DP", "0.00",
+				percentage_check = 0 && decimal_places = "3 DP", "0.000",
+				"0.00")
+				```
+
+	measure 'UCL SPC' = ```
+			
+			
+			var spc_selected = SELECTEDVALUE('SPC Measures'[SPC type])
+			
+			var time_frmae = SELECTEDVALUE('Metrics'[Monthly or Daily Data])
+			
+			var data_points = SELECTEDVALUE('Metrics'[Number of data points per metric])
+			
+			return SWITCH(TRUE(),
+			    data_points < 13, BLANK(),
+			    spc_selected = "I/XmR chart" && time_frmae = "Monthly", [XmR UCL], 
+			    spc_selected = "I/XmR chart" && time_frmae = "Daily", [XmR UCL Daily], 
+			    spc_selected = "P Prime chart" && time_frmae = "Monthly", [Laney P Prime UCL],
+			    spc_selected = "P Prime chart" && time_frmae = "Daily", [Laney P Prime UCL Daily],
+			    spc_selected = "U Prime chart" && time_frmae = "Monthly", [Laney U Prime UCL],
+			    spc_selected = "U Prime chart" && time_frmae = "Daily", [Laney U Prime UCL Daily],
+			    spc_selected = "C Chart", [C UCL],
+			
+			    BLANK())
+			    
+			```
+		lineageTag: 16487d1d-5776-47f9-a0ac-500a8f624909
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				var decimal_places = MAX('Metrics'[Decimal Places])
+				
+				return 
+				SWITCH(TRUE(),
+				percentage_check = 1 && decimal_places = "1 DP", "0.0%",
+				percentage_check = 1 && decimal_places = "2 DP", "0.00%",
+				percentage_check = 0 && decimal_places = "0 DP", "0",
+				percentage_check = 0 && decimal_places = "1 DP", "0.0",
+				percentage_check = 0 && decimal_places = "2 DP", "0.00",
+				percentage_check = 0 && decimal_places = "3 DP", "0.000",
+				"0.00")
+				```
+
+	column 'SPC type'
+		dataType: string
+		lineageTag: 615134c1-7a5f-495b-9003-8f52893d57f8
+		summarizeBy: none
+		sourceColumn: SPC type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'SPC Measures' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WClUIKMrMTVVIzkgsKlGK1YlW8tSPyA1C4gdgqHCGsWMB", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"SPC type" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"SPC type", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

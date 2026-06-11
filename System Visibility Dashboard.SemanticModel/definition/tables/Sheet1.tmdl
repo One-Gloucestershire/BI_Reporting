@@ -1,0 +1,60 @@
+table Sheet1
+	lineageTag: c51fdda3-2b22-472f-ab7d-df0efa2cc001
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 1380f819-a96d-4da0-9660-c00b069dd3e2
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: ca72b474-3f2a-4346-8b1b-92eb7f380a32
+			defaultHierarchy: LocalDateTable_72940b16-b1b8-48cf-868c-1abc44b8c728.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Metric
+		dataType: string
+		lineageTag: 32e3f253-251a-466d-bba2-a2dc6d4c8c59
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: dee1f17d-570b-46b3-81da-b005b549dd34
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Target
+		dataType: int64
+		formatString: 0
+		lineageTag: 02b5d4af-8ea5-4b3e-927b-8c3359443da8
+		summarizeBy: sum
+		sourceColumn: Target
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Sheet1 = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Unsheduled Care\WasO\System Visability Dashboard\Dummy data.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Date", type date}, {"Metric", type text}, {"Value", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

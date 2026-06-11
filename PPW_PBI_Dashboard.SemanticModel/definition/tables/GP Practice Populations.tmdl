@@ -1,0 +1,148 @@
+table 'GP Practice Populations'
+	lineageTag: eaa4b51b-9e14-4b65-be9a-6cf77e20dddc
+
+	measure 'Sum of Total' = SUM('GP Practice Populations'[Total])
+		lineageTag: 113cea0f-12b0-41b0-b7c3-e433bb22253e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 899b53d9-e3de-4f45-adf7-4e9df6791eba
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 3cd2d583-9abf-4082-90c0-73a8e05157d4
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 712205e4-4eba-4d6a-9aaf-fdbe38233bc8
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Place
+		dataType: string
+		lineageTag: 2c27cf4f-72e5-4674-8ffc-e6a7ad6035ea
+		summarizeBy: none
+		sourceColumn: Place
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 4578f300-78a0-4c18-a737-56ac3442eca6
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column CensusDate
+		dataType: string
+		lineageTag: 679fa8c0-d80c-427c-8f3c-2c6c45efe3d1
+		summarizeBy: none
+		sourceColumn: CensusDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sex
+		dataType: string
+		lineageTag: 9fc86751-1da5-4d32-89f1-ae721f8e412e
+		summarizeBy: none
+		sourceColumn: Sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: e1f0af28-46e6-4fdd-a280-94d9d1579df2
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeGroup
+		dataType: string
+		lineageTag: b9791c6d-7f29-4b62-b365-eebcce3b12e9
+		summarizeBy: none
+		sourceColumn: AgeGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeGroupType
+		dataType: string
+		lineageTag: 519f83fb-5a58-49af-99eb-52780d43d160
+		summarizeBy: none
+		sourceColumn: AgeGroupType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		lineageTag: 5be8a23e-075f-4721-8044-561a0fb896a2
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Census_Date
+		dataType: dateTime
+		lineageTag: 2f83ca82-1be0-4b2a-b005-acc198e7b40c
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		variation Variation
+			isDefault
+			relationship: 0ae3b594-b374-4508-b711-abb35abe3008
+			defaultHierarchy: LocalDateTable_c0434b39-952b-401a-b137-fc0f9aadbe21.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Census_Date (Year)' = FORMAT([Census_Date], "yyyy")
+		lineageTag: a46176af-67e0-4201-8278-691a3f29a35a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Census_Date (Quarter)' = CONCATENATE("Qtr", INT((MONTH([Census_Date]) + 2) / 3))
+		lineageTag: 8dacc23e-3c2c-4829-9307-40cd72065d3a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Census_Date (Month Index)' = MONTH([Census_Date])
+		isHidden
+		lineageTag: 7b8cd9ba-e66f-4dad-8b35-8bac99a138b2
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Census_Date (Month)' = FORMAT([Census_Date], "MMM")
+		lineageTag: 21da3098-c4d1-444a-9298-1b3f67e2b17e
+		summarizeBy: none
+		sortByColumn: 'Census_Date (Month Index)'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Practice Populations' = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="#(lf)#(lf)SELECT *#(lf),[Census_Date] = CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE)#(lf)FROM CCG_Reference.Reference.vw_GPPracticePopulation#(lf)where left(age,2) >60#(lf)and AgeGroupType = 'Group 1'#(lf)and CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE) between '20210701' and '20230801'#(lf)order by left(age,2) #(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

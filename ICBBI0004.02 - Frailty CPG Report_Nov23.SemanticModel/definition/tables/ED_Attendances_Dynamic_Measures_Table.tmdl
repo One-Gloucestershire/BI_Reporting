@@ -1,0 +1,45 @@
+table ED_Attendances_Dynamic_Measures_Table
+	lineageTag: 54465020-81e9-472b-ac88-ca9d65690d2b
+
+	measure ED_Attendance_Measure_Value = ```
+			SWITCH(
+										MIN(ED_Attendances_Dynamic_Measures_Table[Measure ID]) ,
+										--------------------------------------
+										1,[mildly_frail_ed_att_per_1000_ot],
+			                            2,[moderately_frail_ed_att_per_1000_ot],
+									3,[severely_frail_ed_att_per_1000_ot]
+									
+			
+										)
+			```
+		formatString: 0.0
+		lineageTag: 4245cfc1-cc0e-48c4-911c-0b659f42542b
+
+	column 'Measure ID'
+		dataType: int64
+		formatString: 0
+		lineageTag: 143d79c5-8e86-456e-a54b-75169b13e76d
+		summarizeBy: none
+		sourceColumn: Measure ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Mesause Name'
+		dataType: string
+		lineageTag: 0f512b87-f667-4473-bab8-e40a500a36b7
+		summarizeBy: none
+		sourceColumn: Mesause Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ED_Attendances_Dynamic_Measures_Table = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("pcxBCoAgEEDRqwyzdqF1hVq2aikuhpxAMBWbgm6fQTdw+z88a9GgwiVEHx/YK4UI8wQkwslT2viEwhWM1vq/JZcrkoScIN9tSTgY0CmLwwdlz5WEu7GxYSu31km5Fw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Measure ID" = _t, #"Mesause Name" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Measure ID", Int64.Type}, {"Mesause Name", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

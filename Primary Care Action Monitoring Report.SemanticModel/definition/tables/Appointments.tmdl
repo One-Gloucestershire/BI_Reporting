@@ -1,0 +1,432 @@
+table Appointments
+	lineageTag: b67f592e-8213-4457-ab0f-08e44adf3f3b
+
+	measure 'Appointments Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('Appointments'),
+			    'Appointments'[Week_Start],
+			    'Appointments'[Month_Name],
+			    "Mean", CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Benchmark_Months] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_AVG
+			    
+			```
+		formatString: #,0
+		lineageTag: 413201d3-d726-4a24-bde9-a8ea7adf225a
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Total Appointments' =
+			
+			
+			SUM('Appointments'[Total_Appointments])
+		formatString: #,0
+		lineageTag: d75f2df2-88a6-41d5-af30-e36c4ab0d54c
+
+	measure 'Appointments STDEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('Appointments'),
+			    'Appointments'[Week_Start],
+			    'Appointments'[Month_Name],
+			    "Mean", CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Benchmark_Months] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(
+			    _SUMMARYTABLE,
+			    [Mean]
+			)
+			
+			RETURN _STDV
+			    
+			```
+		lineageTag: 4edb9a96-0129-4ade-b262-4070f08c64cf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointments - UCL' =
+			
+			
+			IF(([Appointments Mean] + (3*[Appointments STDEV])) < 0, 0, ([Appointments Mean] + (3*[Appointments STDEV])))
+		formatString: #,0
+		lineageTag: eba63105-a206-43b0-8d72-9bcd833d8c51
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Appointments - LCL' =
+			
+			
+			IF(([Appointments Mean] - (3*[Appointments STDEV])) < 0, 0, ([Appointments Mean] - (3*[Appointments STDEV])))
+		formatString: #,0
+		lineageTag: 4e36bf20-dc35-43a5-8944-2472230388b9
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '% F2F' =
+			
+			
+			VAR _F2F = CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Contact_Type] = "Face-to-Face")
+			
+			RETURN
+			
+			_F2F/[Total Appointments]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1c9f4a81-aa23-4f63-8b32-aebb379d630d
+
+	measure '% Telephone' =
+			
+			
+			VAR _TELE = CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Contact_Type] = "Telephone")
+			
+			RETURN
+			
+			_TELE/[Total Appointments]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 3ca78e04-f8f0-4dd0-b988-282354454cd5
+
+	measure 'Appointment % F2F Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Appointments'[Month_Name], 'Appointments'[Week_Start], 'Appointments'[Week Number], 'Appointments'[financial_month] ),
+			            "Value_x", 'Appointments'[Week Number],
+			            "Value_y", 'Appointments'[% F2F]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(SUMX (
+			        DISTINCT ( 'Appointments'[Week Number] ),
+			        Intercept + Slope * 'Appointments'[Week Number]
+			    ) < 0, BLANK(), 
+			    SUMX (
+			        DISTINCT ( 'Appointments'[Week Number] ),
+			        Intercept + Slope * 'Appointments'[Week Number]
+			    )
+			    )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7fc346a3-0ee2-4fd5-a5fc-b531d892f32c
+
+	measure 'Appointment % Telephone Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Appointments'[Month_Name], 'Appointments'[Week_Start], 'Appointments'[Week Number], 'Appointments'[financial_month] ),
+			            "Value_x", 'Appointments'[Week Number],
+			            "Value_y", 'Appointments'[% Telephone]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(SUMX (
+			        DISTINCT ( 'Appointments'[Week Number] ),
+			        Intercept + Slope * 'Appointments'[Week Number]
+			    ) < 0, BLANK(), 
+			    SUMX (
+			        DISTINCT ( 'Appointments'[Week Number] ),
+			        Intercept + Slope * 'Appointments'[Week Number]
+			    )
+			    )
+			```
+		lineageTag: 3d4bb953-8aa0-43a7-af04-5ae06bf795d0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% F2F Mean' =
+			
+			
+			VAR _F2F = CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Contact_Type] = "Face-to-Face", ALL('Appointments'[Week_Start]), 'Appointments'[Benchmark_Months] = 1)
+			
+			VAR _TOTAL = CALCULATE(SUM('Appointments'[Total_Appointments]), ALL('Appointments'[Week_Start]), 'Appointments'[Benchmark_Months] = 1)
+			
+			VAR _MONTHS = CALCULATE(DISTINCTCOUNT('Appointments'[Week Number]), 'Appointments'[Benchmark_Months] = 1)
+			
+			RETURN
+			
+			_F2F/_TOTAL
+		lineageTag: be2d4bd7-c746-4e97-8e59-a56c60e7f68f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% F2F Benchmark' =
+			
+			
+			VAR _F2F = CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Contact_Type] = "Face-to-Face", 'Appointments'[Benchmark_Months] = 1)
+			
+			VAR _TOTAL = CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Benchmark_Months] = 1)
+			
+			RETURN
+			
+			_F2F/_TOTAL
+		lineageTag: a128c1fb-2ca9-4a83-935c-7bd2b11352c0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Telephone Mean' =
+			
+			
+			VAR _TEL = CALCULATE(SUM('Appointments'[Total_Appointments]), 'Appointments'[Contact_Type] = "Telephone", ALL('Appointments'[Week_Start]), 'Appointments'[Benchmark_Months] = 1)
+			
+			VAR _TOTAL = CALCULATE(SUM('Appointments'[Total_Appointments]), ALL('Appointments'[Week_Start]), 'Appointments'[Benchmark_Months] = 1)
+			
+			VAR _MONTHS = CALCULATE(DISTINCTCOUNT('Appointments'[Week Number]), 'Appointments'[Benchmark_Months] = 1)
+			
+			RETURN
+			
+			_TEL/_TOTAL
+		lineageTag: b48f3f72-3778-401a-815c-76624dc9513f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Crude Rate per 1,000' =
+			
+			
+			([Total Appointments] / SUM('Population'[population]))*1000
+		lineageTag: 29abdfde-ca64-4a74-acde-36c369000f5e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Crude Rate per 1,000 Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('Date Reference'),
+			    'Date Reference'[Week_Start],
+			    "Rate per 1,000", CALCULATE([Crude Rate per 1,000], 'Date Reference'[Benchmark_Months] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Rate per 1,000])
+			
+			RETURN _AVG
+			```
+		lineageTag: bcb30b47-386d-4f22-a998-509cab879e78
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Crude Rate per 1,000 Trendline' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Reference'[Week_Start], 'Date Reference'[Week Number] ),
+			            "Value_x", 'Date Reference'[Week Number],
+			            "Value_y", 'Appointments'[Crude Rate per 1,000]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    IF(SUMX (
+			        DISTINCT ( 'Date Reference'[Week Number] ),
+			        Intercept + Slope * 'Date Reference'[Week Number]
+			    ) < 0, BLANK(), 
+			    SUMX (
+			        DISTINCT ( 'Date Reference'[Week Number] ),
+			        Intercept + Slope * 'Date Reference'[Week Number]
+			    )
+			    )
+			```
+		lineageTag: cad7dd46-e437-40c0-82aa-69480d0fa2d6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Trendline' =
+			
+			
+			CALCULATE([Crude Rate per 1,000 Trendline], 'Date Reference'[Week Number] = MAX('Date Reference'[Week Number]))
+		lineageTag: ca5aac77-8d30-436f-852a-520983d1eaa2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('Date Reference'),
+			    'Date Reference'[Week_Start],
+			    "Rate per 1,000 Mean", CALCULATE([Crude Rate per 1,000], 'Date Reference'[Benchmark_Months] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Rate per 1,000 Mean])
+			
+			RETURN _AVG
+			```
+		lineageTag: e67bef56-a2d1-46d7-a5e5-e1d308062588
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Total_Appointments
+		dataType: int64
+		formatString: #,0
+		lineageTag: 07fbe67c-61ea-4ca2-9ee3-35683cfbc96f
+		summarizeBy: sum
+		sourceColumn: Total_Appointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 3c6a8172-c01f-4f64-9565-0f9bce6e645b
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: d13ec292-f0e6-4a87-bcc4-f1c3ca6fedf9
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: d2190fac-f6ee-465e-b35e-7dc451c04e85
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeDescription
+		dataType: string
+		lineageTag: 4cc52f51-ff0d-4366-8371-c7082b07f7dd
+		summarizeBy: none
+		sourceColumn: PracticeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Benchmark_Months
+		dataType: int64
+		formatString: 0
+		lineageTag: 01899c84-08fa-479e-99d6-485ef635e31d
+		summarizeBy: sum
+		sourceColumn: Benchmark_Months
+
+		annotation SummarizationSetBy = Automatic
+
+	column Contact_Type
+		dataType: string
+		lineageTag: eb7d932f-654d-4740-9f85-65dde5d1fa07
+		summarizeBy: none
+		sourceColumn: Contact_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week_Start
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 281a9b31-3dd2-4ead-859f-b7f7b09b9595
+		summarizeBy: none
+		sourceColumn: Week_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Name
+		dataType: string
+		lineageTag: 188c9fb7-fe67-4d0f-9663-7fb2d8b3e315
+		summarizeBy: none
+		sourceColumn: Month_Name
+		sortByColumn: financial_month
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 7cb3ff62-4911-46a3-8b21-0bb525583004
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Number' =
+			
+			
+			RANKX( ALL( 'Appointments' ), 'Appointments'[Week_Start], , ASC, Dense)
+		formatString: 0
+		lineageTag: 0c4f6c5d-016f-41cc-bf6e-7374b528f8e5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Appointments = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="#(lf)  SET NOCOUNT ON#(lf)  SET ANSI_WARNINGS OFF#(lf)  IF OBJECT_ID('TEMPDB..#TEMP_GPAPP') IS NOT NULL DROP TABLE #TEMP_GPAPP#(lf)  ;#(lf)#(lf)  SELECT DISTINCT [ID]#(lf)#(tab)#(tab)#(tab)#(tab) ,[Locality] = CASE WHEN [Locality] LIKE '%Cotswolds' THEN 'Cotswolds' #(lf)#(tab)#(tab)#(tab)#(tab)                    WHEN [Practice_Code] LIKE 'Y05212' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE [Locality] END#(lf)#(tab)#(tab)#(tab)#(tab) ,[PrimaryCareNetwork] = CASE WHEN [PrimaryCareNetwork] LIKE 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)#(tab)#(tab)#(tab)                              WHEN [Practice_Code] LIKE 'Y05212' THEN 'TWNS'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  ELSE [PrimaryCareNetwork] END#(lf)#(tab)#(tab)#(tab)#(tab) ,[Practice_Code]#(lf)#(tab)#(tab)#(tab)#(tab) ,[PracticeDescription]#(lf)#(tab)#(tab)#(tab)#(tab) ,[Benchmark_Months] = CASE WHEN CAST([Appointment_Date] AS DATE) BETWEEN '20240101' AND '20240731' THEN 1 ELSE 0 END#(lf)#(tab)#(tab)#(tab)#(tab) ,[Appointment_Date] = CAST([Appointment_Date] AS DATE)#(lf)#(tab)#(tab)#(tab)#(tab) ,[DATE].[Week_Start]#(lf)#(tab)#(tab)#(tab)#(tab) ,[MONTH].[Month_Name]#(lf)#(tab)#(tab)#(tab)#(tab) ,[DATE].[Working_Day_Calc]#(lf)#(tab)#(tab)#(tab)#(tab) ,[MONTH].[financial_month]#(lf)#(tab)#(tab)#(tab)#(tab) ,[Contact_Type] = CASE WHEN [Appointment_Status] LIKE 'Face to Face%' THEN 'Face-to-Face'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)            WHEN [Appointment_Status] LIKE 'Telephone%' THEN 'Telephone'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE NULL END#(lf)#(lf)  INTO #TEMP_GPAPP#(lf)  FROM [CCG_Current].[PrimaryCare].[vw_Appointments] AS [GP]#(lf)#(lf)  LEFT JOIN (#(lf)             SELECT DISTINCT [Date] = CAST([D1].[Full_Date] AS DATE)#(lf)#(tab)#(tab)#(tab)#(tab)            ,[Week_Start] = CAST([D1].[Week_Start] AS DATE)#(lf)#(tab)#(tab)#(tab)#(tab)            ,[D2].[Working_Day_Calc]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),[D1].[Month_Start]#(lf)             FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates] AS [D1]#(lf)#(tab)#(tab)#(tab) LEFT JOIN (#(lf)#(tab)#(tab)#(tab)            SELECT DISTINCT [Week_Start] = CAST([Week_Start] AS DATE)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)               ,[Working_Day_Calc] = SUM([Working_Day_Calc])#(lf)#(tab)#(tab)#(tab)            FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHERE CAST([Full_Date] AS DATE) >= '20240401'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)GROUP BY [Week_Start]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)) AS [D2]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ON [D2].[Week_Start] = [D1].[Week_Start]#(lf)#(tab)#(tab)#(tab) WHERE CAST([Full_Date] AS DATE) >= '20240401'#(lf)            ) AS [DATE]#(lf)  ON [DATE].[Date] = CAST([GP].[Appointment_Date] AS DATE)#(lf)#(lf)  LEFT JOIN (SELECT DISTINCT [Full_Date]#(lf)                            ,[Month_Name] = LEFT([Month_Name], 3)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),[financial_month] = [Fin_Month_No]#(lf)             FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]) AS [MONTH]#(lf)#(tab)#(tab)#(tab) ON [MONTH].[Full_Date] = [DATE].[Week_Start]#(lf)#(lf)  WHERE [Is_Cancelled] = 'f'#(lf)  AND ([Appointment_Status] LIKE 'Face to Face%'#(lf)  OR [Appointment_Status] LIKE 'Telephone%')#(lf)  AND [Appointment_Status] NOT IN ('Face to Face - Did Not Attend', 'Face to Face - Booked', 'Face to Face - Patient Walked Out'#(lf)                                  ,'Face to Face - Waiting', 'Telephone - Booked', 'Telephone - Did Not Attend', 'Telephone - In Progress'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  ,'Telephone - Patient Walked Out', 'Telephone - Waiting')#(lf)  AND CAST([Appointment_Date] AS DATE) >= '20240401'#(lf)  AND [Locality] IS NOT NULL#(lf)  ;#(lf)#(lf)  SELECT [Total_Appointments] = COUNT(DISTINCT([ID]))/[Working_Day_Calc]#(lf)        ,[Locality]#(lf)#(tab)#(tab),[PrimaryCareNetwork]#(lf)#(tab)#(tab),[Practice_Code]#(lf)#(tab)#(tab),[PracticeDescription]#(lf)#(tab)#(tab),[Benchmark_Months]#(lf)#(tab)#(tab),[Week_Start]#(lf)#(tab)#(tab),[Month_Name]#(lf)#(tab)#(tab),[financial_month]#(lf)#(tab)#(tab),[Contact_Type]#(lf)#(lf)  FROM #TEMP_GPAPP#(lf)#(lf)  GROUP BY [Locality]#(lf)#(tab)#(tab)  ,[PrimaryCareNetwork]#(lf)#(tab)#(tab)  ,[Practice_Code]#(lf)#(tab)#(tab)  ,[PracticeDescription]#(lf)#(tab)#(tab)  ,[Benchmark_Months]#(lf)#(tab)#(tab)  ,[Week_Start]#(lf)#(tab)#(tab)  ,[Month_Name]#(lf)#(tab)#(tab)  ,[financial_month]#(lf)#(tab)#(tab)  ,[Working_Day_Calc]#(lf)#(tab)#(tab)  ,[Contact_Type]#(lf)#(lf)  ORDER BY [Week_Start] DESC "])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

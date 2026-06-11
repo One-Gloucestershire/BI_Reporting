@@ -1,0 +1,1154 @@
+table '01 VW Main'
+	lineageTag: 087f43a3-9771-4a92-ad3c-c75b655ed5dd
+
+	measure 'KPI REF LatestM' = CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Date Table.latest_month_flag])
+		formatString: 0
+		lineageTag: b1af8557-f860-447d-8975-e6e095ce6b61
+
+	measure 'KPI REF PreviousM' = CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Date Table.previous_month_flag]) + 0
+		formatString: 0
+		lineageTag: 8be47ba7-9cb9-4813-8887-4fc4072aa274
+
+	measure 'Latest Month Name Year' = ```
+			
+			VAR MaxDate = MAX('01 VW Main'[Week_End_Wednesday]) 
+			RETURN FORMAT(MaxDate, "DD MMMM yyyy") 
+			```
+		lineageTag: 219b4857-1724-44dc-8e85-221d411dbbf5
+
+	measure 'KPI REF LatestYTD' =
+			
+			VAR currentyear = MAX('01 VW Main'[Date Table.financial_year])
+			RETURN
+			CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Date Table.ytd_flag] = 1, '01 VW Main'[Date Table.financial_year] = currentyear )
+		formatString: 0
+		lineageTag: cedb6fee-2811-4c7d-8dae-fb74cb4837c7
+
+	measure 'Latest financial year' = MAX('01 VW Main'[Date Table.financial_year])
+		lineageTag: 2f708104-166b-43af-ad10-04974a68e48f
+
+	measure 'KPI REF PreviousYTD' =
+			CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Date Table.financial_year] = "2023/24", '01 VW Main'[Date Table.ytd_flag] = 1
+			) + 0
+		formatString: 0
+		lineageTag: cc61d255-ee07-406b-b723-923be1adb2fd
+
+	measure 'KPI REF Latest12' = CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Date Table.latest_12_months_flag] = 1 )
+		formatString: 0
+		lineageTag: 05257022-52bc-4ee0-a5b8-9e37d8095667
+
+	measure 'KPI REF Previous12' = CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Date Table.previous_12_months_flag] = 1 ) + 0
+		formatString: 0
+		lineageTag: d6fc2b58-a6a1-4fe7-a693-e3b95bcd2bbb
+
+	measure 'KPI REF DiffM' = [KPI REF LatestM] - [KPI REF PreviousM]
+		formatString: 0
+		lineageTag: ab90fa9d-b658-4c32-aff1-d900d051220e
+
+	measure 'KPI REF DiffYTD' = [KPI REF LatestYTD] - [KPI REF PreviousYTD]
+		formatString: 0
+		lineageTag: 88be4cee-e589-4d31-b314-6d405ea38720
+
+	measure 'KPI REF Diff12' = [KPI REF Latest12] - [KPI REF Previous12]
+		formatString: 0
+		lineageTag: 2a809950-81f9-49fe-bf8a-f32de0c8b3b8
+
+	measure 'Avg LoS' = AVERAGE('01 VW Main'[length_of_stay_days])
+		lineageTag: c9a547a0-90c6-4e86-9cf3-2ffa794990b9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Pdiag%' = (SUM('01 VW Main'[primary_diagnosis_counter]) / SUM('01 VW Main'[admitting_counter]) )
+		formatString: 0
+		lineageTag: 0c64d141-0fd9-4676-bf84-5ec3cadf8d8d
+
+	measure 'KPI Pdiag% LatestM' = CALCULATE(SUM('01 VW Main'[primary_diagnosis_counter]) / SUM('01 VW Main'[admitting_counter]) , '01 VW Main'[Date Table.ytd_flag] = 1)
+		lineageTag: 55f60e3a-1273-4407-b5ba-9d2fdc0c63ac
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Pdiag% PreviousM' = CALCULATE(SUM('01 VW Main'[primary_diagnosis_counter]) / SUM('01 VW Main'[admitting_counter]) , '01 VW Main'[Date Table.previous_month_flag] = 1)
+		lineageTag: 66344c42-0d4e-44c1-bde3-56827dcd0166
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI PD CurrentYTD' = ```
+			
+			VAR currentyear = MAX('01 VW Main'[Date Table.financial_year]) 
+			
+			RETURN CALCULATE(DIVIDE(SUM('01 VW Main'[primary_diagnosis_counter]), SUM('01 VW Main'[admitting_counter])), '01 VW Main'[Date Table.ytd_flag] = 1, '01 VW Main'[Date Table.financial_year] = currentyear) 
+			```
+		lineageTag: 04bc902d-4e6d-472b-b72b-ad22aeb533f7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI PD PreviousYTD' = CALCULATE(DIVIDE(SUM('01 VW Main'[primary_diagnosis_counter]), SUM('01 VW Main'[admitting_counter])), '01 VW Main'[Date Table.ytd_flag] = 1, '01 VW Main'[Date Table.financial_year] = "2023/24") +0
+		lineageTag: 1e5d1fa6-0069-44e9-a6f8-8175035cee85
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI LoS Current YTD' = ```
+			CALCULATE([Avg LoS],
+			 'Discharge Date Table'[ytd_flag] = 1, 
+			 'Discharge Date Table'[financial_year] = "2025/26" )
+			```
+		lineageTag: 200801f6-eb34-4320-b2b4-8eca79dcbfe0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI LoS PreviousYTD' = ```
+			CALCULATE([Avg LoS],
+			 'Discharge Date Table'[ytd_flag] = 1, 
+			 'Discharge Date Table'[financial_year] = "2024/25" ) +0
+			```
+		lineageTag: b7a1dca7-4fef-47e9-8da9-4c650d8dfae5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI LoS CurrentW' = CALCULATE([Avg LoS],  '01 VW Main'[Latest_week_discharge_flag] = 1)
+		lineageTag: 9f9ea752-aa60-42e1-9d7b-9655a4316f4a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI LoS PreviousW' =
+			CALCULATE(AVERAGE('01 VW Main'[length_of_stay_days]),
+			 '01 VW Main'[Previous_week_discharge_flag] = 1 )
+		lineageTag: 066ed8b3-a48d-4127-98ab-5083efe5d3f2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Week End Admissions' = CALCULATE(MAX('01 VW Main'[Admission_Week_Ending_Sunday]), ALL('01 VW Main') )
+		formatString: General Date
+		lineageTag: 23331b75-4255-4b6a-9136-6a931fadc34e
+
+	measure 'WEEK Latest Admissions' = CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Latest_week_admission_flag] = 1) + 0
+		formatString: 0
+		lineageTag: 2087acce-a980-4f5a-9b8b-b001e60a6212
+
+	measure 'WEEK Previous Admissions' = CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[Previous_week_admission_flag] = 1) +0
+		formatString: 0
+		lineageTag: 11808725-d435-479c-95be-14ec2daeee65
+
+	measure 'WEEK Latest4 AVG Admissions' = ```
+			
+			VAR Latestweekend = CALCULATE(MAX('01 VW Main'[Week_End_Wednesday]), ALL('01 VW Main'))
+			VAR Totalforweek = SUMMARIZE(  FILTER('01 VW Main', '01 VW Main'[Previous_admission_4week_flag] = 1), 
+			                        '01 VW Main'[Week_End_Wednesday], "TotalOcc", SUM('01 VW Main'[admitting_counter])  )  
+			RETURN AVERAGEX(Totalforweek, [TotalOcc])
+			```
+		lineageTag: 28246d39-b3f1-43fd-be68-c5ca4c3a372f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'WEEK YTD AVG Admissions' = ```
+			
+			VAR Latestweekend = CALCULATE(MAX('01 VW Main'[Week_End_Wednesday]), ALL('01 VW Main'))
+			VAR Totalforweek = SUMMARIZE(  FILTER('01 VW Main', '01 VW Main'[Date Table.ytd_flag] = 1), 
+			                        '01 VW Main'[Week_End_Wednesday], "TotalOcc", SUM('01 VW Main'[admitting_counter])  )  
+			RETURN AVERAGEX(Totalforweek, [TotalOcc])
+			```
+		lineageTag: 85c3d925-d82e-493e-a017-19d76192bd6d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI LoS MAX' = ```
+			MAX('01 VW Main'[length_of_stay_days]) 
+			```
+		formatString: 0
+		lineageTag: 458a76fe-b9cc-4a4e-99fe-c321c42870f9
+
+	measure 'KPI Usual Res % LatestM' = CALCULATE(DIVIDE(CALCULATE(SUM('01 VW Main'[discharge_counter]), '01 VW Main'[discharge_destination_code] = "19"), SUM('01 VW Main'[discharge_counter])), '01 VW Main'[Latest_week_discharge_flag] = 1)
+		formatString: 0
+		lineageTag: 34a9128a-664c-4f5f-8646-1fcd3cc2e472
+
+	measure 'KPI Usual Res % PreviousW' = CALCULATE(DIVIDE(CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[discharge_destination_code] = "19"), SUM('01 VW Main'[admitting_counter])), '01 VW Main'[Previous_week_discharge_flag] = 1)
+		lineageTag: 8fd60260-2e64-43c5-acb0-31cafa0616d5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Usual Res %' = (DIVIDE(CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[discharge_destination_code] = "19"), SUM('01 VW Main'[admitting_counter]))) * 100
+		lineageTag: fec9698f-6df2-48ac-b7c0-25ecfa759d39
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Hospital %' = (DIVIDE(CALCULATE(SUM('01 VW Main'[admitting_counter]), '01 VW Main'[discharge_destination_code] = "51"), SUM('01 VW Main'[admitting_counter]))) * 100
+		lineageTag: a75e65f3-ccad-477a-b221-27e4b6f92f1d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Weekly Bed Occupancy' = ```
+			
+			COUNTROWS(
+			    FILTER(
+			        '01 VW Main', 
+			        '01 VW Main'[admission_dateonly] <= '01 VW Main'[Week_End_Wednesday] &&
+			        ('01 VW Main'[discharge_dateonly] > '01 VW Main'[Week_End_Wednesday] || ISBLANK('01 VW Main'[discharge_dateonly])  ) ) )
+			```
+		formatString: 0
+		lineageTag: 29fc9824-e9fc-4d29-83af-54692990deb7
+
+	measure 'KPI HRG%' = (SUM('01 VW Main'[primary_diagnosis_counter]) / SUM('01 VW Main'[admitting_counter]) )
+		lineageTag: a92e5b17-c4c3-4242-a819-428827e2c23d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI DisCH LatestW' = CALCULATE(SUM('01 VW Main'[discharge_counter]), '01 VW Main'[Latest_week_discharge_flag] = 1) +0
+		formatString: 0
+		lineageTag: 471ac71e-e771-4ce5-a494-67d35328b909
+
+	measure DISCH_LATEST_WEEK = ```
+			
+			VAR LatestWeek = MAX('01 VW Main'[discharge_Week_Ending_Sunday])  -- Get the latest week
+			RETURN
+			CALCULATE(
+			    COUNTROWS('01 VW Main'), 
+			    '01 VW Main'[discharge_Week_Ending_Sunday] = LatestWeek,
+			    USERELATIONSHIP('Discharge Date Table'[day_month_year], '01 VW Main'[discharge_dateonly]) 
+			) + 0
+			
+			```
+		formatString: 0
+		lineageTag: 8f698097-49b9-40f1-9bb7-4abced8d9ca1
+
+	measure DISCH_PREVIOUS_WEEK = ```
+			
+			VAR LatestWeek = MAX('01 VW Main'[discharge_Week_Ending_Sunday])  
+			VAR PreviousWeek = 
+			    CALCULATE(
+			        MAX('01 VW Main'[discharge_Week_Ending_Sunday]), 
+			        '01 VW Main'[discharge_Week_Ending_Sunday] < LatestWeek
+			    )  -- Get the most recent week before the latest week
+			RETURN
+			CALCULATE(
+			    SUM('01 VW Main'[discharge_counter]), 
+			    '01 VW Main'[discharge_Week_Ending_Sunday] = PreviousWeek
+			) + 0
+			
+			```
+		formatString: 0
+		lineageTag: a5cddd63-27fa-4ab0-b781-1f3dbbc415db
+
+	measure 'Total Readmissions' = ```
+			
+			CALCULATE(
+			    SUM('03 VW Readmissions'[Count]), 
+			    RELATEDTABLE('03 VW Readmissions')  -- This ensures we only get the related rows from 'Query1'
+			)
+			
+			
+			```
+		formatString: 0
+		lineageTag: c1da4b62-1c10-4426-9bab-d9d4e128b761
+
+	measure 'INDIV WARD OCC WEEKEND' = ```
+			
+			VAR Admissions = 
+			    CALCULATE(
+			        COUNT('01 VW Main'[admitting_counter]), 
+			        FILTER(
+			            ALL('01 VW Main'), 
+			            '01 VW Main'[Week_End_Wednesday] <= MAX('01 VW Main'[Week_End_Wednesday]) &&
+			            '01 VW Main'[Admitting_Ward] = SELECTEDVALUE('01 VW Main'[Admitting_Ward]) 
+			        )
+			    )
+			
+			VAR Discharges = 
+			    CALCULATE(
+			        COUNT('01 VW Main'[discharge_counter]), 
+			        FILTER(
+			            ALL('01 VW Main'), 
+			            '01 VW Main'[WeekEnd_Discharge] <= MAX('01 VW Main'[Week_End_Wednesday]) &&
+			            '01 VW Main'[Admitting_Ward] = SELECTEDVALUE('01 VW Main'[Admitting_Ward])
+			        )
+			    )
+			
+			RETURN Admissions - Discharges
+			
+			```
+		formatString: 0
+		lineageTag: 0626a24f-2f4f-4872-adc7-d15b6a8a2a59
+
+	measure DISCH_LATEST_4WEEK = ```
+			
+			
+			VAR _LATEST = 
+			    CALCULATE(
+			        MAX('01 VW Main'[discharge_Week_Ending_Sunday]),
+			        REMOVEFILTERS('01 VW Main') )
+			
+			VAR _4WEEKS = 
+			DATESINPERIOD(
+			    '01 VW Main'[discharge_Week_Ending_Sunday], 
+			    _LATEST,
+			    -28, DAY ) 
+			
+			RETURN 
+			CALCULATE(
+			    COUNTROWS('01 VW Main'),
+			    _4WEEKS) / 4 
+			```
+		lineageTag: 6440395e-35d3-4bb3-8331-3c76b86e8a0c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Latest Week End Discharges' = ```
+			
+			VAR LatestWeek = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday]), ALL('01 VW Main'))
+			RETURN 
+			FORMAT(LatestWeek, "dd mmmm yyyy")
+			
+			```
+		lineageTag: 8e1420a2-8963-4527-a408-53693aee3e2d
+
+	measure ADMISSION_TOTAL =
+			CALCULATE(
+			    COUNTROWS('01 VW Main'))
+		formatString: 0
+		lineageTag: ac5e74b5-1465-4dd1-a4b7-58cbdec20a92
+
+	measure DISCHARGE_TOTAL =
+			CALCULATE(
+			    COUNTROWS('01 VW Main'),
+			    USERELATIONSHIP('Discharge Date Table'[day_month_year], '01 VW Main'[discharge_dateonly]) )
+		formatString: 0
+		lineageTag: 164fd0f4-361e-4206-9684-5a5a87bef7c2
+
+	measure DISCHARGE_LATESTWEEK =
+			
+			CALCULATE(
+			    MAX('01 VW Main'[discharge_dateonly]),
+			    REMOVEFILTERS('01 VW Main')  )
+		formatString: General Date
+		lineageTag: ec40edd6-20f9-42b2-bd13-bdcd3c7f570e
+
+	measure DISCH_PREVIOUS_4WEEK = ```
+			
+			
+			VAR _LATEST = 
+			    CALCULATE(
+			        MAX('01 VW Main'[discharge_Week_Ending_Sunday]),
+			        REMOVEFILTERS('01 VW Main') )
+			
+			VAR _START = 
+			CALCULATE(
+			    MAX('01 VW Main'[discharge_Week_Ending_Sunday]),
+			    REMOVEFILTERS('01 VW Main')) - 28 
+			
+			VAR _4WEEKS = 
+			DATESINPERIOD(
+			    '01 VW Main'[discharge_Week_Ending_Sunday], 
+			    _START,
+			    -28, DAY ) 
+			
+			RETURN
+			CALCULATE(
+			    COUNTROWS('01 VW Main'),
+			    _4WEEKS) / 4
+			```
+		lineageTag: fc328ffc-e74c-4ee7-9789-a33607690833
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure WARD_OCCUPANCY = [ADMISSION_TOTAL] - [DISCHARGE_TOTAL]
+		formatString: 0
+		lineageTag: b1181a0f-9df3-49ee-8351-f9173facc1c4
+
+	measure ADMS_LATEST_4WEEK = ```
+			
+			
+			VAR _LATEST = 
+			    CALCULATE(
+			        MAX('01 VW Main'[admission_Week_Ending_Sunday]),
+			        REMOVEFILTERS('01 VW Main') )
+			
+			VAR _4WEEKS = 
+			DATESINPERIOD(
+			    '01 VW Main'[admission_Week_Ending_Sunday], 
+			    _LATEST,
+			    -28, DAY ) 
+			
+			RETURN 
+			CALCULATE(
+			    COUNTROWS('01 VW Main'),
+			    _4WEEKS) / 4 
+			```
+		lineageTag: dda64b37-c403-499a-9658-af9f4b490f87
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ADMS_PREVIOUS_4WEEK = ```
+			
+			
+			VAR _LATEST = 
+			    CALCULATE(
+			        MAX('01 VW Main'[admission_Week_Ending_Sunday]),
+			        REMOVEFILTERS('01 VW Main') )
+			
+			VAR _START = 
+			CALCULATE(
+			    MAX('01 VW Main'[admission_Week_Ending_Sunday]),
+			    REMOVEFILTERS('01 VW Main')) - 28 
+			
+			VAR _4WEEKS = 
+			DATESINPERIOD(
+			    '01 VW Main'[admission_Week_Ending_Sunday], 
+			    _START,
+			    -28, DAY ) 
+			
+			RETURN
+			CALCULATE(
+			    COUNTROWS('01 VW Main'),
+			    _4WEEKS) / 4
+			```
+		lineageTag: b31add99-19a2-42b0-bfaa-adabf7bea454
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'WARD OCCUPANCY' = ```
+			
+			CALCULATE (
+			    COUNTROWS('01 VW Main'),
+			    FILTER (
+			        '01 VW Main',
+			        '01 VW Main'[admission_dateonly] <= MAX('Occupancy Date Table'[Date]) &&
+			        (
+			            ISBLANK('01 VW Main'[discharge_dateonly]) || 
+			            '01 VW Main'[discharge_dateonly] > MAX('Occupancy Date Table'[Date])
+			        )
+			    )
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 1af6c22c-7ac6-4226-ab92-dea46322564f
+
+	measure DISCHARGE_COMPARISON = ```
+			CALCULATE(
+			    COUNTROWS('01 VW Main'), 
+			    USERELATIONSHIP('Compare Date Table'[Date], '01 VW Main'[discharge_dateonly]) )
+			```
+		formatString: 0
+		lineageTag: 638bc681-a74b-4bf5-ae55-3da081f3329a
+
+	measure 'KPI LoS Previous4W' = CALCULATE([Avg LoS],  '01 VW Main'[Previous_discharge_4week_flag] = 1)
+		lineageTag: ab4b9eb9-ed71-47d2-b333-2a5f674751e8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI LoS Latest4W' = CALCULATE([Avg LoS],  '01 VW Main'[Latest_discharge_4week_flag] = 1)
+		lineageTag: f782cb8c-007e-4fb0-828b-6d195d13da26
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column nhs_number
+		dataType: string
+		lineageTag: 50643657-0778-422d-ba17-64b19ec5ef28
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column hospital_episode_number
+		dataType: string
+		lineageTag: 70685ad9-d882-475d-9109-ce6e9ef47295
+		summarizeBy: none
+		sourceColumn: hospital_episode_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisation_code_of_commissioner
+		dataType: string
+		lineageTag: e10caf81-15fa-4616-b451-1fc4dab68efa
+		summarizeBy: none
+		sourceColumn: organisation_code_of_commissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_datetime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e36b51eb-b604-47a4-a592-07c0bff46ec9
+		summarizeBy: none
+		sourceColumn: admission_datetime
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method_code
+		dataType: string
+		lineageTag: bf70218e-3b4b-4447-b863-23677d5f1c4d
+		summarizeBy: none
+		sourceColumn: admission_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method
+		dataType: string
+		lineageTag: d2bd3c33-0c91-4e65-a5f8-96fe562ba3a1
+		summarizeBy: none
+		sourceColumn: admission_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_treatment_function_code
+		dataType: string
+		lineageTag: c261f915-eaed-4794-b87a-25e783986268
+		summarizeBy: none
+		sourceColumn: admission_treatment_function_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_treatment_function
+		dataType: string
+		lineageTag: c6bab3dc-5fcc-4134-87f2-aeead4539271
+		summarizeBy: none
+		sourceColumn: admission_treatment_function
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_ward_code
+		dataType: string
+		lineageTag: ec5f7882-15e7-4bab-8ee9-4558f261e00a
+		summarizeBy: none
+		sourceColumn: admitting_ward_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_ward
+		dataType: string
+		lineageTag: e9e59953-1fae-4039-87cd-7cdd1c0815a4
+		summarizeBy: none
+		sourceColumn: admitting_ward
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_datetime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 004cd5f3-d89c-4962-83f7-e49985346f87
+		summarizeBy: none
+		sourceColumn: discharge_datetime
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_code
+		dataType: string
+		lineageTag: d7c29f90-19da-4e2c-acdc-841c2916aefe
+		summarizeBy: none
+		sourceColumn: discharge_destination_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination
+		dataType: string
+		lineageTag: 56fdb69d-6128-43f8-a35a-d6810495ad2f
+		summarizeBy: none
+		sourceColumn: discharge_destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_method
+		dataType: string
+		lineageTag: bb041c04-9d99-4d37-9fc9-b49ecfc87dda
+		summarizeBy: none
+		sourceColumn: discharge_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_method_code
+		dataType: string
+		lineageTag: 697ecf90-7dc3-47c7-9020-78fb596b6017
+		summarizeBy: none
+		sourceColumn: discharge_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_pathway
+		dataType: string
+		lineageTag: cea732c6-24ea-4b48-8556-d463fb3cbfe3
+		summarizeBy: none
+		sourceColumn: discharge_pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	column length_of_stay_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 012c218f-998f-4387-bcc3-aee71e4ff276
+		summarizeBy: none
+		sourceColumn: length_of_stay_days
+
+		annotation SummarizationSetBy = User
+
+	column readmission_30_day
+		dataType: string
+		lineageTag: a2e546fa-9fbe-4b4d-818a-97d18c701b01
+		summarizeBy: none
+		sourceColumn: readmission_30_day
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpellHRG
+		dataType: string
+		lineageTag: ecdc3cda-7298-474a-985d-4843ba7a651b
+		summarizeBy: none
+		sourceColumn: SpellHRG
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRGCodeDescription
+		dataType: string
+		lineageTag: 85d52301-54ee-49b1-bb3e-9fd678d7ff69
+		summarizeBy: none
+		sourceColumn: HRGCodeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG_Chapter_Description
+		dataType: string
+		lineageTag: 6f7db7f7-b815-42e1-91ed-300433cc4753
+		summarizeBy: none
+		sourceColumn: HRG_Chapter_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG_SubChapter_Description
+		dataType: string
+		lineageTag: a351090c-30a5-48b6-a78f-a26de9ff3889
+		summarizeBy: none
+		sourceColumn: HRG_SubChapter_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_P_diag
+		dataType: string
+		lineageTag: 7687a57a-724c-4b20-b470-59473c5ab9c5
+		summarizeBy: none
+		sourceColumn: spell_P_diag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10Code
+		dataType: string
+		lineageTag: d6c32a61-a5a2-490d-ab1c-348d21837d30
+		summarizeBy: none
+		sourceColumn: ICD10Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_diagnosis
+		dataType: string
+		lineageTag: 9785732f-2cf7-4992-865c-5b5f48700ba8
+		summarizeBy: none
+		sourceColumn: Primary_diagnosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_diagnosis_counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 8071b4a4-4604-4824-92f0-311e80c462ad
+		summarizeBy: sum
+		sourceColumn: primary_diagnosis_counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column frailty_proxy
+		dataType: string
+		lineageTag: 0ad5ff31-f241-4b74-999d-6781987a5bc8
+		summarizeBy: none
+		sourceColumn: frailty_proxy
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_admission
+		dataType: string
+		lineageTag: 1e1b6494-b10c-48da-83f6-340a249808b1
+		summarizeBy: none
+		sourceColumn: age_at_admission
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 10c83066-8dc5-4c79-a2d8-04b0f39b730c
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracNameCurrent
+		dataType: string
+		lineageTag: a7d4d23b-a504-4d1c-82f6-1896a8642a2b
+		summarizeBy: none
+		sourceColumn: PracNameCurrent
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralUrbanClass
+		dataType: int64
+		formatString: 0
+		lineageTag: 36dd2d09-de95-4b63-8e10-3ab0b1592c99
+		summarizeBy: sum
+		sourceColumn: RuralUrbanClass
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		lineageTag: 776c7b15-77fe-4bfd-b6ae-fda8fb9828bc
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalityName
+		dataType: string
+		lineageTag: a60e0d9e-4b68-4995-b1f7-65bcf040acf2
+		summarizeBy: none
+		sourceColumn: LocalityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: string
+		lineageTag: 126f2dca-13b6-45f5-b20f-338cd73a08dc
+		summarizeBy: none
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column death_flag
+		dataType: string
+		lineageTag: 1214820f-7d09-49d1-8d33-3e4d5df8f0a0
+		summarizeBy: none
+		sourceColumn: death_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column place_of_death
+		dataType: string
+		lineageTag: 548fb868-5a78-4074-896b-9594149b25a4
+		summarizeBy: none
+		sourceColumn: place_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitting_counter
+		dataType: int64
+		formatString: 0
+		lineageTag: b68e151d-11dc-4c17-94dd-2cca5a3d55af
+		summarizeBy: sum
+		sourceColumn: admitting_counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'admission_datetime - Copy'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 977b4b1b-7bc8-4f84-8f8e-751b8eb8c37f
+		summarizeBy: none
+		sourceColumn: admission_datetime - Copy
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column month_year = FORMAT('01 VW Main'[admission_datetime - Copy], "MMMM yyyy")
+		lineageTag: 0b542529-0f2f-4b41-b0a8-c8dc7f5496d3
+		summarizeBy: none
+		sortByColumn: month_year_sort
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_year_sort = YEAR('01 VW Main'[admission_datetime - Copy]) * 100 + MONTH('01 VW Main'[admission_datetime - Copy])
+		formatString: 0
+		lineageTag: cac9ab95-d935-401b-ba88-efae94cd2ba6
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_AdmissionMethodName_Short
+		dataType: string
+		lineageTag: e957287f-73cf-4fae-8a04-d366faaba8ca
+		summarizeBy: none
+		sourceColumn: Derived_AdmissionMethodName_Short
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand5yr
+		dataType: string
+		lineageTag: cf452e2b-941c-4ea7-bac5-08c6282541fa
+		summarizeBy: none
+		sourceColumn: AgeBand5yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginDescription
+		dataType: string
+		lineageTag: fbf5ffc9-c8dc-435d-817b-85172db5e9c3
+		summarizeBy: none
+		sourceColumn: EthnicOriginDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method2
+		dataType: string
+		lineageTag: 1bc94820-066d-4423-9da4-f71c5836e430
+		summarizeBy: none
+		sourceColumn: admission_method2
+
+		annotation SummarizationSetBy = Automatic
+
+	column CCI_Name
+		dataType: string
+		lineageTag: 61ce68a1-1714-4de2-8eb9-25ee65854789
+		summarizeBy: none
+		sourceColumn: CCI_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_dateonly
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5eb4bef5-fb7b-4fd8-ada2-c5d940d20352
+		summarizeBy: none
+		sourceColumn: admission_dateonly
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_dateonly
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2b047022-f188-4ac0-a104-69ac6eda4b8b
+		summarizeBy: none
+		sourceColumn: discharge_dateonly
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_week_discharge_flag = ```
+			
+			IF('01 VW Main'[discharge_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday]), ALL('01 VW Main')), 1, 0) 
+			```
+		formatString: 0
+		lineageTag: 534adf33-78ca-4f1b-bc5f-874561e07308
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Previous_week_discharge_flag =
+			
+			IF( '01 VW Main'[discharge_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday]), ALL('01 VW Main')) -7,
+			    1, 0 )
+		formatString: 0
+		lineageTag: 9c3ceb54-e3e3-4d7d-b89e-3310890b1c42
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Previous_admission_4week_flag =
+			
+			IF( '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -28
+			    || '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -35
+			    || '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -42
+			    || '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main'))-48,
+			    1, 0 )
+		formatString: 0
+		lineageTag: bf1f86ac-d26c-401a-8bb9-2ae0117a867a
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_use
+		dataType: string
+		lineageTag: 3ae159a2-f358-4192-b93f-b25258ff3372
+		summarizeBy: none
+		sourceColumn: discharge_destination_use
+
+		annotation SummarizationSetBy = Automatic
+
+	column length_of_stay_groups
+		dataType: string
+		lineageTag: 519c96e8-6ede-4d02-ba93-a400ed668cf7
+		summarizeBy: none
+		sourceColumn: length_of_stay_groups
+		sortByColumn: LoS_groups_sort
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoS_groups_sort
+		dataType: string
+		lineageTag: 668e49eb-b26f-458c-aaeb-846d96bf75ba
+		summarizeBy: none
+		sourceColumn: LoS_groups_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 08b6ab65-47cb-4ac0-a183-6bc9cf29d96f
+		summarizeBy: sum
+		sourceColumn: discharge_counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month-Year = ```
+			FORMAT('01 VW Main'[Week_End_Wednesday], "YYYY-MM")
+			
+			```
+		lineageTag: 61c3ba3f-7e8b-4bf3-a743-bb5da91d13f2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_Week_Ending_Sunday = ```
+			
+			VAR _CURRENT = '01 VW Main'[discharge_dateonly]
+			RETURN 
+			    _CURRENT + (7 - weekday(_CURRENT, 2) ) 
+			```
+		formatString: Long Date
+		lineageTag: e01eabbb-3a60-4c92-8c65-e6af7d08d3eb
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column discharge_month_year = FORMAT('01 VW Main'[discharge_dateonly], "MMMM yyyy")
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: cabef0f2-9411-41c0-9bd4-240af7a594dd
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column admission_month_year = FORMAT('01 VW Main'[admission_dateonly], "MMMM yyyy")
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: 5ce27aba-0282-4c18-b6bf-05e9ba291048
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column admission_hour = ```
+			HOUR('01 VW Main'[admission_datetime]) 
+			```
+		formatString: 0
+		lineageTag: 92f1e771-320e-420a-86c6-ffe0ed6b577f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_hour = ```
+			HOUR('01 VW Main'[discharge_datetime]) 
+			```
+		formatString: 0
+		lineageTag: 584045ef-4560-4124-aabe-eb36264cd466
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_week_admission_flag = ```
+			
+			IF('01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')), 1, 0) 
+			```
+		formatString: 0
+		lineageTag: eb375d4c-ac3d-4c42-abbb-6dc9429d924f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Previous_week_admission_flag =
+			
+			IF( '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -7,
+			    1, 0 )
+		formatString: 0
+		lineageTag: c56ba54d-add0-450c-b505-e124607fa358
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_discharge_4week_flag = ```
+			
+			IF( '01 VW Main'[discharge_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -7
+			    || '01 VW Main'[discharge_Week_Ending_Sunday]  = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -14
+			    || '01 VW Main'[discharge_Week_Ending_Sunday]  = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -21
+			    || '01 VW Main'[discharge_Week_Ending_Sunday]  = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')),
+			    1, 0 ) 
+			```
+		formatString: 0
+		lineageTag: ec349807-143b-403d-bbe7-3cfe446b5b96
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Previous_discharge_4week_flag = ```
+			
+			IF( '01 VW Main'[discharge_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -28
+			    || '01 VW Main'[discharge_Week_Ending_Sunday]  = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -35
+			    || '01 VW Main'[discharge_Week_Ending_Sunday]  = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -42
+			    || '01 VW Main'[discharge_Week_Ending_Sunday]  = CALCULATE(MAX('01 VW Main'[discharge_Week_Ending_Sunday] ), ALL('01 VW Main')) -48 ,
+			    1, 0 ) 
+			```
+		formatString: 0
+		lineageTag: 660ad96a-98b0-415e-a98e-d325615238ee
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_admission_4week_flag =
+			
+			IF( '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -7
+			    || '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -14
+			    || '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')) -21
+			    || '01 VW Main'[admission_Week_Ending_Sunday] = CALCULATE(MAX('01 VW Main'[admission_Week_Ending_Sunday]), ALL('01 VW Main')),
+			    1, 0 )
+		formatString: 0
+		lineageTag: 00fc9ba8-97c1-4569-bfb8-43ce70b0100e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Week_Ending_Sunday
+		dataType: dateTime
+		formatString: dd mmmm yyyy
+		lineageTag: d3a72eaf-2ab6-4ed7-ae3f-877dda3912aa
+		summarizeBy: none
+		sourceColumn: Admission_Week_Ending_Sunday
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Admission_Week_Ending_Sunday2
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 4156c0dd-e8ec-4b10-a10b-72e1559f8f53
+		summarizeBy: none
+		sourceColumn: Admission_Week_Ending_Sunday2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA Code'
+		dataType: string
+		lineageTag: 30a3a45a-a72a-4acb-bd67-4ba5a2cf10bc
+		summarizeBy: none
+		sourceColumn: LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOACode
+		dataType: string
+		lineageTag: ef33d236-5e42-4209-9ab1-fa04ef4e21fc
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column RUC11Code
+		dataType: string
+		lineageTag: 4cfd371e-0d77-486f-803d-d65f58264719
+		summarizeBy: none
+		sourceColumn: RUC11Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column RUC11Desc
+		dataType: string
+		lineageTag: 129a7f7a-2101-43ae-ba17-840d2d5e4344
+		summarizeBy: none
+		sourceColumn: RUC11Desc
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rural_Urban
+		dataType: string
+		lineageTag: 8b02a9a8-3149-4e00-855b-a3fbcaaed1fe
+		summarizeBy: none
+		sourceColumn: Rural_Urban
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'discharge_dateonly Hierarchy'
+		lineageTag: 6898d5fb-a83d-493a-9c82-7394439540fc
+
+		level discharge_dateonly
+			lineageTag: f7f94b3e-c2f7-459f-9c76-457c0e2b0144
+			column: discharge_dateonly
+
+		level discharge_month_year
+			lineageTag: ab377408-6099-48a6-ab06-3a0b33b7f9da
+			column: discharge_month_year
+
+		level discharge_Week_Ending_Sunday
+			lineageTag: dd5d8c3e-7150-4296-a1f7-e6e4c265c2a0
+			column: discharge_Week_Ending_Sunday
+
+	partition '01 VW Main' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="--------- Virtual Wards table ---------#(lf) IF OBJECT_ID ('tempdb..#VW') IS NOT NULL DROP TABLE #VW#(lf)#(lf)#(lf)SELECT VW.nhs_number, VW.hospital_episode_number, VW.organisation_code_of_commissioner,#(lf)#(tab)   -- admission columns --#(lf)#(tab)   VW.admission_datetime, CAST(VW.admission_datetime AS DATE) as 'admission_dateonly', #(lf)#(tab)   DATEADD(DAY, 7 - DATEPART(WEEKDAY, VW.admission_datetime), CAST(VW.admission_datetime AS DATE)) AS Admission_Week_Ending_Sunday,#(lf)#(tab)   ad.Derived_AdmissionMethodName_Short, VW.admission_method_code, VW.admission_method, VW.admission_treatment_function_code, VW.admission_treatment_function,#(lf)#(tab)   VW.admitting_ward_code, VW.admitting_ward, #(lf)#(tab)   -- discharge columns --#(lf)#(tab)   VW.discharge_datetime, CAST( VW.discharge_datetime AS DATE) as 'discharge_dateonly',  #(lf)#(tab)   VW.discharge_destination_code, VW.discharge_destination, dd.CCI_Name, VW.discharge_method, VW.discharge_method_code, HPS.discharge_pathway,#(lf)#(tab)   -- LoS and readmission --#(lf)#(tab)   CASE WHEN VW.discharge_datetime <> '' THEN DATEDIFF(DAY, VW.admission_datetime, VW.discharge_datetime) ELSE NULL END AS length_of_stay_days, #(lf)#(tab)   HPS.readmission_30_day,#(lf)#(tab)   -- HRG and primary diagnosis columns--#(lf)#(tab)   VW.SpellHRG, HRG.HRGCodeDescription, HRG.HRG_Chapter_Description, HRG.HRG_SubChapter_Description,#(lf)#(tab)   VW.spell_P_diag, ICD.ICD10Code, ICD.ICD10Description as 'Primary_diagnosis',  CASE WHEN VW.spell_P_diag <> '' THEN 1 ELSE 0 END AS 'primary_diagnosis_counter', #(lf)#(tab)   -- Demographics columns --#(lf)#(tab)   VW.frailty_proxy, VW.age_at_admission, MPI.Gender, MPI.EthnicOriginDescription, MPI.PracNameCurrent, MPI.RuralUrbanClass, MPI.NetworkName, MPI.LocalityName, MPI.IMDcountyDecile, MPI.AgeBand5yr, MPI.[LSOA Code],#(lf)#(lf)#(tab)   -- counters and flags --#(lf)#(tab)   CASE WHEN VW.discharge_datetime <> '' THEN 1 ELSE 0 END AS discharge_counter,#(lf)#(tab)   CASE WHEN VW.discharge_method_code = '4' THEN '1' ELSE '0' END AS death_flag, #(lf)#(tab)   CASE WHEN VW.discharge_method_code = '4' THEN EOL.place_of_death ELSE NULL END AS place_of_death#(lf)#(lf)#(tab)   into #VW#(lf)FROM [CCG_Current].[GHFT].[vw_IPVirtualWard] as VW#(lf)#(lf)#(lf)----------- Joining for HRG description -----------------#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_HRG] as HRG#(lf)#(tab)ON HRG.HRGCode = VW.SpellHRG#(lf)#(lf)  #(lf)----------- Joining primary diagnosis description -----------------#(lf)  LEFT JOIN CCG_Reference.Reference.vw_ICD10 as ICD#(lf)  ON ICD.ICD10Code = VW.spell_P_diag#(lf)  #(lf)#(lf)----------- Joining for place of death -----------------#(lf) LEFT JOIN [PowerBI_Processing].[dbo].[EOL_Report_Table_v2] as EOL#(lf)#(tab)ON VW.nhs_number = EOL.pseudo_nhs_number#(lf)#(tab)#(lf)----------- Joining for readmission and discharge pathway --------------#(lf) LEFT JOIN [CCG_Current].[GHFT].[vw_HospitalProviderSpell] as HPS#(lf)#(tab)ON HPS.hospital_episode_number = VW.hospital_episode_number#(lf)#(lf)----------- Joining for demographic data --------------#(lf) LEFT JOIN [BIReports].[MPI].[MPI_current] as MPI#(lf)    ON MPI.Derived_Pseudo_NHS = VW.nhs_number#(lf)#(lf)------------ Joining for further admission method details -------#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_AdmissionMethod] as ad#(lf)  ON VW.admission_method_code = ad.AdmissionMethodCode#(lf)#(lf)------------ Joining for discharge destination reference --------#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_DischargeDestination] as dd#(lf)  ON dd.DischargeDestinationCode = VW.discharge_destination_code#(lf)  #(lf)#(lf)#(lf)WHERE VW.organisation_code_of_commissioner = '11M' #(lf)#(tab)AND VW.nhs_number NOT LIKE '' #(lf)#(tab)AND VW.[admitting_ward] IN ('Virtual Heart Failure Ward', 'Virtual Respiratory Ward', 'Virtual Frailty Ward', 'Virtual General Medicine Ward', 'Virtual Oncology Haematology Ward')#(lf)#(lf)#(tab)--AND VW.discharge_datetime BETWEEN '20180401 00:00:00.000' AND EOMONTH ( DATEADD ( MONTH, -1, GETDATE() ) )  --  The EOMONTH function finds the latest complete month.#(lf)    --AND VW.admission_datetime BETWEEN  '20250102 00:00:00.0000' AND GETDATE()                                                                               #(lf)#(tab)#(lf) #(lf)ORDER BY nhs_number desc#(lf)#(lf);#(lf)#(lf)--------------------------------------------------------------------------------------------------------------------------------------------------#(lf)#(lf) IF OBJECT_ID ('tempdb..#VWmain') IS NOT NULL DROP TABLE #VWmain#(lf)#(lf)#(lf)------  VW TABLE FOR ADMISSIONS WEEK END  -------#(lf)select *, #(lf)CASE WHEN RU.RUC11Desc LIKE '%urban%' THEN 'Urban' #(lf)#(tab) WHEN RU.RUC11Desc LIKE '%rural%' THEN 'Rural' #(lf)#(tab) ELSE 'Unknown' END AS 'Rural_Urban',#(lf)#(lf)CASE WHEN #VW.length_of_stay_days = 0 THEN '0 days' #(lf)#(tab) WHEN #VW.length_of_stay_days BETWEEN 1 AND 4 THEN '1-4 days'#(lf)#(tab) WHEN #VW.length_of_stay_days BETWEEN 5 AND 9 THEN '5-9 days'#(lf)#(tab) WHEN #VW.length_of_stay_days BETWEEN 10 AND 14 THEN '10-14 days'#(lf)#(tab) WHEN #VW.length_of_stay_days > 14 THEN 'Over 14 days'#(lf)#(tab) ELSE 'Unknown' END AS 'length_of_stay_groups' #(lf)#(tab) #(lf)from #VW#(lf)#(lf)INNER JOIN (#(lf)#(tab)#(tab)SELECT [Admission_Week_Ending_Sunday]#(lf)#(tab)#(tab)FROM #VW #(lf)#(tab)#(tab)WHERE [Admission_Week_Ending_Sunday] = (SELECT MAX([Admission_Week_Ending_Sunday]) FROM #VW) -- checking the latest week end only#(lf)#(tab)#(tab)GROUP BY [Admission_Week_Ending_Sunday]#(lf)#(tab)#(tab)HAVING COUNT(DISTINCT CAST(admission_dateonly AS DATE)) = 7 -- checking to see if 7 individual days have been included across to week #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)  #(tab)   #(lf)#(tab)#(tab)UNION ALL#(lf)    #(lf)#(tab)#(tab)-- Include all previous weeks (those before the latest Sunday) regardless of completeness#(lf)#(tab)#(tab)SELECT [Admission_Week_Ending_Sunday]#(lf)#(tab)#(tab)FROM #VW#(lf)#(tab)#(tab)WHERE [Admission_Week_Ending_Sunday]< (SELECT MAX([Admission_Week_Ending_Sunday]) FROM #VW)  -- Prior weeks#(lf)#(tab)#(tab)GROUP BY [Admission_Week_Ending_Sunday]) AS FULLWEEKS#(lf)#(tab)#(tab)ON #VW.[Admission_Week_Ending_Sunday] = FULLWEEKS.[Admission_Week_Ending_Sunday]#(lf)#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_rural_urban] AS RU#(lf)ON RU.[LSOACode] = #VW.[LSOA Code] #(lf)#(lf)ORDER BY #vw.[Admission_Week_Ending_Sunday] desc #(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)------- FINAL OUTPUT INCLUDING VW DISCHARGES WEEK END -----#(lf)#(lf)--SELECT #VWmain.*#(lf)--#(tab), #ref_reporting_dates_ref.Week_End AS 'WeekEnd_Discharge' #(lf)#(lf)--#(tab)FROM #VWmain#(lf)#(lf)--LEFT JOIN  #ref_reporting_dates_ref ON #ref_reporting_dates_ref.date_only = #VWmain.discharge_dateonly #(lf)----INNER JOIN (#(lf)----#(tab)#(tab)SELECT [Week_Ending_Sunday]#(lf)----#(tab)#(tab)FROM #HAH #(lf)----#(tab)#(tab)WHERE [Week_Ending_Sunday] = (SELECT MAX([Week_Ending_Sunday]) FROM #HAH) -- checking the latest week end only#(lf)----#(tab)#(tab)GROUP BY [Week_Ending_Sunday]#(lf)----#(tab)#(tab)HAVING COUNT(DISTINCT CAST(ContactDate AS DATE)) = 7 -- checking to see if 7 individual days have been included across to week #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)  #(tab)   #(lf)----#(tab)#(tab)UNION ALL#(lf)    #(lf)----#(tab)#(tab)-- Include all previous weeks (those before the latest Sunday) regardless of completeness#(lf)----#(tab)#(tab)SELECT [Week_Ending_Sunday]#(lf)----#(tab)#(tab)FROM #HAH#(lf)----#(tab)#(tab)WHERE [Week_Ending_Sunday] < (SELECT MAX([Week_Ending_Sunday]) FROM #HAH)  -- Prior weeks#(lf)----#(tab)#(tab)GROUP BY [Week_Ending_Sunday]) AS FULLWEEKS#(lf)----#(tab)#(tab)ON #HAH.Week_Ending_Sunday = FULLWEEKS.Week_Ending_Sunday#(lf)#(lf)#(lf)--WHERE #VWmain.discharge_datetime BETWEEN '20180401 00:00:00.000' AND GETDATE()#(lf)#(lf)#(lf)----EOMONTH ( DATEADD ( MONTH, -1, GETDATE() ) )  --  The EOMONTH function finds the latest complete month.#(lf)"]),
+				    #"Added Custom" = Table.AddColumn(Source, "admitting_counter", each 1),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added Custom",{{"admission_datetime", type datetime}, {"discharge_datetime", type datetime}}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Changed Type", "admission_datetime", "admission_datetime - Copy"),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Duplicated Column",{{"admission_datetime - Copy", type date}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type1", {"admission_dateonly"}, #"Admission Date Table", {"day_month_year"}, "Date Table", JoinKind.LeftOuter),
+				    #"Expanded Date Table" = Table.ExpandTableColumn(#"Merged Queries", "Date Table", {"month_name", "financial_year", "financial_month", "ytd_flag", "latest_month_flag", "latest_12_months_flag"}, {"Date Table.month_name", "Date Table.financial_year", "Date Table.financial_month", "Date Table.ytd_flag", "Date Table.latest_month_flag", "Date Table.latest_12_months_flag"}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Expanded Date Table",{{"admitting_counter", Int64.Type}}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Changed Type2", {"admission_dateonly"}, #"Admission Date Table", {"day_month_year"}, "Date Table", JoinKind.LeftOuter),
+				    #"Expanded Date Table1" = Table.ExpandTableColumn(#"Merged Queries1", "Date Table", {"ytd_flag", "previous_month_flag", "previous_12_months_flag"}, {"Date Table.ytd_flag.1", "Date Table.previous_month_flag", "Date Table.previous_12_months_flag"}),
+				    #"Duplicated Column1" = Table.DuplicateColumn(#"Expanded Date Table1", "admission_dateonly", "admission_dateonly - Copy"),
+				    #"Extracted Month Name" = Table.TransformColumns(#"Duplicated Column1", {{"admission_dateonly - Copy", each Date.MonthName(_), type text}}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Extracted Month Name",{{"admission_dateonly - Copy", "full_month_name"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns1",{"full_month_name"}),
+				    #"Merged Queries2" = Table.NestedJoin(#"Removed Columns", {"admission_dateonly"}, #"Admission Date Table", {"day_month_year"}, "Date Table", JoinKind.LeftOuter),
+				    #"Expanded Date Table2" = Table.ExpandTableColumn(#"Merged Queries2", "Date Table", {"month_year_name", "month_year"}, {"Date Table.month_year_name", "Date Table.month_year"}),
+				    #"Added Custom1" = Table.AddColumn(#"Expanded Date Table2", "month_year_sort", each Date.Year([Date Table.month_year]) * 100 + Date.Month([Date Table.month_year])),
+				    #"Calculated End of Month" = Table.TransformColumns(#"Added Custom1",{{"Date Table.month_year", Date.EndOfMonth, type date}}),
+				    #"Changed Type3" = Table.TransformColumnTypes(#"Calculated End of Month",{{"Date Table.month_year_name", type date}}),
+				    #"Extracted Month Name1" = Table.TransformColumns(#"Changed Type3", {{"Date Table.month_year_name", each Date.MonthName(_), type text}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Extracted Month Name1",{"month_year_sort", "Date Table.month_year"}),
+				    #"Merged Queries3" = Table.NestedJoin(#"Removed Columns1", {"admission_dateonly"}, #"Admission Date Table", {"day_month_year"}, "Date Table", JoinKind.LeftOuter),
+				    #"Expanded Date Table3" = Table.ExpandTableColumn(#"Merged Queries3", "Date Table", {"same_month_last_year_flag"}, {"Date Table.same_month_last_year_flag"}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Expanded Date Table3","F","Female",Replacer.ReplaceText,{"Gender"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","M","Male",Replacer.ReplaceText,{"Gender"}),
+				    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1",null,"Unknown",Replacer.ReplaceValue,{"Gender"}),
+				    #"Sorted Rows" = Table.Sort(#"Replaced Value2",{{"admission_method", Order.Ascending}}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Sorted Rows", "admission_method2", each if [admission_method_code] = "21" then "Emergency or Dental Emergency Dept" else if [admission_method_code] = "2A" then "Emergency or Dental Emergency Dept" else if [admission_method_code] = "24" then "Outpatient Clinic" else if [admission_method_code] = "22" then "GP referral " else if [admission_method_code] = "2D" then "Emergency or Dental Emergency Dept" else if [admission_method_code] = "2B" then "Inpatient transfer" else if [admission_method_code] = "81" then "Inpatient transfer" else "Other"),
+				    #"Replaced Value3" = Table.ReplaceValue(#"Added Conditional Column",null,"(Not Specified)",Replacer.ReplaceValue,{"Primary_diagnosis"}),
+				    #"Duplicated Column3" = Table.DuplicateColumn(#"Replaced Value3", "CCI_Name", "CCI_Name - Copy"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Duplicated Column3",{{"CCI_Name - Copy", "discharge_destination_use"}}),
+				    #"Replaced Value4" = Table.ReplaceValue(#"Renamed Columns","NHS other hospital provider - other","Hospital",Replacer.ReplaceText,{"discharge_destination_use"}),
+				    #"Replaced Value5" = Table.ReplaceValue(#"Replaced Value4","Not applicable - PATIENT died or still birth","Death",Replacer.ReplaceText,{"discharge_destination_use"}),
+				    #"Replaced Value6" = Table.ReplaceValue(#"Replaced Value5","Non-NHS (other than Local Authority) run Care Home","Care Home",Replacer.ReplaceText,{"discharge_destination_use"}),
+				    #"Replaced Value7" = Table.ReplaceValue(#"Replaced Value6","NHS run Care Home","Care Home",Replacer.ReplaceText,{"discharge_destination_use"}),
+				    #"Replaced Value8" = Table.ReplaceValue(#"Replaced Value7","NHS other hospital provider - medium secure unit","Hospital",Replacer.ReplaceText,{"discharge_destination_use"}),
+				    #"Added Conditional Column1" = Table.AddColumn(#"Replaced Value8", "LoS_groups_sort", each if [length_of_stay_groups] = "0 days" then 1 else if [length_of_stay_groups] = "1-4 days" then 2 else if [length_of_stay_groups] = "5-9 days" then 3 else if [length_of_stay_groups] = "10-14 days" then 4 else if [length_of_stay_groups] = "Over 14 days" then 5 else 99),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Added Conditional Column1",{"Date Table.month_name", "Date Table.financial_year", "Date Table.financial_month", "Date Table.ytd_flag", "Date Table.latest_month_flag", "Date Table.latest_12_months_flag", "Date Table.ytd_flag.1", "Date Table.previous_month_flag", "Date Table.previous_12_months_flag", "Date Table.month_year_name", "Date Table.same_month_last_year_flag"})
+				in
+				    #"Removed Columns3"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

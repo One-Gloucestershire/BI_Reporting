@@ -1,0 +1,412 @@
+table TimetoTriage_AdmnConversion
+	lineageTag: 4a3852a7-b61f-4b78-8322-42eb9ff66bd9
+
+	measure TimetoTriageTarget = 15
+		formatString: 0
+		lineageTag: 2000deb2-5fb3-4a4d-864c-e1b63b722f0a
+
+	measure LatestIAMonth = Max(TimetoTriage_AdmnConversion[IA_YearMonth])
+		lineageTag: 60cda2e3-748c-429c-a6e6-9383ca837b34
+
+	measure AvgTimetoTriageForLatestMonth = CALCULATE(AVERAGE(TimetoTriage_AdmnConversion[Initial_Assessment_Time_Since_Arrival]),TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))
+		lineageTag: 62809086-db47-4924-a58f-b7f74f67fd15
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LongestTimetoTriageForLatestMonth = CALCULATE(MAX(TimetoTriage_AdmnConversion[Initial_Assessment_Time_Since_Arrival]),TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))
+		formatString: 0
+		lineageTag: a23e2090-38a9-4695-b00a-cef595e7c5b9
+
+	measure MedianTimetoTriageForLatestMonth = CALCULATE(MEDIAN(TimetoTriage_AdmnConversion[Initial_Assessment_Time_Since_Arrival]),TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))
+		lineageTag: ece7374b-721e-44af-a745-9e58331c4b7a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure AdmConversionRateForLatestMonth = CALCULATE(sum(TimetoTriage_AdmnConversion[Counter]), TimetoTriage_AdmnConversion[Disposal_of_Admitted_or_Transferred_Flag] = "Yes", TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))/CALCULATE(sum(TimetoTriage_AdmnConversion[Counter]),TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 4556019f-a188-41e2-93e0-1c97a6016f8f
+
+	measure AdmissionForLatestMonth = CALCULATE(sum(TimetoTriage_AdmnConversion[Counter]),TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))
+		formatString: 0
+		lineageTag: 15d7a92a-48e0-4695-9ad2-a5ff8d88706b
+
+	measure AdmConversionRateForLatestMonthwithDisposalFlag = CALCULATE(sum(TimetoTriage_AdmnConversion[Counter]), TimetoTriage_AdmnConversion[Disposal_of_Admitted_or_Transferred_Flag] = "Yes", TimetoTriage_AdmnConversion[ArrivalDate_YearMonth] = max(TimetoTriage_AdmnConversion[ArrivalDate_YearMonth]))
+		formatString: 0
+		lineageTag: 20ae6014-96f6-401d-bdff-6b1a37d74096
+
+	measure AdmissionForLatestFY = CALCULATE(sum(TimetoTriage_AdmnConversion[Counter]),TimetoTriage_AdmnConversion[ArrivalDate_FinYr] = max(TimetoTriage_AdmnConversion[ArrivalDate_FinYr]))
+		formatString: 0
+		lineageTag: 39d0ada9-ba35-4561-b1a7-0ac3faccb289
+
+	measure ReadmissionForLatestMonth = CALCULATE(sum(Readmissions_30Days[Counter]), Readmissions_30Days[Readmission_Start_Date] = max(Readmissions_30Days[Readmission_Start_Date]))
+		formatString: 0
+		lineageTag: cdb50df5-68b3-455b-a869-d388fd114785
+
+	measure ED0LoSTarget = 0.33
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 98b79062-b6d1-4051-b188-7fc91e3ff20f
+
+	measure ED0LoSMaxforTacometer = 0.45
+		lineageTag: 33f8827e-d6e9-4de6-a377-d6449f5a79e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 1dc36f53-6635-452e-bf77-6e99ee7a7a95
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Arrival_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 1e801aa9-f49d-46b2-af56-79a8c74ae761
+		summarizeBy: none
+		sourceColumn: Arrival_Date
+
+		variation Variation
+			isDefault
+			relationship: 2ba280ef-e717-4c8d-a48c-ee61f7dc4ef8
+			defaultHierarchy: LocalDateTable_491352eb-a886-4322-8981-a0ec8998b1da.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Arrival_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 51d7bd51-71c2-473e-b562-8674325757c4
+		summarizeBy: none
+		sourceColumn: Arrival_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Decision_To_Admit_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7e58a858-2408-4322-908a-fdfedc2fafcd
+		summarizeBy: none
+		sourceColumn: Decision_To_Admit_Date
+
+		variation Variation
+			isDefault
+			relationship: 63672f70-38c0-4ea0-89a9-87fed1094ff6
+			defaultHierarchy: LocalDateTable_dd42353c-d784-478e-b03f-08bed987d8b4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Decision_To_Admit_Time_Since_Arrival
+		dataType: int64
+		formatString: 0
+		lineageTag: 23ac4aed-ed57-4901-871e-9e0f588c77cf
+		summarizeBy: sum
+		sourceColumn: Decision_To_Admit_Time_Since_Arrival
+
+		annotation SummarizationSetBy = Automatic
+
+	column Departure_Time_Since_Arrival
+		dataType: int64
+		formatString: 0
+		lineageTag: 85b4a44c-79d9-4eaa-ae36-afbaa21669e7
+		summarizeBy: sum
+		sourceColumn: Departure_Time_Since_Arrival
+
+		annotation SummarizationSetBy = Automatic
+
+	column Initial_Assessment_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 007a53f7-03c9-4d28-a8fd-fee89febadc9
+		summarizeBy: none
+		sourceColumn: Initial_Assessment_Date
+
+		variation Variation
+			isDefault
+			relationship: 1505ab0f-4b69-4f6c-8d42-736a10a377c6
+			defaultHierarchy: LocalDateTable_607611a5-b820-4bb9-9130-234d1fd0cfc8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Initial_Assessment_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 9fe91715-7ee1-4992-9ad4-5735a805af07
+		summarizeBy: none
+		sourceColumn: Initial_Assessment_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Initial_Assessment_Time_Since_Arrival
+		dataType: int64
+		formatString: 0
+		lineageTag: c9406926-6e16-4352-a1f6-2cc00c7bdbd6
+		summarizeBy: sum
+		sourceColumn: Initial_Assessment_Time_Since_Arrival
+
+		annotation SummarizationSetBy = Automatic
+
+	column ArrivalDate_YearMonthDesc
+		dataType: string
+		lineageTag: e636c2e0-2721-4604-9354-cd5ca028871d
+		summarizeBy: none
+		sourceColumn: ArrivalDate_YearMonthDesc
+		sortByColumn: ArrivalDate_YearMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column ArrivalDate_YearMonth
+		dataType: string
+		lineageTag: 1d3a9b1c-dbcb-4b43-b188-957172c91f3f
+		summarizeBy: none
+		sourceColumn: ArrivalDate_YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column ArrivalDate_FinYr
+		dataType: string
+		lineageTag: 75038448-c3b4-4dca-911d-39d82fa1f67b
+		summarizeBy: none
+		sourceColumn: ArrivalDate_FinYr
+
+		annotation SummarizationSetBy = Automatic
+
+	column ArrivalDate_FinMonth
+		dataType: string
+		lineageTag: 23975945-180f-48af-bba0-f6f0291a9724
+		summarizeBy: none
+		sourceColumn: ArrivalDate_FinMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column IA_YearMonthDesc
+		dataType: string
+		lineageTag: 8276d0d0-3dde-4b78-a08a-9ea89b8f5120
+		summarizeBy: none
+		sourceColumn: IA_YearMonthDesc
+
+		annotation SummarizationSetBy = Automatic
+
+	column IA_YearMonth
+		dataType: string
+		lineageTag: 951abef0-5048-44be-ba87-a9a8d96c17fe
+		summarizeBy: none
+		sourceColumn: IA_YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column IA_FinYr
+		dataType: string
+		lineageTag: b4aea14d-944b-431e-8995-e96fb4d6727f
+		summarizeBy: none
+		sourceColumn: IA_FinYr
+
+		annotation SummarizationSetBy = Automatic
+
+	column IA_FinMonth
+		dataType: string
+		lineageTag: 20cc8bef-f2d5-4f6a-90f1-137fed4667ab
+		summarizeBy: none
+		sourceColumn: IA_FinMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_At_CDS_Activity_Date
+		dataType: int64
+		formatString: 0
+		lineageTag: 35681b5c-785b-4a7a-a755-85a76fce1810
+		summarizeBy: sum
+		sourceColumn: Age_At_CDS_Activity_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 2d69805f-d114-43af-bac0-e055cf0fb820
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: 851364b9-b3af-42ad-846c-c659cff89598
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_Origin
+		dataType: string
+		lineageTag: 8b2741fb-9897-47e1-9c32-3031bae5cdd5
+		summarizeBy: none
+		sourceColumn: Ethnic_Origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_Origin_Group
+		dataType: string
+		lineageTag: 2f153cb6-e496-4dc1-b52a-d74147bc0531
+		summarizeBy: none
+		sourceColumn: Ethnic_Origin_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: c9e0bc1f-9cfa-4e70-ac46-26e8f9c8eae9
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG_Code
+		dataType: string
+		lineageTag: 0fc79636-1dbc-4f51-ab3e-8b4ad2266d07
+		summarizeBy: none
+		sourceColumn: HRG_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Point_of_Delivery
+		dataType: string
+		lineageTag: b5126ba4-6cd4-4ab8-87e9-d79486dffc6d
+		summarizeBy: none
+		sourceColumn: Point_of_Delivery
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 7863149c-828c-4081-b1c2-a57b2e24972b
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tariff
+		dataType: double
+		lineageTag: 6d06f3c4-2e8a-4009-a13a-0791b1d6c80c
+		summarizeBy: sum
+		sourceColumn: Tariff
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Organisation_Code_Commissioner
+		dataType: string
+		lineageTag: b094283f-8703-4f65-bb5c-5c63dbde7e50
+		summarizeBy: none
+		sourceColumn: Organisation_Code_Commissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisation_Code_Provider
+		dataType: string
+		lineageTag: b8178b5e-2ab9-4080-9004-a16d3f2c1a85
+		summarizeBy: none
+		sourceColumn: Organisation_Code_Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Name
+		dataType: string
+		lineageTag: 19e3f5b0-d8d6-4bfe-be22-aca016f94d04
+		summarizeBy: none
+		sourceColumn: Provider_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sector_Flag
+		dataType: string
+		lineageTag: 417a7285-6622-45ba-ac6f-d0ff90d04032
+		summarizeBy: none
+		sourceColumn: Sector_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column General_Practice
+		dataType: string
+		lineageTag: 7c2e6c22-e4e6-4e20-a8aa-f852f65ae85f
+		summarizeBy: none
+		sourceColumn: General_Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column A&E_Source
+		dataType: string
+		lineageTag: 7209c9f9-a3a6-4d54-a24d-f335589c1688
+		summarizeBy: none
+		sourceColumn: A&E_Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column A&E_Acuity
+		dataType: string
+		lineageTag: 7cbca60d-2f98-40da-ac6c-9e0f1df6cf85
+		summarizeBy: none
+		sourceColumn: A&E_Acuity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attendance_Category
+		dataType: string
+		lineageTag: df0dd29e-8d07-4711-9472-7e1fb9a7ecf3
+		summarizeBy: none
+		sourceColumn: Attendance_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attendance_Category_Desc
+		dataType: string
+		lineageTag: 583b47f1-bb56-494f-b17e-fce6255567a2
+		summarizeBy: none
+		sourceColumn: Attendance_Category_Desc
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination
+		dataType: string
+		lineageTag: 54b82b06-a743-4427-8004-557dff89ef17
+		summarizeBy: none
+		sourceColumn: Destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column Disposal_of_Admitted_or_Transferred_Flag
+		dataType: string
+		lineageTag: 654ec2fe-f7d5-4853-a45e-35d7139b3201
+		summarizeBy: none
+		sourceColumn: Disposal_of_Admitted_or_Transferred_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition TimetoTriage_AdmnConversion = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="Select * from Timetotriage"]),
+				    #"Datetime to Date" = Table.TransformColumnTypes(Source,{{"Arrival_Date", type date}, {"Decision_To_Admit_Date", type date}, {"Initial_Assessment_Date", type date}, {"Disposal_of_Admitted_or_Transferred_Flag", type text}}),
+				    #"DispFlag 1 to yes" = Table.ReplaceValue(#"Datetime to Date","1","Yes",Replacer.ReplaceText,{"Disposal_of_Admitted_or_Transferred_Flag"}),
+				    #"DispFlag 0 to No" = Table.ReplaceValue(#"DispFlag 1 to yes","0","No",Replacer.ReplaceText,{"Disposal_of_Admitted_or_Transferred_Flag"})
+				in
+				    #"DispFlag 0 to No"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

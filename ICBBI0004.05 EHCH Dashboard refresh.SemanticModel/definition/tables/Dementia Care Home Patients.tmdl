@@ -1,0 +1,97 @@
+table 'Dementia Care Home Patients'
+	lineageTag: aff2e252-94fa-469d-a548-d68bbc3ff6c5
+
+	measure '% have dementia' = [Current Dementia Care Home Population] / [Current Care Home Patients]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 24388e16-b5b8-443d-aec6-2bee75034e5d
+
+	measure '% with dementia over time' =
+			
+			IFERROR(
+			CALCULATE ( SUM ( 'Dementia Care Home Population Over Time'[dementiacare_home_population]))
+			/
+			[Current  Diagnosed Dementia Population],blank())
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 189e51f1-837e-4563-b6fd-c1566b833cbb
+
+	measure 'Current Dementia Care Home Population' = CALCULATE(DISTINCTCOUNT('Dementia Care Home Patients'[Pseudo_NHS_Number.1]),'Dementia Care Home Patients'[Current_patient_flag] = 1)
+		formatString: 0
+		lineageTag: 052abdbc-12b8-4975-aad9-d1625c1efcf7
+
+	measure 'Dementia Care Home Population Per Month' = ```
+			
+			 
+			VAR CurrentDate = MAX('Date table (pop over time)'[Date])
+			 
+			RETURN
+			    CALCULATE(
+			        COUNT('Dementia Care Home Patients'[Pseudo_NHS_Number.1]),
+			        'Dementia Care Home Patients'[Care_home_date] <= CurrentDate,
+			        'Dementia Care Home Patients'[End_date] >= CurrentDate)
+			    
+			
+			```
+		formatString: 0
+		lineageTag: b5c37191-4ccd-4af0-8a2f-9e8336114429
+
+	measure test
+		lineageTag: eef2fded-6238-4d0e-b28c-e866b0cd2b22
+
+	column Current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 320092c1-6eed-4a99-b93b-eb3809d7ffb5
+		summarizeBy: sum
+		sourceColumn: Current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Pseudo_NHS_Number.1'
+		dataType: string
+		lineageTag: 7d250836-ce89-4ca5-9897-62df5170310e
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number.1
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8d858b48-7f24-423d-9cd8-1e005a59c54b
+		summarizeBy: none
+		sourceColumn: Care_home_date
+
+		variation Variation
+			isDefault
+			relationship: 1ecbd62c-fb8d-4c3d-ada3-5fab1aec7436
+			defaultHierarchy: LocalDateTable_30d526cd-1043-4ea4-a1ba-4221d978c178.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a9f3998c-483e-47c7-8872-82a476c9c9b4
+		summarizeBy: none
+		sourceColumn: End_date
+
+		variation Variation
+			isDefault
+			relationship: 1e54860d-7ecd-4c8b-a270-741b941d9acd
+			defaultHierarchy: LocalDateTable_60d01555-ad16-4d57-97b4-cbdff0e3eae3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dementia Care Home Patients' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT #(lf)[c].[Pseudo_NHS_Number]#(lf),Care_home_date#(lf),End_date#(lf),Current_patient_flag#(lf)  FROM [PowerBI_Reporting].[dbo].[Dementia_patients] [D]#(lf)#(lf)  left join [PowerBI_Reporting].[dbo].[Care_Home_Patients_PC_Data_v4] [C] ON [C].[Pseudo_NHS_Number] = [D].[pseudo_nhs_number]#(lf)#(lf)  WHERE #(lf)  [C].[pseudo_nhs_number] IS NOT NULL#(lf)#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Pseudo_NHS_Number", "Pseudo_NHS_Number.1"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

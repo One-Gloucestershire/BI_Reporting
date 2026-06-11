@@ -1,0 +1,117 @@
+table 'Care Home Patients'
+	lineageTag: cf588f37-faa0-488b-9ba5-6dae42293a79
+
+	measure 'Care Home Population Per Month' = ```
+			
+			 
+			VAR CurrentDate = MAX('Date table (pop over time)'[Date])
+			 
+			RETURN
+			    CALCULATE(
+			        COUNT('Care Home Patients'[Pseudo_NHS_Number]),
+			        'Care Home Patients'[Care_home_date] <= CurrentDate
+			        ,'Care Home Patients'[End_date] >= CurrentDate)
+			    
+			    
+			```
+		formatString: 0
+		lineageTag: 0ec50813-4562-40f1-8861-fd2fcc0decc7
+
+	measure 'Population Trend Line' = ```
+			
+			 
+			VAR Temp_Table =
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Table'[financial_year], 'Date Table'[financial_month],
+			                        
+			                         'Date Table'[month_name], 'Date Table'[month_number] ),
+			            "Value_x", 'Date Table'[month_number],
+			            "Value_y", [Care Home Population Per Month]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			 
+			VAR LINESTX_Table =
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope =
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept =
+			    MAXX ( LINESTX_Table, [Intercept] )
+			 
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Table'[month_number] ),
+			        Intercept + Slope * 'Date Table'[month_number]
+			    )
+			```
+		lineageTag: d78abdc5-54b6-4a08-9c60-9e11ede70b57
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Care Home Population Over Time' = COUNT('Dementia Patients'[pseudo_nhs_number])
+		formatString: 0
+		lineageTag: 0000c581-3053-43fe-80c4-2772babf77ac
+
+	measure CurrentDate = MAX('Date table (pop over time)'[Date])
+		formatString: General Date
+		lineageTag: b0efda40-721a-4f31-999e-a951e2fc2ffc
+
+	column Pseudo_NHS_Number
+		dataType: string
+		lineageTag: 2a6a23d3-9746-47e7-830f-eb692c9d23aa
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 304b923c-4633-4c54-8a15-e520afd2211c
+		summarizeBy: none
+		sourceColumn: Care_home_date
+
+		variation Variation
+			isDefault
+			relationship: 6eb12f0a-f9e7-493c-97df-64620263fc84
+			defaultHierarchy: LocalDateTable_4f56a979-4754-4128-b786-49905f878a68.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 75a584bb-457b-4118-b408-add5826bf4b5
+		summarizeBy: none
+		sourceColumn: End_date
+
+		variation Variation
+			isDefault
+			relationship: e48b2eb3-de50-436d-be39-0fb6165f4357
+			defaultHierarchy: LocalDateTable_046de3f6-0c68-4ef4-9ba0-3b6b97358ded.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a63a307c-a7f9-4575-923c-937024fcc0c3
+		summarizeBy: sum
+		sourceColumn: Current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Care Home Patients' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)#(lf)from [PowerBI_Reporting].[dbo].[Care_Home_Patients_PC_Data_v4] [C]#(lf)#(lf)--LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] [D] ON [D].[Date] = [C].[Care_home_date]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

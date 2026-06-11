@@ -1,0 +1,52 @@
+table test
+	lineageTag: be1af416-03e2-46aa-91de-57823f0e97bd
+
+	column Value_x
+		formatString: 0
+		lineageTag: 7eab598e-ce26-4e9e-8003-f833db95a0ed
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value_x]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value_y
+		formatString: 0
+		lineageTag: 1a13e399-69a7-46f9-85be-877766bd9bc8
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value_y]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition test = calculated
+		mode: import
+		source = ```
+				
+				VAR Temp_Table = 
+				    FILTER (
+				        SELECTCOLUMNS (
+				            ALLSELECTED( 'Date Reference'[financial_year], 'Date Reference'[financial_month],
+				                         'Date Reference'[month_name], 'Date Reference'[Month_Number] ),
+				            "Value_x", 'Date Reference'[Month_Number],
+				            "Value_y", [Total Tests (712&713)]
+				        ),
+				        AND (
+				            NOT ( ISBLANK ( "Value_x" ) ),
+				            NOT ( ISBLANK ( "Value_y" ) )
+				        )
+				    )
+				
+				VAR LINESTX_Table = 
+				    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+				VAR Slope = 
+				    MAXX ( LINESTX_Table, [Slope1] )
+				VAR Intercept = 
+				    MAXX ( LINESTX_Table, [Intercept] )
+				
+				RETURN
+				Temp_Table
+				```
+
+	annotation PBI_Id = 0a7f68690955403c8c92380c15a70aee
+

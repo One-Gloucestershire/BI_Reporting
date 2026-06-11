@@ -1,0 +1,34 @@
+table 'REF Age Band'
+	lineageTag: 2d8545d7-a893-4bec-bc5b-22d8d81d0491
+
+	column 'Age Band'
+		dataType: string
+		lineageTag: 885c65ac-c773-4ebc-acce-ca301560d1df
+		summarizeBy: none
+		sourceColumn: Age Band
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: int64
+		formatString: 0
+		lineageTag: b921be31-9725-4f73-9a2e-d043e8b52d33
+		summarizeBy: sum
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'REF Age Band' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("HcfBEYAgDATAXvKVmzkkQFIL8rIG+5dkf7uWPB/ZXqUUMdllSSWvk5pxwv3szhlhsZabxIxpbhAj1nOd6LGRU0JjU/b+AQ==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Age Band" = _t, Order = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Age Band", type text}, {"Order", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

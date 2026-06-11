@@ -1,0 +1,112 @@
+table Population
+	lineageTag: 82fa4a6b-efcc-4d3e-81b2-40895ef57983
+
+	measure 'Total Population' =
+			
+			
+			SUM('Population'[population])
+		lineageTag: 67b25154-c919-4eaa-970f-4ce142e0f902
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Trendline Gap' =
+			
+			
+			[Crude Rate per 1,000 Mean] - [Latest Trendline]
+		lineageTag: f6e7ff3b-acfe-4062-8b59-90ac88394767
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column locality
+		dataType: string
+		lineageTag: fed4e528-57ab-4c04-91f4-b583409991b6
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: ac0d2c6e-7561-4567-8dcc-dec63e6319c9
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: b9c6a2ff-2f88-4ffd-84b8-9742e409ee17
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 8f518f59-6433-4f01-83f1-1114ffe459d9
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: 22790a01-1ddd-4d76-abac-538c465a04d5
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column sex
+		dataType: string
+		lineageTag: 08deb037-5e6f-4255-80c6-56c1008c5812
+		summarizeBy: none
+		sourceColumn: sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column population
+		dataType: double
+		lineageTag: 583f4668-630f-473a-9f9b-095139584dfa
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column gp_longitude
+		dataType: string
+		lineageTag: a575ca0d-5757-4b7e-af11-fb6ba5b559d3
+		summarizeBy: none
+		sourceColumn: gp_longitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column gp_latitude
+		dataType: string
+		lineageTag: 28bec65a-1307-4bb9-80de-30ded67e44d5
+		summarizeBy: none
+		sourceColumn: gp_latitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5460a475-5c87-40d8-a4fe-0da8363d91a0
+		summarizeBy: none
+		sourceColumn: Week_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Population = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)SELECT DISTINCT [locality]#(lf)               ,[primary_care_network]#(lf)               ,[practice_name]#(lf)#(tab)#(tab)#(tab)   ,[practice_code]#(lf)               ,[age_band] = CASE WHEN [age_band] IN ('85-89', '90-94', '95+') THEN '85+' ELSE [age_band] END#(lf)#(tab)#(tab)#(tab)   ,[sex]#(lf)#(tab)#(tab)#(tab)   ,[population]#(lf)               ,[gp_longitude]#(lf)               ,[gp_latitude]#(lf)#(tab)#(tab)#(tab)   ,[DATE].[Week_Start]#(lf)#(lf)  FROM [PowerBI_Reporting].[dbo].[GP_Practice_Populations] AS [GPP]#(lf)#(lf)  LEFT JOIN (SELECT DISTINCT [MonthYearName] = CONCAT([Month_Short_Name], '-', LEFT([Date_112], 4))#(lf)                            ,[Year_Month]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab),[Week_Start] = CAST([Week_Start] AS DATE)#(lf)#(tab)#(tab)#(tab) FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)#(tab)#(tab)#(tab) WHERE [Week_Start] >= [Month_Start]) AS [DATE]#(lf)  ON [DATE].[Year_Month] = [GPP].[year_month]#(lf)#(lf)  WHERE [first_date_of_month] >= '20240401'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

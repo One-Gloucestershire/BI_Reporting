@@ -1,0 +1,55 @@
+table 'Occupancy grouped'
+	lineageTag: 54c4d6e4-5d83-4dc8-84e6-2020bc5e2756
+
+	measure 'Total % Occupied' = calculate(sum('Occupancy grouped'[Occupied])/sum('Occupancy grouped'[Care homes beds]))
+		formatString: 0%;-0%;0%
+		lineageTag: 75e7fb5f-edde-4244-bdc7-e6c92e86a548
+
+	measure 'Total Vacant Beds' = calculate(sum('Occupancy grouped'[Care homes beds]) - sum('Occupancy grouped'[Occupied]))
+		formatString: 0
+		lineageTag: f0294148-5deb-4aea-b5d5-7dbdd531bf72
+
+	column Occupied
+		dataType: int64
+		formatString: 0
+		lineageTag: a00038f4-81ba-4152-a62f-8461452e3b2e
+		summarizeBy: sum
+		sourceColumn: Occupied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care homes beds'
+		dataType: int64
+		formatString: 0
+		lineageTag: ba85c4ab-b62b-44c3-b7b4-d391496e94ff
+		summarizeBy: sum
+		sourceColumn: Care homes beds
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Name'
+		dataType: string
+		lineageTag: 0077275e-130b-45f2-920d-2f292970a249
+		summarizeBy: none
+		sourceColumn: Location Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column CqcId
+		dataType: string
+		lineageTag: 2dbe519f-7532-42c5-ace5-4f6ac666d7ca
+		summarizeBy: none
+		sourceColumn: CqcId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Occupancy grouped' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="--Table for getting the most up to date month for CQC data#(lf)SET NOCOUNT ON#(lf)IF OBJECT_ID ('TEMPDB..#max_date') IS NOT NULL DROP TABLE #max_date#(lf);#(lf)#(lf)SELECT#(lf)[max_published_date] = max(published_date)#(lf),[Current_up_to_date_month] = 'Yes'#(lf)INTO #max_date#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List]#(lf)#(lf)--------------------------------------------------------#(lf)--------------------------------------------------------#(lf)#(lf)SELECT#(lf)#(lf)[Occupied] = sum([Occupied])#(lf),[Q].[Care homes beds]#(lf),[Q].[Location Name]#(lf),[CqcId]#(lf)#(lf)#(lf)FROM [BIReports].[dbo].[Capacity_Tracker_Monthly_List] [C]#(lf)#(lf)LEFT JOIN #(lf)(SELECT *#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List]#(lf)LEFT JOIN #max_date [M] ON [M].[max_published_date] = Published_Date#(lf)WHERE [Current_up_to_date_month] like 'Yes') AS [Q] ON [Q].[location id] = [C].[CqcId]#(lf)#(lf)WHERE [Location Name]  IS NOT NULL#(lf)#(lf) group by #(lf) [Q].[Care homes beds]#(lf),[Q].[Location Name]#(lf),[CqcId]#(lf)#(lf)order by [Location Name]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

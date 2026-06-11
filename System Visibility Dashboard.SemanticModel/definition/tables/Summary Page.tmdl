@@ -1,0 +1,231 @@
+table 'Summary Page'
+	lineageTag: 698e6841-8c31-44a1-a1ce-dba343c42579
+
+	measure 'Value - Dynamic' = CALCULATE(SUM('Summary Page'[Numerator])/sum('Summary Page'[Denominator]))
+		displayFolder: Data
+		lineageTag: c11cf7c3-ca04-4649-ad61-07204c6b5f2e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure AMB01_RAG_Red = if(CALCULATE(sum('Summary Page'[Value])/sum('Summary Page'[Target]),ALLSELECTED('Date Table'[Week_Start])) > 1.01,1,0)
+		formatString: 0
+		displayFolder: RAG
+		lineageTag: 2bb0020b-04d7-48d4-b7d6-df4bfac041e7
+
+	measure AMB01_RAG_Green = if(CALCULATE(sum('Summary Page'[Value])/sum('Summary Page'[Target]),ALLSELECTED('Date Table'[Week_Start])) < 0.99,1,0)
+		formatString: 0
+		displayFolder: RAG
+		lineageTag: 5b31a03e-604e-4401-8624-7d81cb3a4af0
+
+	measure AMB01_RAG_Amber = if(and(CALCULATE(sum('Summary Page'[Value])/sum('Summary Page'[Target]),ALLSELECTED('Date Table'[Week_Start])) >= 0.99,CALCULATE(sum('Summary Page'[Value])/sum('Summary Page'[Target]),ALLSELECTED('Date Table'[Week_Start])) <=1.01),1,0)
+		formatString: 0
+		displayFolder: RAG
+		lineageTag: b3165807-79e4-45f1-beb7-f881427056f1
+
+	measure 'Value - Dynamic%' = CALCULATE(SUM('Summary Page'[Numerator])/sum('Summary Page'[Denominator]))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Data
+		lineageTag: 2016eafb-09c8-4738-a9dc-641b7af6e39a
+
+	measure Target_% = calculate(AVERAGE('Summary Page'[Target]))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Data
+		lineageTag: 4333eb09-f320-472d-8640-09c1e72d835b
+
+	measure Value_Supressed =
+			if(
+			    ISBLANK(SUM('Summary Page'[Value])),"",
+			    IF(
+			        SUM('Summary Page'[Value])<5,0,sum('Summary Page'[Value])))
+		displayFolder: Data
+		lineageTag: 4ca37db4-7862-40af-84fe-5f0166eb6053
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Indicator Group'
+		dataType: string
+		displayFolder: Filters
+		lineageTag: 9d6a8432-1c2c-4e30-9cf3-86f697b5d80e
+		summarizeBy: none
+		sourceColumn: Indicator Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Indicator Code'
+		dataType: string
+		displayFolder: Filters
+		lineageTag: 69d092c2-9448-4041-9501-9a6aff6b5bd4
+		summarizeBy: none
+		sourceColumn: Indicator Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Indicator Name'
+		dataType: string
+		displayFolder: Filters
+		lineageTag: 3e841fb2-394b-434b-ab2e-a563afdcc1bf
+		summarizeBy: none
+		sourceColumn: Indicator Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Target
+		dataType: double
+		displayFolder: Data
+		lineageTag: 80f8f88d-907a-4725-9fec-4819ac19bbfa
+		summarizeBy: sum
+		sourceColumn: Target
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Target Definition'
+		dataType: string
+		displayFolder: Data
+		lineageTag: df5598b5-b5fc-4dd7-b164-a876addf13b0
+		summarizeBy: none
+		sourceColumn: Target Definition
+
+		annotation SummarizationSetBy = Automatic
+
+	column Numerator
+		dataType: double
+		displayFolder: Data
+		lineageTag: d6194b9f-ae5b-4281-8e90-c3a7cbc9d866
+		summarizeBy: sum
+		sourceColumn: Numerator
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Denominator
+		dataType: double
+		displayFolder: Data
+		lineageTag: c0e40c9b-fe18-4e9a-b4a2-aaa3117ffee8
+		summarizeBy: sum
+		sourceColumn: Denominator
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Value
+		dataType: double
+		formatString: 0.00
+		displayFolder: Data
+		lineageTag: a62c14da-6969-4618-9bd5-c5628900f5f7
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		displayFolder: Dates
+		lineageTag: 1d8e4bfa-4705-41cc-afaa-bcf1b8d3bcaa
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Week Number'
+		dataType: int64
+		formatString: 0
+		displayFolder: Dates
+		lineageTag: 546164e8-f0ad-414e-8008-157456839ab3
+		summarizeBy: sum
+		sourceColumn: Week Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day Number'
+		dataType: int64
+		formatString: 0
+		displayFolder: Dates
+		lineageTag: 06b06e02-553c-4be6-b4be-ac7ff064ccb4
+		summarizeBy: sum
+		sourceColumn: Day Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		displayFolder: Dates
+		lineageTag: ff56e196-94e6-4ed1-a41e-3fb421bff530
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Band'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 693c0681-a833-40e1-aad0-0facf85fa450
+		summarizeBy: none
+		sourceColumn: Age Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Secondary Filter'
+		dataType: string
+		displayFolder: Filters
+		lineageTag: 85520c9f-a9bf-4618-8eda-de9d00b68974
+		summarizeBy: none
+		sourceColumn: Secondary Filter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: dbd32443-571f-4178-b053-fa90d1f56637
+		summarizeBy: none
+		sourceColumn: Max Date
+
+		variation Variation
+			isDefault
+			relationship: ad012ab7-00c3-4867-97ec-804bfa458df2
+			defaultHierarchy: LocalDateTable_a5dfa6e1-1212-4958-88b9-552c8f160036.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Week Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 49465458-b59b-4f8f-bd77-fe9efff822a3
+		summarizeBy: sum
+		sourceColumn: Max Week Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Full Week Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: befa6553-d5d8-4e15-a80b-89e6bf792385
+		summarizeBy: sum
+		sourceColumn: Full Week Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateSelected = "Date Selected"
+		lineageTag: c33f4f72-231d-497a-b7df-9145a30cedb3
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Summary Page' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="#(tab)select *#(lf)#(tab)from [PowerBI_Processing].[USC].[System_Visability_LandingPage]#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,55 @@
+table GP_Practice_Populations_over_time
+	lineageTag: 06fe48b5-e759-4587-86bb-9859b0c35532
+
+	measure GP_Population_2019/20 = CALCULATE(SUM(GP_Practice_Populations_over_time[Total 65+ Population]),FILTER(GP_Practice_Populations_over_time,GP_Practice_Populations_over_time[CensusDate_as_date] = DATE(2020,03,01)))
+		formatString: 0
+		lineageTag: 484a796a-06d0-437e-8c3d-ca6f507ed305
+
+	measure GP_Population_2020/21 = CALCULATE(SUM(GP_Practice_Populations_over_time[Total 65+ Population]),FILTER(GP_Practice_Populations_over_time,GP_Practice_Populations_over_time[CensusDate_as_date] = DATE(2021,03,01)))
+		formatString: 0
+		lineageTag: 10661586-9330-444d-bda5-11f9b1eb00a4
+
+	measure GP_Population_2021/22 = CALCULATE(SUM(GP_Practice_Populations_over_time[Total 65+ Population]),FILTER(GP_Practice_Populations_over_time,GP_Practice_Populations_over_time[CensusDate_as_date] = DATE(2022,03,01)))
+		formatString: 0
+		lineageTag: 28aef956-f44d-4699-b3f1-a1078407be29
+
+	measure GP_Population_2022/23 = CALCULATE(SUM(GP_Practice_Populations_over_time[Total 65+ Population]),FILTER(GP_Practice_Populations_over_time,GP_Practice_Populations_over_time[CensusDate_as_date] = DATE(2023,03,01)))
+		formatString: 0
+		lineageTag: e3a24dd5-5cf3-4567-a971-afa817d6040c
+
+	column CensusDate
+		dataType: string
+		lineageTag: 12adf2eb-f688-4a1b-87e5-173c52b9da74
+		summarizeBy: none
+		sourceColumn: CensusDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column CensusDate_as_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f169eb43-2b69-4e71-897e-15871dfce93a
+		summarizeBy: none
+		sourceColumn: CensusDate_as_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total 65+ Population'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1ef81761-f128-418f-bc9a-a41acb30a1fe
+		summarizeBy: sum
+		sourceColumn: Total 65+ Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GP_Practice_Populations_over_time-3b9bd41f-4e8e-4093-bdac-9292b9e34415 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="----------------------------------#(lf)-------- POPULATION TABLE --------#(lf)----------------------------------#(lf)#(lf)SELECT DISTINCT#(lf)--[Practice Code] = [P].[OrganisationCode],#(lf)--[Practice Name] = [P].[OrganisationName],#(lf)--[Locality] = CASE WHEN [GP].[Locality] IN ('South Cotswolds','North Cotswolds') THEN 'Cotswolds' ELSE [GP].[Locality] END ,#(lf)--[Primary Care Network] = CASE WHEN [GP].[PrimaryCareNetwork] = 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS' ELSE [GP].[PrimaryCareNetwork] END,#(lf)CensusDate,#(lf)--Age,#(lf)[CensusDate_as_date] = CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE),#(lf)[Total 65+ Population] = SUM([Total])#(lf)#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_GPPracticePopulation] [P]#(lf)#(lf)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] AS [GP]#(lf)ON [P].[OrganisationCode] = [GP].[OrganisationCode]#(lf)#(lf)WHERE AgeGroupType = 'GROUP 1'#(lf)and left(Age,2) >= 65  #(lf)AND [P].[OrganisationCode] <> 'Y00054' -- excluded homeless health team#(lf)group by CensusDate#(lf)#(lf)#(lf)#(lf)order by CensusDate_as_date asc#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

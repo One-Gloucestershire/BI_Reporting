@@ -1,0 +1,167 @@
+table REF_Date_Ref
+	lineageTag: cee8bc15-4371-42e3-bad1-8e43086ce4ce
+
+	column Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 481fb7e6-5f5d-46ef-b9b4-aee45485f3b0
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: e2ed7134-c4e8-4ba1-956a-8a36a8c62a41
+			defaultHierarchy: LocalDateTable_bc0d0598-67f5-4f3f-b36b-1c9095dcd6b3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		dataType: int64
+		formatString: 0
+		lineageTag: fabe519f-ed2d-4385-9ca7-e74453f4d50d
+		summarizeBy: sum
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 05c78e80-51f1-4e83-b62a-46db65981c96
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: FinancialMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 711e3ccf-6977-46cc-9f70-544887848734
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 70f633c2-8db8-4b33-a4ef-88e028b017e4
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 4771fb5d-5692-4ede-a385-0ec6ec725ebf
+		summarizeBy: sum
+		sourceColumn: FinancialMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_In_baselines_Date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 6ed50fef-c666-462a-bc23-95b4b9a0efe5
+		summarizeBy: none
+		sourceColumn: Latest_In_baselines_Date
+
+		variation Variation
+			isDefault
+			relationship: ec2c3aed-de9f-4b2c-93b7-d926f1135cf0
+			defaultHierarchy: LocalDateTable_51fccccf-6507-407e-b944-df2fce971678.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 16c6882f-4127-4684-8f2c-12db2153174a
+		summarizeBy: sum
+		sourceColumn: Latest_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 3_Months_Ago_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 9b322bae-3d5d-43ec-917c-84f6675e6da2
+		summarizeBy: sum
+		sourceColumn: 3_Months_Ago_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Year
+		dataType: string
+		lineageTag: 99c9cf53-99bc-4ed4-ba44-c618abfa182c
+		summarizeBy: none
+		sourceColumn: Month_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Reporting_Date
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: b1d5d789-085c-46bb-a6f9-2e8eec7b3907
+		summarizeBy: none
+		sourceColumn: Latest_Reporting_Date
+
+		variation Variation
+			isDefault
+			relationship: 64ec0432-5ac4-449a-9f40-422128ad07ca
+			defaultHierarchy: LocalDateTable_78f928e9-89cc-4295-95bd-5628593b185b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Latest_Reporting_Census_Date
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: 4c1a053a-798c-4dca-9af9-5aaf3d68ad76
+		summarizeBy: none
+		sourceColumn: Latest_Reporting_Census_Date
+
+		variation Variation
+			isDefault
+			relationship: 440eb836-88d3-420b-85ec-654c5fcd092b
+			defaultHierarchy: LocalDateTable_a16165f2-7123-4e19-87ff-ecba6ae5f2f0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Data_source_last_updated
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: f257614e-3d40-4970-be9b-8f7ab9e60bd3
+		summarizeBy: none
+		sourceColumn: Data_source_last_updated
+
+		variation Variation
+			isDefault
+			relationship: 837ea98b-0f0e-4663-a32e-da7a01eafc8a
+			defaultHierarchy: LocalDateTable_1342e78a-9cc1-4caa-a4fa-4080ee1826af.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	partition REF_Date_Ref = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="select [Date] = d.date#(lf),[FinancialMonth] = d.financial_month#(lf),[FinancialYear] = d.financial_year#(lf),[Year] = d.year_month#(lf),[MonthName] = d.month_name#(lf),[Month_Year] =  d.month_year#(lf),[Day] = d.month_day_no#(lf),[Latest_In_baselines_Date] = (select max(Census_Date) from PowerBI_Reporting.dbo.Proactive_Whiteboard_Cohort)#(lf),[Latest_Month_Flag] = case when Date between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 2, 0) AND  EOMONTH(DATEADD(MONTH, -2, GETDATE())) then 1 else 0 end #(lf),[Latest_Reporting_Census_Date] =   DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 2, 0) #(lf),[3_Months_Ago_Flag] =  case when Date = (select dateadd(mm,-3,max(Census_Date)) from PowerBI_Reporting.dbo.Proactive_Whiteboard_Cohort) then 1 else 0 end #(lf),[Latest_Reporting_Date] =   EOMONTH(DATEADD(MONTH, -2, GETDATE()))  #(lf),[Data_source_last_updated] = GETDATE()#(lf)#(lf)from PowerBI_Reporting.dbo.date_ref as d#(lf)where #(lf) d.date between '20210701' and EOMONTH(DATEADD(MONTH, -2, GETDATE()))#(lf)#(lf)order by date#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"FinancialMonth", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,890 @@
+table '4.Inpatient Discharges'
+	lineageTag: 86ee3b75-e8a4-4001-9a36-9598bead20d3
+
+	measure 'Number of IP discharges' = DISTINCTCOUNT('4.Inpatient Discharges'[Unique_Hospital_Provider_SpellID])
+		formatString: #,0
+		displayFolder: Current IP Discharges FY vs Last FY Card Measures
+		lineageTag: 1f07a007-f820-4962-a566-9862b64fbe53
+
+	measure 'Admission to discharge ratio' = ```
+			[Number of IP discharges]/[Number of admissions] 
+			```
+		lineageTag: 6d0fd5f0-a7c4-44ad-a633-3246c7b6cda8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Admission_Discharge_Ratio_Colour_Conditioning =
+			
+			IF([Admission to discharge ratio] > 1, "#488f31", "#FFB14E")
+		lineageTag: 46ef6f76-70ed-4558-a2d8-86e93e0ce288
+
+	measure Average_LoS = AVERAGE('4.Inpatient Discharges'[LoS_of_Admission])
+		formatString: 0.0
+		lineageTag: 74e84231-2266-44a3-9759-eb249fe55ed6
+
+	measure Median_LoS = median('4.Inpatient Discharges'[LoS_of_Admission])
+		formatString: 0.0
+		lineageTag: 4fb73f92-9cea-46bd-8c9c-15efab46449a
+
+	measure Total_Discharges_with_60+_days_LoS = sum('4.Inpatient Discharges'[Los_60+_days_flag])
+		formatString: 0
+		lineageTag: e42a96b4-9df7-44f2-8c96-10774f465cca
+
+	measure Total_Discharges_with_90+_days_LoS = sum('4.Inpatient Discharges'[Los_90+_days_flag])
+		formatString: 0
+		lineageTag: eaf15178-0f3c-4be1-9d9e-bd9348e4eaf6
+
+	measure proportion_of_60+_Los_discharges = ```
+			divide([Total_Discharges_with_60+_days_LoS],[Number of IP discharges]) 
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 314355d5-2b25-407e-aa6e-c1673c13ef74
+
+	measure proportion_of_90+_Los_discharges = ```
+			divide([Total_Discharges_with_90+_days_LoS],[Number of IP discharges]) 
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e6782bf2-c186-43b5-be3f-231b4ce91162
+
+	measure Number_of_inpatient_discharges_latest_FY_in_reporting =
+			
+			
+			var latest_reporting_month = calculate(max(REF_Date_Ref[financial_month]),REF_Date_Ref[Reporting_Month_Flag] = 1,all(REF_Date_Ref))
+			var latest_financial_year_order_in_range = calculate(max(REF_Date_Ref[Date_Order_Financial_Year]),all(REF_Date_Ref))
+			
+			return
+			
+			calculate([Number of IP discharges],REF_Date_Ref[financial_month] <= latest_reporting_month,REF_Date_Ref[Date_Order_Financial_Year] = latest_financial_year_order_in_range -1 ,all(REF_Date_Ref)
+			)
+		formatString: 0
+		displayFolder: Current IP Discharges FY vs Last FY Card Measures
+		lineageTag: 127da2fb-b361-4aca-9d29-8325675c1415
+
+	measure Number_of_inpatient_discharges_current_FY_in_reporting = ```
+			
+			
+			var latest_reporting_month = calculate(max(REF_Date_Ref[financial_month]),REF_Date_Ref[Reporting_Month_Flag] = 1,all(REF_Date_Ref))
+			var latest_financial_year_order_in_range = calculate(max(REF_Date_Ref[Date_Order_Financial_Year]),all(REF_Date_Ref))
+			Var final_calc = calculate([Number of IP discharges],REF_Date_Ref[financial_month] <= latest_reporting_month,REF_Date_Ref[Date_Order_Financial_Year] = latest_financial_year_order_in_range,all(REF_Date_Ref)
+			)
+			
+			return
+			
+			if(isblank(final_calc),0,final_calc)
+			
+			
+			```
+		formatString: 0
+		displayFolder: Current IP Discharges FY vs Last FY Card Measures
+		lineageTag: 22267a71-8745-4d2c-89b3-ba0387c51970
+
+	measure Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous = ([Number_of_inpatient_discharges_current_FY_in_reporting] - [Number_of_inpatient_discharges_latest_FY_in_reporting])/[Number_of_inpatient_discharges_latest_FY_in_reporting]
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Current IP Discharges FY vs Last FY Card Measures
+		lineageTag: 62c7712f-8df5-4613-b7c6-247c83749f3a
+
+	measure Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous_Arrow = ```
+			
+			    IF(
+			        [Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous] > 0, UNICHAR(9650),
+			        IF(
+			            [Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous] < 0, UNICHAR(9660), 
+			            ""
+			        )
+			    )
+			```
+		displayFolder: Current IP Discharges FY vs Last FY Card Measures
+		lineageTag: 0f8521ed-b38f-4ae5-948c-6d4d6cae63ef
+
+	measure Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous_Arrow_Colour = ```
+			
+			    IF([Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous] > 0, "Green",
+			        IF([Number_of_discharges_%_variance_current_reporting_period_current_FY_Vs_Previous] < 0, "Red", BLANK())
+			    )
+			```
+		displayFolder: Current IP Discharges FY vs Last FY Card Measures
+		lineageTag: b3a9cb21-19e4-48da-8a45-a93fa4e0f68a
+
+	measure Average_LoS_of_inpatient_discharges_current_FY_in_reporting =
+			
+			
+			var latest_reporting_month = calculate(max(REF_Date_Ref[financial_month]),REF_Date_Ref[Reporting_Month_Flag] = 1,all(REF_Date_Ref))
+			var latest_financial_year_order_in_range = calculate(max(REF_Date_Ref[Date_Order_Financial_Year]),all(REF_Date_Ref))
+			var final_calc = calculate([Average_LoS],REF_Date_Ref[financial_month] <= latest_reporting_month,REF_Date_Ref[Date_Order_Financial_Year] = latest_financial_year_order_in_range,all(REF_Date_Ref)
+			)
+			return
+			final_calc
+		formatString: 0.0
+		lineageTag: d4906196-1f2d-4561-899d-e2c980d8cb70
+
+	measure Average_LoS_of_inpatient_discharges_previous_FY_in_reporting =
+			
+			
+			var latest_reporting_month = calculate(max(REF_Date_Ref[financial_month]),REF_Date_Ref[Reporting_Month_Flag] = 1,all(REF_Date_Ref))
+			var latest_financial_year_order_in_range = calculate(max(REF_Date_Ref[Date_Order_Financial_Year]),all(REF_Date_Ref))
+			
+			return
+			
+			calculate([Average_LoS],REF_Date_Ref[financial_month] <= latest_reporting_month,REF_Date_Ref[Date_Order_Financial_Year] = latest_financial_year_order_in_range -1,all(REF_Date_Ref)
+			)
+		lineageTag: 607ee622-051b-4a41-b36b-48f94a937ec5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous = ```
+			
+			 
+			 VAR final_calc = ([Average_LoS_of_inpatient_discharges_current_FY_in_reporting] - [Average_LoS_of_inpatient_discharges_previous_FY_in_reporting])/[Average_LoS_of_inpatient_discharges_previous_FY_in_reporting]
+			
+			 RETURN 
+			final_calc
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7910329f-78ab-4944-86e8-79b26db4d219
+
+	measure Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous_Arrow = ```
+			
+			    IF(
+			        [Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous] > 0, UNICHAR(9650),
+			        IF(
+			            [Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous] < 0, UNICHAR(9660), 
+			            ""   )
+			    )
+			```
+		lineageTag: 6e32757e-c3ad-4568-80bb-42b6c31c44f5
+
+	measure Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous_Arrow_Colour = ```
+			
+			    IF([Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous] > 0, "Orange",
+			        IF([Average_LoS_%_variance_current_reporting_period_current_FY_Vs_Previous] < 0, "Green", BLANK())
+			    )
+			```
+		lineageTag: b2bca6c8-4504-42b8-8f74-4dd72d25b241
+
+	column nhs_number
+		lineageTag: 89aafb51-65ba-4ccd-b80a-85959f6bce02
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[nhs_number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Code
+		lineageTag: 98cde5c6-30b8-4f44-b239-271814bc49ff
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Ethnicity_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Code_Description
+		lineageTag: 5748a5f2-d3b2-4404-843d-2c02527a5543
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Ethnicity_Code_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unique_Hospital_Provider_SpellID
+		lineageTag: e5314b22-16bc-4655-b4dd-b95af1eefb9a
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Unique_Hospital_Provider_SpellID]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceRequestId
+		lineageTag: 99e6a054-0d4e-452b-a086-117f7eb99353
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[ServiceRequestId]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code
+		lineageTag: f5dfee31-f942-4a6e-ab1d-db40e58a1fa9
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Provider_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Description
+		lineageTag: 2de2a5f5-b6bc-4d31-94b3-cb45cb4e501c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Provider_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commissioner_Code
+		lineageTag: de4434b9-c9d2-4237-8258-5038f9b111a8
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Commissioner_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commissioner_Name
+		lineageTag: 2b330847-a080-4a48-b1ed-56e746e38bb2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Commissioner_Name]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Processed_Date
+		formatString: General Date
+		lineageTag: ff886a4e-b3a4-472c-8357-05e424fb56de
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Processed_Date]
+
+		variation Variation
+			isDefault
+			relationship: b59c674e-3422-4778-b984-6fce2db4e6a2
+			defaultHierarchy: LocalDateTable_24169cd2-ae6c-46d5-859c-09dee5ee6e6e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Date_Hospital_Provider_Spell
+		formatString: General Date
+		lineageTag: db13eb8e-d650-4c0b-bbc9-a4c11a7da1c2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Start_Date_Hospital_Provider_Spell]
+
+		variation Variation
+			isDefault
+			relationship: 88926e46-0cdd-42ea-be26-aab42ea715cc
+			defaultHierarchy: LocalDateTable_20f8304c-15fd-4b5a-95fa-3de8e69341ca.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Time_Hospital_Provider_Spell
+		formatString: General Date
+		lineageTag: 38cb05db-64ad-4379-ac9a-62be96ff2399
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Start_Time_Hospital_Provider_Spell]
+
+		variation Variation
+			isDefault
+			relationship: 72af2020-f0a9-4ed4-b4bc-04834fb7ee84
+			defaultHierarchy: LocalDateTable_3a83978d-50a0-4373-9813-8116f52f3633.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Date_Time_Hospital_Provider_Spell
+		formatString: General Date
+		lineageTag: c04133dc-c319-42cb-bb3e-ca585ba9ad63
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Start_Date_Time_Hospital_Provider_Spell]
+
+		variation Variation
+			isDefault
+			relationship: 7d134824-09cc-4361-bfda-17baf1171000
+			defaultHierarchy: LocalDateTable_a9077a82-30e2-4c07-af7c-7fe1ba2e1e01.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Year_Month_Of_Birth
+		formatString: General Date
+		lineageTag: e08d9ac2-c76e-49e8-9cb6-85b4aa4ffa31
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Derived_Year_Month_Of_Birth]
+
+		variation Variation
+			isDefault
+			relationship: 023cdc4b-2444-4dfa-9b29-62ba3316e448
+			defaultHierarchy: LocalDateTable_88d13cb1-a83f-4fec-8762-c291c4eb98da.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_on_Admission
+		formatString: 0
+		lineageTag: 42ac0f3a-0d60-4711-a8fc-49c852c08c62
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Age_on_Admission]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Ward_Code
+		lineageTag: cd4ec9ba-5e8e-49f2-9cba-b1c127507aeb
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Admission_Ward_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Description
+		lineageTag: 66ee0c7e-2e33-4bb8-a13c-b79d2a50567d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Ward_Type_Code
+		lineageTag: 8a67f431-050f-4244-9ce1-5fb0364b6d50
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Admission_Ward_Type_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Ward_Type_Description
+		lineageTag: 23cfa935-24be-459d-9e16-254768772cb0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Admission_Ward_Type_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Hospital_Bed_Type_Code
+		lineageTag: 1bb83407-3a7d-45e8-9cc5-486a8c6e2c66
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Admission_Hospital_Bed_Type_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Hospital_Bed_Type_Description
+		lineageTag: 52779b5b-ac76-4e38-93a6-24f466a471d9
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Admission_Hospital_Bed_Type_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_of_Admission_Hospital_Provider_Spell_Code
+		lineageTag: 9060df60-c891-43cb-ae06-c2df8503b15c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Source_of_Admission_Hospital_Provider_Spell_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_of_Admission_Hospital_Provider_Spell_Description
+		lineageTag: 7ee71daf-ff0c-4674-8b17-ab89e04c1109
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Source_of_Admission_Hospital_Provider_Spell_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Method_of_Admission_Hospital_Provider_Spell_Code
+		lineageTag: 719a395e-0e17-4a41-b690-663877064314
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Method_of_Admission_Hospital_Provider_Spell_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Method_of_Admission_Hospital_Provider_Spell_Description
+		lineageTag: 93b995d6-b87b-4fc2-8988-b29b85d3b497
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Method_of_Admission_Hospital_Provider_Spell_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date_Hospital_Provider_Spell
+		formatString: General Date
+		lineageTag: cc083cf6-511e-4592-8e43-b549f6c0022e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Date_Hospital_Provider_Spell]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Time_Hospital_Provider_Spell
+		formatString: General Date
+		lineageTag: dc92093b-5828-433a-a7e9-eeb3a76ea7c9
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Time_Hospital_Provider_Spell]
+
+		variation Variation
+			isDefault
+			relationship: b531a32d-bbdf-4327-b2f2-3df3794b0a4b
+			defaultHierarchy: LocalDateTable_caa232b2-4d41-4615-8095-7dba7858c5f7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date_Time_Hospital_Provider_Spell
+		formatString: General Date
+		lineageTag: 207cf68d-a3c6-452e-bf3b-7e4d451f7d47
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Date_Time_Hospital_Provider_Spell]
+
+		variation Variation
+			isDefault
+			relationship: 54300863-5da0-4444-8c56-57666ea2d873
+			defaultHierarchy: LocalDateTable_82850d7f-b9f4-45c5-af02-697752c7f8aa.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Ward_Code
+		lineageTag: 235dbfb0-5b42-40a5-a926-e36d22e93ba8
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Ward_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Description
+		lineageTag: d69b6a39-5255-46f0-a447-baec37c670ab
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Ward_Type_Code
+		lineageTag: 9fd7c59d-2b39-4952-8ac2-526bbbe3f610
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Ward_Type_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Ward_Type_Description
+		lineageTag: d64f8387-a80e-461a-90a6-943bfc8f828d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Ward_Type_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Hospital_Bed_Type_Code
+		lineageTag: 23a95e36-6619-4fb7-9514-ed6a279c24ac
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Hospital_Bed_Type_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Hospital_Bed_Type_Description
+		lineageTag: fe212ffc-f5da-4359-af36-1e75bbfde2fc
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Hospital_Bed_Type_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination_Of_Discharge_Hospital_Provider_Spell_Code
+		lineageTag: 15240973-acdb-4df3-bd59-7caaea819362
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Destination_Of_Discharge_Hospital_Provider_Spell_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination_Of_Discharge_Hospital_Provider_Spell_Description
+		lineageTag: 786353e4-33be-4f76-9d26-7f1dcf78373f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Destination_Of_Discharge_Hospital_Provider_Spell_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoS_of_Admission
+		formatString: 0.0
+		lineageTag: 8c26aea2-de80-49c2-96db-db63225cd09d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[LoS_of_Admission]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Directorate_1_Code
+		lineageTag: c7b4b27a-1360-4f4a-9e89-2a0549d2dc0b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Directorate_1_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Directorate_1_Description
+		lineageTag: 47da37d3-ef68-43e7-b82a-b654e46133ce
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Directorate_1_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Directorate_2_Code
+		lineageTag: 262fefff-7739-44ad-b6bd-f7c2928ed934
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Directorate_2_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Directorate_2_Description
+		lineageTag: bf0eca68-e28b-4805-9c0e-1495446dab11
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Directorate_2_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Service_Code
+		lineageTag: 044dc9d8-8f56-40b3-a168-bbf581517e82
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Service_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Service_Description
+		lineageTag: e7bd1b51-f65c-4282-9334-72527ffc8361
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Service_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Sub_Service_Code
+		lineageTag: 91de8da3-6717-4fe9-b782-9f10401dc9f6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Sub_Service_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Sub_Service_Description
+		lineageTag: 7572b0c1-fb4d-4fbe-a70e-48ae8ba85f19
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Sub_Service_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Cost_Centre
+		lineageTag: 1052f2b7-5594-45d0-a590-4d74ed8f54f9
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Cost_Centre]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Admission_Ward_Team_Locality
+		lineageTag: 003c077d-ca32-4e91-99e8-b15fcad95ef0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Admission_Ward_Team_Locality]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Directorate_1_Code
+		lineageTag: 70b89083-3131-4966-a274-1a6a8bbb853d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Directorate_1_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Directorate_1_Description
+		lineageTag: a95f1372-f301-4216-a846-e4b7da26874e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Directorate_1_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Directorate_2_Code
+		lineageTag: 3bf16792-4340-418e-890c-b6ed37079df3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Directorate_2_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Directorate_2_Description
+		lineageTag: 1d0be865-0372-4fb4-9acb-1f5c1135e93f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Directorate_2_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Service_Code
+		lineageTag: 88edceca-0f32-4aa9-94f1-ddaa8e94929b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Service_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Service_Description
+		lineageTag: f986f316-5d27-409b-9f1c-c604944710c7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Service_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Sub_Service_Code
+		lineageTag: 3ad609be-fbe6-402d-a00f-98d96495d791
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Sub_Service_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Sub_Service_Description
+		lineageTag: be3f5615-a294-42c3-a71b-ee61b101a821
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Sub_Service_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Cost_Centre
+		lineageTag: e702fbfa-4001-4ce5-95b3-64421a091265
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Cost_Centre]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Discharge_Ward_Team_Locality
+		lineageTag: 2126cf76-8e04-416b-9da6-a358d97f41bf
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[GHC_Discharge_Ward_Team_Locality]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		formatString: 0
+		lineageTag: ae8a5aa9-5a04-4e11-bc24-fb4bdab7bd12
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Counter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharged_Flag
+		formatString: 0
+		lineageTag: 6c41ad8b-c6f4-4a6c-be48-de5c240f3da4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharged_Flag]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Los_60+_days_flag
+		formatString: 0
+		lineageTag: e7ec75c4-b971-4e74-8f2f-9132525103b8
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Los_60+_days_flag]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Los_90+_days_flag
+		formatString: 0
+		lineageTag: 369a08c1-c1a5-4268-86a0-babac994b3ab
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Los_90+_days_flag]
+
+		annotation SummarizationSetBy = Automatic
+
+	column LOS_Grouping
+		lineageTag: 187810f6-a9b0-45d0-a378-69f30038c75d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[LOS_Grouping]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Time_Hospital_Provider_Spell_Time_of_Day_Grouping
+		lineageTag: 906aa238-3ecb-4aa4-b0dc-92f8f0a91559
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Start_Time_Hospital_Provider_Spell_Time_of_Day_Grouping]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Time_Hospital_Provider_Spell_Time_of_Day_Grouping_order
+		formatString: 0
+		lineageTag: 20a10b6e-4685-4288-9411-e02eb34c7388
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Start_Time_Hospital_Provider_Spell_Time_of_Day_Grouping_order]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date_Hospital_Provider_Spell_Time_of_Day_Grouping
+		lineageTag: 3c8338cf-558f-4862-bf80-de30a344c8b4
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Date_Hospital_Provider_Spell_Time_of_Day_Grouping]
+		sortByColumn: Discharge_Date_Hospital_Provider_Spell_Time_of_Day_Grouping_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date_Hospital_Provider_Spell_Time_of_Day_Grouping_order
+		formatString: 0
+		lineageTag: 62ec7511-c883-46a0-badc-e9aa2afa3923
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Discharge_Date_Hospital_Provider_Spell_Time_of_Day_Grouping_order]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Person_ID
+		lineageTag: fb2fd5b1-0053-47e1-8caf-77d2f4797ae9
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Person_ID]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		lineageTag: 5efbb7fb-0b40-4398-a691-3d991deeb62b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Practice_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Name
+		lineageTag: 59e6b7e4-181e-47c2-9339-468c5de6fa33
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Practice_Name]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		lineageTag: 3d1068f9-1df4-4451-8653-f07bd76812e0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Locality]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_care_network
+		lineageTag: bfcdf9c6-f9d2-4feb-986f-5ff8b733e059
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Primary_care_network]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_code_wider_groups
+		lineageTag: 17e4af06-d5c9-4d45-a433-bb37c8cac8f5
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Ethnic_code_wider_groups]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_code_origin_grouped
+		lineageTag: 9cae5a97-46fb-4b05-be98-ca3b9eb88708
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Ethnic_code_origin_grouped]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dervived_postcode_on_admission
+		formatString: 0
+		lineageTag: a1fc1e69-0f7a-49b1-a060-8ffc6a2d146e
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Dervived_postcode_on_admission]
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_Code_on_admission
+		lineageTag: ae50ee97-b649-4314-a02e-6193d66a28a6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[LSOA_Code_on_admission]
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentDistrictWardcode_on_admission
+		lineageTag: 3a4e2f8c-24d1-401f-9e65-ed8f1d8e4639
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[CurrentDistrictWardcode_on_admission]
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentDistrictWardname_on_admission
+		lineageTag: f242ee50-0fb3-4e11-a977-da9f0ee848f5
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[CurrentDistrictWardname_on_admission]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile_on_admission
+		lineageTag: 6ffc5985-8703-4389-9f5c-df4defa750a6
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[IMDcountyDecile_on_admission]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column IMDcountyQuintile_on_admission
+		lineageTag: af686d93-72e3-4cc2-a744-60912b47cc97
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[IMDcountyQuintile_on_admission]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Core20Flag
+		formatString: 0
+		lineageTag: a87835f7-7453-4b89-bd73-b210530a61af
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Core20Flag]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Code
+		lineageTag: 047a2de7-5b86-466e-9d05-b473fd9b21e4
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Gender_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Description
+		lineageTag: 97ff1d32-c32f-4b19-8dc0-020b2a4dd258
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 3.Inpatient Admissions[Gender_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '4.Inpatient Discharges' = calculated
+		mode: import
+		source =
+				CALCULATETABLE(
+				    '3.Inpatient Admissions',
+				    FILTER(
+				        '3.Inpatient Admissions',
+				        NOT ISBLANK('3.Inpatient Admissions'[Discharge_Date_Hospital_Provider_Spell])
+				    )
+				)
+
+	annotation PBI_Id = 15fc5602a9e24897b33f36b62d5dfa42
+

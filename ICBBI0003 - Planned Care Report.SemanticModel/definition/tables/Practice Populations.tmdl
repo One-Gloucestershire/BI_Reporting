@@ -1,0 +1,128 @@
+table 'Practice Populations'
+	lineageTag: 881ccfc3-0fea-4bd9-b664-00ba7ca2ac60
+
+	column practice_code
+		dataType: string
+		lineageTag: acda0c2f-0fa6-4a4c-ab38-4c25fd256f14
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 3e6a0d4a-0b50-423b-a92f-f7683a857cf9
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: dd12a816-6fe5-4d8c-9f9c-e54b99a74ccf
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 97f23fa1-3c0d-40b4-a3a8-7d73ab96797a
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column population
+		dataType: double
+		lineageTag: c6fd98cf-e1ff-4339-b376-6da395137a28
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column census_date
+		dataType: string
+		lineageTag: 4ff6927a-91e1-4475-8667-bf6381134dff
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: string
+		lineageTag: cfee9896-8c7e-4de2-9d33-82561b365b75
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_date_of_month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ed5b327d-899a-43d1-a01a-b04d7b707a3b
+		summarizeBy: none
+		sourceColumn: first_date_of_month
+
+		variation Variation
+			isDefault
+			relationship: d980b450-84e1-4cea-884a-8c497e486d95
+			defaultHierarchy: LocalDateTable_0930fcfc-e206-4188-949a-07dacbc9fc09.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_date_of_month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a21701f7-71d1-4b91-b1a2-c76d129e3d6e
+		summarizeBy: none
+		sourceColumn: last_date_of_month
+
+		variation Variation
+			isDefault
+			relationship: ced8961f-aaf6-4e19-9601-f34161a15715
+			defaultHierarchy: LocalDateTable_f0febbe6-dbba-4744-bc01-c56769487344.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: cf69fc48-6fc9-41fc-9095-2c78b2370429
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthShort
+		dataType: string
+		lineageTag: bebf67bf-3cb0-4ade-84a6-eb753f435120
+		summarizeBy: none
+		sourceColumn: MonthShort
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeMonth
+		dataType: string
+		lineageTag: 2adb212f-d9b2-4c39-9d98-396928cd8084
+		summarizeBy: none
+		sourceColumn: PracticeMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Practice Populations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "POWERBI_REPORTING", [Query="SELECT [practice_code]#(lf)      ,[practice_name]#(lf)      ,[primary_care_network]#(lf)      ,[locality]#(lf)      ,[population] = SUM([population])#(lf)      ,[census_date]#(lf)      ,[year_month]#(lf)      ,[first_date_of_month]#(lf)      ,[last_date_of_month]#(lf)      ,[financial_year]#(lf)#(tab)  ,[PracticeMonth] = [practice_code]+[financial_year]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations]#(lf)WHERE LEFT([census_date],3) = 'APR'#(lf)GROUP BY [practice_code],[practice_name],[primary_care_network],#(lf)[locality],[census_date],[year_month],[first_date_of_month],[last_date_of_month],[financial_year]#(lf)ORDER BY [practice_code],[financial_year]"]),
+				    #"Inserted Text Before Delimiter" = Table.AddColumn(Source, "Text Before Delimiter", each Text.BeforeDelimiter([census_date], "-"), type text),
+				    #"Renamed Columns" = Table.RenameColumns(#"Inserted Text Before Delimiter",{{"Text Before Delimiter", "MonthShort"}}),
+				    #"Sorted Rows" = Table.Sort(#"Renamed Columns",{{"practice_code", Order.Ascending}})
+				in
+				    #"Sorted Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

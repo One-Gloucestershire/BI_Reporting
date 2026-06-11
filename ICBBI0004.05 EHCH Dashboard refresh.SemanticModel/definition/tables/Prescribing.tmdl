@@ -1,0 +1,104 @@
+table Prescribing
+	lineageTag: 08faee75-86a1-42c7-90c4-9dce78fd0a30
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: afe46497-91f0-4cb7-9a98-bff2a37a298b
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 559793a7-bd36-4506-93dc-75bcb708763b
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Item_cost_in_pounds
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 2dbf0e03-9a54-4604-918c-e0ac265f0c76
+		summarizeBy: sum
+		sourceColumn: Item_cost_in_pounds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Item_Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 14879d85-146e-4411-a300-b8c6dc4a9cc6
+		summarizeBy: sum
+		sourceColumn: Item_Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: c07dbbec-f583-4a05-85e9-e7290e43a5e8
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstance
+		dataType: string
+		lineageTag: ae3b95f4-f424-49a5-9ccd-049ba532c150
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column PARTITION_KEY
+		dataType: int64
+		formatString: 0
+		lineageTag: d005599c-121d-4a0a-a259-67b3026ebab0
+		summarizeBy: sum
+		sourceColumn: PARTITION_KEY
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_gp_ods
+		dataType: string
+		lineageTag: a218413a-8315-413a-97e2-0172e19360d9
+		summarizeBy: none
+		sourceColumn: patient_gp_ods
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Assessment_Number
+		dataType: int64
+		formatString: 0
+		lineageTag: 4b3a0262-5ab0-43d8-8dcc-83df65196ff7
+		summarizeBy: sum
+		sourceColumn: Patient_Assessment_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Processing_Period_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2cc74679-4fbf-4bf3-bcfd-fe4e698ba072
+		summarizeBy: none
+		sourceColumn: Processing_Period_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Prescribing = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)select distinct#(lf)#(lf)[counter] = 1#(lf),[PM].[ID]#(lf),[Item_cost_in_pounds] = Item_Actual_Cost / 100#(lf),[Item_Count]#(lf),[NHS_Number]#(lf),[BNF].[BNFChemicalSubstance]#(lf),[pm].[PARTITION_KEY]#(lf),[PM].[patient_gp_ods] #(lf),Patient_Assessment_Number = RANK() OVER(PARTITION BY [PM].[ID]  ORDER BY [NHS_Number] ASC) #(lf),[Pm].[Processing_Period_Date] #(lf)#(lf)from [PowerBI_Reporting].[dbo].[Care_Home_Patients_PC_Data_v4] [F]#(lf)#(lf)left join data_mart_primary_care_meds.import.patient_medication [PM] ON [PM].[NHS_Number] = [F].[Pseudo_NHS_Number] and [Pm].[Processing_Period_Date] BETWEEN [Care_home_date] and [End_date]#(lf)#(lf)LEFT JOIN [PowerBI_Reporting].[Prescribing].[tbl_BNF_Reference] AS [BNF] ON [BNF].[BNFPresentationCode] = [PM].[Paid_BNF_Code]#(lf)#(lf)WHERE [PM].[Patient_Commissioner] = '11M'#(lf)--AND [PM].[Cost_Centre_Type] = 7#(lf)AND [PARTITION_KEY] >= 202104#(lf)#(lf)ORDER BY [PM].[ID]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

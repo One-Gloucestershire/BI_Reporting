@@ -1,0 +1,47 @@
+table 'Dementia Care Home Population Over Time'
+	lineageTag: abd91f32-c252-41ba-85bf-43ea00e7d9b0
+
+	measure '% of current care home patients have dementia' = [Current Dementia Care Home Population] / [Current Dementia Population]
+		formatString: 0%;-0%;0%
+		lineageTag: b9bd93f6-efc7-471a-80f3-bad01acfba28
+
+	measure '% of care home patients have dementia' = [Dementia Care Home Population Per Month] / [Care Home Population Per Month]
+		lineageTag: d920bd7c-3b38-4d5f-a641-01c8f73131d3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column dte
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b765c605-f20d-4c9f-a37b-32165de513f5
+		summarizeBy: none
+		sourceColumn: dte
+
+		variation Variation
+			isDefault
+			relationship: ea4ae927-ba49-4b07-a28b-0a2d96636849
+			defaultHierarchy: LocalDateTable_0e54d951-a0be-4096-a7c9-66b6e8942965.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementiacare_home_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 48a27646-2be7-472f-aba5-06c46efe1ec8
+		summarizeBy: sum
+		sourceColumn: dementiacare_home_population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Dementia Care Home Population Over Time' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)with cte as (#(lf)      select datefromparts(year([Care_home_date]), month([Care_home_date]), 1) as dte, [end_date], [C].[Pseudo_NHS_Number]#(lf)      from [PowerBI_Reporting].[dbo].[Dementia_patients] [D]#(lf)#(lf)LEFT JOIN [PowerBI_Reporting].[dbo].[Care_Home_Patients_PC_Data_v4] [C] ON [D].[pseudo_nhs_number] = [C].[Pseudo_NHS_Number]#(lf)WHERE [C].[Pseudo_NHS_Number] IS NOT NULL#(lf)      union all#(lf)      select  dateadd(month, 1, dte), [end_date], Pseudo_NHS_Number#(lf)      from cte#(lf)      where eomonth(dte) < eomonth([end_date])#(lf)     )#(lf)select dte, [dementiacare_home_population] = count(Pseudo_NHS_Number)#(lf)from cte#(lf)group by dte#(lf)order by dte#(lf);"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

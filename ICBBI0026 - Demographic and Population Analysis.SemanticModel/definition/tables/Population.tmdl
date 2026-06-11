@@ -1,0 +1,56 @@
+table Population
+	lineageTag: e5bb98c2-93c5-4a58-81bf-5ed021af8798
+
+	column GP_Practice_Code
+		dataType: string
+		lineageTag: 875689e3-1144-4d7a-8f14-bf4175c5aa00
+		summarizeBy: none
+		sourceColumn: GP_Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice_Name
+		dataType: string
+		lineageTag: 0dc636ee-5c9b-48a0-a367-245f68cf3bbf
+		summarizeBy: none
+		sourceColumn: GP_Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: 4ec51cb2-3679-420c-ba7f-8b2a5a663756
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: 12eea968-7e53-4018-be23-85e70609b714
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: af9d3763-0bcc-4a0d-a638-99eb2cc01d70
+		summarizeBy: none
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Population = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "POWERBI_Reporting", [Query="SELECT #(lf)[GP_Practice_Code],#(lf)[GP_Practice_Name],#(lf)[GPLatitude],#(lf)[GPLongitude],#(lf)[Population] = SUM([Population]) #(lf)FROM (#(lf)#(tab)SELECT DISTINCT  #(lf)#(tab)[DPO].[GP_Practice_Code],#(lf)#(tab)[GP_Practice_Name] = CASE WHEN [DPO].[GP_Practice_Code] = 'L84080' THEN 'The Willow Tree Practice' ELSE [DPO].[GP_Practice_Name] END,#(lf)#(tab)[DPO].[GPLatitude],#(lf)#(tab)[DPO].[GPLongitude],#(lf)#(tab)[Population] = COUNT(*) #(lf)#(tab)FROM [PowerBI_Reporting].[dbo].[tbl_Demographics_Population_Overview] [DPO]#(lf)#(tab)WHERE [DPO].[GPLatitude] IS NOT NULL #(lf)#(tab)GROUP BY [DPO].[GP_Practice_Code],#(lf)#(tab)[DPO].[GP_Practice_Name],#(lf)#(tab)[DPO].[GPLatitude],#(lf)#(tab)[DPO].[GPLongitude]) AS SUB#(lf)GROUP BY [GP_Practice_Code],#(lf)[GP_Practice_Name],#(lf)[GPLatitude],#(lf)[GPLongitude]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

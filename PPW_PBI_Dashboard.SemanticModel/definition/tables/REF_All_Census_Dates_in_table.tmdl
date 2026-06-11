@@ -1,0 +1,62 @@
+table REF_All_Census_Dates_in_table
+	lineageTag: cbf65002-1e86-44da-95c1-008ee1c91492
+
+	measure test = ```
+			
+			
+			```
+		formatString: 0
+		lineageTag: 709cade5-1407-49a6-9bbd-d6b823b978d5
+
+	column census_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 45dbf16a-921c-4624-a98d-49ad73af798e
+		summarizeBy: none
+		sourceColumn: census_date
+
+		variation Variation
+			isDefault
+			relationship: 8e34d526-7004-4fb9-8d8f-beb0c2af2387
+			defaultHierarchy: LocalDateTable_42853feb-87d2-48d5-966b-a125200ed49c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'census_date (Year)' = FORMAT([census_date], "yyyy")
+		lineageTag: de752f29-e9e4-486b-9d02-ed32ffd154f7
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'census_date (Quarter)' = CONCATENATE("Qtr", INT((MONTH([census_date]) + 2) / 3))
+		lineageTag: c976e985-ed2a-40f1-8426-ea4c12fa584b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'census_date (Month Index)' = MONTH([census_date])
+		isHidden
+		lineageTag: b8cd7cb8-5d93-4230-bc68-d92cea099f6d
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'census_date (Month)' = FORMAT([census_date], "MMM")
+		lineageTag: 7ad1bc9c-2ce6-46d8-96b9-6a6d33802ac8
+		summarizeBy: none
+		sortByColumn: 'census_date (Month Index)'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_All_Census_Dates_in_table = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCg_CURRENT", [Query="select distinct census_date#(lf)#(lf)from [PowerBI_Reporting].[dbo].[Proactive_Whiteboard_Cohort] #(lf)#(lf)order by census_date asc"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([census_date] <> #datetime(2020, 4, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 5, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 6, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 7, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 8, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 9, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 10, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 11, 1, 0, 0, 0) and [census_date] <> #datetime(2020, 12, 1, 0, 0, 0) and [census_date] <> #datetime(2021, 1, 1, 0, 0, 0) and [census_date] <> #datetime(2021, 2, 1, 0, 0, 0) and [census_date] <> #datetime(2021, 3, 1, 0, 0, 0) and [census_date] <> #datetime(2021, 4, 1, 0, 0, 0) and [census_date] <> #datetime(2021, 5, 1, 0, 0, 0) and [census_date] <> #datetime(2021, 6, 1, 0, 0, 0)))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+

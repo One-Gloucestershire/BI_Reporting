@@ -1,0 +1,143 @@
+table 'Rockwood Score'
+	lineageTag: dcb0a9a5-01aa-4c4a-b95f-bcd1b7631268
+
+	measure 'Rockwood Score - 1' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "1" }
+			)
+		formatString: 0
+		lineageTag: ed52b5b5-d7ff-4f92-9bdc-68e1db808adc
+
+	measure 'Rockwood Score - 2' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "2" }
+			)
+		formatString: 0
+		lineageTag: 91e3b225-4600-4f5a-a96b-5a6296a1a718
+
+	measure 'Rockwood Score - 3' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "3" }
+			)
+		formatString: 0
+		lineageTag: 59d4672e-b81d-468c-9e91-dde509dc84ba
+
+	measure 'Rockwood Score - 4' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "4" }
+			)
+		formatString: 0
+		lineageTag: 54486149-40a9-41ea-8395-dddd9d36c8cd
+
+	measure 'Rockwood Score - 5' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "5" }
+			)
+		formatString: 0
+		lineageTag: 3e498323-cbfe-405c-b9b1-a54761ce75dd
+
+	measure 'Rockwood Score - 6' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "6" }
+			)
+		formatString: 0
+		lineageTag: 36b4d41d-7316-4c09-ac32-88e1ced2cda1
+
+	measure 'Rockwood Score - 7' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "7" }
+			)
+		formatString: 0
+		lineageTag: 701be37b-1bc9-4373-9d4e-0b5e0a3c5155
+
+	measure 'Rockwood Score - 8' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "8" }
+			)
+		formatString: 0
+		lineageTag: a0a22831-9b21-452d-acf7-afc721190d6a
+
+	measure 'Rockwood Score - 9' =
+			
+			CALCULATE(
+				COUNT('Rockwood Score'[Pseudo_NHS_Number]),
+				'Rockwood Score'[Value_1] IN { "9" }
+			)
+		formatString: 0
+		lineageTag: ce55af28-11fe-4d0c-a8a8-fe5b5d0d4fd5
+
+	column Pseudo_NHS_Number
+		dataType: string
+		lineageTag: e440972a-ce1a-4b52-9f05-77042c9d7a2d
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 4a202fd7-9ae2-4ed3-bcc5-ead8389c8783
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Event_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ae2fe988-b7bf-45d4-bc95-5aea485e1b10
+		summarizeBy: none
+		sourceColumn: Event_date
+
+		variation Variation
+			isDefault
+			relationship: b095b085-b7c0-4787-9731-f9d9c241a468
+			defaultHierarchy: LocalDateTable_e94dda29-1180-4418-a48d-c267af04ea71.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value_1
+		dataType: string
+		lineageTag: d00dcf6f-4243-45b0-9bfc-2f414f5615d5
+		summarizeBy: none
+		sourceColumn: Value_1
+
+		annotation SummarizationSetBy = Automatic
+
+	column Event_code_rank
+		dataType: int64
+		formatString: 0
+		lineageTag: ecbef608-b611-4d8f-b44b-7ca0a560608d
+		summarizeBy: sum
+		sourceColumn: Event_code_rank
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Rockwood Score' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="#(lf)SET NOCOUNT ON#(lf)IF OBJECT_ID ('TEMPDB..#table1') IS NOT NULL DROP TABLE #table1#(lf);#(lf)#(lf)SELECT distinct#(lf)#(lf)[C].[Pseudo_NHS_Number]#(lf),[Practice_Code]#(lf),[Event_date]#(lf),[Value_1]#(lf),Event_code_rank = RANK() OVER(PARTITION BY [C].[Pseudo_NHS_Number] ORDER BY cast(event_date as date) desc) #(lf)#(lf)INTO #table1#(lf)#(lf)FROM [PowerBI_Reporting].[dbo].[Care_Home_Patients_PC_Data_v4] [C]#(lf)#(lf)LEFT JOIN [CCG_Current].[PrimaryCare].[vw_Events] [E] on [E].[Pseudo_NHS_Number] = [C].[Pseudo_NHS_Number]#(lf)#(lf)#(tab)WHERE ([Event_Code] COLLATE SQL_Latin1_General_CP1_CS_AS IN ('XaQik')#(lf)#(tab)OR [Snomed_Code] = '763264000')#(lf)#(lf)#(tab)AND [C].[Current_patient_flag] LIKE 1#(lf)#(lf)#(tab)order by [C].[Pseudo_NHS_Number], Event_Date#(lf)#(lf)#(lf)#(tab)SELECT DISTINCT *#(lf)#(tab)FROM #table1#(lf)#(tab)WHERE Event_code_rank LIKE 1"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

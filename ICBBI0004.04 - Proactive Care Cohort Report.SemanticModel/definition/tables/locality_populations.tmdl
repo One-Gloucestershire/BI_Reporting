@@ -1,0 +1,41 @@
+table locality_populations
+	lineageTag: 09c52751-b9f8-4e6d-b9c0-a9c8fe67906f
+
+	measure locality_population = sum(locality_populations[total_population])
+		formatString: 0
+		lineageTag: 79a118b4-635d-47ee-a456-114070d4f026
+
+	measure locality_rate_per_100,000 = [total_activity]/([locality_population]/100000)
+		lineageTag: ee3fc333-4399-4f86-9a39-932c0ab8bc3b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column locality
+		dataType: string
+		lineageTag: 20b60656-455b-467f-ba42-5c1345405cd7
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_population
+		dataType: int64
+		formatString: 0
+		lineageTag: d03380ea-0762-4587-8461-0cbe7f97e699
+		summarizeBy: none
+		sourceColumn: total_population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition locality_populations-eb711723-0273-4376-8a03-60ab41a218b3 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="select * from  [PowerBI_Reporting].[dbo].[Locality_Populations]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,703 @@
+table '1.Community_Referrals'
+	lineageTag: 30bc5c29-40d4-44c3-a03f-ac8c66d6c8e5
+
+	measure Referral_Growth = ```
+			
+			VAR CY = [Number of referrals]
+			VAR LY = CALCULATE(
+			    [Number of referrals],
+			    DATESBETWEEN(
+			        REF_Date_Ref[date],
+			        EDATE(MIN('REF_Date_Ref'[date]),-12),
+			        EOMONTH(max(REF_Date_Ref[date]),-12)
+			    )
+			
+			)
+			VAR Check = CY  &&  LY && HASONEVALUE('REF_Date_Ref'[financial_year])
+			Return 
+			
+			IF(Check,divide(CY,LY) -1)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 92cce4ad-da33-44e1-b353-eebe4afe2921
+
+	measure TestA = EOMONTH(max(REF_Date_Ref[date]),-12)
+		formatString: General Date
+		lineageTag: a5b4cb82-484e-44f2-b05f-61830ab0b39c
+
+	measure TestB = EDATE(MIN('REF_Date_Ref'[date]),-12)
+		formatString: General Date
+		lineageTag: 960db4c4-066a-44b3-b3e1-29798507a666
+
+	measure 'Number of referrals' = ```
+			distinctcount('1.Community_Referrals'[UniqServReqID]) 
+			```
+		formatString: #,0
+		lineageTag: f9bbbe47-fd5b-4b28-a4fa-64cb42bf8b41
+
+	measure Number_of_countywide_referrals_per_1000_crude_rate =
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			RETURN
+			CALCULATE(
+			    ([Number of referrals] / SUM('REF_GP Practice Populations'[Total Population])) * 1000,
+			    'REF_GP Practice Populations'[CensusDate_as_date] = start_of_latest_month,
+			    ALL(REF_GP_Reference_Table),
+			    REF_GP_Reference_Table[OrganisationCode] <> "Y00054",
+			    NOT ISBLANK(REF_GP_Reference_Table[Locality]) ,
+			    NOT ISBLANK(REF_GP_Reference_Table[PrimaryCareNetwork])
+			)
+		lineageTag: 72da5293-9280-45de-ba74-59f1e260b99d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Number_of_referrals_per_1000_crude_rate =
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			RETURN
+			calculate(([Number of referrals]/sum('REF_GP Practice Populations'[Total Population]))*1000,'REF_GP Practice Populations'[CensusDate_as_date] = start_of_latest_month
+			
+			)
+		lineageTag: 884749ae-ec07-4327-beb0-427f45cf8711
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Referrals_Locality_Bars_Conditional_Formatting_compared_to_countywide_rate =
+			
+			SWITCH(
+			    True(),
+			    [Number_of_referrals_per_1000_crude_rate] > [Number_of_countywide_referrals_per_1000_crude_rate],"#FE7A36"
+			    ,"#3652AD"
+			)
+		lineageTag: 15cf9d3a-41e5-4a86-883c-010785ec9eca
+
+	measure Data_Table_Number_of_referrals_per_1000_crude_rate =
+			
+			VAR latest_date = MAX(REF_Date_Ref[date])
+			VAR start_of_latest_month = DATE(YEAR(latest_date), MONTH(latest_date), 1)
+			RETURN
+			calculate(([Number of referrals]/sum('REF_GP Practice Populations'[Total Population]))*1000,'REF_GP Practice Populations'[CensusDate_as_date] = start_of_latest_month
+			,not(isblank(REF_GP_Reference_Table[PrimaryCareNetwork]))
+			,not(isblank(REF_GP_Reference_Table[Locality]))
+			,REF_GP_Reference_Table[ReportingOrganisationCode] <> "Y00054"
+			
+			
+			)
+		lineageTag: 39d81cfe-6fae-4279-96a4-c7720ac1365b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Only_Relevant_refs_in_filter =
+			
+			
+			var referral_row_count = countrows('1.Community_Referrals')
+			var discharge_row_count = countrows('2.Community_Discharges')
+			
+			RETURN
+			
+			referral_row_count + discharge_row_count
+		formatString: 0
+		lineageTag: 99ae45e1-4836-4450-a9ae-f79393826fde
+
+	column nhs_number
+		dataType: string
+		lineageTag: c2a120af-504d-48d8-9626-1159b05757a7
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqServReqID
+		dataType: string
+		lineageTag: bebc2c9a-f4fb-46f8-bbfd-bec6f869ff77
+		summarizeBy: none
+		sourceColumn: UniqServReqID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commissioner_Code
+		dataType: string
+		lineageTag: 00b52c3a-5cd3-4b61-8600-5ee3e9335761
+		summarizeBy: none
+		sourceColumn: Commissioner_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commissioner_Description
+		dataType: string
+		lineageTag: 1b16df08-a86f-4e91-ad69-f101f92ef9da
+		summarizeBy: none
+		sourceColumn: Commissioner_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code
+		dataType: string
+		lineageTag: e44a709e-3dc7-4339-8a05-6e087882679b
+		summarizeBy: none
+		sourceColumn: Provider_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Description
+		dataType: string
+		lineageTag: aeffb8ea-1edd-4d17-888d-96292b89886c
+		summarizeBy: none
+		sourceColumn: Provider_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Recieved_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6e321296-c510-49e2-a857-93128eacf67c
+		summarizeBy: none
+		sourceColumn: Referral_Recieved_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Recieved_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 2aba162c-3614-40ab-8d10-55020085b1eb
+		summarizeBy: none
+		sourceColumn: Referral_Recieved_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Source_of_Referral_Code
+		dataType: string
+		lineageTag: 8e51eb23-c7c8-48b8-9f0a-3257c4d4e122
+		summarizeBy: none
+		sourceColumn: Source_of_Referral_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Source_of_Referral_Description
+		dataType: string
+		lineageTag: d7ae63b9-74ec-4e18-bd97-93527ef3745f
+		summarizeBy: none
+		sourceColumn: Source_of_Referral_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Clinical_Responsibilty_Prioirty_Type_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: 546bf8c8-cc5b-49a4-9b9d-10f2d9e7d7b6
+		summarizeBy: count
+		sourceColumn: Clinical_Responsibilty_Prioirty_Type_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Clinical_Responsibilty_Prioirty_Type_Description
+		dataType: string
+		lineageTag: ef084666-d157-4662-b752-e6a2658c0c28
+		summarizeBy: none
+		sourceColumn: Clinical_Responsibilty_Prioirty_Type_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_Referral_Reason_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: ac0d9f22-334f-4a95-bb79-f11d84d3e029
+		summarizeBy: count
+		sourceColumn: Primary_Referral_Reason_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_Referral_Reason_Description
+		dataType: string
+		lineageTag: b6b06ebb-86ec-485f-b5f3-a4141b3a944c
+		summarizeBy: none
+		sourceColumn: Primary_Referral_Reason_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_Service_Referral_Received
+		dataType: int64
+		formatString: 0
+		lineageTag: 23d998f7-a385-49c8-b6f5-de0299c31b3c
+		summarizeBy: none
+		sourceColumn: Age_at_Service_Referral_Received
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Discharge_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6923d46c-5664-4c0a-b20d-205d9e9d1848
+		summarizeBy: none
+		sourceColumn: Service_Discharge_Date
+
+		variation Variation
+			isDefault
+			relationship: 58f7ba04-9d46-4990-97b3-c24bfc6ba7a4
+			defaultHierarchy: LocalDateTable_e2e5e350-fe03-483f-bf78-46551edf4bd1.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Discharge_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 0114ec53-c104-48c2-b479-9480e27642f1
+		summarizeBy: none
+		sourceColumn: Service_Discharge_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Care_Professional_Team_Local_ID
+		dataType: string
+		lineageTag: c9590bfb-ac05-4a0c-ae09-628a236a9fb8
+		summarizeBy: none
+		sourceColumn: Care_Professional_Team_Local_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_Professional_Team_Local_ID_Description
+		dataType: string
+		lineageTag: 62d248e8-17cb-4b3d-87b0-ec8a90071648
+		summarizeBy: none
+		sourceColumn: Care_Professional_Team_Local_ID_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Closure_Reason_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: a6c62713-29c6-4b6a-b22e-01d9e00f22e0
+		summarizeBy: count
+		sourceColumn: Referral_Closure_Reason_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Closure_Reason_Description
+		dataType: string
+		lineageTag: fc0fdf9c-809d-453d-9bb5-8cf7dd3dd6e2
+		summarizeBy: none
+		sourceColumn: Referral_Closure_Reason_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Closure_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 51554852-c5c2-4662-82e9-dca7013dc445
+		summarizeBy: none
+		sourceColumn: Referral_Closure_Date
+
+		variation Variation
+			isDefault
+			relationship: 4456f563-11b7-488a-a5c3-e1c0c7981ebd
+			defaultHierarchy: LocalDateTable_a7347e70-52ab-41e3-8c56-75c64e6b6545.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Rejection_Reason_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: fea67cbe-3d05-417d-a242-d75e6bac0cdd
+		summarizeBy: count
+		sourceColumn: Referral_Rejection_Reason_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Rejection_Reason_Description
+		dataType: string
+		lineageTag: 7d60975f-7a5b-4f38-9039-9127af669b61
+		summarizeBy: none
+		sourceColumn: Referral_Rejection_Reason_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Rejection_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8a468ac7-6c08-46b9-9135-eff410427858
+		summarizeBy: none
+		sourceColumn: Referral_Rejection_Date
+
+		variation Variation
+			isDefault
+			relationship: 7e6ecf7a-eeda-426b-8da8-243c4c4e85df
+			defaultHierarchy: LocalDateTable_7fd46fc1-7e60-4d4d-a470-93dd4caea134.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Team_Type_Referred_To_Code
+		dataType: string
+		lineageTag: dff156e7-a8a9-455c-be93-82dc0297feb3
+		summarizeBy: none
+		sourceColumn: Service_Team_Type_Referred_To_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Team_Type_Referred_To_Description
+		dataType: string
+		lineageTag: b784699e-1759-44ac-b7c0-646c6f0ab212
+		summarizeBy: none
+		sourceColumn: Service_Team_Type_Referred_To_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Processed_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ea4c9b3f-3b7f-445a-b6b2-23e16869c366
+		summarizeBy: none
+		sourceColumn: Processed_Date
+
+		variation Variation
+			isDefault
+			relationship: 0321f351-239f-41d3-af88-149fb096b833
+			defaultHierarchy: LocalDateTable_744f9bf2-4895-49eb-a60d-b1583bf139a0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Directorate_1_Code
+		dataType: string
+		lineageTag: 43a3e577-5736-4f0e-be3d-e43d889f9fce
+		summarizeBy: none
+		sourceColumn: GHC_Directorate_1_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Directorate_1_Description
+		dataType: string
+		lineageTag: 9a56d67f-c0f1-4389-bd03-46abfd6f743a
+		summarizeBy: none
+		sourceColumn: GHC_Directorate_1_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Directorate_2_Code
+		dataType: string
+		lineageTag: 32cfbb62-a06d-48f9-b97b-da849140fd55
+		summarizeBy: none
+		sourceColumn: GHC_Directorate_2_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Directorate_2_Description
+		dataType: string
+		lineageTag: ac1a7fa1-6dee-4454-83b2-2f77439df0cc
+		summarizeBy: none
+		sourceColumn: GHC_Directorate_2_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Service_Code
+		dataType: string
+		lineageTag: 50eb208d-488d-4fe1-8008-4fbdec066847
+		summarizeBy: none
+		sourceColumn: GHC_Service_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Service_Description
+		dataType: string
+		lineageTag: 40c1d5a4-9571-4d5e-97b4-cfd9b2816a34
+		summarizeBy: none
+		sourceColumn: GHC_Service_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Sub_Service_Code
+		dataType: string
+		lineageTag: 6d80db92-7ac0-4074-b3e2-aa417c9bb8bc
+		summarizeBy: none
+		sourceColumn: GHC_Sub_Service_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Sub_Service_Description
+		dataType: string
+		lineageTag: bf0a9e84-ce4a-4025-9f8a-2add9bf13637
+		summarizeBy: none
+		sourceColumn: GHC_Sub_Service_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Cost_Centre
+		dataType: string
+		lineageTag: a4b6b622-1b72-4a39-a341-b49d93a06313
+		summarizeBy: none
+		sourceColumn: GHC_Cost_Centre
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Ward_Team_Code
+		dataType: string
+		lineageTag: ec8da396-9d0d-46a1-b7c9-18bb01e65722
+		summarizeBy: none
+		sourceColumn: GHC_Ward_Team_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Team_Description
+		dataType: string
+		lineageTag: 7e78978c-367c-4e62-b2fb-f6f6f7aab98e
+		summarizeBy: none
+		sourceColumn: GHC_Team_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHC_Team_Locality
+		dataType: string
+		lineageTag: b8f01c63-1328-434a-992d-eaef3246139a
+		summarizeBy: none
+		sourceColumn: GHC_Team_Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: c9b6e75b-cbb3-404f-aa69-e7ac06f5df41
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_referral_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 401b6197-da36-4c91-ad0f-b02b0d11e380
+		summarizeBy: sum
+		sourceColumn: Length_of_referral_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_referral_days_banding
+		dataType: string
+		lineageTag: b84569ac-8922-4a01-a09f-307a497da367
+		summarizeBy: none
+		sourceColumn: Length_of_referral_days_banding
+
+		annotation SummarizationSetBy = Automatic
+
+	column Length_of_referral_days_banding_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 6445dada-4ada-4386-8f39-c58f2e77740d
+		summarizeBy: sum
+		sourceColumn: Length_of_referral_days_banding_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Person_ID
+		dataType: string
+		lineageTag: f1e0cdc0-7709-4a0c-9c40-86ce7377c29c
+		summarizeBy: none
+		sourceColumn: Person_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Code
+		dataType: string
+		lineageTag: 1c4e4fdc-1f59-4d12-9c89-967b7a1fcb2b
+		summarizeBy: none
+		sourceColumn: Ethnicity_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Code_Description
+		dataType: string
+		lineageTag: ae8795a3-cd9e-42b2-a132-6956829d71c1
+		summarizeBy: none
+		sourceColumn: Ethnicity_Code_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 1d2a0c72-129c-460a-9264-a5791aeb43e3
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Name
+		dataType: string
+		lineageTag: 8d9f2727-ce2e-489b-9d5f-48b4bbf5b911
+		summarizeBy: none
+		sourceColumn: Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: d63dc6d4-3b11-4a51-bddb-57ee8abf3e92
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_care_network
+		dataType: string
+		lineageTag: 70260d7c-41e6-4da1-809b-651aa0451c16
+		summarizeBy: none
+		sourceColumn: Primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_time_of_day_grouping
+		dataType: string
+		lineageTag: 773dac67-9672-40ba-a18d-98971779dafa
+		summarizeBy: none
+		sourceColumn: Referral_time_of_day_grouping
+		sortByColumn: Referral_time_of_day_grouping_order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_time_of_day_grouping_order
+		dataType: int64
+		formatString: 0
+		lineageTag: e178091d-8c9f-4581-9cf8-77b94cfa2236
+		summarizeBy: sum
+		sourceColumn: Referral_time_of_day_grouping_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_recieved_day_of_week
+		dataType: string
+		lineageTag: 479244d2-8570-4d03-8883-0ee2d3b20b9c
+		summarizeBy: none
+		sourceColumn: Referral_recieved_day_of_week
+		sortByColumn: Referral_recieved_day_of_weekday_number
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_recieved_day_of_weekday_number
+		dataType: int64
+		formatString: 0
+		lineageTag: f8fc8b0c-7eb4-44b4-9b91-f18e07174755
+		summarizeBy: sum
+		sourceColumn: Referral_recieved_day_of_weekday_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_code_wider_groups
+		dataType: string
+		lineageTag: 7a017e88-1fac-48b7-9152-0d9e2fae87d8
+		summarizeBy: none
+		sourceColumn: Ethnic_code_wider_groups
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_code_origin_grouped
+		dataType: string
+		lineageTag: ebcf0f2f-e433-48e7-811a-69e06b129a99
+		summarizeBy: none
+		sourceColumn: Ethnic_code_origin_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attended_Contacts_in_Referral
+		dataType: int64
+		formatString: 0
+		lineageTag: 06afb6e3-3014-4400-8e86-ab1b9adb9f54
+		summarizeBy: sum
+		sourceColumn: Attended_Contacts_in_Referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dervived_postcode_on_referral
+		dataType: int64
+		formatString: 0
+		lineageTag: 7383c10c-2e2f-4472-92ad-37ff073e17ff
+		summarizeBy: sum
+		sourceColumn: Dervived_postcode_on_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_Code_on_referral
+		dataType: string
+		lineageTag: e5ace011-31fa-4faa-ab40-612553963128
+		summarizeBy: none
+		sourceColumn: LSOA_Code_on_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentDistrictWardcode_on_referral
+		dataType: string
+		lineageTag: 8ddeb8c0-2d85-4e5a-8e62-a82e877d00aa
+		summarizeBy: none
+		sourceColumn: CurrentDistrictWardcode_on_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrentDistrictWardname_on_referral
+		dataType: string
+		lineageTag: 34673933-1928-47bc-b67e-690eeab8f405
+		summarizeBy: none
+		sourceColumn: CurrentDistrictWardname_on_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile_on_referral
+		dataType: double
+		lineageTag: 8174ec47-47d1-4d04-8bbe-d37ac4af70d2
+		summarizeBy: sum
+		sourceColumn: IMDcountyDecile_on_referral
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column IMDcountyQuintile_on_referral
+		dataType: double
+		lineageTag: 82782727-1f7f-4e3e-9104-4378949726a8
+		summarizeBy: sum
+		sourceColumn: IMDcountyQuintile_on_referral
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 94c073e5-19d3-470b-9abf-9d8dc6545e81
+		summarizeBy: sum
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Code
+		dataType: string
+		lineageTag: 84bdafd4-6c0f-4450-8c2e-9ec4db07ff38
+		summarizeBy: none
+		sourceColumn: Gender_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender_Description
+		dataType: string
+		lineageTag: 952d0260-5963-4a42-9b55-a8d13b1f78e5
+		summarizeBy: none
+		sourceColumn: Gender_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1.Community_Referrals' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="select *#(lf)from [PowerBI_Processing].[dbo].[MHSDS_MH_Referrals]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

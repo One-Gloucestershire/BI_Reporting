@@ -1,0 +1,153 @@
+table 'CQC over time'
+	lineageTag: b21c1a83-1223-44a7-b151-6c41e7dd4aa0
+
+	column 'Location ID'
+		dataType: string
+		lineageTag: f8d713f7-677f-467b-916f-9b553c8a3b8a
+		summarizeBy: none
+		sourceColumn: Location ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Published_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f2f38b55-7a8f-4f4e-9998-618e3e369603
+		summarizeBy: none
+		sourceColumn: Published_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Name'
+		dataType: string
+		lineageTag: 5ec01478-5360-48b3-b8e0-12f541394ae6
+		summarizeBy: none
+		sourceColumn: Location Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care homes beds'
+		dataType: int64
+		formatString: 0
+		lineageTag: 64ee1187-ced2-48a2-a26c-6032877664b8
+		summarizeBy: sum
+		sourceColumn: Care homes beds
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Latest Overall Rating'
+		dataType: string
+		lineageTag: da0ad832-2f8e-4963-97d4-6a6bba5c3683
+		summarizeBy: none
+		sourceColumn: Location Latest Overall Rating
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Postal Code'
+		dataType: string
+		lineageTag: 4bf13024-8991-4b39-950f-19484dbf5509
+		summarizeBy: none
+		sourceColumn: Location Postal Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Street Address'
+		dataType: string
+		lineageTag: a377c5fe-7db1-4db4-a384-517374c05bbc
+		summarizeBy: none
+		sourceColumn: Location Street Address
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		lineageTag: bf3f6ab8-14e3-48b0-b2eb-52c33276b6af
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Primary Inspection Category'
+		dataType: string
+		lineageTag: 32fbc8c3-673e-4dc2-9136-d799fb0bdc72
+		summarizeBy: none
+		sourceColumn: Provider Primary Inspection Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Children 0-18 years'
+		dataType: string
+		lineageTag: 42d01108-b3f3-470e-b093-61ed0b9d5c87
+		summarizeBy: none
+		sourceColumn: Service user band - Children 0-18 years
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Dementia'
+		dataType: string
+		lineageTag: 6cf7cd7c-03ad-4c3b-9873-1af18a8abf77
+		summarizeBy: none
+		sourceColumn: Service user band - Dementia
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Learning disabilities or autistic spectrum disorder'
+		dataType: string
+		lineageTag: af680ba4-c178-4c29-8c77-f641c12bfb39
+		summarizeBy: none
+		sourceColumn: Service user band - Learning disabilities or autistic spectrum disorder
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Mental Health'
+		dataType: string
+		lineageTag: 18d4df22-fdbc-48d4-845e-e2c227af04c8
+		summarizeBy: none
+		sourceColumn: Service user band - Mental Health
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Older People'
+		dataType: string
+		lineageTag: f9e6aef0-5f57-4d5c-8759-2943c7eacc5f
+		summarizeBy: none
+		sourceColumn: Service user band - Older People
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Physical Disability'
+		dataType: string
+		lineageTag: d1a6000d-489d-4d43-8d90-ef5b83729923
+		summarizeBy: none
+		sourceColumn: Service user band - Physical Disability
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service user band - Younger Adults'
+		dataType: string
+		lineageTag: 0e3d8b56-ed8b-464c-91db-4d57629a66f0
+		summarizeBy: none
+		sourceColumn: Service user band - Younger Adults
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location Latest Overall Rating Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: 931b2115-c3f5-4ea4-a21b-aa497e6bf119
+		summarizeBy: sum
+		sourceColumn: Location Latest Overall Rating Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'CQC over time' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT *#(lf),[Location Latest Overall Rating Order] = CASE #(lf)WHEN [Location Latest Overall Rating] LIKE 'Outstanding' THEN 1#(lf)WHEN [Location Latest Overall Rating] LIKE 'Good' THEN 2#(lf)WHEN [Location Latest Overall Rating] LIKE 'Requires improvement' THEN 3#(lf)WHEN [Location Latest Overall Rating] LIKE 'Inadequate' THEN 4#(lf)END#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Location Latest Overall Rating Order", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Exception
+

@@ -1,0 +1,56 @@
+table 'CQC Alignment'
+	lineageTag: 99871a86-4b18-47b8-a37c-5d109193b85b
+
+	column Aligned_PCN
+		dataType: string
+		lineageTag: a8d28919-7a35-4497-84e4-21f0388c2f04
+		summarizeBy: none
+		sourceColumn: Aligned_PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bed_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f75fed4-9b03-4c31-8c09-d4082c558c0f
+		summarizeBy: sum
+		sourceColumn: Bed_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_CQC_rating
+		dataType: string
+		lineageTag: d46c24e4-628b-47b4-b50d-5d373953767f
+		summarizeBy: none
+		sourceColumn: Latest_CQC_rating
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWASFT Name'
+		dataType: string
+		lineageTag: 8fd0f5c5-9de7-4e8e-9d10-4b189622f9b4
+		summarizeBy: none
+		sourceColumn: SWASFT Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Assigned_name
+		dataType: string
+		lineageTag: 6b0a0cc0-c62d-4f78-ba0c-4a207481ac40
+		summarizeBy: none
+		sourceColumn: Assigned_name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'CQC Alignment' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="#(lf)--Table for getting the most up to date month for CQC data#(lf)SET NOCOUNT ON#(lf)IF OBJECT_ID ('TEMPDB..#max_date') IS NOT NULL DROP TABLE #max_date#(lf);#(lf)#(lf)SELECT#(lf)[max_published_date] = max(published_date)#(lf),[Current_up_to_date_month] = 'Yes'#(lf)INTO #max_date#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List]#(lf)#(lf)#(lf)-------------------------------------------------------#(lf)-------------------------------------------------------#(lf)#(lf)#(lf)SELECT distinct#(lf)#(lf)[Aligned_PCN] = case when [p].[pcn] IS NULL then 'No aligned PCN' else [p].[pcn] END#(lf),[Bed_count] = CASE WHEN p.[total beds] IS NULL THEN 0 ELSE p.[total beds] END#(lf),[Latest_CQC_rating] = CASE WHEN q.[location latest overall rating] IS NULL THEN 'No known rating' ELSE q.[location latest overall rating]  END#(lf),[SWASFT Name]#(lf)--,[SWAST_aligned_name] = case when [location name] = 'The Lawns' and [pcn] = 'TWNS ' then null else [SWASFT Name] end#(lf),[Assigned_name] = CASE#(tab)WHEN [CQC_Care_Home_Name] IS NULL THEN UPPER(LEFT([SWASFT Name],1))+LOWER(SUBSTRING([SWASFT Name],2,LEN([SWASFT Name])))#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [location name] = 'The Lawns' AND [pcn] = 'TWNS ' THEN 'The Lawns (TWNS)'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [location name] = 'The Lawns' AND [pcn] = 'Rosebank & Bartongate 'THEN [CQC_Care_Home_Name]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [CQC_Care_Home_Name] IS NOT NULL THEN [CQC_Care_Home_Name]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)END#(lf)#(lf)FROM [BIReports].[dbo].[Care_Home_Mapping_May23] [M]#(lf)#(lf)LEFT JOIN [BIReports].[dbo].[PCN_CQC_Monthly_List] [P] ON [P].[CQC_Care_Home_Name] = [M].[CQC Name] #(lf)#(lf)LEFT JOIN #(lf)(SELECT *#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List] [A]#(lf)LEFT JOIN #max_date [MD] ON [MD].max_published_date = [A].[Published_Date]#(lf)WHERE [Current_up_to_date_month] like 'Yes') AS [Q] ON [Q].[Location Name] = [P].[CQC_Care_Home_Name] and [Q].[Location Postal Code] = [P].[Postcode]#(lf)#(lf)#(lf)order by [Assigned_name]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

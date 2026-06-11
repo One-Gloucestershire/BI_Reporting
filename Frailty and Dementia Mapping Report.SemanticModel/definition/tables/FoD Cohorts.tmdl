@@ -1,0 +1,71 @@
+table 'FoD Cohorts'
+	lineageTag: d521442a-e1b9-4158-bee3-6c2f517aa0ea
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: 5f5c0833-1926-4a6e-8c9e-5b4aa0f0ec31
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA code'
+		dataType: string
+		lineageTag: 89dff550-ac7c-4d53-ac40-e70af125d2d2
+		summarizeBy: none
+		sourceColumn: LSOA code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward name 2021'
+		dataType: string
+		lineageTag: 7adcd614-5bd7-43bd-afd1-d0f9c6429a0a
+		summarizeBy: none
+		sourceColumn: Current District Ward name 2021
+
+		annotation SummarizationSetBy = Automatic
+
+	column District
+		dataType: string
+		lineageTag: a0b9fc7a-1b2f-4d99-9fbe-6a0a17c865b6
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column DementiaDerived
+		dataType: string
+		lineageTag: e4850ad5-b2b3-4ce7-af78-dc7ca85ee769
+		summarizeBy: none
+		sourceColumn: DementiaDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Catgory_derived
+		dataType: string
+		lineageTag: ba94c4f6-f16b-468e-a357-d1f5910b78eb
+		summarizeBy: none
+		sourceColumn: eFI_Catgory_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column 65+_Flag
+		dataType: string
+		lineageTag: 9ef9edfc-186a-4dd4-b340-58be86284b4c
+		summarizeBy: none
+		sourceColumn: 65+_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'FoD Cohorts' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT DISTINCT [PseudoNHSNo]#(lf)           --      ,[Rockwood_Frailty] = CASE WHEN [Value1] IN ('0','1') THEN 'Very Fit'#(lf)#(tab)#(tab)#(tab)#(tab)       --                     WHEN [Value1] IN ('2') THEN 'Well'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('3') THEN 'Managing Well'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('4') THEN 'Vulnerable'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('5') THEN 'Mildly Frail'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('6') THEN 'Moderately Frail'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('7') THEN 'Severely Frail'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('8') THEN 'Very Severely Frail'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)--WHEN [Value1] IN ('9') THEN 'Terminally Ill' ELSE 'Not Recorded' END#(lf)  INTO #TEMP#(lf)  FROM [CCG_Current].[PrimaryCare].[vw_Events] WHERE ([EventCode] COLLATE SQL_Latin1_General_CP1_CS_AS IN ('XaQik')#(lf)                                               OR [SnomedCode] = '763264000')#(lf)  ;#(lf)#(lf)  SELECT DISTINCT [Derived_Pseudo_NHS]#(lf)                 ,[LSOA code]#(lf)                 ,[Current District Ward name 2021]#(lf)#(tab)#(tab)#(tab)#(tab) ,[District]#(lf)#(tab)#(tab)#(tab)#(tab) ,[DementiaDerived] = CASE WHEN [DementiaDerived] IS NULL THEN 'Not Diagnosed'#(lf)#(tab)#(tab)#(tab)#(tab)                           WHEN [DementiaDerived] = 0 THEN 'Not Diagnosed'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [DementiaDerived] = 1 THEN 'Dementia Diagnosed' END#(lf)#(tab)#(tab)#(tab)#(tab) ,[eFI_Catgory_derived]#(lf)#(tab)#(tab)#(tab)#(tab) ,[65+_Flag] = CASE WHEN [Derived_Age] >= 65 THEN '65+' ELSE '>65' END#(lf)#(tab)#(tab)#(tab)#(tab) --,[Rockwood_Frailty] = CASE WHEN [B].[Rockwood_Frailty] IS NULL THEN 'Not Recorded'#(lf)#(tab)#(tab)#(tab)#(tab) --                           ELSE [B].[Rockwood_Frailty] END#(lf)#(lf)  FROM [BIReports].[MPI].[MPI_current] [A]#(lf)#(lf)  LEFT JOIN #TEMP [B] ON [B].[PseudoNHSNo] = [A].[Derived_Pseudo_NHS]#(lf)#(lf)  WHERE [LSOA code] IS NOT NULL#(lf)  AND [CCG_Of_Registration] = '11M'#(lf)  AND [District] IS NOT NULL"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

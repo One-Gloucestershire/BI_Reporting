@@ -1,0 +1,56 @@
+table REF_GP_Practice_2_Comparison
+	lineageTag: 0bbced94-e44a-4306-9b9f-7d594f383f7b
+
+	column practice_code
+		dataType: string
+		lineageTag: 49f98b52-8a10-4a12-861b-061f0391721c
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 7368c3b8-eceb-49b4-8298-248658554c4b
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 0569c836-cfa7-4465-855e-8c39894f75d6
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 4db8a3ba-181b-48ee-be68-ff3978e1d639
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Using_Whiteboard_Flag
+		dataType: string
+		lineageTag: f74ea6a7-969f-46ea-9aaa-5cb28c59f07b
+		summarizeBy: none
+		sourceColumn: Using_Whiteboard_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_GP_Practice_2_Comparison = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="SELECT DISTINCT [practice_code] = gp.OrganisationCode#(lf),[practice_name] = gp.ReportingOrganisationName#(lf),[primary_care_network] = gp.Reporting_PrimaryCareNetwork#(lf),[Locality] = gp.Reporting_Locality#(lf),[Using_Whiteboard_Flag] = case when gp.Reporting_PrimaryCareNetwork in (#(lf)'North and South Gloucester'#(lf),'Cheltenham Central'#(lf),'South Cotswolds'#(lf),'North Cotswolds'#(lf),'Berkeley Vale'#(lf),'Severn Health'#(lf),'TWNS'#(lf),'Aspen'#(lf),'Rosebank & Bartongate'#(lf),'Hadwen & Quedgeley'#(lf),'The Forest of Dean') then 'Yes' else 'No' end #(lf)#(lf)#(lf)FROM PowerBI_Reporting.dbo.GP_Practice_Ref as gp#(lf)#(lf)where gp.OrganisationCode  IN (SELECT DISTINCT  p.practice_code FROM PowerBI_Reporting.dbo.Proactive_Whiteboard_Cohort as p) #(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,46 @@
+table REF_LSOA
+	lineageTag: c080ecc9-0b5d-49d5-965f-9de44560611e
+
+	column LSOACode
+		dataType: string
+		lineageTag: b1dbabc4-62a5-4e90-a2dd-e78a6db0da92
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDCountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 20dd1d56-5d25-4a93-b159-06725aa17609
+		summarizeBy: sum
+		sourceColumn: IMDCountyDecile
+
+		changedProperty = DataType
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_in_Gloucestershire
+		dataType: int64
+		formatString: 0
+		lineageTag: eb146982-0978-4303-ad1f-bf2ad76142ff
+		summarizeBy: sum
+		sourceColumn: LSOA_in_Gloucestershire
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_LSOA = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="#(lf)select DISTINCT p.LSOACode#(lf),[IMDCountyDecile] = Derived_IMDGloucestershireDecile#(lf)#(lf),[LSOA_in_Gloucestershire] = case when (m.IsGloucestershire = 'Y') then 1  else 0 end#(lf)#(lf)from CCG_Reference.Reference.vw_LSOA_IMD as p #(lf)left join CCG_Reference.Reference.vw_GeographyMapping as m on m.LSOACode = p.LSOACode#(lf)where p.LSOACode is not null #(lf)"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

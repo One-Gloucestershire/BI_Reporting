@@ -1,0 +1,371 @@
+table hospice_at_home_quarterly
+	lineageTag: 6acb6d85-a2bb-4952-9f75-730ab77f104b
+
+	measure 'Total Average Hours of Care per Day' = ```
+			
+			var max_date = ENDOFMONTH('hospice_at_home_quarterly'[Month])
+			var min_date = STARTOFMONTH('hospice_at_home_quarterly'[Month])
+			var diff = DATEDIFF(min_date, max_date, DAY) + 31
+			var total_hours = sum('hospice_at_home_quarterly'[total_hours_of_care]) 
+			RETURN total_hours / diff
+			```
+		lineageTag: f354beca-5b82-4530-a52f-4a289c2e2898
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Average Hours of Care per Month correct' =
+			
+			var max_date = ENDOFMONTH('hospice_at_home_quarterly'[Month])
+			var min_date = STARTOFMONTH('hospice_at_home_quarterly'[Month])
+			var diff = DATEDIFF(min_date, max_date, MONTH) + 1
+			var total_hours = sum('hospice_at_home_quarterly'[total_hours_of_care])
+			RETURN total_hours / diff
+		formatString: 0
+		lineageTag: f4dfd474-9c57-4710-a281-088294cfa998
+
+	measure 'Average Hours of Care per Day' =
+			
+			CALCULATE((AVERAGEX(
+				KEEPFILTERS(VALUES('REF date_table (2)'[day_month_year])),
+				CALCULATE(sum(hospice_at_home_quarterly[total_hours_of_care])) +0
+			)  ))
+		lineageTag: c9e0138b-890c-4b91-81ca-baa147894a3d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Date Diff Total Average Hours of Care per Month correct' =
+			
+			var max_date = ENDOFMONTH('hospice_at_home_quarterly'[Month])
+			var min_date = STARTOFMONTH('hospice_at_home_quarterly'[Month])
+			var diff = DATEDIFF(min_date, max_date, MONTH) +1
+			var total_hours = sum('hospice_at_home_quarterly'[total_hours_of_care])
+			RETURN diff
+		formatString: 0
+		lineageTag: b3bfac44-f83a-40be-af57-97162f0c0490
+
+	measure 'Date Diff Day Average Hours of Care per Day' =
+			
+			var max_date = ENDOFMONTH('hospice_at_home_quarterly'[Month])
+			var min_date = STARTOFMONTH('hospice_at_home_quarterly'[Month])
+			var diff = DATEDIFF(min_date, max_date, DAY) + 31
+			
+			RETURN diff
+		formatString: 0
+		lineageTag: a7ab6ae9-e5e4-4802-90a1-8989d0cd3761
+
+	measure 'Total hours monthly (per 12 months)' = CALCULATE(sum(hospice_at_home_quarterly[total_hours_of_care]) / 12)
+		formatString: 0
+		lineageTag: 592c3832-b36a-4d32-8fbb-994eb7049d34
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column Provider
+		dataType: string
+		lineageTag: 182600cb-cd55-426b-8113-860156ce8f62
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 72c6f282-efdb-4b8e-93a8-439e27521a94
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 128850d6-2856-4ab3-b587-0c9f891cb6dc
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 05128419-9708-4273-b09e-729229ea3262
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: 358ed974-2a33-48b9-b5a7-3064e493b9ae
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_week_day_hours
+		dataType: double
+		lineageTag: 817edf40-dc6d-4425-b529-28ab1aa29972
+		summarizeBy: sum
+		sourceColumn: Number_of_week_day_hours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Number_of_week_night_hours
+		dataType: double
+		lineageTag: fcfdf9d6-867f-4172-be4f-63c6b336fc79
+		summarizeBy: sum
+		sourceColumn: Number_of_week_night_hours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Number_of_weekend_and_bank_holiday_hours
+		dataType: double
+		lineageTag: d4e1a65e-daa7-4e62-b3ae-5444b5ab0713
+		summarizeBy: sum
+		sourceColumn: Number_of_weekend_and_bank_holiday_hours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Number_of_missed_visits_-_patient_request
+		dataType: int64
+		formatString: 0
+		lineageTag: 1e3df12a-711d-4019-9c5f-4b76adc3dee4
+		summarizeBy: sum
+		sourceColumn: Number_of_missed_visits_-_patient_request
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_missed_visits_-_hospice_request
+		dataType: int64
+		formatString: 0
+		lineageTag: 32b36a91-86c1-4329-bfe2-6d489edc9750
+		summarizeBy: sum
+		sourceColumn: Number_of_missed_visits_-_hospice_request
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_staff
+		dataType: int64
+		formatString: 0
+		lineageTag: 8d6fcbdd-0fd8-4dd3-a505-8a190875ffde
+		summarizeBy: sum
+		sourceColumn: Total_staff
+
+		annotation SummarizationSetBy = Automatic
+
+	column Full_Time_Equivalent_Staff
+		dataType: double
+		lineageTag: 74c0f7a2-3c01-456d-92d1-916a59745e05
+		summarizeBy: sum
+		sourceColumn: Full_Time_Equivalent_Staff
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column New_starters
+		dataType: int64
+		formatString: 0
+		lineageTag: 450d15bc-0abb-40ff-860d-49961d7cec97
+		summarizeBy: sum
+		sourceColumn: New_starters
+
+		annotation SummarizationSetBy = Automatic
+
+	column Leavers
+		dataType: int64
+		formatString: 0
+		lineageTag: ad445766-5a5b-4741-b344-f92ea1c01db3
+		summarizeBy: sum
+		sourceColumn: Leavers
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_clinical_incidents
+		dataType: int64
+		formatString: 0
+		lineageTag: e726aeae-6702-4f46-8ee5-51e6329b07cb
+		summarizeBy: sum
+		sourceColumn: Number_of_clinical_incidents
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_compliments
+		dataType: int64
+		formatString: 0
+		lineageTag: 9853c938-d0fe-477a-9002-662db31ded92
+		summarizeBy: sum
+		sourceColumn: Number_of_compliments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_complaints
+		dataType: int64
+		formatString: 0
+		lineageTag: d561d5a1-3821-4df1-ba2e-5325ad474f95
+		summarizeBy: sum
+		sourceColumn: Number_of_complaints
+
+		annotation SummarizationSetBy = Automatic
+
+	column Number_of_external_clinics/groups_hosted_at_hospice
+		dataType: int64
+		formatString: 0
+		lineageTag: d699f71a-da5f-49bf-817d-54ea0d174573
+		summarizeBy: sum
+		sourceColumn: Number_of_external_clinics/groups_hosted_at_hospice
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: bba58072-1078-4f04-8fc9-f34379437251
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: 9b1e5cb5-f987-44d0-bbb8-1e7beb597067
+			defaultHierarchy: LocalDateTable_b2d2ea70-e0d7-42b3-a3ec-65e2b4ef0f22.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FileName
+		dataType: string
+		lineageTag: b3e27f3b-8d3f-4ff9-9ddc-a4fc4f2d5663
+		summarizeBy: none
+		sourceColumn: FileName
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_hours_of_care
+		dataType: double
+		formatString: 0
+		lineageTag: d367f9da-eb23-47ae-97a9-672ff57f5c75
+		summarizeBy: sum
+		sourceColumn: total_hours_of_care
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'H&H Quarterly YTD' =
+			
+			
+			VAR current_month = MONTH('hospice_at_home_quarterly'[Month])
+			VAR f_current_month = SWITCH(TRUE(),
+			current_month = 4, 1,
+			current_month = 5, 2,
+			current_month = 6, 3,
+			current_month = 7, 4,
+			current_month = 8, 5,
+			current_month = 9, 6,
+			current_month = 10, 7,
+			current_month = 11, 8,
+			current_month = 12, 9,
+			current_month = 1, 10,
+			current_month = 2, 11,
+			current_month = 3, 12
+			)
+			
+			VAR max_month = CALCULATE(MONTH(MAX('hospice_at_home_quarterly'[Month])),ALLEXCEPT('hospice_at_home_quarterly','hospice_at_home_quarterly'[Provider]))
+			VAR f_max_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			
+			return if(f_current_month <= f_max_month, "Year to Date", "Not Year to Date")
+		lineageTag: 82926e08-87d4-4c81-ad86-c99eed951d45
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_month = CALCULATE(MONTH(MAX('hospice_at_home_quarterly'[Month])),ALLEXCEPT('hospice_at_home_quarterly','hospice_at_home_quarterly'[Provider]))
+		formatString: 0
+		lineageTag: 39c7a8f8-210f-43a3-869f-7cb6b6a6bcbe
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current Year Flag' = ```
+			
+			
+			VAR max_year = YEAR(MAX('hospice_at_home_quarterly'[Month]
+			))
+			VAR max_month = MONTH(MAX('hospice_at_home_quarterly'[Month]
+			))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR current_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			
+			VAR adjusted_year = if(
+			    MONTH('hospice_at_home_quarterly'[Month])= 1, YEAR('hospice_at_home_quarterly'[Month]
+			) -1, 
+			    if(MONTH('hospice_at_home_quarterly'[Month]) = 2, YEAR('hospice_at_home_quarterly'[Month]
+			) -1, 
+			    if(MONTH('hospice_at_home_quarterly'[Month]) = 3, YEAR('hospice_at_home_quarterly'[Month]
+			) -1, year('hospice_at_home_quarterly'[Month]
+			))))
+			
+			var year_flag = IF(adjusted_year = current_year, "Current Year", IF(adjusted_year = current_year - 1, "Previous Year", "Other Year"))
+			
+			RETURN year_flag
+			```
+		lineageTag: 9ac6d081-54d8-4575-899f-6441ce7de7c0
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition hospice_at_home_quarterly-6dd386dc-1832-4231-9482-c09c865c247c = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT [Provider]#(lf)      ,[H].[Month]#(lf)#(tab)  ,[FinancialYear]#(lf)#(tab)  ,[D].[MonthName]#(lf)#(tab)  ,[YearMonth]#(lf)      ,[Number_of_week_day_hours]#(lf)      ,[Number_of_week_night_hours]#(lf)      ,[Number_of_weekend_and_bank_holiday_hours]#(lf)      ,[Number_of_missed_visits_-_patient_request]#(lf)      ,[Number_of_missed_visits_-_hospice_request]#(lf)      ,[Total_staff]#(lf)      ,[Full_Time_Equivalent_Staff]#(lf)      ,[New_starters]#(lf)      ,[Leavers]#(lf)      ,[Number_of_clinical_incidents]#(lf)      ,[Number_of_compliments]#(lf)      ,[Number_of_complaints]#(lf)      ,[Number_of_external_clinics/groups_hosted_at_hospice]#(lf)      ,[ProcessedDate]#(lf)      ,[FileName]#(lf)  FROM [CCG_Current].[Hospices].[vw_HospiceAtHome_Quarterly][H]#(lf)#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup][D]#(lf)  ON [H].[Month] = [D].[Date]"]),
+				    #"Changed Month type to date" = Table.TransformColumnTypes(Source,{{"Month", type date}, {"Number_of_week_day_hours", type number}}),
+				    #"Added total_hours_of_care" = Table.AddColumn(#"Changed Month type to date", "total_hours_of_care", each [Number_of_week_day_hours]+[Number_of_week_night_hours]+[Number_of_weekend_and_bank_holiday_hours]),
+				    #"Changed total_hours_of_care to decimal" = Table.TransformColumnTypes(#"Added total_hours_of_care",{{"total_hours_of_care", type number}})
+				in
+				    #"Changed total_hours_of_care to decimal"
+
+	annotation PBI_ResultType = Table
+

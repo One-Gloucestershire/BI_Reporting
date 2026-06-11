@@ -1,0 +1,38 @@
+table lsoa_populations
+	lineageTag: 5dd61d80-7217-4834-a342-a23aee251e76
+
+	measure lsoa_population = sum(lsoa_populations[total_population])
+		formatString: 0
+		lineageTag: 13692693-c302-4da7-bb2d-0e2b5c2a9ba5
+
+	measure lsoa_rate_per_1000 = [total_activity]/([lsoa_population]/1000)
+		formatString: 0.0
+		lineageTag: bebc8322-e7b0-4dd2-9bad-8283a1656b01
+
+	column lsoa
+		dataType: string
+		lineageTag: 44091b5b-ebd5-40c2-ad21-a8be3c26a722
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_population
+		dataType: int64
+		formatString: 0
+		lineageTag: 515a9cfa-727b-47b5-b069-12dc5142567e
+		summarizeBy: none
+		sourceColumn: total_population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition lsoa_populations-f86389df-704d-41f5-8221-a79822d7d527 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[dbo].[LSOA_Populations]#(lf)where [lsoa] not in ('E01032351','E01028762')"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,82 @@
+table 'GP Reference'
+	lineageTag: 7e9eaaa0-60d6-4cf5-96a8-15e509a818da
+
+	column Locality
+		dataType: string
+		lineageTag: 1c870bf8-d5c2-410d-a125-828973b48941
+		summarizeBy: none
+		sourceColumn: Locality
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: a2b6a344-c2b6-451c-a300-d5e0c3bfb572
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: d3b1d3c6-7394-43be-b487-391d1b8250f1
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: 28ee757a-2eba-4614-9c2f-ed30a34f7dc3
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: a266298f-6f60-4dfd-95f4-e9322c5ffffc
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: ce22e720-7824-44c1-a43e-433bf360319e
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 5f5a2316-59ed-4c46-a60c-f14031765ccf
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)#(lf)SELECT [Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)                         WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Locality] LIKE 'Tewkesbury Newent and Staunton' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)      ,[PrimaryCareNetwork] = CASE WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)                               WHEN [PrimaryCareNetwork] LIKE 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   ELSE [PrimaryCareNetwork] END#(lf)#(tab)  ,[OrganisationCode]#(lf)#(tab)  ,[ReportingOrganisationCode] = CASE WHEN [ReportingOrganisationCode] LIKE 'L84073' THEN 'L84075' /*Acorn Practice*/#(lf)#(tab)                                      WHEN [ReportingOrganisationCode] LIKE 'L84017' THEN 'L84018' /*Cirencester Health Group*/#(lf)#(tab)                                      ELSE [ReportingOrganisationCode] END #(lf)#(tab)  ,[ReportingOrganisationName] = CASE WHEN [ReportingOrganisationName] LIKE 'Acorn Practice' THEN 'May Lane Surgery' #(lf)#(tab)                                      WHEN [ReportingOrganisationName] LIKE 'Regent Street Surgery' THEN 'The Willow Tree Practice'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [ReportingOrganisationName] LIKE 'Coleford Family Doctors' THEN 'Coleford Medical Practice'#(lf) #(tab)                                      ELSE [ReportingOrganisationName] END#(lf)#(lf)INTO #TEMP#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)#(lf)#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)AND [Locality] IS NOT NULL#(lf);#(lf)#(lf)SELECT [GP].*#(lf)#(tab)  ,[COORD].[GPLatitude]#(lf)#(tab)  ,[COORD].[GPLongitude]#(lf)#(lf)FROM #TEMP AS [GP]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT [GP_Practice_Code], [GPLatitude], [GPLongitude]#(lf)           FROM [PowerBI_Reporting].[dbo].[tbl_Demographics_Population_Overview]) [COORD] ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"ReportingOrganisationName", "Practice Name"}})
+				in
+				    #"Renamed Columns"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+

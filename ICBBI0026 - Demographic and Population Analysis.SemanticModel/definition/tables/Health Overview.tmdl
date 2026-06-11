@@ -1,0 +1,279 @@
+table 'Health Overview'
+	lineageTag: cf410392-50e1-4fac-a5cd-37cf921c9903
+
+	measure LTC% = IF(Sum('Health Overview'[Value])/CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Health Overview'[Attribute]))>1,1,Sum('Health Overview'[Value])/CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Health Overview'[Attribute])))
+		formatString: 0.000%;-0.000%;0.000%
+		lineageTag: ab1cf45f-81ff-4d0e-8e35-5445616b63a2
+
+	measure 'With LTC' =
+			CALCULATE(
+			    SUM('Health Overview'[Value]),
+			    'Health Overview'[Attribute] = "Healthy_Well")
+		formatString: 0
+		lineageTag: e35cd4db-e585-46ed-9547-7da217193234
+
+	measure 'Healthy Well' = [With LTC %]
+		formatString: 0
+		lineageTag: 82f2dba3-e667-40f5-b9a8-15fcc8352d69
+
+	measure 'Healthy Well %' = 1-[With LTC %]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: fb0a63e5-1968-4d2f-9d95-a3c01818389a
+
+	measure 'Population Counter' = sum('Population Overview'[Population_Counter])
+		formatString: 0
+		lineageTag: 37bc0ffd-15c1-48be-99d2-a0fb15de6898
+
+	measure 'With LTC %' = 1-'Health Overview'[With LTC]/sum('Population Overview'[Population_Counter])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 44cb947e-1ba9-41dd-b0e8-60d7ac893df9
+
+	measure 'LTC NO FILTER %' = CALCULATE(SUM('Health Overview'[Value]),ALL('Population Overview'))/CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Population Overview'),ALL('Health Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 55fcc3f2-81d8-4d69-a3d2-83d6bed5c05c
+
+	measure Axis = if('Health Overview'[LTC NO FILTER %]>='Health Overview'[LTC%],'Health Overview'[LTC NO FILTER %]+0.03,'Health Overview'[LTC%]+0.03)
+		lineageTag: 4ed6d2b4-4737-4c9b-be14-1913701b029a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Number Suppressed Value' = if(sum('Health Overview'[Value])<5,"<5",sum('Health Overview'[Value]))
+		lineageTag: a007e99a-a079-47c9-a720-2ba9d6195c3b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CoditionalFormattingGeography = IF([LTC NO FILTER %]>[LTC%],0,1)
+		formatString: 0
+		lineageTag: e14ed293-2a4e-4196-96fe-8d528a5ca968
+
+	measure IsAttributeFiltered = if(ISFILTERED('Health Overview'[Attribute]),1,0)
+		formatString: 0
+		lineageTag: 4fdc9618-f7c6-4778-9cb5-af6c45603554
+
+	measure ShapeTransparency = ```
+			
+			    IF(ISFILTERED('Health Overview'[Attribute]),"#FFFFFF00","#FFFFFF")
+			```
+		lineageTag: a29c93c5-09bb-405e-b1da-204d4bb97b9e
+
+	measure 'ISR - Reference Events' = CALCULATE(SUM('Health Overview'[Value]),ALLEXCEPT('Population Overview','Population Overview'[Age]))
+		formatString: 0
+		lineageTag: 3f9bda80-2401-4087-9dc0-0dbc49eb8677
+
+	measure 'ISR - Reference Population' = CALCULATE(SUM('Population Overview'[Population_Counter]),ALLEXCEPT('Population Overview','Population Overview'[Age]),ALLEXCEPT('Health Overview', 'Population Overview'[Age]))
+		formatString: 0
+		lineageTag: f4cc0bd9-4d69-43a1-9e8c-018b0f7f4d5c
+
+	measure 'ISR - Reference Rates' = [ISR - Reference Events]/[ISR - Reference Population]
+		formatString: 0.000
+		lineageTag: ed79b2cb-aa87-4401-a813-7e9d956632dd
+
+	measure 'ISR - Observed (Local Events)' = SUM('Health Overview'[Value])
+		formatString: 0
+		lineageTag: 7eccb7af-8fbd-4fb5-9a22-bc85234331d1
+
+	measure 'ISR - Local Expected Events' = [ISR - Reference Rates]*[ISR - Local Population]
+		lineageTag: 3d4b0b7c-2709-468b-8ab9-c60657dd661e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ISR - Local Population' = CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Health Overview'[Attribute]))
+		formatString: 0
+		lineageTag: 5f440407-04a3-4326-9909-b279fa1d1a77
+
+	measure 'ISR - Reference Crude Rates' = [ISR - Reference Events]/[ISR - Reference Population]*1000
+		lineageTag: c35aa2c4-5037-455f-be16-75ba6448daea
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ISR - Indirectly Standardised Rate' = [ISR - Observed (Local Events)]/[ISR - Local Expected Events 1]*[ISR - Reference Crude Rates]
+		formatString: 0.00
+		lineageTag: 806749ec-4605-4131-aa65-e277a34da232
+
+	measure 'ISR - Lower Confidence Interval' = iferror(EXP(LN([ISR - Indirectly Standardised Rate])-1.959964*sqrt(1/[ISR - Local Expected Events])),0)
+		lineageTag: 202ae13a-ec3a-4a29-8e4f-c6c6dfe272df
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ISR - Upper Confidence Interval' = iferror(EXP(LN([ISR - Indirectly Standardised Rate])+1.959964*sqrt(1/[ISR - Local Expected Events])),0)
+		lineageTag: 4af69a0e-efbb-49cb-84a2-984f6b5b10c1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ISR - ConditionalFormatting' = ```
+			
+			VAR RatePer1000 = [LTC NO FILTER %] * 1000
+			VAR StandardisedRate = [ISR - Indirectly Standardised Rate]
+			VAR LowerCI = [ISR - Lower Confidence Interval]
+			VAR UpperCI = [ISR - Upper Confidence Interval]
+			
+			RETURN 
+			    IF(
+			        LowerCI > RatePer1000, 3,
+			        IF(
+			            StandardisedRate > RatePer1000, 1,
+			            IF(
+			                UpperCI < RatePer1000, 2,
+			                0
+			            )
+			        )
+			    )
+			```
+		formatString: 0
+		lineageTag: cbb4aaab-8ce5-4bf3-bf33-2e9b8afc642e
+
+	measure 'ICB Crude Rate' = CALCULATE(SUM('Health Overview'[Value]),ALL('Population Overview'))/CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Population Overview'),ALL('Health Overview'))*1000
+		lineageTag: 3e60ac19-64f3-4a77-a1ef-4c834d78574a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LTC NO FILTER Rate' = (CALCULATE(SUM('Health Overview'[Value]),ALL('Population Overview'))/CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Population Overview'),ALL('Health Overview')))*1000
+		lineageTag: 358c53bb-b0c8-4e4d-bbe0-d6015c40f89b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dynamic Title National Deprivation' = ```
+			
+			VAR SelectedAttribute = SELECTEDVALUE('Health Overview'[Attribute])
+			RETURN 
+			IF (
+			    [HideVisualAttribute] = 0,
+			    "National Deprivation Decile",
+			    SelectedAttribute & " - National Deprivation Decile"
+			)
+			```
+		lineageTag: 76607cb2-6f87-4811-afb8-7c455555ed00
+
+	measure 'Dynamic Title Gloucestershire Deprivation' = ```
+			
+			VAR SelectedAttribute = SELECTEDVALUE('Health Overview'[Attribute])
+			RETURN 
+			IF (
+			    [HideVisualAttribute] = 0,
+			    "Gloucestershire Deprivation Decile",
+			    SelectedAttribute & " - Gloucestershire Deprivation Decile"
+			)
+			```
+		lineageTag: bb9baa2b-a24c-47b1-9795-0ee45246e2ac
+
+	measure 'Dynamic Title Electronic Frailty Index' = ```
+			
+			VAR SelectedAttribute = SELECTEDVALUE('Health Overview'[Attribute])
+			RETURN 
+			IF (
+			    [HideVisualAttribute] = 0,
+			    "Electronic Frailty Index",
+			    SelectedAttribute & " - Electronic Frailty Index"
+			)
+			```
+		lineageTag: ebbd3a07-374a-4e96-81c5-0504cbfab6ec
+
+	measure 'Dynamic Title Ageband' = ```
+			
+			VAR SelectedAttribute = SELECTEDVALUE('Health Overview'[Attribute])
+			RETURN 
+			IF (
+			    [HideVisualAttribute] = 0,
+			    "Ageband",
+			    SelectedAttribute & " - Ageband"
+			)
+			```
+		lineageTag: ad15e0b1-c446-476b-aa71-621c4975f1a2
+
+	measure 'Healthy Well ICB' =
+			CALCULATE(
+			    SUM('Health Overview'[Value]),
+			    ALLEXCEPT('Health Overview','Health Overview'[Attribute]))/CALCULATE(SUM('Population Overview'[Population_Counter]), ALL('Population Overview'),ALL('Health Overview'))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0b9afcb4-1583-4997-b9d1-7443330f1bca
+
+	measure 'With LTC ICB' = 1-'Health Overview'[Healthy Well ICB]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: fd60ffcf-672d-4da3-baee-5f8bac2e035c
+
+	measure 'Dynamic Title Ethnicity' = ```
+			
+			VAR SelectedAttribute = SELECTEDVALUE('Health Overview'[Attribute])
+			RETURN 
+			IF (
+			    [HideVisualAttribute] = 0,
+			    "Ethnicity",
+			    SelectedAttribute & " - Ethnicity"
+			)
+			```
+		lineageTag: 56f7c59b-4bed-40c7-a0d8-94f318cab9df
+
+	measure 'ISR - Expected' = [ISR - Local Expected Events]
+		lineageTag: b7e71cc9-2ab2-478d-a385-ceef501b6ab7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ISR - Reference Crude Rate' = [ISR - Reference Events]/[ISR - Reference Population]*1000
+		lineageTag: 46f39d2e-d5b9-4cc1-ade2-72818de1e0a8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ISR - Local Expected Events 1' = ```
+			sumx(VALUES('Population Overview'[Age]),[ISR - Local Expected Events]) 
+			```
+		lineageTag: ede6aebc-d2e7-4dc1-9344-c9a7cd4de3d1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Attribute
+		dataType: string
+		lineageTag: 550c4be4-a3d0-4768-a111-1555fb6a9ebc
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: a40d07e5-d9e5-4c9a-8482-07aeb62e3ae9
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 2305ea49-2c36-4e98-bfe7-35f4a26ed7cc
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 59ea4202-0f4f-42cb-90c4-b42458d55cd3
+		summarizeBy: sum
+		sourceColumn: Population_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column NumberOfLTC
+		dataType: int64
+		formatString: 0
+		lineageTag: d57bf4d5-7088-4d4c-9f37-eac80bb7ddb8
+		summarizeBy: sum
+		sourceColumn: NumberOfLTC
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Health Overview' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT * FROM [PowerBI_Reporting].[dbo].[tbl_Demographics_Health_Overview]#(lf)#(lf)"]),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(Source, {"Derived_NHS_Number", "Population_Counter", "NumberOfLTC"}, "Attribute", "Value"),
+				    #"Filtered Rows" = Table.SelectRows(#"Unpivoted Columns", each ([Value] = 1))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

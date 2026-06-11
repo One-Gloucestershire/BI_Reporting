@@ -1,0 +1,147 @@
+table 'Compare Date Table'
+	lineageTag: 01d47707-d503-4c62-bc3e-854efab0959c
+
+	column Date
+		formatString: Long Date
+		lineageTag: 36be2599-2d62-4d6b-9e28-4ff9ea5a9678
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		formatString: 0
+		lineageTag: 3921d6ca-8e92-445e-8dd1-9424b32b9948
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Number'
+		formatString: 0
+		lineageTag: 3e2c3582-101e-458e-b8f9-e7323eea0861
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month Number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Name'
+		lineageTag: e84c7526-3026-4635-8c25-62278a34b036
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month Name]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month-Year
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: c583981e-8e6b-4891-8fc5-8ffebc7f6bb8
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month-Year]
+		sortByColumn: 'Month Number'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Week Number'
+		formatString: 0
+		lineageTag: 1fc31c76-f459-4921-ab11-3cb7afb72190
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Week Number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Ending'
+		formatString: dd mmmm yyyy
+		lineageTag: a66377ab-f233-47d2-b32f-c2c24a13ce80
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Week Ending]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Day of Week'
+		lineageTag: 02b26f48-91a3-4456-adef-bef99f281f31
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Day of Week]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		formatString: 0
+		lineageTag: edf39cca-5a54-480b-8f27-e7ef9a7bc4a3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Day]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Year'
+		lineageTag: c5b31b56-a722-4c03-b1a5-3ad46708c4f7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Financial Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Date Hierarchy'
+		lineageTag: b91c4464-3c47-4d63-9630-44f2b4e0d99d
+
+		level Date
+			lineageTag: 19534dfa-edbd-4eef-8755-7eb0bfa56569
+			column: Date
+
+		level 'Week Ending'
+			lineageTag: c4e6c961-1752-4d22-ae3f-1697937f05dc
+			column: 'Week Ending'
+
+		level Month-Year
+			lineageTag: a514c7f5-16f6-43b3-b869-459b5ac39465
+			column: Month-Year
+
+	partition 'Compare Date Table' = calculated
+		mode: import
+		source = ```
+				
+				VAR BaseCalendar = 
+				    ADDCOLUMNS (
+				        CALENDAR (MIN('01 VW Main'[admission_dateonly]), MAX('01 VW Main'[discharge_dateonly])),
+				        "Year", YEAR([Date]),
+				        "Month Number", MONTH([Date]),
+				        "Month Name", FORMAT([Date], "MMMM"),
+				        "Month-Year", FORMAT([Date], "MMM YYYY"),
+				        "Week Number", WEEKNUM([Date], 2),
+				        "Week Ending", [Date] + (7 - WEEKDAY([Date], 2)),
+				        "Day of Week", FORMAT([Date], "dddd"),
+				        "Day", DAY([Date])
+				    )
+				RETURN
+				    ADDCOLUMNS (
+				        BaseCalendar,
+				        "Financial Year", 
+				            IF(MONTH([Date]) >= 4, 
+				               FORMAT(YEAR([Date]), "0000") & "/" & FORMAT(YEAR([Date]) + 1, "00"), 
+				               FORMAT(YEAR([Date]) - 1, "0000") & "/" & FORMAT(YEAR([Date]), "00")
+				            )
+				    )
+				
+				```
+
+	annotation PBI_Id = 09ae1316796a4943aadb320c58133494
+

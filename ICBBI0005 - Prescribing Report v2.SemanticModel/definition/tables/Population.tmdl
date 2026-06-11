@@ -1,0 +1,798 @@
+table Population
+	lineageTag: 49346b74-d4dd-4a77-876a-07a6db55ac5c
+
+	measure 'Rate per 1,000 Items' =
+			
+			(DIVIDE(SUM('EPACT'[Items]), SUM('Population'[Total])))*1000
+		formatString: #,0.00
+		lineageTag: 93eece51-7f52-43e4-a74d-16113f4c2308
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+	measure 'Rate per 1,000 Costs' =
+			
+			(DIVIDE(SUM('EPACT'[ActualCost]), SUM('Population'[Total])))*1000
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 2aa6bf24-db1c-4807-acbc-a461d25eb029
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'YTD Costs Growth' =
+			
+			
+			VAR _LATESTDATE = CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			
+			VAR _PREVIOUSDATE = EDATE(
+			    CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			,-12)
+			
+			RETURN
+			
+			(CALCULATE(SUM('EPACT'[ActualCost]), 'DateReference'[Date] = _LATESTDATE) - CALCULATE(SUM('EPACT'[ActualCost]), 'DateReference'[Date] = _PREVIOUSDATE))/CALCULATE(SUM('EPACT'[ActualCost]), 'DateReference'[Date] = _PREVIOUSDATE)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ca7ac6c1-4e1e-4cda-9e2f-bbb4d1e6af7a
+
+	measure 'Latest Date' =
+			
+			
+			MAX('DateReference'[Date])
+		formatString: General Date
+		lineageTag: d0bb0b92-fe14-43b7-9730-a5d8fb119792
+
+	measure 'Latest Date (Last Year)' =
+			
+			
+			EDATE(
+			    CALCULATE(MAX('DateReference'[Date])),
+			    -12
+			)
+		formatString: General Date
+		lineageTag: b1e10d44-ebf8-466d-989e-4103be8538cf
+
+	measure 'YTD Items Growth' =
+			
+			
+			VAR _LATESTDATE = CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			
+			VAR _PREVIOUSDATE = EDATE(
+			    CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			,-12)
+			
+			RETURN
+			
+			(CALCULATE(SUM('EPACT'[Items]), 'DateReference'[Date] = _LATESTDATE) - CALCULATE(SUM('EPACT'[Items]), 'DateReference'[Date] = _PREVIOUSDATE))/CALCULATE(SUM('EPACT'[Items]), 'DateReference'[Date] = _PREVIOUSDATE)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1fb92146-73a8-4e29-b218-26de276fecda
+
+	measure '% Apixaban Growth' =
+			
+			
+			VAR _BASELINE = (CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFChemicalSubstance] = "Apixaban", 'DateReference'[YearMonth] IN {"202401", "202402", "202403"}, ALL('DateReference'))/3)
+			
+			VAR _LATESTDATE = CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			
+			RETURN
+			IF(MAX('DateReference'[YearMonth]) >= "202404",
+			(
+			    (CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFChemicalSubstance] = "Apixaban", 'DateReference'[Date] = _LATESTDATE) - _BASELINE)/_BASELINE), BLANK()
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1941c5a0-5e40-4edd-9f81-d6f947fc9a1b
+
+	measure '% Sitagliptin Growth' =
+			
+			
+			VAR _BASELINE = (CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFChemicalSubstance] = "Sitagliptin", 'DateReference'[YearMonth] IN {"202401", "202402", "202403"}, ALL('DateReference'))/3)
+			
+			VAR _LATESTDATE = CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			
+			RETURN
+			IF(MAX('DateReference'[YearMonth]) >= "202404",
+			(
+			    (CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFChemicalSubstance] = "Sitagliptin", 'DateReference'[Date] = _LATESTDATE) - _BASELINE)/_BASELINE), BLANK()
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5a5c2979-4fd8-4582-b47b-70bb6f6ec4b6
+
+	measure '% Melatonin Ceyesto Liquid' =
+			
+			
+			VAR _MELA = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFChemicalSubstance] = "Melatonin", 'EPACT'[PackSizeUnit] = "ml")
+			VAR _CEYE = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] = "Ceyesto", 'EPACT'[PackSizeUnit] = "ml")
+			
+			RETURN
+			
+			_CEYE/_MELA
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 72a1f059-a976-4f20-82d5-b402106d5cd2
+
+	measure '% Colecalciferol Valupak Brand' =
+			
+			
+			VAR _COLA = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFChemicalSubstance] = "Colecalciferol")
+			VAR _VALU = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] IN {"Valupak Vit D3", "Valupak Vitamin D3"})
+			
+			RETURN
+			
+			_VALU/_COLA
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 13e5534c-4be0-4795-ab2d-ceb9b7d1f84c
+
+	measure 'Rate per 1,000 Costs - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([Rate per 1,000 Costs], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_AVG
+			```
+		lineageTag: 3de99035-8e4f-4ba9-bb8e-e94025338e06
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YTD Costs Growth - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([YTD Costs Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_AVG
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d0b628cb-266b-4f7f-a80a-271ba94e7a44
+
+	measure '% Apixaban Growth - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Apixaban Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Apixaban Growth] = BLANK(), BLANK(), _AVG)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 09a38a27-2b6c-44f1-b1da-804901013e27
+
+	measure 'YTD Items Growth - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([YTD Items Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_AVG
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 0bcd5885-e828-4e25-b954-8743605463d1
+
+	measure '% Sitagliptin Growth - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Sitagliptin Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Sitagliptin Growth] = BLANK(), BLANK(), _AVG)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c7637d67-3b4f-4da9-a9f6-84f90fe37f4d
+
+	measure '% Melatonin Ceyesto Liquid - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Melatonin Ceyesto Liquid], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Melatonin Ceyesto Liquid] = BLANK(), BLANK(), _AVG)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5ffd1c14-1c7a-46ee-9505-400b6d6e6483
+
+	measure '% Colecalciferol Valupak Brand - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Colecalciferol Valupak Brand], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_AVG
+			```
+		lineageTag: 2a25b063-57eb-439b-b2b7-291d7fafe7c0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Apixaban Growth - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Apixaban Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Apixaban Growth] = BLANK(), BLANK(), _STDV)
+			```
+		lineageTag: fb58ca4b-c8cd-4d0a-b6a9-d661a11569fe
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 Costs - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([Rate per 1,000 Costs], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_STDV
+			```
+		lineageTag: 395cb2a9-67b4-4554-93a0-e9da0b787eaf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Colecalciferol Valupak Brand - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Colecalciferol Valupak Brand], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_STDV
+			```
+		lineageTag: 0ee4fb15-b345-4191-974b-11ce10f28411
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Melatonin Ceyesto Liquid Growth - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Melatonin Ceyesto Liquid], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Melatonin Ceyesto Liquid] = BLANK(), BLANK(), _STDV)
+			```
+		lineageTag: 9f706a49-d4be-4da8-a589-c033088c8769
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Sitagliptin Growth - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Sitagliptin Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Sitagliptin Growth] = BLANK(), BLANK(), _STDV)
+			```
+		lineageTag: 23e5f0ed-4d4a-4dec-9313-8bb20e93ac96
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YTD Costs Growth - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([YTD Costs Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_STDV
+			```
+		lineageTag: cb213009-af3f-4cfd-90fd-7018eadf9fba
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YTD Items Growth - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([YTD Items Growth], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			_STDV
+			```
+		lineageTag: 71213167-3d6e-4c1d-b469-bd9024fc2416
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Apixaban Growth - ICB' =
+			
+			
+			CALCULATE([% Apixaban Growth], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: 9732d796-8269-4148-82d8-ed74de47f667
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate per 1,000 Costs - ICB' =
+			
+			
+			CALCULATE([Rate per 1,000 Costs], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: f6bbaad4-0822-471e-8a06-7c05debad94b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Colecalciferol Valupak Brand - ICB' =
+			
+			
+			CALCULATE([% Colecalciferol Valupak Brand], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: 2017041d-c257-483b-b306-8b23caa6a3cd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Melatonin Ceyesto Liquid - ICB' =
+			
+			
+			CALCULATE([% Melatonin Ceyesto Liquid], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: eb31caab-90dd-4b1b-ba7e-3bab74f6f34f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Sitagliptin Growth - ICB' =
+			
+			
+			CALCULATE([% Sitagliptin Growth], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: d0715dbe-77f0-46f2-9344-dd3159c6e8b5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YTD Costs Growth - ICB' =
+			
+			
+			CALCULATE([YTD Costs Growth], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: bbe3fee2-bb95-47dd-b946-df04b5164090
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YTD Items Growth - ICB' =
+			
+			
+			CALCULATE([YTD Items Growth], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: 291d1d32-e61b-4ebb-992a-2bb72d626859
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fostair MDI to Fobumix' =
+			
+			
+			VAR _BASELINE_FOST = (CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] = "Fostair", 'DateReference'[YearMonth] IN {"202401", "202402", "202403"}, ALL('DateReference'))/3)
+			
+			VAR _BASELINETARGET_FOST = _BASELINE_FOST * 0.25 -- Defining a 25% reduction baseline from Q4 2023/24
+			
+			VAR _BASELINE_FOB = (CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] = "Fobumix", 'DateReference'[YearMonth] IN {"202401", "202402", "202403"}, ALL('DateReference'))/3)
+			
+			VAR _LATESTFOB = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] = "Fobumix")
+			
+			VAR _LATESTDATE = CALCULATE(
+			    STARTOFMONTH('DateReference'[Date]),
+			    FILTER(
+			        ALL('DateReference'),
+			        'DateReference'[Date] = MAX('DateReference'[Date])
+			    )
+			)
+			
+			RETURN
+			IF(MAX('DateReference'[YearMonth]) >= "202404",
+			(_LATESTFOB - _BASELINE_FOB)/_BASELINETARGET_FOST
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cb3263c6-6079-4d59-9e78-d621e8cac604
+
+	measure '% Amoxicillin 15 Capsules' =
+			
+			
+			VAR _CAP15 = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] = "Amoxicillin", 'EPACT'[PayPackSizeUnit] = "capsule", 'EPACT'[PackSize] = 15)
+			VAR _CAPALL = CALCULATE(SUM('EPACT'[Items]), 'EPACT'[BNFProduct] = "Amoxicillin", 'EPACT'[PayPackSizeUnit] = "capsule")
+			
+			RETURN
+			
+			_CAP15/_CAPALL
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: ac5bbe89-3228-42ac-8294-9e361aacb434
+
+	measure '% Amoxicillin 15 Capsules - ICB' =
+			
+			
+			CALCULATE([% Amoxicillin 15 Capsules], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 47d02469-b986-48c4-a337-c40f1351386c
+
+	measure '% Amoxicillin 15 Capsules - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Amoxicillin 15 Capsules], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Amoxicillin 15 Capsules] = BLANK(), BLANK(), _AVG)
+			```
+		lineageTag: 3eff7157-1c9c-4044-9fa5-e57994278728
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Amoxicillin 15 Capsules - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([% Amoxicillin 15 Capsules], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([% Amoxicillin 15 Capsules] = BLANK(), BLANK(), _STDV)
+			```
+		lineageTag: 20f759dc-cb84-4f60-b4a9-26620948dfca
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fostair MDI to Fobumix - ICB' =
+			
+			
+			CALCULATE([Fostair MDI to Fobumix], ALL('Population'), 'Population'[OrganisationName] <> "The Homeless Healthcare Team" && 'Population'[OrganisationName] <> BLANK())
+		lineageTag: 17bfb056-bd87-4487-8cbb-968ad34a05c1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fostair MDI to Fobumix - Mean' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([Fostair MDI to Fobumix], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _AVG = 
+			
+			AVERAGEX(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([Fostair MDI to Fobumix] = BLANK(), BLANK(), _AVG)
+			```
+		lineageTag: c8a60f86-4991-4453-a83a-29e29d5dc644
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fostair MDI to Fobumix - STD DEV' = ```
+			
+			
+			VAR _SUMMARYTABLE = 
+			
+			SUMMARIZE(
+			    ALLSELECTED('DateReference'),
+			    'DateReference'[MonthNameShort],
+			    'DateReference'[Financial Year],
+			    "Mean", CALCULATE([Fostair MDI to Fobumix], 'DateReference'[SPC_Period] = 1)
+			)
+			
+			VAR _STDV = 
+			
+			STDEVX.P(_SUMMARYTABLE, [Mean])
+			
+			RETURN
+			
+			IF([Fostair MDI to Fobumix] = BLANK(), BLANK(), _STDV)
+			```
+		lineageTag: 429c2e75-61fa-4268-8d63-13f1a820cb6a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 5562c38b-4fd0-4e0f-bf6b-d5f428640463
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 8fb7dd45-1d1d-4813-b897-75cb5e40f8a6
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 68d504e3-46f9-4a13-86bb-27b62ce7ab35
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Place
+		dataType: string
+		lineageTag: f4c26407-f230-4942-b617-d83f25d7fa04
+		summarizeBy: none
+		sourceColumn: Place
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: d2c6eb1c-0ef5-460e-a296-f15e61586852
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column CensusDate
+		dataType: string
+		lineageTag: 6023e02c-4b50-49df-a50c-dc28ad1eccec
+		summarizeBy: none
+		sourceColumn: CensusDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeGroupType
+		dataType: string
+		lineageTag: a0cadfe9-38bd-4aeb-9ccd-0cc5a46704df
+		summarizeBy: none
+		sourceColumn: AgeGroupType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: #,0
+		lineageTag: b38c5359-f08c-4c8e-8767-60c356d1429c
+		summarizeBy: none
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: 65370225-a587-41a5-a8ae-f6fa8e07cd03
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year-MonthName
+		dataType: string
+		lineageTag: 7b970023-173f-4a10-b784-f13f75b13951
+		summarizeBy: none
+		sourceColumn: Year-MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date = concatenate(CONCATENATE("01/",right(Population[YearMonth],2)),concatenate("/",left(Population[YearMonth],4)))
+		lineageTag: 6ede0e3a-6048-46d7-af8f-4683b4db1195
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Population-b5c5c83e-0f3d-44b2-92d8-4774c148a6fb = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)#(lf)/*=================================================#(lf)Date Ref#(lf)=================================================*/#(lf)#(lf)IF OBJECT_ID('tempdb..#DateRef1', 'U') IS NOT NULL DROP TABLE #DateRef1;#(lf)#(lf)SELECT [DateKey]#(lf)      ,[Date]#(lf)      ,[DayMonthYear]#(lf)      ,[Day]#(lf)      ,[DaySuffix]#(lf)      ,[Weekday]#(lf)      ,[WeekDayName]#(lf)      ,[DayofWeekInMonth]#(lf)      ,[DayOfYear]#(lf)      ,[WeekOfMonth]#(lf)      ,[WeekOfYear]#(lf)      ,[Month]#(lf)      ,[MonthName]#(lf)      ,[Quarter]#(lf)      ,[QuarterName]#(lf)      ,[Year]#(lf)      ,[MonthYear]#(lf)      ,[MonthYearName]#(lf)      ,[YearMonth]#(lf)      ,[IsWeekend]#(lf)      ,[IsHoliday]#(lf)      ,[FinancialWeekofYear]#(lf)      ,[HolidayName]#(lf)      ,[SpecialDays]#(lf)      ,[FinancialYear]#(lf)      ,[FinancialQuarter]#(lf)      ,[FinancialMonth]#(lf)      ,[FirstDateofYear]#(lf)      ,[LastDateofYear]#(lf)      ,[FirstDateofQuater]#(lf)      ,[LastDateofQuater]#(lf)      ,[FirstDateofMonth]#(lf)      ,[LastDateofMonth]#(lf)      ,[FirstDateofWeek]#(lf)      ,[LastDateofWeek]#(lf)      ,[WeekBand]#(lf)      ,[CurrentYear]#(lf)      ,[CurrentQuater]#(lf)      ,[CurrentMonth]#(lf)      ,[CurrentWeek]#(lf)      ,[CurrentDay]#(lf)#(tab)  ,[ShortMonth] = LEFT([MonthName],3)#(lf)#(tab)  ,[ShortYear] = RIGHT([Year], 2)#(lf)#(tab)  ,[YearMonthName] = CONCAT(LEFT([MonthName],3),RIGHT([Year],2))#(lf)#(tab)  ,[Year-MonthName] = CONCAT(LEFT([MonthName],3),'-',RIGHT([Year],2))#(lf)#(lf)#(tab)  INTO #DateRef1#(lf)#(lf)  FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(lf)  WHERE [Year] >= '2019'#(lf)#(lf)#(lf)/*=================================================#(lf)Population (max census date)#(lf)=================================================*/#(lf)#(lf)SELECT distinct [OrganisationCode]#(lf)      ,[OrganisationName] = CASE WHEN [OrganisationName] LIKE 'Acorn Practice' THEN 'May Lane Surgery' #(lf)#(tab)                             WHEN [OrganisationName] LIKE 'Regent Street Surgery' THEN 'The Willow Tree Practice'#(lf)#(tab)#(tab)#(tab)#(tab)                 WHEN [OrganisationName] LIKE 'Coleford Family Doctors' THEN 'Coleford Medical Practice'#(lf) #(tab)                             ELSE [OrganisationName] END#(lf)      ,[PrimaryCareNetwork]#(lf)      ,[Place]#(lf)      ,[Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)#(tab)                     WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)      ,[CensusDate]#(lf)      ,[AgeGroupType]#(lf)      ,[Total] = sum([Total])#(lf)#(tab)  ,[YearMonth]#(lf)#(tab)  ,[Year-MonthName]#(lf)#(lf)  FROM [CCG_Reference].[Reference].[vw_GPPracticePopulation][Ref]#(lf)#(lf)  LEFT JOIN [#DateRef1]#(lf)  ON [#DateRef1].[Date] = CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE)#(lf)#(lf)  WHERE [AgeGroupType] = 'All'#(lf)  AND CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE) =  (select distinct MAX(CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE)) FROM CCG_Reference.Reference.vw_GPPracticePopulation)#(lf)#(lf)  GROUP BY   [OrganisationCode]#(lf)      ,[OrganisationName]#(lf)      ,[PrimaryCareNetwork]#(lf)      ,[Place]#(lf)      ,[Locality]#(lf)      ,[CensusDate]#(lf)      ,[AgeGroupType]#(lf)#(tab)  ,[YearMonth]#(lf)#(tab)  ,[Year-MonthName]"]),
+				    #"Replaced Value" = Table.ReplaceValue(Source,"Tewkesbury, Newent and Staunton and West Cheltenham Medical","TWNS",Replacer.ReplaceText,{"PrimaryCareNetwork"})
+				in
+				    #"Replaced Value"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

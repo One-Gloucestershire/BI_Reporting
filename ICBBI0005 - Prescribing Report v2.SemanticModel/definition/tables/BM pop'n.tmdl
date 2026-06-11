@@ -1,0 +1,43 @@
+table 'BM pop''n'
+	lineageTag: e7c6b424-b4e0-4b9a-bc1a-3e4399b7c9c3
+
+	column Commissioner_Provider_ICB_Level
+		dataType: string
+		sourceProviderType: varchar(250)
+		lineageTag: 7e955ad4-91c4-46be-a478-8bf312f698cc
+		summarizeBy: none
+		sourceColumn: Commissioner_Provider_ICB_Level
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year_Month
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 93e55ce3-b6db-4c22-b399-e8a18112614d
+		summarizeBy: none
+		sourceColumn: Year_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Registered_Population
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 9b402c36-fab4-428a-b03a-0972d3db3f37
+		summarizeBy: sum
+		sourceColumn: Registered_Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'BM pop''n' = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Benchmarking", [Query="SELECT DISTINCT [Commissioner_Provider_ICB_Level]#(lf)               ,[Year_Month]#(lf)#(tab)#(tab)#(tab)   ,[Registered_Population]#(lf) #(lf)FROM [ICB_Benchmarking].[epact].[tbl_Benchmark_YTD]#(lf) #(lf)WHERE [Year_Month] >= '202104' /* Picking out Population per Organisation by Month */"])
+				in
+				    Source
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,145 @@
+table 'Occupancy Date Table'
+	lineageTag: ba8a6c72-c960-4521-8b78-5f7861b85ed6
+
+	column Date
+		formatString: Long Date
+		lineageTag: 36f2a757-d208-464f-94a0-c51ccd3517db
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		formatString: 0
+		lineageTag: ad6b1e8a-4137-4602-8ce0-6cc80d040f84
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Ending'
+		formatString: Long Date
+		lineageTag: 63a02913-6bbf-46a9-8033-bdafb5e198cf
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Week Ending]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Month Number'
+		formatString: 0
+		lineageTag: 82a97b21-283e-489e-809f-36fd832665b7
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Month Number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Name'
+		lineageTag: cdb325df-a333-4e19-ac6d-8f384cd1cb31
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month Name]
+		sortByColumn: 'Month Number'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month-Year
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: a4465ad0-e113-471d-aba4-087c2e9a6fd6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month-Year]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column 'Week Number'
+		formatString: 0
+		lineageTag: e121c3b5-897b-4a09-9d21-5d9ab12c2542
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Week Number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day of Week'
+		lineageTag: 09f9d2e2-c0b1-463a-b545-e59c3a7701bf
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Day of Week]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		formatString: 0
+		lineageTag: f1ecc69a-adb6-4a7e-ab24-6d446b330fdc
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Day]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Year'
+		lineageTag: e29c1404-6903-4347-ad0d-77694315e71a
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Financial Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Date Hierarchy'
+		lineageTag: 59cd8544-29fd-4231-99dc-8cb21dbcdf6a
+
+		level Date
+			lineageTag: d5c597d5-3d12-4396-b41e-3da91a8945f6
+			column: Date
+
+		level 'Week Ending'
+			lineageTag: 5170c0a1-8710-4004-a233-0f106b5b9156
+			column: 'Week Ending'
+
+		level Month-Year
+			lineageTag: 4378e054-2353-4158-aea8-0d9aa580faf5
+			column: Month-Year
+
+	partition 'Occupancy Date Table' = calculated
+		mode: import
+		source = ```
+				
+				VAR BaseCalendar = 
+				    ADDCOLUMNS (
+				        CALENDAR (MIN('01 VW Main'[admission_dateonly]), MAX('01 VW Main'[discharge_dateonly])),
+				        "Year", YEAR([Date]),
+				        "Month Number", MONTH([Date]),
+				        "Month Name", FORMAT([Date], "MMMM"),
+				        "Month-Year", FORMAT([Date], "MMM YYYY"),
+				        "Week Number", WEEKNUM([Date], 2),
+				        "Week Ending", [Date] + (7 - WEEKDAY([Date], 2)),
+				        "Day of Week", FORMAT([Date], "dddd"),
+				        "Day", DAY([Date])
+				    )
+				RETURN
+				    ADDCOLUMNS (
+				        BaseCalendar,
+				        "Financial Year", 
+				            IF(MONTH([Date]) >= 4, 
+				               FORMAT(YEAR([Date]), "0000") & "/" & FORMAT(YEAR([Date]) + 1, "00"), 
+				               FORMAT(YEAR([Date]) - 1, "0000") & "/" & FORMAT(YEAR([Date]), "00")
+				            )
+				    )
+				
+				```
+
+	annotation PBI_Id = cdaaa13ec9ab4730b18bb98d8d261364
+

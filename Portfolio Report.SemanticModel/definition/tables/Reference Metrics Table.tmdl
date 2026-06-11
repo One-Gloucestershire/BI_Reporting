@@ -1,0 +1,107 @@
+table 'Reference Metrics Table'
+	lineageTag: 8f18f8d1-439d-45d1-aa25-385970bc2530
+
+	column Metric_ID
+		dataType: string
+		lineageTag: c73735cc-36d1-4b4e-8204-97854f5e9159
+		summarizeBy: none
+		sourceColumn: Metric_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric_Description
+		dataType: string
+		lineageTag: acb9311d-5384-41a9-87db-d9a9305009bb
+		summarizeBy: none
+		sourceColumn: Metric_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Portfolio
+		dataType: string
+		lineageTag: fb7dc6a9-fc6a-44a7-914f-86fab82ded18
+		summarizeBy: none
+		sourceColumn: Portfolio
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'JFP & Ops Plan Yes'
+		dataType: string
+		lineageTag: a0d92540-2501-4733-82c9-d5c3e3360b49
+		summarizeBy: none
+		sourceColumn: JFP & Ops Plan Yes
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BI Lead for the Area'
+		dataType: string
+		lineageTag: 4b3a8bdf-d0f8-42f3-98af-fd7b07ddcafe
+		summarizeBy: none
+		sourceColumn: BI Lead for the Area
+
+		annotation SummarizationSetBy = Automatic
+
+	column Comments
+		dataType: string
+		lineageTag: 97866439-ec76-46d7-9561-2199b2b45657
+		summarizeBy: none
+		sourceColumn: Comments
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'When is scripting the metric deliverable by?'
+		dataType: string
+		lineageTag: d0f82b34-68ca-479f-a5ba-be4a654f86e7
+		summarizeBy: none
+		sourceColumn: When is scripting the metric deliverable by?
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Completed'
+		dataType: string
+		lineageTag: b310759b-e886-4051-aa29-cbcb92ecea16
+		summarizeBy: none
+		sourceColumn: Metric Completed
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric in the report?'
+		dataType: string
+		lineageTag: 28bf764b-3219-42cc-9743-210dc05a056e
+		summarizeBy: none
+		sourceColumn: Metric in the report?
+
+		annotation SummarizationSetBy = Automatic
+
+	column Methodology
+		dataType: string
+		lineageTag: 2bc40cef-a9d6-4dcd-80f7-7ebdfeb1a4c1
+		summarizeBy: none
+		sourceColumn: Methodology
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'In JFP/Ops Plan?' = IF('Reference Metrics Table'[JFP & Ops Plan Yes] = "TRUE", "Yes", IF('Reference Metrics Table'[JFP & Ops Plan Yes] = "FALSE", "No", "Unknown"))
+		lineageTag: 04c6b959-f3d7-4b5f-86d1-8efdf4bb2ab0
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Healthcare_Area = LOOKUPVALUE('Metrics'[Healthcare_Area], 'Metrics'[Metric_ID], 'Reference Metrics Table'[Metric_ID])
+		lineageTag: 1a6ae0bc-da6c-487b-885e-abc79debe17d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Reference Metrics Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  select * #(lf)  FROM [PowerBI_Reporting].[dbo].[Portfolio_Metrics_Reference]#(lf)  WHERE Metric_ID != 'Missing ID - Relative cost difference' --more than one row for this metric#(lf)  order by Metric_ID"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

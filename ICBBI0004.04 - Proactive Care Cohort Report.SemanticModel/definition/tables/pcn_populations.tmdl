@@ -1,0 +1,41 @@
+table pcn_populations
+	lineageTag: 0ac99453-5c53-403d-9a43-67bf2a249487
+
+	measure pcn_population = sum(pcn_populations[total_population])
+		formatString: 0
+		lineageTag: 41aac222-48da-4e63-9259-650e35399d44
+
+	measure pcn_rate_per_100,000 = [total_activity]/([pcn_population]/100000)
+		lineageTag: c5d722b9-d81c-4e00-b5fa-08a9e49dc7ab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column primary_care_network
+		dataType: string
+		lineageTag: d7148f55-4f94-4f26-b651-c6c7035d2e45
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_population
+		dataType: int64
+		formatString: 0
+		lineageTag: fcf306d7-5e6d-415d-9254-de7823fcbcbb
+		summarizeBy: none
+		sourceColumn: total_population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition pcn_populations-2fa525dc-f412-49b1-ab48-247a2053a5ce = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIReports", [Query="select * from  [PowerBI_Reporting].[dbo].[PCN_Populations]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

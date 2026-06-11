@@ -1,0 +1,50 @@
+table REF_Service_Team_Type_Referred_To_Ref
+	lineageTag: d857710d-a14f-49c6-a457-387ff128ad03
+
+	column Service_Team_Type_Referred_To_Code
+		lineageTag: 363da36e-39ca-42eb-b614-804fcf8697c2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 1.Community_Referrals[Service_Team_Type_Referred_To_Code]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Team_Type_Referred_To_Description
+		lineageTag: 8958d7c6-afb1-46a9-b56a-f734dad6dedb
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: 1.Community_Referrals[Service_Team_Type_Referred_To_Description]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service_Team_Type_Group
+		lineageTag: 479ed76b-68b8-49c5-bb5e-1ef35d04cb9d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Service_Team_Type_Group]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Service_Team_Type_Referred_To_Ref = calculated
+		mode: import
+		source =
+				
+				SUMMARIZE(
+				    FILTER(
+				        '1.Community_Referrals',
+				        NOT ISBLANK('1.Community_Referrals'[Service_Team_Type_Referred_To_Code])
+				    ),
+				    '1.Community_Referrals'[Service_Team_Type_Referred_To_Code],
+				    '1.Community_Referrals'[Service_Team_Type_Referred_To_Description],
+				    "Service_Team_Type_Group", IF(
+				        '1.Community_Referrals'[Service_Team_Type_Referred_To_Code] = "xxx" ||
+				        '1.Community_Referrals'[Service_Team_Type_Referred_To_Code] = "Z99" ||
+				        '1.Community_Referrals'[Service_Team_Type_Referred_To_Code] = "ZZZ" ||
+				        '1.Community_Referrals'[Service_Team_Type_Referred_To_Code] = "999",
+				        "Unknown Code",
+				        '1.Community_Referrals'[Service_Team_Type_Referred_To_Description]
+				    )
+				)
+
+	annotation PBI_Id = 0fbed35bc54a4f66ad2c764e1f0927b8
+

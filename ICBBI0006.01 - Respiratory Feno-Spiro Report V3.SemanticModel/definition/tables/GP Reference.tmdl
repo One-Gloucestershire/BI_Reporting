@@ -1,0 +1,86 @@
+table 'GP Reference'
+	lineageTag: 452ab777-7585-412d-a067-a71dea78be4b
+
+	measure Matrix_Primary_Care_Network_Header = ```
+			
+			
+			VAR OrgCode = SELECTEDVALUE('GP Reference'[OrganisationCode])
+			RETURN
+			IF(
+			    ISBLANK(OrgCode),
+			    "Residing in county but registered out of county at the time of test",
+			    OrgCode
+			)
+			
+			
+			```
+		lineageTag: 46625cc8-fabe-405f-8fe9-97fca9d2fa1a
+
+	column Locality
+		dataType: string
+		lineageTag: 24e05231-00e2-4888-85d9-68ccc3bc096c
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: a24f1700-7b11-4ee5-b7c6-0b3135ff7fc8
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 3c2bb596-f916-4b67-8f06-c1fad0f7fcef
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 2bdc77f2-826c-417b-b87b-eb115593521c
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 3b9f0897-d536-43b5-bd35-c0a614b74a5e
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLatitude
+		dataType: string
+		lineageTag: bc471d5f-4d61-447f-ad71-5e46c7cd7439
+		summarizeBy: none
+		sourceColumn: GPLatitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column GPLongitude
+		dataType: string
+		lineageTag: a9204579-2c3d-42db-b53e-c091558edb59
+		summarizeBy: none
+		sourceColumn: GPLongitude
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)#(lf)SELECT [Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)                         WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Locality] LIKE 'Tewkesbury Newent and Staunton' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'Tewkesbury'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)      ,[PrimaryCareNetwork] = CASE WHEN [ReportingOrganisationName] LIKE 'West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)                               WHEN [PrimaryCareNetwork] LIKE 'Tewkesbury, Newent and Staunton and West Cheltenham Medical' THEN 'TWNS'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   ELSE [PrimaryCareNetwork] END#(lf)#(tab)  ,[OrganisationCode]#(lf)#(tab)  ,[ReportingOrganisationCode] = CASE WHEN [ReportingOrganisationCode] LIKE 'L84073' THEN 'L84075' /*Acorn Practice*/#(lf)#(tab)                                      WHEN [ReportingOrganisationCode] LIKE 'L84017' THEN 'L84018' /*Cirencester Health Group*/#(lf)#(tab)                                      ELSE [ReportingOrganisationCode] END #(lf)#(tab)  ,[ReportingOrganisationName] = CASE WHEN [ReportingOrganisationName] LIKE 'Acorn Practice' THEN 'May Lane Surgery' #(lf)#(tab)                                      WHEN [ReportingOrganisationName] LIKE 'Regent Street Surgery' THEN 'The Willow Tree Practice'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  WHEN [ReportingOrganisationName] LIKE 'Coleford Family Doctors' THEN 'Coleford Medical Practice'#(lf) #(tab)                                      ELSE [ReportingOrganisationName] END#(lf)#(lf)INTO #TEMP#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)#(lf)#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)AND [Locality] IS NOT NULL#(lf);#(lf)#(lf)SELECT [GP].*#(lf)#(tab)  ,[COORD].[GPLatitude]#(lf)#(tab)  ,[COORD].[GPLongitude]#(lf)#(lf)FROM #TEMP AS [GP]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT [GP_Practice_Code], [GPLatitude], [GPLongitude]#(lf)           FROM [PowerBI_Reporting].[PHM].[tbl02_DemographicsOverview]) [COORD] ON [COORD].[GP_Practice_Code] = [GP].[ReportingOrganisationCode]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

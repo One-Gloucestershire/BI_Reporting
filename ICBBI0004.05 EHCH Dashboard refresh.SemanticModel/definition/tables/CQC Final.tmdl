@@ -1,0 +1,416 @@
+table 'CQC Final'
+	lineageTag: 9bec2952-0012-4c8f-ac6e-8ececeb0aed1
+
+	measure 'See & Convey' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome] == "See & Convey")
+		formatString: 0
+		lineageTag: ccfbf0a9-12ea-47eb-86ec-e930c8e6ba1c
+
+	measure 'Total Activity Rate per 100' = IFERROR(sum('SWAST Calls'[Care Home SWAST Calls])/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		lineageTag: a1cf0a12-9086-43d4-8093-97b78e0c8612
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See & Convey Rate per 100' = IFERROR('CQC Final'[See & Convey]/sum('CQC Final'[Bed_count]) * 100, BLANK())
+		formatString: 0.00
+		lineageTag: e48b7985-e99a-46a4-bfb6-0f5c672ea92e
+
+	measure 'See and Convey Rank' = CALCULATE(RANKX(ALL('CQC Final'[Assigned_name]),[See & Convey Rate per 100],,DESC,Skip) - 1)
+		formatString: 0
+		lineageTag: 291b94b7-e4a1-44d1-9b9a-8cd68b7bab5b
+
+	measure 'Count of care homes' = CALCULATE(DISTINCTCOUNT('CQC Alignment'[Assigned_name]),ALL('CQC Alignment'))
+		formatString: 0
+		lineageTag: 5a3d063d-e8fa-461c-a562-819c14a665d3
+
+	measure '20% of Care Homes' = [Count of care homes] * 0.2
+		lineageTag: 4d43326c-2a6a-45a8-8c59-2db6b53d83cb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Convey Top 20%' = IF([See and Convey Rank] <= [20% of Care Homes], "Yes", "No")
+		lineageTag: 2cfe284b-6ab5-4ee9-b2ba-c62c5bc8c013
+
+	measure 'Total Average Calls per Day pre Training' =
+			
+			var max_date = max('CQC Final'[Training date])
+			var min_date = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[counter]), 'SWAST Calls'[SWAST_call_date] < max_date)
+			RETURN if(total_hours / diff = blank(), blank(), total_hours / diff)
+		formatString: 0.0000
+		lineageTag: a1e712a7-f9a6-4847-9ece-b47a4d321651
+
+	measure 'Total Average Calls per Day post Training' = ```
+			
+			var max_date =  "31/03/2024"
+			var min_date = max('CQC Final'[Training date])
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[counter]), 'SWAST Calls'[SWAST_call_date] > min_date)
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		lineageTag: 5b0a687e-1d56-483b-a6e4-c7244e1655a7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Aligned_PCN
+		dataType: string
+		lineageTag: b97d2b81-9350-4702-851a-d450615e5fed
+		summarizeBy: none
+		sourceColumn: Aligned_PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bed_count
+		dataType: double
+		formatString: 0
+		lineageTag: 3c838fd2-5e60-4fb1-b4aa-f563bc16ae49
+		summarizeBy: sum
+		sourceColumn: Bed_count
+
+		annotation SummarizationSetBy = User
+
+	column Latest_CQC_rating
+		dataType: string
+		lineageTag: 8e543972-9ef3-44a7-a797-c67b0461c615
+		summarizeBy: none
+		sourceColumn: Latest_CQC_rating
+
+		annotation SummarizationSetBy = Automatic
+
+	column Assigned_name
+		dataType: string
+		lineageTag: 1147de7a-8246-4fbc-b5d2-ec6ed420a156
+		summarizeBy: none
+		sourceColumn: Assigned_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column CQC_or_not
+		dataType: string
+		lineageTag: 588d92d3-6c82-4765-83a9-3e27d51b3d7d
+		summarizeBy: none
+		sourceColumn: CQC_or_not
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Capacity Tracker Beds'
+		dataType: double
+		lineageTag: c6e6bb5d-a5c2-4936-95e1-83c91b79f679
+		summarizeBy: sum
+		sourceColumn: Capacity Tracker Beds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CQC_beds
+		dataType: int64
+		formatString: 0
+		lineageTag: e8601220-9d56-451a-aa61-5b10a0374c6a
+		summarizeBy: sum
+		sourceColumn: CQC_beds
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location ID'
+		dataType: string
+		lineageTag: 1fceeb9f-d967-4c4b-aef6-2b87038ad435
+		summarizeBy: none
+		sourceColumn: Location ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Training datekey' = ```
+			
+			SWITCH(TRUE(),
+			'CQC Final'[Assigned_name] = "Ambleside", 20240307,
+			'CQC Final'[Assigned_name] = "Badgeworth Court Care Centre", 20231130,
+			'CQC Final'[Assigned_name] = "Bramble House", 20231017,
+			'CQC Final'[Assigned_name] = "Castleford House Nursing Home", 20231116,
+			'CQC Final'[Assigned_name] = "Cavendish Care Home", 20240124,
+			'CQC Final'[Assigned_name] = "Charlton Kings Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Chaxhill Hall", 20240124,
+			'CQC Final'[Assigned_name] = "Cotswold House Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Edwardstow Court Care Centre", 20231121,
+			'CQC Final'[Assigned_name] = "Euroclydon Nursing Home", 20231116,
+			'CQC Final'[Assigned_name] = "Four Seasons", 20231121,
+			'CQC Final'[Assigned_name] = "Guild House Residential Home", 20240124,
+			'CQC Final'[Assigned_name] = "OSJCT Henlow Court", 20231017,
+			'CQC Final'[Assigned_name] = "Highborder Lodge", 20240207,
+			'CQC Final'[Assigned_name] = "Holly Oak Care Centre", 20240207,
+			'CQC Final'[Assigned_name] = "Horton House Residential Care Home", 20240124,
+			'CQC Final'[Assigned_name] = "Hunters Care Centre", 20231023,
+			'CQC Final'[Assigned_name] = "Kingsley House", 20231023,
+			'CQC Final'[Assigned_name] = "Lilleybrook Care Home", 20240307,
+			'CQC Final'[Assigned_name] = "Longhope Manor", 20240409,
+			'CQC Final'[Assigned_name] = "Magnolia House", 20231108,
+			'CQC Final'[Assigned_name] = "Mill House", 20240124,
+			'CQC Final'[Assigned_name] = "Newlands Nursing Care Centre", 20231121,
+			'CQC Final'[Assigned_name] = "Nodens Manor Care Home", 20240409,
+			'CQC Final'[Assigned_name] = "Northfield House", 20240124,
+			'CQC Final'[Assigned_name] = "Northleach Court Care Home with Nursing", 20231213,
+			'CQC Final'[Assigned_name] = "Oak Tree Mews", 20231121,
+			'CQC Final'[Assigned_name] = "Oakhaven Residential Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Oakhaven Residential Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Monkscroft Care Centre", 20231108,
+			'CQC Final'[Assigned_name] = "OSJCT Rodley House", 20240124,
+			'CQC Final'[Assigned_name] = "Windsor Street Care Centre", 20231116,
+			'CQC Final'[Assigned_name] = "Regency Retirement Home", 20240207,
+			'CQC Final'[Assigned_name] = "Resthaven Nursing Home", 20231116,
+			'CQC Final'[Assigned_name] = "Royal Court", 20240312,
+			'CQC Final'[Assigned_name] = "Saintbridge House Nursing and Residential Home", 20231130,
+			'CQC Final'[Assigned_name] = "St Faith's Nursing Home", 20240312,
+			'CQC Final'[Assigned_name] = "Stratton Court", 20231130,
+			'CQC Final'[Assigned_name] = "Tewkesbury Fields", 20240307,
+			'CQC Final'[Assigned_name] = "The Elms", 20240409,
+			'CQC Final'[Assigned_name] = "The Hollies Nursing Home", 20240207,
+			'CQC Final'[Assigned_name] = "The Laurels", 20231116,
+			'CQC Final'[Assigned_name] = "The Knoll", 20240307,
+			'CQC Final'[Assigned_name] = "Thirlestaine Park Care Home", 20231130,
+			'CQC Final'[Assigned_name] = "Watermoor House", 20240409,
+			'CQC Final'[Assigned_name] = "Westbourne Care Home", 20231108,
+			'CQC Final'[Assigned_name] = "Westgreen House", 20240207,
+			'CQC Final'[Assigned_name] = "Winslow House", 20231121,
+			'CQC Final'[Assigned_name] = "Yercombe (Gloucestershire) Trust", 20231017,
+			BLANK())
+			
+			
+			```
+		formatString: 0
+		lineageTag: 120c73bf-3247-4d7c-b991-b50c041f71ac
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care home training flag' = IF('CQC Final'[Training datekey] = BLANK(), "Have not had training", "Have had training")
+		lineageTag: c40c6a66-b6c5-4137-8780-ae3a4002f935
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Training date' = ```
+			DATE(LEFT([Training datekey],4),MID([Training datekey],5,2),RIGHT([Training datekey],2))
+			
+			```
+		formatString: Short Date
+		lineageTag: a74fb346-a6b9-4071-9aaa-8ae15bfa0f82
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: da0d994f-8d1b-4c66-a3aa-555a94c8f317
+			defaultHierarchy: LocalDateTable_40a815c9-005c-4ad1-bdb9-9f1f7343422d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Column Total Average Calls per Day pre Training' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN if(total_hours / diff = blank(), blank(), total_hours / diff)
+		formatString: 0.000
+		lineageTag: 45098f4e-c71a-4d1f-b72c-9a7033b9736b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Column Total Average Calls per Day post Training' = ```
+			
+			var max_date =  MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		formatString: 0.000
+		lineageTag: cba4bbe2-7e79-4471-9231-bac7dd486fcb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'New Column Total Average Calls per Day pre Training' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, DAY)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date)
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		formatString: 0.000
+		lineageTag: 645cb350-3983-4a49-8b22-e0adce69346c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '12 months pre training' = ```
+			EDATE('CQC Final'[Training date], -12)
+			
+			```
+		formatString: Short Date
+		lineageTag: 296c5de2-94a1-4cf5-830f-5875abc0aa78
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: ad167a4b-4fc6-4acf-8a1a-5cca9ba016c9
+			defaultHierarchy: LocalDateTable_88a9ad35-2bee-4879-8393-4f8ff38f33b8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Pre & Post-Training Daily Call Comparison' = [Column Total Average Calls per Day post Training] - [New Column Total Average Calls per Day pre Training]
+		lineageTag: f9acae84-6893-41f8-bc64-d80c5cb792d8
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Days since Training' = ```
+			
+			var max_date = MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, DAY)
+			
+			RETURN diff
+			
+			```
+		formatString: 0
+		lineageTag: 99028359-c190-4151-94fb-00c5d6ced06f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weeks since Training' = ```
+			
+			var max_date =  "31/03/2024"
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, WEEK)
+			
+			RETURN diff
+			
+			```
+		formatString: 0
+		lineageTag: 9a9272e6-007e-45ed-8401-bc49eb9776d0
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'New Column Total Average Calls per Week pre Training' =
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			var diff = DATEDIFF(select_min_date, max_date, WEEK)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date)
+			RETURN if(total_hours / diff = blank(), 0, total_hours / diff)
+		formatString: 0.000
+		lineageTag: 03984db5-8807-4419-9998-0f5f2115582f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Column Total Average Calls per Week post Training' = ```
+			
+			var max_date =  MAX('SWAST Calls'[SWAST_call_date])
+			var min_date = 'CQC Final'[Training date]
+			var diff = DATEDIFF(min_date, max_date, WEEK)
+			var total_hours = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] > min_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls")
+			RETURN 
+			IF(
+			total_hours / diff 
+			= blank(), 0, total_hours / diff)
+			```
+		formatString: 0.000
+		lineageTag: 94f6b0b7-d77d-4a86-b640-4e0519eeea7b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Pre & Post-Training Weekly Call Comparison' = [Column Total Average Calls per Week post Training] - [New Column Total Average Calls per Week pre Training]
+		lineageTag: 18342bf4-fbdd-4ee2-800b-df5b4c59cecb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Calls pre Training' = ```
+			
+			var max_date = 'CQC Final'[Training date]
+			var min_date_1 = STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			var min_date_2 = [12 months pre training]
+			var select_min_date = if(min_date_1 > min_date_2, min_date_1, min_date_2)
+			RETURN CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST_call_date] < max_date, 'SWAST Calls'[Symptom_Group_Chief_Complaint] = "Falls", 'SWAST Calls'[SWAST_call_date] > select_min_date)
+			
+			```
+		formatString: 0
+		lineageTag: a4e9443c-ec11-4f80-8774-80dc585c7ee1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'fist call date' = ```
+			STARTOFMONTH('SWAST Calls'[SWAST_call_date])
+			
+			
+			```
+		formatString: General Date
+		lineageTag: 4b2b33a2-8ed2-4727-8fdf-86b6e32b88e8
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 94042109-3909-4c5f-a76e-f8cb268f0b6e
+			defaultHierarchy: LocalDateTable_ca65db83-fa6b-41bc-9557-b87d860a24dc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column select_min_date = if([fist call date] > [12 months pre training], [fist call date], [12 months pre training])
+		formatString: General Date
+		lineageTag: 7dd5443f-9628-4dbf-b9e3-bbd0741a817b
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 626ef825-c63d-4e81-a1e3-5a3cc9efb64a
+			defaultHierarchy: LocalDateTable_b4f61579-24dc-4fd4-a5e5-2ec72fcdbe3e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column SWAST_care_home_type
+		dataType: string
+		lineageTag: f6fab2a1-6d80-457c-8f10-af9aa53ae8b7
+		summarizeBy: none
+		sourceColumn: SWAST_care_home_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column SWAST_care_home_type_rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 8483575d-adb8-4d17-9990-fd19adb63c48
+		summarizeBy: sum
+		sourceColumn: SWAST_care_home_type_rank
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'CQC Final' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="#(lf)--Table for getting the most up to date month for CQC data#(lf)SET NOCOUNT ON#(lf)IF OBJECT_ID ('TEMPDB..#max_date') IS NOT NULL DROP TABLE #max_date#(lf);#(lf)#(lf)SELECT#(lf)[max_published_date] = max(published_date)#(lf),[Current_up_to_date_month] = 'Yes'#(lf)INTO #max_date#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List]#(lf)#(lf)#(lf)-------------------------------------------------------#(lf)-------------------------------------------------------#(lf)#(lf)#(lf)#(lf)#(lf)SET NOCOUNT ON#(lf)IF OBJECT_ID ('TEMPDB..#Union_table') IS NOT NULL DROP TABLE #Union_table#(lf);#(lf)#(lf)#(lf)SELECT distinct#(lf)#(lf)[Aligned_PCN] = case when [p].[pcn] IS NULL then 'No aligned PCN' else [p].[pcn] END#(lf),[Bed_count] = CASE WHEN [p].[total beds] = [M].[Capacity Tracker Beds] THEN [p].[total beds]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [p].[total beds] IS NULL AND [M].[Capacity Tracker Beds] IS NOT NULL THEN [M].[Capacity Tracker Beds]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [p].[total beds] IS NULL AND [M].[Capacity Tracker Beds] IS NULL THEN 0#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [p].[total beds] != [M].[Capacity Tracker Beds] THEN [p].[total beds]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)END#(lf)#(lf),[Location ID] = cast([Location ID] as varchar)#(lf),[Latest_CQC_rating] = CASE WHEN q.[location latest overall rating] IS NULL THEN 'No known rating' ELSE q.[location latest overall rating]  END#(lf)--,[SWASFT Name]#(lf)--,[SWAST_aligned_name] = case when [location name] = 'The Lawns' and [pcn] = 'TWNS ' then null else [SWASFT Name] end#(lf),[M].[Capacity Tracker Beds]#(lf),[CQC_beds] = [p].[total beds]#(lf),[Assigned_name] = CASE#(tab)WHEN [CQC_Care_Home_Name] IS NULL THEN UPPER(LEFT([SWASFT Name],1))+LOWER(SUBSTRING([SWASFT Name],2,LEN([SWASFT Name])))#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [location name] = 'The Lawns' AND [pcn] = 'TWNS ' THEN 'The Lawns (TWNS)'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [location name] = 'The Lawns' AND [pcn] = 'Rosebank & Bartongate 'THEN [CQC_Care_Home_Name]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [CQC_Care_Home_Name] IS NOT NULL THEN [CQC_Care_Home_Name]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)END#(lf),[CQC_or_not] = CASE WHEN [p].[pcn] IS NULL THEN 'Not CQC' ELSE 'CQC' END #(lf),[SWAST_care_home_type] = m.[Broad Type (confirmed)]#(lf),[SWAST_care_home_type_rank] = RANK() OVER(PARTITION BY CASE#(tab)WHEN [CQC_Care_Home_Name] IS NULL THEN UPPER(LEFT([SWASFT Name],1))+LOWER(SUBSTRING([SWASFT Name],2,LEN([SWASFT Name])))#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [location name] = 'The Lawns' AND [pcn] = 'TWNS ' THEN 'The Lawns (TWNS)'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [location name] = 'The Lawns' AND [pcn] = 'Rosebank & Bartongate 'THEN [CQC_Care_Home_Name]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [CQC_Care_Home_Name] IS NOT NULL THEN [CQC_Care_Home_Name]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)END ORDER BY [Broad Type (confirmed)]  ASC) #(lf)#(lf)into #Union_table#(lf)#(lf)FROM [BIReports].[dbo].[Care_Home_Mapping_May23] AS [M] #(lf)#(lf)#(lf)LEFT JOIN [BIReports].[dbo].[PCN_CQC_Monthly_List] [P] ON [P].[CQC_Care_Home_Name] = [M].[CQC Name] #(lf)#(lf)LEFT JOIN #(lf)(SELECT *#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List] [A]#(lf)LEFT JOIN #max_date [MD] ON [MD].max_published_date = [A].[Published_Date]#(lf)WHERE [Current_up_to_date_month] like 'Yes') AS [Q] ON [Q].[Location Name] = [P].[CQC_Care_Home_Name] and [Q].[Location Postal Code] = [P].[Postcode]#(lf)#(lf)#(lf)UNION#(lf)#(lf)#(lf)#(lf)#(lf)SELECT#(lf)[Aligned_PCN] = case when [p].[pcn] IS NULL then 'No aligned PCN' else [p].[pcn] END#(lf),[Bed_count] = CASE WHEN [p].[total beds] = [M].[Capacity Tracker Beds] THEN [p].[total beds]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [p].[total beds] IS NULL AND [M].[Capacity Tracker Beds] IS NOT NULL THEN [M].[Capacity Tracker Beds]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [p].[total beds] IS NULL AND [M].[Capacity Tracker Beds] IS NULL THEN 0#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [p].[total beds] != [M].[Capacity Tracker Beds] THEN [p].[total beds]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)END#(lf),[Location ID] = cast([Location ID] as varchar)#(lf),[Latest_CQC_rating] = CASE WHEN q.[location latest overall rating] IS NULL THEN 'No known rating' ELSE q.[location latest overall rating]  END#(lf),[M].[Capacity Tracker Beds]#(lf),[CQC_beds] = [p].[total beds]#(lf),[Assigned_name] =  [Location Name]#(lf),[CQC_or_not] = CASE WHEN [p].[pcn] IS NULL THEN 'Not CQC' ELSE 'CQC' END #(lf),[SWAST_care_home_type] = m.[Broad Type (confirmed)] #(lf),[SWAST_care_home_type_rank] = RANK() OVER(PARTITION BY [Location Name]ORDER BY [Broad Type (confirmed)]  ASC) #(lf)#(lf)#(lf)#(lf)FROM [BIReports].[dbo].[CQC_Monthly_List] [Q]#(lf)#(lf)LEFT JOIN [BIReports].[dbo].[Care_Home_Mapping_May23] [M] ON [M].[CQC Name] = [Q].[Location Name]#(lf)#(lf)LEFT JOIN [BIReports].[dbo].[PCN_CQC_Monthly_List] [P] ON [P].[CQC_Care_Home_Name] = [Q].[Location Name]#(lf)#(lf)LEFT JOIN #max_date [MD] ON [MD].max_published_date = [Q].[Published_Date]#(lf)#(lf)WHERE [SWASFT Name] IS NULL #(lf)AND [Current_up_to_date_month] like 'Yes'#(lf)ORDER BY Assigned_name#(lf)#(lf)#(lf)SELECT * #(lf)FROM #Union_table#(lf)WHERE [SWAST_care_home_type_rank] = 1"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

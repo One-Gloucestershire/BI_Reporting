@@ -1,0 +1,768 @@
+table 'SWAST Calls'
+	lineageTag: 06da6dcd-ad6d-4bcf-9493-71bb0d59199e
+
+	measure '% of SWAST calls for care home patients' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls])/sum('SWAST Calls'[counter]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: dc1d2805-8437-4622-9cf0-ec960172eaeb
+
+	measure 'Care Home calls' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[counter]),
+				'SWAST Calls'[Residential_or_Nursing_home_Location]
+					IN { "Care / Nursing Home" }
+			)
+		formatString: 0
+		lineageTag: 7f33f282-d4b2-47b6-a696-998739405e53
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure '% of SWAST calls to care homes' = CALCULATE('SWAST Calls'[Care Home calls]/sum('SWAST Calls'[counter])*100)
+		lineageTag: 27d87822-1f0d-4b39-8829-b1cebe267265
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Last FY YTD Calls' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+				'SWAST Calls'[SWAST YTD] = "Year to Date" &&
+			    'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year]
+			)
+		formatString: 0
+		lineageTag: 95865203-6c73-4161-8e49-72509390e405
+
+	measure 'Current FY YTD Calls' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+				'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST current year]
+			)
+		formatString: 0
+		lineageTag: 51b6b102-8437-42cd-a125-a27f7aac3f4e
+
+	measure 'Total Last FY Calls' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+			    'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year]
+			)
+		formatString: 0
+		lineageTag: 2ea3b45e-e5b2-48c5-a288-bb44503f3d81
+
+	measure '% Over/Under FY YTD Calls' = CALCULATE('SWAST Calls'[Current FY YTD Calls] - 'SWAST Calls'[Last FY YTD Calls])/'SWAST Calls'[Last FY YTD Calls]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: abae4397-8875-4f4f-8e6f-9ee75f36d8c3
+
+	measure 'Current FY top 3 call reasons' = ```
+			
+			CALCULATE (
+			SUM ( 'SWAST Calls'[Care Home SWAST Calls] ),
+			ALLEXCEPT ( 'SWAST Calls', 'SWAST Calls'[Symptom_Group_Chief_Complaint], 'SWAST Calls'[Outcome], 'SWAST Calls'[Broad Type (confirmed)], 'Year to Date Reference'[YTD Reference] ),
+			'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST current year])
+			
+			```
+		formatString: 0
+		lineageTag: efc386ae-31ee-4799-877a-ff2d38a5423a
+
+	measure 'Last FY top 3 call reasons' =
+			
+			CALCULATE (
+			SUM ( 'SWAST Calls'[Care Home SWAST Calls] ),
+			ALLEXCEPT ( 'SWAST Calls', 'SWAST Calls'[Symptom_Group_Chief_Complaint], 'SWAST Calls'[Outcome], 'SWAST Calls'[Broad Type (confirmed)], 'Year to Date Reference'[YTD Reference]  ),
+			'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year]
+			)
+		formatString: 0
+		lineageTag: 10cc6216-416c-4f97-8acd-09e8b0be33a4
+
+	measure 'Conveyance rate' = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome] = "See & Convey")/sum('SWAST Calls'[Care Home SWAST Calls])
+		formatString: 0%;-0%;0%
+		lineageTag: a0e5acef-499e-44bb-9b02-ea97a5cb8bc0
+
+	measure 'CH Current FY YTD Calls' = ```
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+			    'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST current year]
+			
+			)
+			
+			```
+		formatString: 0
+		lineageTag: ff3b25d3-e20e-47bf-9caf-9c45a3d5a617
+
+	measure 'CH Last FY YTD Calls' = ```
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+			    'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year],
+			    'SWAST Calls'[SWAST YTD] = "Year to Date"
+			)
+			
+			```
+		formatString: 0
+		lineageTag: b5bfbb1a-f34c-4e45-96d4-239f0e3556b2
+
+	measure '% of calls from CH year on year comparison' =
+			CALCULATE(
+			    (('SWAST Calls'[CH Current FY YTD Calls]/('SWAST Calls'[All Current FY YTD Calls]))
+			    -
+			    ('SWAST Calls'[CH Last FY YTD Calls]/('SWAST Calls'[All Last FY YTD Calls])))
+			  )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f547431b-d7a6-4805-af5b-a7557a447d74
+
+	measure 'Care_home_patient_flag for Hear & Treat' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+				'SWAST Calls'[Outcome] IN { "Hear & Treat" }
+			)
+		formatString: #,0
+		lineageTag: 4b248990-2360-4331-b12d-dacfb83e6f92
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Care_home_patient_flag for See & Treat' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+				'SWAST Calls'[Outcome] IN { "See & Treat" }
+			)
+		formatString: 0
+		lineageTag: e884c4c4-3c85-45d0-9944-8252ab314851
+
+	measure 'Care_home_patient_flag for See & Convey' =
+			
+			CALCULATE(
+				SUM('SWAST Calls'[Care Home SWAST Calls]),
+				'SWAST Calls'[Outcome] IN { "See & Convey" }
+			)
+		formatString: 0
+		lineageTag: 23aee994-844a-447f-a214-abd974be568e
+
+	measure 'YTD SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('SWAST Calls'[Care Home SWAST Calls] ), 'Date Table'[ytd_flag] IN { 1 }, ALLEXCEPT( 'date table', 'date table'[financial_year] )  )
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 57ab5573-d80e-457f-8fba-a4a8f0551bbe
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('SWAST Calls'[Care Home SWAST Calls] ))
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 8b1f8dca-5551-4701-aaa6-59535b8b5c15
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SWAST Rate per 1000 Monthly' =
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('SWAST Calls'[Care Home SWAST Calls] ))
+			VAR POP = CALCULATE ( [Care Home Population Per Month] )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: abb28dca-d114-4563-bd63-639b4da657b9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Hear & Treat SWAST Rate per 1000 Monthly' =
+			
+			
+			VAR SWAST = 'SWAST Calls'[Care_home_patient_flag for Hear & Treat]
+			VAR POP = CALCULATE ([Care Home Population Per Month] )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: afc930f0-77d6-4707-a375-81034a6bb6c7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Convey SWAST Rate per 1000 Monthly' =
+			
+			
+			VAR SWAST = 'SWAST Calls'[Care_home_patient_flag for See & Convey]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: ba94caf7-f4f7-49b8-ab8d-a306dbc27061
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and Treat SWAST Rate per 1000 Monthly' =
+			
+			
+			VAR SWAST = 'SWAST Calls'[Care_home_patient_flag for See & Treat]
+			VAR POP = CALCULATE ( [Care Home Population Per Month] )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: d99f83ea-1ff9-4c94-9f05-70a2be772b35
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Hear and Treat SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = 'SWAST Calls'[Care_home_patient_flag for Hear & Treat]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 5b1a660d-b363-40f2-ad4e-9c6f26cc8474
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and convey SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = 'SWAST Calls'[Care_home_patient_flag for See & Convey]
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 739c8fff-c709-4717-8d4f-80dceb663589
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'See and treat SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = 'SWAST Calls'[Care_home_patient_flag for See & Treat]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'date table'[month_name] IN {"Apr"} )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 09f219f2-ea2e-4f8d-b8b6-7499dab48a26
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CY Reasons SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = [Current FY top 3 call reasons]
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , ALLEXCEPT ('date table', 'date table'[financial_year] ), ALLEXCEPT('SWAST Calls', 'SWAST Calls'[Outcome], 'SWAST Calls'[Broad Type (confirmed)], 'Year to Date Reference'[YTD Reference] ), 'Date Table'[month_name] IN {"Apr"}, 'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST current year])
+			
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 3733e2ca-2e90-40b5-937c-3c10dfdcb31f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'LY Call Reasons SWAST Rate per 1000 Yearly' =
+			
+			
+			VAR SWAST = [Last FY top 3 call reasons]
+			VAR POP = CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), ALLEXCEPT('SWAST Calls', 'SWAST Calls'[Outcome], 'SWAST Calls'[Broad Type (confirmed)], 'Year to Date Reference'[YTD Reference] ), 'date table'[month_name] IN {"Apr"}, 'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year] )
+			
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 6d7ce37d-bf73-49c4-be87-5368a7c34178
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'test LY Call Reasons SWAST Rate per 1000 Yearly' = ```
+			CALCULATE ( [Care Home Population Per Month]  , ALLEXCEPT ('date table', 'date table'[financial_year] ), 'Date Table'[Last_FY_Flag] = 1 && 'date table'[month_name] IN {"Apr"} )
+			
+			
+			```
+		lineageTag: 47aea2db-5de7-44ae-9076-849897039e40
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'All Current FY YTD Calls' = ```
+			
+			CALCULATE(
+				SUM('SWAST Calls'[counter]),
+			    'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST current year]
+			
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 19d5e691-f424-43f2-807e-3e5850a39413
+
+	measure 'All Last FY YTD Calls' = ```
+			
+			CALCULATE(
+				SUM('SWAST Calls'[counter]),
+			    'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year],
+			    'SWAST Calls'[SWAST YTD] = "Year to Date"
+			)
+			
+			```
+		formatString: 0
+		lineageTag: a49fa07f-4664-42da-b1ed-8f08b26e1096
+
+	measure 'SWAST Rate per 1000 Yearly CY' =
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST current year])
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , 'date table'[month_name] IN {"Apr"}, 'Date Table'[Current_FY_Flag] = 1)
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: a51d258c-d94a-4cb2-8576-345151559e5a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SWAST Rate per 1000 Yearly LY YTD' =
+			
+			
+			VAR SWAST = CALCULATE ( SUM ('SWAST Calls'[Care Home SWAST Calls]), 'SWAST Calls'[SWAST year adjusted] = 'SWAST Calls'[SWAST previous year], 'SWAST Calls'[SWAST YTD] = "Year to Date")
+			VAR POP = CALCULATE ( [Care Home Population Per Month] , 'date table'[month_name] IN {"Apr"}, 'Date Table'[Last_FY_Flag] = 1 )
+			
+			RETURN (SWAST/POP*1000)
+		lineageTag: 139175fa-fb98-4351-8167-d6d443ccbedd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SWAST Rate per 1000 Comparison CY v LY YTD' = [SWAST Rate per 1000 Yearly CY] - [SWAST Rate per 1000 Yearly LY YTD]
+		formatString: 0.0
+		lineageTag: 247b9c7e-5ba1-4e83-8b1b-889e37cbe1b7
+
+	measure Conveyances = CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls]),'SWAST Calls'[Outcome] = "See & Convey")
+		formatString: 0
+		lineageTag: 5ca205dc-c856-453c-921c-a5ed5ce1bf8f
+
+	measure 'Data up to' =
+			
+			VAR currmonth = MONTH((MAX('SWAST Calls'[SWAST_call_date])))
+			VAR year_name = CONCATENATE(" ",Year(MAX('SWAST Calls'[SWAST_call_date])))
+			
+			VAR month_name = SWITCH(TRUE(),
+			currmonth = 4, "April",
+			currmonth = 5, "May",
+			currmonth = 6, "June",
+			currmonth = 7, "July",
+			currmonth = 8, "August",
+			currmonth = 9, "September",
+			currmonth = 10, "October",
+			currmonth = 11, "November",
+			currmonth = 12, "December",
+			currmonth = 1, "January",
+			currmonth = 2, "February",
+			currmonth = 3, "March"
+			)
+			
+			return CONCATENATE(month_name,year_name)
+		lineageTag: e15498a5-156e-4f86-9f66-d10244bf3c9a
+
+	measure 'SWAST activity y-axis' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate" && x_axis = "Yearly", 'SWAST Calls'[SWAST Rate per 1000 Yearly]
+			
+			        ,if(rate_or_actual = "Rate" && x_axis = "Monthly", 'SWAST Calls'[SWAST Rate per 1000 Monthly]
+			        
+			        ,if(rate_or_actual = "Actual", CALCULATE(sum('SWAST Calls'[Care Home SWAST Calls])))))
+			```
+		lineageTag: 40d97865-577b-4f45-ba72-d9372e0cee2d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SWAST activity title' = ```
+			
+			
+			VAR  rate_or_actual = 
+			    if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Actual Activity", "Actual"
+			    ,if(SELECTEDVALUE('Actual or Rate'[Actual or Rate]) = "Rate per 1000", "Rate"))
+			
+			
+			VAR x_axis =
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'Month or Year Parameter', 'Month or Year Parameter'[Month or Year Parameter], 'Month or Year Parameter'[Month or Year Parameter Fields] ),
+			        'Month or Year Parameter'[Month or Year Parameter])
+			
+			RETURN  if(rate_or_actual = "Rate", "SWAST Calls for Care Home Residents - Rate per 1000"
+			        ,if(rate_or_actual = "Actual", "SWAST Calls for Care Home Residents - Actual Number of Calls"))
+			```
+		lineageTag: ec0e168f-4129-4c6b-8777-cbc2757006bb
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 419f754f-9b0b-4dbd-8817-af42c546ca80
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHSNumber
+		dataType: string
+		lineageTag: 420be6fc-3229-4a4d-8179-7efc4f955245
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: string
+		lineageTag: 863d6e52-e0d8-4014-adb5-aab4a0a209ea
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care Home SWAST Calls'
+		dataType: int64
+		formatString: #,0
+		lineageTag: f587a3d0-89b4-4710-8548-f33efa117ad8
+		summarizeBy: sum
+		sourceColumn: Care Home SWAST Calls
+
+		annotation SummarizationSetBy = Automatic
+
+	column Symptom_Group_Chief_Complaint
+		dataType: string
+		lineageTag: 6be42454-d583-462f-8cbf-84520dd2774e
+		summarizeBy: none
+		sourceColumn: Symptom_Group_Chief_Complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column Outcome
+		dataType: string
+		lineageTag: a3ab7ebe-76ab-4857-9ba8-fcaf1f09c361
+		summarizeBy: none
+		sourceColumn: Outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column SWAST_call_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 376c3c56-2e6c-4009-ab12-d634ca60b11d
+		summarizeBy: none
+		sourceColumn: SWAST_call_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Residential_or_Nursing_home_Location
+		dataType: string
+		lineageTag: a579559d-d67a-4890-9477-c862ca0eb7c5
+		summarizeBy: none
+		sourceColumn: Residential_or_Nursing_home_Location
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_patient_description
+		dataType: string
+		lineageTag: b29aecef-5279-4046-9bd0-af18036b9af2
+		summarizeBy: none
+		sourceColumn: Care_home_patient_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Broad Type (confirmed)'
+		dataType: string
+		lineageTag: b2928cb1-cde1-4357-9a34-cba2212d23cf
+		summarizeBy: none
+		sourceColumn: Broad Type (confirmed)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pseudo_NHS_Number
+		dataType: string
+		lineageTag: cb57ee28-bee2-43d9-89d6-42452314566c
+		summarizeBy: none
+		sourceColumn: Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_home_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2144ea6a-f74a-49e2-82c8-33e92e5ca6a3
+		summarizeBy: none
+		sourceColumn: Care_home_date
+
+		variation Variation
+			isDefault
+			relationship: 5326f2f3-9491-4874-94ba-f32c40915f3e
+			defaultHierarchy: LocalDateTable_9bd5ccf1-e1af-4639-8586-87c1d45f0070.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column end_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e78e51e4-2a25-4164-8687-0e0c3bfcdb84
+		summarizeBy: none
+		sourceColumn: end_date
+
+		variation Variation
+			isDefault
+			relationship: eedff79d-cebd-4cce-adf7-3bcb44b5a61a
+			defaultHierarchy: LocalDateTable_494a7c96-f1ff-4251-bf7e-3d7d1bbf6829.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 0c304e3d-53df-4710-a00c-68d5baba6f1a
+		summarizeBy: sum
+		sourceColumn: rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column Residential_or_Nursing_home_Location_Name
+		dataType: string
+		lineageTag: 3df11780-fb1d-4cbf-a658-d97893d4794c
+		summarizeBy: none
+		sourceColumn: Residential_or_Nursing_home_Location_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column duplicate
+		dataType: string
+		lineageTag: f270e320-e2a1-4b5a-ab89-81da9e55c1dc
+		summarizeBy: none
+		sourceColumn: duplicate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_patient_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: f56dc356-f31b-4c93-9cf1-89dda6188c13
+		summarizeBy: sum
+		sourceColumn: Current_patient_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 37feff71-2fcb-46b3-975f-7ba704c7a156
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 7229d2e5-b088-4b08-8ee7-c7fc91f5ed0b
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Death_date_diff
+		dataType: int64
+		formatString: 0
+		lineageTag: 97360f3e-79dd-473c-9f7a-71ff59910733
+		summarizeBy: sum
+		sourceColumn: Death_date_diff
+
+		annotation SummarizationSetBy = Automatic
+
+	column 48_hour_date_diff
+		dataType: int64
+		formatString: 0
+		lineageTag: f4aced70-753b-48f0-8d0f-8020fcf6078c
+		summarizeBy: sum
+		sourceColumn: 48_hour_date_diff
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateOfDeath
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7f8526fd-679e-420f-98b6-62a17bd1d46f
+		summarizeBy: none
+		sourceColumn: DateOfDeath
+
+		variation Variation
+			isDefault
+			relationship: e286c688-fe00-4b05-bbe0-c9c0c4a894da
+			defaultHierarchy: LocalDateTable_af9d3d8c-6817-47b0-805f-05b1c273e1fd.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Conveyed_To_Ward_Type
+		dataType: string
+		lineageTag: 4845e467-c761-4619-bd95-99b241fc3eb8
+		summarizeBy: none
+		sourceColumn: Conveyed_To_Ward_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_Ward_Attended
+		dataType: string
+		lineageTag: d6c2e528-99c5-44de-a3cb-64e4ee932915
+		summarizeBy: none
+		sourceColumn: First_Ward_Attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST max financial month' = ```
+			
+			VAR currmonth = MONTH(MAX('SWAST Calls'[SWAST_call_date]))
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+			
+			```
+		formatString: 0
+		lineageTag: 8dee78af-3c60-4aca-aae4-113a6a0b8df7
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST financial month' = ```
+			
+			VAR currmonth = MONTH('SWAST Calls'[SWAST_call_date]
+			)
+			VAR cal = SWITCH(TRUE(),
+			currmonth = 4, 1,
+			currmonth = 5, 2,
+			currmonth = 6, 3,
+			currmonth = 7, 4,
+			currmonth = 8, 5,
+			currmonth = 9, 6,
+			currmonth = 10, 7,
+			currmonth = 11, 8,
+			currmonth = 12, 9,
+			currmonth = 1, 10,
+			currmonth = 2, 11,
+			currmonth = 3, 12
+			)
+			return cal
+			
+			```
+		formatString: 0
+		lineageTag: 70fe1b47-440b-4dde-ae84-e4aa8fb6313e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST YTD' = ```
+			if('SWAST Calls'[SWAST financial month]<= 'SWAST Calls'[SWAST max financial month], "Year to Date", "Not Year to Date")
+			
+			```
+		lineageTag: d2405490-a8c1-470a-a0d2-1898db111e99
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST current year' = ```
+			
+			VAR max_year = YEAR(MAX('SWAST Calls'[SWAST_call_date]
+			))
+			VAR max_month = MONTH(MAX('SWAST Calls'[SWAST_call_date]
+			))
+			VAR financial_month = SWITCH(TRUE(),
+			max_month = 4, 1,
+			max_month = 5, 2,
+			max_month = 6, 3,
+			max_month = 7, 4,
+			max_month = 8, 5,
+			max_month = 9, 6,
+			max_month = 10, 7,
+			max_month = 11, 8,
+			max_month = 12, 9,
+			max_month = 1, 10,
+			max_month = 2, 11,
+			max_month = 3, 12
+			)
+			VAR adjust_year = SWITCH(TRUE(),
+			max_month = 1, max_year - 1,
+			max_month = 2, max_year - 1,
+			max_month = 3, max_year - 1,
+			max_month = 4, max_year,
+			max_month = 5, max_year,
+			max_month = 6, max_year,
+			max_month = 7, max_year,
+			max_month = 8, max_year,
+			max_month = 9, max_year,
+			max_month = 10, max_year,
+			max_month = 11, max_year,
+			max_month = 12, max_year
+			)
+			return adjust_year
+			
+			```
+		formatString: 0
+		lineageTag: 8fa45aeb-75dc-41c8-9ed1-5324ae384e58
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST year adjusted' = ```
+			if(
+			    'SWAST Calls'[SWAST financial month] = 10, YEAR('SWAST Calls'[SWAST_call_date]
+			) -1, 
+			    if('SWAST Calls'[SWAST financial month] = 11, YEAR('SWAST Calls'[SWAST_call_date]
+			) -1, 
+			    if('SWAST Calls'[SWAST financial month] = 12, YEAR('SWAST Calls'[SWAST_call_date]
+			) -1, year('SWAST Calls'[SWAST_call_date]
+			))))
+			
+			```
+		formatString: 0
+		lineageTag: 84ce9fac-b46b-4a05-b99d-3c45f2a3214f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SWAST previous year' = ```
+			'SWAST Calls'[SWAST current year] - 1
+			
+			```
+		formatString: 0
+		lineageTag: daea4c9e-b755-4aa5-9982-63bf46bc57b6
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'SWAST Calls' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)#(lf)#(lf)IF OBJECT_ID ('TEMPDB..#table1') IS NOT NULL DROP TABLE #table1#(lf)#(lf)SELECT distinct #(lf)#(lf)[counter] = 1#(lf)#(lf),[E].[Derived_Pseudo_NHSNumber]#(lf),[P].[Pseudo_NHS_Number]#(lf),E.ID#(lf),[rank] = RANK() OVER   #(lf)   (PARTITION BY E.ID ORDER BY case when cast(Time_Of_Incident as date) between [P].[Care_home_date] and [End_date] then 1 else 0 END DESC)#(lf),[duplicate] = CASE WHEN ROW_NUMBER()OVER(PARTITION BY ID,  Time_Of_Incident  ORDER BY Time_Of_Incident ASC)= 1 THEN 'Referral' ELSE 'Duplicate referral' END#(lf),[SWAST_call_date] = cast([Time_Of_Incident] as date)#(lf),[Care_home_date]#(lf),end_date#(lf),[Care_home_patient_flag] = case when cast(Time_Of_Incident as date) between [P].[Care_home_date] and [End_date] then 1 else 0 END#(lf),[Care_home_patient_description] = case when cast(Time_Of_Incident as date) between [P].[Care_home_date] and [End_date] then 'Care Home' else 'Not Care Home' END#(lf),[E].Symptom_Group_Chief_Complaint#(lf),Outcome#(lf),Residential_or_Nursing_home_Location#(lf),[Broad Type (confirmed)]#(lf),Residential_or_Nursing_home_Location_Name#(lf),[P].[Current_patient_flag]#(lf),gp.ReportingOrganisationCode#(lf),gp.ReportingOrganisationName#(lf),[Death_date_diff] = DATEDIFF(DAY,[Time_Of_Incident],[D].[DateOfDeath])#(lf),[48_hour_date_diff] = CASE WHEN DATEDIFF(DAY,[Time_Of_Incident],[D].[DateOfDeath]) <= 2 THEN 1 ELSE 0 END#(lf),[D].[DateOfDeath]#(lf),[Conveyed_To_Ward_Type]#(lf),[First_Ward_Attended]#(lf)#(lf)into #table1#(lf)FROM [CCG_Current].SWASFT.vw_AmbulanceServicePatient [E]#(lf)#(lf)LEFT JOIN [PowerBI_Reporting].[dbo].[Care_Home_Patients_PC_Data_v4] [P] ON P.[Pseudo_NHS_Number] = [E].Derived_Pseudo_NHSNumber#(lf)LEFT JOIN bireports.dbo.Care_Home_Mapping_May23 [CH] ON [CH].[SWASFT Name] = [Residential_or_Nursing_home_Location_Name]#(lf)left join [ccg_reference].[Population].[vw_PDS_Current] b on [E].[Derived_Pseudo_NHSNumber] = b.Derived_NHS_Number and [E].[Time_Of_Incident] between b.AddressEffectiveDate and getdate() AND B.ResidentialNursingHomeFlag = 1#(lf)left join ccg_reference.reference.vw_GPPractice gp on b.PrimaryCareProvider = gp.OrganisationCode#(lf)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths] [D] ON [D].[Derived_NHS_Number] = [E].[Derived_Pseudo_NHSNumber]#(lf)#(lf)WHERE#(lf)#(lf)cast(Time_Of_Incident as date) between '2021-04-01' and EOMONTH(DATEADD(MONTH, -1, GETDATE()))#(lf)#(lf)and [E].CCG like '11m'#(lf)#(lf)order by [Pseudo_NHS_Number], SWAST_call_date asc#(lf)#(lf)#(lf)select#(lf)*#(lf)from #table1#(lf)where [rank] = 1#(lf)and [duplicate] = 'Referral'"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"ID", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Care_home_patient_flag", "Care Home SWAST Calls"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,348 @@
+table 'PDS Movement'
+	lineageTag: be657d2e-fddf-4b6e-86cb-f0d591eeed29
+
+	measure 'PDS Movement - Population' =
+			
+			
+			SUM('PDS Movement'[Counter])
+		formatString: #,0
+		lineageTag: fe8b7a82-8f97-4508-a9db-3e1017456d2b
+
+	measure 'PDS Movement - Net Movement' =
+			
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    'PDS Movement'[Movement_Type] = "Joiner"
+			)
+			
+			-
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    'PDS Movement'[Movement_Type] = "Leaver"
+			)
+		formatString: #,0
+		lineageTag: abf8a69f-81b2-4469-b59b-a722e200e3fd
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'PDS Movement - Net Movement - Cards' = [PDS Movement - Net Movement]
+		lineageTag: 2b9e5c76-67cc-41e9-b55d-8e4ee691ba49
+
+		formatStringDefinition = "+,0;-,0"
+
+	measure 'PDS Movement Leavers' =
+			
+			
+			0
+			
+			-
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    'PDS Movement'[Movement_Type] = "Leaver"
+			)
+		formatString: 0
+		lineageTag: a84a9ec6-5ba3-4b7e-a104-1649fc4f1517
+
+	measure 'PDS Movement - Joiners' =
+			
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    'PDS Movement'[Movement_Type] = "Joiner"
+			)
+		formatString: 0
+		lineageTag: 3b5ce698-b86b-433f-9848-753334f7fdf9
+
+	measure 'Base 0' =
+			
+			
+			0
+		formatString: 0
+		lineageTag: 56db1c99-17e5-45f2-9749-f3deb039e8f6
+
+	measure 'PDS Movement - Male Population' =
+			
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    'PDS Movement'[Gender] = "Male"
+			)
+		formatString: #,0
+		lineageTag: d710eef3-8af8-4b37-aaad-bf1214a688c3
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'PDS Movement - Female Population' =
+			
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    'PDS Movement'[Gender] = "Female"
+			)
+		formatString: #,0
+		lineageTag: d486a3c1-837d-457e-a343-927d13388ed8
+
+	measure 'PDS Movement - Male Population Gloucestershire' =
+			
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    ALLSELECTED('PDS Movement'[10YR_Age_Band]),
+			    'PDS Movement'[Gender] = "Male"
+			)
+		formatString: 0
+		lineageTag: adb2186b-b86d-4e78-ba06-98fdc6ee4a8b
+
+	measure 'PDS Movement - % Male Population' =
+			
+			
+			[PDS Movement - Male Population] / [PDS Movement - Male Population Gloucestershire]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: cfaab70d-3247-4d59-b846-a1557e34106d
+
+	measure 'PDS Movement - Female Population Gloucestershire' =
+			
+			
+			CALCULATE(
+			    SUM('PDS Movement'[Counter]),
+			    ALLSELECTED('PDS Movement'[10YR_Age_Band]),
+			    'PDS Movement'[Gender] = "Female"
+			)
+		formatString: 0
+		lineageTag: 6cd37858-6ae0-4543-8e28-f05b83fdec74
+
+	measure 'PDS Movement - % Female Population' =
+			
+			
+			[PDS Movement - Female Population] / [PDS Movement - Female Population Gloucestershire]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 3d093d3a-4c43-4c81-8c38-5118139e675f
+
+	measure 'PDS Movement - % Female Population Gloucestershire' = ```
+			
+			
+			CALCULATE(
+			    [PDS Movement - Female Population],
+			    ALL('PDS Movement'[Core20Flag])
+			)
+			
+			/
+			
+			CALCULATE(
+			    [PDS Movement - Female Population Gloucestershire],
+			    ALL('PDS Movement'[Core20Flag])
+			)
+			
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e88a68a6-11b4-428f-bd64-6ae7e29a341a
+
+	column Movement_Type
+		dataType: string
+		lineageTag: 1e2a526f-4f29-4d5d-b09f-e08429c56207
+		summarizeBy: none
+		sourceColumn: Movement_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Movement_Reason
+		dataType: string
+		lineageTag: 3a82afe2-dc0a-4471-8708-15c5f3cd98b8
+		summarizeBy: none
+		sourceColumn: Movement_Reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 764c79f9-be96-497e-8088-ca29b6a0a35b
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 72e6341f-ad0f-495f-a7a1-5a23e80ec1e3
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: f956d3cf-f3b8-465b-8cdb-086b3174e9c7
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: 66ded4b7-c924-4618-8dd3-4e78ceaab83e
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_Groups
+		dataType: string
+		lineageTag: 046a24a2-549e-4d67-a9f5-7c3895a77b4b
+		summarizeBy: none
+		sourceColumn: Age_Groups
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnic_Origin_Grouped
+		dataType: string
+		lineageTag: 0d252d05-199d-4f3a-a963-94f63eebd10f
+		summarizeBy: none
+		sourceColumn: Ethnic_Origin_Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareProvider
+		dataType: string
+		lineageTag: ac97187e-e33e-4195-822a-ca9b5a4ccf93
+		summarizeBy: none
+		sourceColumn: PrimaryCareProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	column District
+		dataType: string
+		lineageTag: 21306f76-18fc-4df5-9703-387934e4f424
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ward_Name
+		dataType: string
+		lineageTag: 4718c271-bf8a-4d24-ba55-6438f5a5e13c
+		summarizeBy: none
+		sourceColumn: Ward_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_Name
+		dataType: string
+		lineageTag: 6ddde403-c4a8-45bf-bd29-40c8a8cca2d0
+		summarizeBy: none
+		sourceColumn: LSOA_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gloucestershire_Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: 0d973ce2-a857-46a5-94c4-80f1625cef66
+		summarizeBy: sum
+		sourceColumn: Gloucestershire_Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column England_Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: 2fff8e8c-aec9-4bb5-a124-1aab7ea3aa1d
+		summarizeBy: sum
+		sourceColumn: England_Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 62b87df2-914e-481a-b3b3-ed44a39b8dfc
+		summarizeBy: sum
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Care_Home_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 0859b796-abbe-4c66-b3d7-0f7112000640
+		summarizeBy: sum
+		sourceColumn: Care_Home_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column RecordType
+		dataType: string
+		lineageTag: 715b36b3-e239-4b8a-a6d3-3594fc949d1a
+		summarizeBy: none
+		sourceColumn: RecordType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Movement_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a2c7c97f-6064-47ea-adbe-e76fd92c8c7e
+		summarizeBy: none
+		sourceColumn: Movement_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 927c5cf0-ff4a-4b0b-9f39-0042d7756fef
+		summarizeBy: sum
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 854b99db-d69d-49cb-881d-182566fe95c9
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 6affae3d-9dbd-4859-82f6-5e2268e63562
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: f3f5a7ff-c9e5-4d1c-adef-478f17144f4f
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2d35edd6-271b-44f4-b985-28c53cf4c181
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 64a4b7a5-4ccd-405f-86ff-ea701684c66c
+			defaultHierarchy: LocalDateTable_1fd724db-8587-44e1-834e-17a4f142d4fc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'PDS Movement' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT * FROM [PowerBI_Reporting].[dbo].[PDS_Population_Movement]"])
+				in
+				    Source
+
