@@ -1,0 +1,46 @@
+table Ref_Organisations
+	lineageTag: b7486b10-4ca5-4bb9-b5cb-3824d23a1f10
+
+	measure 'Waiting Times Title' = "Waiting Times -" & " " & min('Ref_Organisations'[OrganisationName])
+		lineageTag: 6dbc1acf-99bc-4f50-bbf8-0435dc6e460b
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	measure Filtered_Provider = min('Ref_Organisations'[OrganisationName])
+		lineageTag: fce5ad34-4c5c-43fe-9dbe-98ed8979d7cc
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: b187cfb5-84fa-47b8-949d-f49a148ddc63
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: d965607e-1625-41fd-be55-3463ecf76288
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_Organisations-593dae51-bb80-4e7b-b516-cd54ef8974b9 = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_reference", [Query="#(tab)#(lf)#(tab)#(tab)set nocount on #(lf)#(lf)#(lf)--get list of required TFC's and their associated Descs#(lf)#(lf)select ISP.OrganisationCode#(lf),isp.OrganisationName#(lf)from CCG_Reference.Reference.vw_IndependentProvider as isp#(lf)where OrganisationCode in (#(lf)#(lf)'NVC', -- Ramsay Healthcare#(lf)'NT2', -- Nuffield Health#(lf)'AAH', -- Tetbury#(lf)'NXP', -- Independent Health Group #(lf) 'NTP') -- Practice Plus Group#(lf)#(lf) union all#(lf)#(lf)#(lf) select OrganisationCode#(lf) ,Name#(lf)#(lf) from  CCG_Reference.Reference.vw_OrganisationTrust AS NHSO#(lf)#(lf) where OrganisationCode = 'RTE' -- GHFT#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

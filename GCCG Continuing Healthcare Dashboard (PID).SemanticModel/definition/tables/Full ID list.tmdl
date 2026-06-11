@@ -1,0 +1,28 @@
+table 'Full ID list'
+	lineageTag: d48ea33f-f8e7-4a12-a402-a2d9181dca5c
+
+	column clientid
+		dataType: int64
+		formatString: 0
+		lineageTag: be2d7a81-ebe1-4aa5-b02a-b476d1a2583e
+		summarizeBy: none
+		sourceColumn: clientid
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Full ID list-4f2befd8-57ee-4395-b1d1-a6a3ff9d30b6' = m
+		mode: import
+		source =
+				let
+				    Source = #"28days_Referrals",
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"clientid"}),
+				    #"Appended Query" = Table.Combine({#"Removed Other Columns", PHB, C_Onetimecost, #"A_ Main data", Appeals, B_Reviews}),
+				    #"Removed Other Columns1" = Table.SelectColumns(#"Appended Query",{"clientid"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns1")
+				in
+				    #"Removed Duplicates"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

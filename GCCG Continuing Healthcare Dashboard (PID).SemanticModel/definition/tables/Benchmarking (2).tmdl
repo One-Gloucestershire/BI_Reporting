@@ -1,0 +1,110 @@
+table 'Benchmarking (2)'
+	lineageTag: c9ac19db-ce0d-454e-9ba6-b5d64a42780b
+
+	measure Value_ = ```
+			var avg1 =  AVERAGE('Benchmarking (2)'[Value])
+			var order1 = max('Benchmarking order'[Order])
+			
+			return 
+			
+			if ( order1 in {3,4,5}, FORMAT(avg1, "Percent"  ),    avg1   )
+			```
+		formatString: 0.0
+		lineageTag: 24ddd581-8edc-419d-98f2-b3fafd193ee1
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	column 'Time Period'
+		dataType: string
+		lineageTag: 503ef42b-2f56-493d-838e-669187e21f8f
+		summarizeBy: none
+		sourceColumn: Time Period
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Organisation Type'
+		dataType: string
+		lineageTag: 2b340144-533e-47cd-ac51-ba6d88307ab6
+		summarizeBy: none
+		sourceColumn: Organisation Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisationcode
+		dataType: string
+		lineageTag: 9ca48040-0cdf-4f3f-9c04-39fb2fb8d511
+		summarizeBy: none
+		sourceColumn: organisationcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Organisation Name'
+		dataType: string
+		lineageTag: c4b70cf6-00a1-47f7-a77d-895c1a6ffb35
+		summarizeBy: none
+		sourceColumn: Organisation Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: double
+		formatString: 0.00
+		lineageTag: 8f04d39e-9bf8-4670-bb89-e4fa7b8d0ec5
+		summarizeBy: average
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_ChangedProperties = ["FormatString"]
+
+	column Attribute
+		dataType: string
+		lineageTag: f53ef6fc-a2d1-4cbf-bff6-ebc3f4b35af8
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SW Peer Cluster 1' =
+			if ( 'Benchmarking (2)'[Organisation Name] =  "NHS Gloucestershire CCG" ,    "NHS Gloucestershire CCG" ,         Switch (true(),
+			
+			'Benchmarking (2)'[Organisation Name] = "NHS Kernow CCG" , "South West Peer Group Exc GCCG",
+			'Benchmarking (2)'[Organisation Name]= "NHS Cornwall CCG" , "South West Peer Group Exc GCCG",
+			'Benchmarking (2)'[Organisation Name] = "NHS Scilly CCG" ,"South West Peer Group Exc GCCG",
+			'Benchmarking (2)'[Organisation Name]= "NHS Devon CCG","South West Peer Group Exc GCCG",
+			'Benchmarking (2)'[Organisation Name]= "NHS Somerset CCG", "South West Peer Group Exc GCCG",
+			'Benchmarking (2)'[Organisation Name] = "NHS Dorset CCG" , "South West Peer Group Exc GCCG",
+			""))
+		dataType: string
+		lineageTag: edf9156e-6d5d-4350-b572-33af4cf300d3
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["DataType"]
+
+	partition 'Benchmarking (2)-3b549687-8b5a-43a2-bb94-4b0947440c0f' = m
+		mode: import
+		source =
+				let
+				    Source = AmazonRedshift.Database("redshift-cluster-2.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5439","dw01"),
+				    data_mart_pid_011_chs_continuinghealthcare = Source{[Name="data_mart_pid_011_chs_continuinghealthcare"]}[Data],
+				    tbl_benchmarking_201_load = data_mart_pid_011_chs_continuinghealthcare{[Name="tbl_benchmarking_201_load"]}[Data],
+				    #"Renamed Columns" = Table.RenameColumns(tbl_benchmarking_201_load,{{"timeperiod", "Time Period"}, {"organisationtype", "Organisation Type"}, {"organisationname", "Organisation Name"}}),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Renamed Columns", {"Time Period", "Organisation Type", "organisationcode", "Organisation Name"}, "Attribute", "Value"),
+				    #"Duplicated Column" = Table.AddColumn(#"Unpivoted Columns", "Replaced Text", each Text.Replace(Text.Proper([Attribute]), "_", " "), type text),
+				    #"Removed Columns" = Table.RemoveColumns(#"Duplicated Column",{"Attribute"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns",{{"Replaced Text", "Attribute"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns1",{{"Value", type number}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type","Elidgible","Eligible",Replacer.ReplaceText,{"Attribute"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","Fasttrack","Fast Track",Replacer.ReplaceText,{"Attribute"}),
+				    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1","Ytd","YTD",Replacer.ReplaceText,{"Attribute"}),
+				    #"Replaced Value3" = Table.ReplaceValue(#"Replaced Value2","Fnc","FNC",Replacer.ReplaceText,{"Attribute"}),
+				    #"Replaced Value4" = Table.ReplaceValue(#"Replaced Value3","Chc","CHC",Replacer.ReplaceText,{"Attribute"})
+				in
+				    #"Replaced Value4"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

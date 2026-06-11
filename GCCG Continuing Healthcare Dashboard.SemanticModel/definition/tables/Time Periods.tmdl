@@ -1,0 +1,114 @@
+table 'Time Periods'
+	lineageTag: 1a5d9e71-120e-4d4d-b06a-07a04bf5e69f
+
+	column Date
+		formatString: General Date
+		lineageTag: 9a118095-2b8c-4675-95a8-d3df797df129
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["IsHidden"]
+
+	column Period
+		lineageTag: 714371b7-a3b7-4663-9981-a1c4a6222c65
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Period]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["IsHidden"]
+
+	column 'Axis Date'
+		formatString: General Date
+		lineageTag: 3ca28ef0-d7b7-4f68-a9ba-99d02f2ea070
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Axis Date]
+
+		variation Variation
+			isDefault
+			relationship: facdbf7f-5e32-4963-bc66-368cb8c2838a
+			defaultHierarchy: LocalDateTable_e7d3571b-e3e4-461f-81fe-19b6ec22da9f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_ChangedProperties = ["IsHidden"]
+
+	partition 'Time Periods-9ee5d775-26c2-4344-b0ef-3a161e3cae8c' = calculated
+		mode: import
+		source = ```
+				
+				VAR _today =
+				    today()
+				VAR _thisyear = 
+				    YEAR(_today)
+				VAR _thismonth = 
+				    MONTH(_today)
+				VAR _thisday = 
+				    DAY(_today)
+				var _lastmonthstart = 
+				 date (  year( EDATE( today(),-1)), MONTH( EDATE( today(),-1)),1)
+				var _lastmonthend =
+				  date (  year( _lastmonthstart ), MONTH( _lastmonthstart  ), day(  edate(_lastmonthstart,1) -1))
+				var _last3monthstart = date (  year( EDATE( today(),-3)), MONTH( EDATE( today(),-3)),1)
+				var _last12monthstart = date (  year( EDATE( today(),-12)), MONTH( EDATE( today(),-12)),1)
+				
+				RETURN
+				    SELECTCOLUMNS(
+				        UNION(
+				    
+				
+				          //LastMonth
+				            ADDCOLUMNS(
+				                GENERATE(
+				                    SELECTCOLUMNS( { "Last Month" }, "Period", [Value]),
+				                    GENERATESERIES(_lastmonthstart, _lastmonthend) 
+				                ),
+				                "Axis Date", [Value]
+				            ),
+				
+				          //Last3Month
+				            ADDCOLUMNS(
+				                GENERATE(
+				                    SELECTCOLUMNS( { "Last 3 Months" }, "Period", [Value]),
+				                    GENERATESERIES(_last3monthstart, _lastmonthend) 
+				                ),
+				                "Axis Date", [Value]
+				            ),
+				
+				    //Last12Month
+				            ADDCOLUMNS(
+				                GENERATE(
+				                    SELECTCOLUMNS( { "Last 12 Months" }, "Period", [Value]),
+				                    GENERATESERIES(_last12monthstart, _lastmonthend) 
+				                ),
+				                "Axis Date", [Value]
+				            ),
+				
+				
+				             // All Data (max 10yr)
+				            ADDCOLUMNS(
+				                GENERATE(
+				                    SELECTCOLUMNS( { "All" }, "Period", [Value]),
+				                    GENERATESERIES(
+				                        DATE(_thisyear,_thismonth,_thisday-3650), _today-1
+				                    )
+				                ),
+				                "Axis Date", [Value]
+				            )
+				
+				            
+				            
+				        ),
+				        "Date",[Value],
+				        "Period", [Period],
+				        "Axis Date", [Axis Date]
+				    )
+				```
+
+	annotation PBI_Id = cda1f16adaba428ea68e96f4e7192479
+
