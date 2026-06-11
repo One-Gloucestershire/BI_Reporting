@@ -1,0 +1,177 @@
+table vw_SMS_Activity
+	lineageTag: 69db0a8e-45dc-4dfb-a160-76d6e9179e72
+
+	measure 'Fragments per practice' =
+			
+			VAR Total_fragments = CALCULATE(SUM('vw_SMS_Activity'[TotalFragments]),'REF_SMSCostCentreCodeRef'[CostCentreType]="GP Practice")
+			VAR GP_practice_count = CALCULATE(COUNT('vw_SMS_Activity'[CostCentre]),'REF_SMSCostCentreCodeRef'[CostCentreType]="GP Practice")/DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			RETURN ROUND(Total_fragments / GP_practice_count,2)
+		formatString: #,0.00
+		lineageTag: 6971020e-6fed-4635-9ab9-0db921e08ea6
+
+	measure 'Spend per practice' =
+			
+			VAR Total_spend = CALCULATE(SUM('vw_SMS_Activity'[TotalCost]) ,'REF_SMSCostCentreCodeRef'[CostCentreType]="GP Practice")
+			VAR GP_practice_count = CALCULATE(COUNT('vw_SMS_Activity'[CostCentre]),'REF_SMSCostCentreCodeRef'[CostCentreType]="GP Practice")/DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			RETURN ROUND(Total_spend / GP_practice_count,2)
+		lineageTag: a070e649-1c56-41e8-800c-f5a661a66b02
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fragments per 1000patient' =
+			
+			VAR Total_fragments = SUM('vw_SMS_Activity'[TotalFragments])
+			VAR patient_count = SUM('GP Practice Populations'[Population]) / COUNTA('REF_DateRef'[Month_No])
+			RETURN ROUND(DIVIDE(1000*Total_fragments,patient_count,BLANK()),2)
+		formatString: #,0.00
+		lineageTag: a45f4b80-b5c0-4caf-935b-c6d06b88864a
+
+	measure 'Spend per 1000patient per month' =
+			
+			VAR Total_spend = SUM('vw_SMS_Activity'[TotalCost])
+			VAR patient_count = SUM('GP Practice Populations'[Population]) / DISTINCTCOUNT('GP Practice Populations'[first_date_of_month])
+			VAR Num_Months = DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			RETURN ROUND(DIVIDE(1000*Total_spend/Num_Months,patient_count,BLANK()),2)
+		lineageTag: ef34b0de-0ef6-408f-bdae-fc74d30a5385
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Fragments per month' =
+			
+			VAR Total_Fragments = SUM('vw_SMS_Activity'[TotalFragments])
+			VAR Num_Months = DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			RETURN ROUND(Total_Fragments / Num_Months,2)
+		formatString: #,0.00
+		lineageTag: 1c5de73f-a31e-4770-99b8-fef4c53f009a
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MathematicalDivision"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Annualised Fragments' =
+			
+			DIVIDE(
+				12*SUM('vw_SMS_Activity'[TotalFragments]),
+				DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			)
+		formatString: #,0.00
+		lineageTag: 61663dbd-1264-4029-bfa1-7f782676a688
+
+	measure 'Spend per month' =
+			
+			VAR Total_spend = SUM('vw_SMS_Activity'[TotalCost])
+			VAR Num_Months = DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			RETURN ROUND(Total_spend / Num_Months,2)
+		lineageTag: eefb2f1d-6523-444b-93c5-3555b66af0c1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Annualised Spend' =
+			
+			DIVIDE(
+				12*SUM('vw_SMS_Activity'[TotalCost]),
+				DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			)
+		formatString: #,0.00
+		lineageTag: f9477315-20db-489c-bc71-a20add24b947
+
+	measure 'Fragments per 1000patient per month' =
+			
+			VAR Total_Fragments = SUM('vw_SMS_Activity'[TotalFragments])
+			VAR patient_count = SUM('GP Practice Populations'[Population]) / DISTINCTCOUNT('GP Practice Populations'[first_date_of_month])
+			VAR Num_Months = DISTINCTCOUNT('REF_DateRef'[Month_Start])
+			RETURN ROUND(DIVIDE(1000*Total_Fragments/Num_Months,patient_count,BLANK()),2)
+		lineageTag: b5ef5939-0b09-4d3b-a057-f5168fbedf41
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Annualised Fragments per 1000patient' =
+			
+			VAR Total_fragments = SUM('vw_SMS_Activity'[TotalFragments])
+			VAR patient_count = SUM('GP Practice Populations'[Population]) / COUNTA('REF_DateRef'[Month_No])
+			RETURN DIVIDE(12*Total_fragments*1000/DISTINCTCOUNT('REF_DateRef'[Month_Start]),patient_count,BLANK())
+		formatString: #,0.00
+		lineageTag: 5d151df1-6108-4731-89cb-2a7c9d29c0c5
+
+	measure 'Annualised Spend per 1000patient' =
+			
+			VAR Total_spend = SUM('vw_SMS_Activity'[TotalCost])
+			VAR patient_count = SUM('GP Practice Populations'[Population]) / DISTINCTCOUNT('GP Practice Populations'[first_date_of_month])
+			RETURN DIVIDE(12*Total_spend*1000/DISTINCTCOUNT('REF_DateRef'[Month_Start]),patient_count,BLANK())
+		formatString: #,0.00
+		lineageTag: 804208fa-e903-4d10-9b40-a89c16e31524
+
+	measure 'Spend per 1000patient' =
+			
+			VAR Total_Spend = SUM('vw_SMS_Activity'[TotalCost])
+			VAR patient_count = SUM('GP Practice Populations'[Population]) / COUNTA('REF_DateRef'[Month_No])
+			RETURN ROUND(DIVIDE(1000*Total_Spend,patient_count,BLANK()),2)
+		lineageTag: 596fc629-e454-4b48-bf5e-ca6aea25c1af
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 494d0007-ae7b-4dda-9b08-644284838073
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalFragments
+		dataType: int64
+		formatString: #,0
+		lineageTag: aefb7d1d-c1d7-47d9-9ab5-a184c97e93f4
+		summarizeBy: sum
+		sourceColumn: TotalFragments
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalCost
+		dataType: double
+		formatString: #,0.00
+		lineageTag: d8052f22-494b-49ca-86ff-6c5c908e70c0
+		summarizeBy: sum
+		sourceColumn: TotalCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column CostCentre
+		dataType: string
+		lineageTag: 6652ddd3-20e8-4f13-b503-bfc07765b13a
+		summarizeBy: none
+		sourceColumn: CostCentre
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 98e3ba5c-9c04-4c9a-9664-7e3386027384
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: 85dd3fe5-c130-49f8-a5f8-aea89bcede65
+			defaultHierarchy: LocalDateTable_721edb56-d2da-45f4-9e19-fec751787d74.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition vw_SMS_Activity = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT * FROM  PowerBI_Reporting.primarycare.[tbl08_SMS]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

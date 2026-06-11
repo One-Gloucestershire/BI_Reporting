@@ -1,0 +1,148 @@
+table '3.Creative Health Referrals'
+	lineageTag: 38d8d63e-3cb8-4a43-975c-7077880208e5
+
+	measure Number_of_Creative_Health_Referrals_Suppressed =
+			
+			
+			calculate(if(sum('3.Creative Health Referrals'[count])<=6,0,sum('3.Creative Health Referrals'[count])),'3.Creative Health Referrals'[Accept/Exclude] = "Accept")
+		formatString: 0
+		lineageTag: 069045d1-eb62-4200-99f8-d637b06fc0df
+
+		changedProperty = IsHidden
+
+	measure Number_of_Creative_Health_Referrals =
+			
+			
+			calculate(SUM('3.Creative Health Referrals'[count]),'3.Creative Health Referrals'[Accept/Exclude] = "Accept")
+		formatString: 0
+		lineageTag: 52214d19-3cb2-4c47-82f4-7da0ad6950ed
+
+		changedProperty = IsHidden
+
+	measure Creative_Health_Referrals_per_1000_population = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]))
+			    
+			
+			VAR Latest_GP_Registered_Population =
+			    CALCULATE(
+			        SUM(REF_GP_Practice_Populations[Total Population]),
+			        REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date
+			    )
+			
+			RETURN
+			
+			([Number_of_Creative_Health_Referrals]/Latest_GP_Registered_Population)*1000
+			
+			
+			
+			```
+		lineageTag: 8a8f5d46-fb77-445c-86fd-1bc96da9612d
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Gloucestershire_Creative_Health_Referrals_per_1000_population = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			  
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date])
+			    
+			
+			VAR Latest_GP_Registered_Population =
+			    CALCULATE(
+			        SUM(REF_GP_Practice_Populations[Total Population])
+			        ,all(REF_GP_Practice_Ref)
+			        ,NOT(ISBLANK(REF_GP_Practice_Ref[OrganisationCode]))
+			        ,REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date
+			        
+			        )
+			   
+			
+			    Var Number_of_creative_health_countywide_referrals = 
+			    calculate([Number_of_Creative_Health_Referrals]
+			    ,ALL(REF_GP_Practice_Ref)
+			    ,NOT(ISBLANK(REF_GP_Practice_Ref[OrganisationCode]))
+			    )
+			    
+			  
+			
+			RETURN
+			
+			iferror((Number_of_creative_health_countywide_referrals/Latest_GP_Registered_Population)*1000,BLANK())
+			
+			
+			
+			```
+		lineageTag: 16890c9a-b54f-49a1-9c4d-4f61de515167
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Number_of_Creative_Health_Referrals_Missing_GP_Practice =
+			
+			calculate([Number_of_Creative_Health_Referrals]
+			,isblank('3.Creative Health Referrals'[Practice_Code]))
+		formatString: 0
+		lineageTag: bf9806a4-6092-4836-9031-c0263d941b63
+
+		changedProperty = IsHidden
+
+	measure Creative_Health_Referral_Rate_per_1000_conditional_formatting =
+			
+			SWITCH(
+			    True(),
+			    [Creative_Health_Referrals_per_1000_population] > [Gloucestershire_Creative_Health_Referrals_per_1000_population],"#FE7A36"
+			    ,"#3652AD"
+			
+			)
+		lineageTag: 0546781b-8615-4c65-914b-ce51c409215b
+
+		changedProperty = IsHidden
+
+	measure Only_relevant_items_in_creative_health_referrals_dataset = countrows('3.Creative Health Referrals')
+		formatString: 0
+		lineageTag: c185766b-9407-4871-b24b-8c1e93f035be
+
+	column count
+		dataType: int64
+		formatString: 0
+		lineageTag: a6f07e2a-adcc-4266-9b7c-8a2d8e3e92f3
+		summarizeBy: sum
+		sourceColumn: count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column place_holder
+		dataType: int64
+		formatString: 0
+		lineageTag: 21d78b7c-8d4c-405c-bb8f-747109c7703e
+		summarizeBy: none
+		sourceColumn: place_holder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '3.Creative Health Referrals' = m
+		mode: import
+		queryGroup: 'Creative Health'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)#(lf)---DUMMY #(lf)#(lf)select [place_holder] = 1#(lf),[count] = NULL#(lf)#(lf)#(lf)#(lf)-----referral#(lf)#(lf)--SELECT #(lf)--'1' as [count] ,#(lf)-- ssp.[NHS_Number]#(lf)--  ,[Derived_NumberofReferralsTotal]#(lf)--      ,[Derived_NumberofReferralToEachProgramme]#(lf)--  ,[Gender]#(lf)--  ,date.monthname#(lf)--  ,date.financialyear#(lf)--      ,[EthnicOriginDescription] = e.EthnicOriginDescription#(lf)--      ,[Age_at_referral]#(lf)--#(tab)  ,[LTCCount] = mpi.[LTCCountDerived]#(lf)--      ,[eFI_catogory] = mpi.[eFICategoryDerived]#(lf)--      ,[IsLivingAlone] = NULL#(lf)--      ,ssp.[Derived_DateofReferral]#(lf)--#(tab)  ,case when ssp.[Derived_DateofReferral] > [Derived_ProgrammeStartDate] then [Derived_ProgrammeStartDate]#(lf)--  when ssp.[Derived_DateofReferral] is null then [Derived_ProgrammeStartDate]#(lf)--  else ssp.[Derived_DateofReferral]  end as 'Referral Date'#(lf)--#(tab)  ,date.MonthYearName#(lf)--#(tab)  --[Referral_month]#(lf)--      --,[Referral_monthyear]#(lf)--      --,[Referral_fyear]#(lf)--      ,[GP_Practice_at_Referral]#(lf)--#(tab)  ,gp.OrganisationCode#(lf)--      --,[ReferralPracticeCode]#(lf)--      ,gp.[Network]#(lf)--,gp.primarycarenetwork #(lf)--,[Primary care Network] = case when gp.primarycarenetwork is null then mpi.PrimaryCareNetwork else gp.PrimaryCareNetwork end#(lf)--,[Practice_Code] = case when gp.OrganisationCode IS null then MPI.PracticeCode else gp.OrganisationCode END #(lf)#(lf)#(lf)--,[Locality] = MPI.Locality#(lf)--, [Locality Name] = case when MPI.Locality is null then mpi.Locality else MPI.Locality end #(lf)--#(tab)  ,Gp.place#(lf)--      ,[Source_of_referral]#(lf)-- , case when [Source_of_referral] in ('Self referral', 'self referral', 'Self -referral', 'Self-referral', 'leaflet', 'Sef-referral', 'Sef-referral') then 'Self-Referral'#(lf)-- when [Source_of_referral] = '' then 'Unknown'#(lf)-- when [Source_of_referral] in ('GP', 'GP Surgery') then 'GP/GP Surgery'#(lf)--#(tab)  else [Source_of_referral] end as 'Source or Referral'#(lf)--      ,[Referral_appropriate]#(lf)--#(tab)  ,case when [Referral_appropriate] = 'N/A' then 'Unknown'#(lf)--#(tab)  when [Referral_appropriate] is null then 'Unknown' #(lf)--#(tab)  when [Referral_appropriate] = ' ' then 'Unknown'#(lf)--#(tab)  else [Referral_appropriate] end as 'Referral appropriate'#(lf)--      ,[Innapropriate_referral_reason] = case when [Innapropriate_referral_reason] = ' ' then 'Unknown' #(lf)--#(tab)  else [Innapropriate_referral_reason] end #(lf)--      ,[Completion_of_personalised_support_plan]#(lf)--      ,[Carer_Family_Attendance]#(lf)--      ,[Other_carer_responsibilities]#(lf)--      ,ssp.[Programme_name]#(lf)-- ,case when ssp.[Programme_name] =  'CYP Pain' then 'CYP LTCs' else ssp.[Programme_name] end as 'Course Name' #(lf)--      ,[Programme_provider]#(lf)--,case when  programme_provider is null and ssp.Programme_name = 'Adult Pain' then 'Artlift' else programme_provider end as 'Programme Provider'#(lf)--      ,[Programme_capacity]#(lf)--      ,[Derived_ProgrammeStartDate]#(lf)--      ,[Derived_ProgrammeEndDate]#(lf)#(tab)  #(lf)#(tab) #(lf)#(lf)--#(tab)   ,REF.REREFERRALS#(lf)--#(tab) ,[PREVIOUS PROGRAMME END DATE]#(lf)#(tab) #(lf)--#(tab) ,[REFERRERAL FLAG] = CASE WHEN DATEDIFF(M,[PREVIOUS PROGRAMME END DATE], ssp.[Derived_ProgrammeStartDate]) BETWEEN 0 AND 6 THEN '1'#(lf)--#(tab) ELSE '0' END #(lf)--#(tab) ,[DIF] = DATEDIFF(M,[PREVIOUS PROGRAMME END DATE], ssp.[Derived_ProgrammeStartDate]) #(lf)#(lf)--      ,[Number_of_available_sessions]#(lf)--      ,[Number_of_attended_sessions]#(lf)--      ,[Reason_for_disengagment]#(lf)    #(lf)--      --,[Completed_programme_flag]#(lf)--      --,[Unique_identifier]#(lf)--      ,ssp.[FileName] -- Nick C: presuming ssp is correct but don't know#(lf)--      ,[ProcessedDate] = ssp.ProcessedDate#(lf)#(lf)--#(tab)  ,case when ssp.[Derived_DateofReferral] < /*'20220430'*/ ssp.[ProcessedDate] then 'Include' #(lf)--#(tab)   when [Derived_ProgrammeStartDate] < /*'20220430'*/ ssp.[ProcessedDate] then 'Include' -- if ref or start date is greater than Submision date#(lf)--#(tab)  else 'Exclude' #(lf)--#(tab)   end as 'Dates in'#(lf)#(lf)#(lf)--  ,case when ([Derived_NumberofReferralsTotal]  = '1' and ssp.[Derived_DateofReferral] is null and ssp.NHS_Number is null and Referral_appropriate is Null and ssp.[Programme_name] is null) then 'Exclude' #(lf)--#(tab)  else 'Accept' end as 'Accept/Exclude'#(lf)#(lf)--#(tab)  ,referral_reason#(lf)--,Type_of_dementia,#(lf)#(lf)--Derived_DiagnosisDate,#(lf)--[Diagnosis FY] = diagdate.FinancialYear,#(lf)--[Diagnosis MY] = diagdate.MonthYearName,#(lf)      #(lf)--Derived_InitialAssessmentDate,#(lf)--[initial assessment FY] = initialdate.FinancialYear,#(lf)--[initial assessment MY] = initialdate.MonthYearName,#(lf) #(lf)--Derived_PostAssessmentDate,#(lf)--[Post assessment FY] = postdate.FinancialYear,#(lf)--[Post assessment MY] = postdate.MonthYearName,#(lf)#(lf)--Ethnicity_of_carer#(lf)--,Gender_of_carer#(lf)--,Age_of_carer#(lf)--,Carers_relationship#(lf)#(lf)#(lf)#(lf)#(lf)--  FROM [CCG_Current].[CreativeHealth].[vw_CreativeHealthConsortium] ssp#(lf)#(lf)#(lf)--   LEFT JOIN (SELECT NHS_NUMBER, [PREVIOUS PROGRAMME END DATE] = [Derived_ProgrammeEndDate], [REREFERRALS] = ROW_NUMBER()OVER(PARTITION BY NHS_NUMBER ORDER BY [Derived_ProgrammeEndDate] ASC) +1 #(lf)--  FROM [CCG_Current].[CreativeHealth].[vw_CreativeHealthConsortium] where NHS_Number <> '') AS REF#(lf)--  ON ssp.NHS_Number = REF.NHS_NUMBER and ssp.[Derived_NumberofReferralToEachProgramme] = REF.REREFERRALS#(lf)#(lf)#(lf)-----------------------check this works#(lf)--#(tab)#(tab)  --left join (select [NHS_Number], [Derived_DateofReferral], [Programme_name], /*[Programme_start_date], */ #(lf)--#(tab)#(tab)#(tab)#(tab)--#(tab)[Num_of_Referrals_to_each_programme] = ROW_NUMBER () over(partition by NHS_Number, [Programme_name] order by [Derived_DateofReferral], [Derived_ProgrammeStartDate])#(lf)--#(tab)#(tab)#(tab)#(tab)--#(tab), [Num_of_Referrals_Total] = ROW_NUMBER () over(partition by NHS_Number order by [Derived_DateofReferral],[Derived_ProgrammeStartDate]) #(lf)--#(tab)#(tab)#(tab)#(tab)--#(tab)from [CCG_Current].[CreativeHealth].[vw_CreativeHealthConsortium]#(lf)--#(tab)#(tab)#(tab)#(tab)--#(tab)where NHS_Number is not Null or NHS_Number <> '') as num#(lf)--#(tab)#(tab)#(tab)#(tab)--#(tab)on num.nhs_number = ssp.NHS_Number and num.[Derived_DateofReferral] = ssp.[Derived_DateofReferral] #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(lf)-------------------------#(lf)#(lf)#(lf)--  left join [CCG_Reference].[Reference].[vw_GPPractice] gp on gp.[OrganisationCode] = [Derived_ReferralPracticecode]#(lf)--  left join  [ICB_Products].[Patient].vw_Summary MPI on MPI.[PseudoNHSNumber] = ssp.[NHS_Number]#(lf)--  left join [CCG_Reference].[Reference].[vw_DateLookup] date on  date.date = case when ssp.[Derived_DateofReferral] > [Derived_ProgrammeStartDate] then [Derived_ProgrammeStartDate]#(lf)--  when ssp.[Derived_DateofReferral] is null then [Derived_ProgrammeStartDate]#(lf)--  else ssp.[Derived_DateofReferral] end #(lf)#(lf)--   left join  [CCG_Reference].[Reference].[vw_DateLookup] as diagdate#(lf)--  on diagdate.date = ssp.Derived_DiagnosisDate#(lf)#(lf)--   left join  [CCG_Reference].[Reference].[vw_DateLookup] as initialdate#(lf)--  on initialdate.date = ssp.Derived_InitialAssessmentDate#(lf)#(lf)--   left join  [CCG_Reference].[Reference].[vw_DateLookup] as postdate#(lf)--  on postdate.date = ssp.Derived_postassessmentDate#(lf)#(lf)--  LEFT JOIN [ICB_Products].Patient.vw_Ethnicity as e #(lf)--  on e.PseudoNHSNumber = ssp.NHS_Number#(lf)#(lf)#(lf)--  order by  ssp.NHS_Number, ssp.Derived_NumberofReferralsTotal asc, ssp.[Derived_DateofReferral]#(lf)#(lf)#(lf) #(lf)#(lf)#(lf)#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"count", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

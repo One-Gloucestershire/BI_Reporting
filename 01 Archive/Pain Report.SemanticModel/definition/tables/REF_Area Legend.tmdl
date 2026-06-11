@@ -1,0 +1,50 @@
+table 'REF_Area Legend'
+	lineageTag: 580d8146-c9a5-4e3a-af5c-5d82e8e1006d
+
+	column Area
+		lineageTag: 30863b1b-bbc7-4929-a7a2-9dc39b51c93b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Area]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Field
+		lineageTag: 3084e43d-2d2d-4985-8010-4bbd69906a19
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Field]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'REF_Area Legend' = calculated
+		mode: import
+		source = ```
+				
+				VAR UnionTable =
+				    UNION(
+				        SELECTCOLUMNS(
+				            VALUES('REF_GP_Practice_Ref'[Locality]),
+				            "Area",
+				             'REF_GP_Practice_Ref'[Locality],
+				            "Field",
+				             "Locality"
+				        ),
+				        SELECTCOLUMNS(
+				            VALUES('REF_GP_Practice_Ref'[PrimaryCareNetwork]),
+				            "Area", 'REF_GP_Practice_Ref'[PrimaryCareNetwork],
+				            "Field", "PCN"
+				        ),
+				        SELECTCOLUMNS(
+				            VALUES('REF_GP_Practice_Ref'[ReportingOrganisationName]),
+				            "Area", 'REF_GP_Practice_Ref'[ReportingOrganisationName],
+				            "Field", "GP practice"
+				        )
+				    )
+				RETURN
+				    FILTER(UnionTable, NOT ISBLANK([Area]))
+				
+				```
+
+	annotation PBI_Id = f5d77b90132a4c409e1011312f9ef829
+

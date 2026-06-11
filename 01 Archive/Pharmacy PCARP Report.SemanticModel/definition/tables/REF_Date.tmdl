@@ -1,0 +1,151 @@
+table REF_Date
+	lineageTag: 827c9e27-f049-4269-b6d9-d04cd920fce1
+
+	column MonthYearName
+		dataType: string
+		lineageTag: d6068ca3-2631-450c-bfe9-aa3fa9f99eac
+		summarizeBy: none
+		sourceColumn: MonthYearName
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d38c3910-9f5f-49d8-b27e-a85e29cf9ccb
+		summarizeBy: none
+		sourceColumn: Month_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year_Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 19d5fd52-3f7c-4060-91af-f2c6b81b20b8
+		summarizeBy: sum
+		sourceColumn: Year_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cal_Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 3bb846c3-cb56-4ecc-990e-7bbbbeb49783
+		summarizeBy: sum
+		sourceColumn: Cal_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: c0621afc-61e0-4e9e-b239-d7bd87497f54
+		summarizeBy: none
+		sourceColumn: FinancialYear
+		sortByColumn: Fin_Year_First_Part
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fin_Year_First_Part
+		dataType: int64
+		formatString: 0
+		lineageTag: b1c795c1-58bd-43f1-86b1-73abc3f1ea8f
+		summarizeBy: sum
+		sourceColumn: Fin_Year_First_Part
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_No
+		dataType: int64
+		formatString: 0
+		lineageTag: a2a4f975-c6a7-4d4e-86db-29baeb2ebd82
+		summarizeBy: sum
+		sourceColumn: Month_No
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fin_Month_No
+		dataType: int64
+		formatString: 0
+		lineageTag: 57ab8735-d772-488d-aca2-3ef3588fbc11
+		summarizeBy: sum
+		sourceColumn: Fin_Month_No
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Name
+		dataType: string
+		lineageTag: 88e2c1c0-362b-465b-9607-575702584abc
+		summarizeBy: none
+		sourceColumn: Month_Name
+		sortByColumn: Fin_Month_No
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Short_Name
+		dataType: string
+		lineageTag: e19a4b29-dcae-4f8a-ab14-975f72876be2
+		summarizeBy: none
+		sourceColumn: Month_Short_Name
+		sortByColumn: Fin_Month_No
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshMonthYear
+		dataType: string
+		lineageTag: e64db663-e6c4-4058-85bf-cfbd407e9564
+		summarizeBy: none
+		sourceColumn: RefreshMonthYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthYearName2
+		dataType: string
+		lineageTag: 6669c6f7-c3d3-42f4-986b-484c128d2fe3
+		summarizeBy: none
+		sourceColumn: MonthYearName2
+		sortByColumn: Year_Month
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column ComparisonMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 4bce64bd-90e3-4a07-9f48-6cc7f947c58f
+		summarizeBy: sum
+		sourceColumn: ComparisonMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'FinancialYear Hierarchy'
+		lineageTag: 5598b3ca-37a2-47f9-b697-138fbcf7c95c
+
+		level 'Financial Year'
+			lineageTag: af3a838e-77a2-476c-96e7-d94a59fa73c3
+			column: FinancialYear
+
+		level Month(s)
+			lineageTag: d0cd6304-6a5c-414a-934b-112e68f05f5d
+			column: Month_Short_Name
+
+	partition REF_Date = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="DECLARE @startdate DATE = (SELECT MIN(Consultation_Month) FROM PowerBI_Reporting.primarycare.[tbl07_Pharm_Consultations])#(lf)DECLARE @enddate DATE = (SELECT MAX(Consultation_Month) FROM PowerBI_Reporting.primarycare.[tbl07_Pharm_Consultations])#(lf)#(lf)SELECT #(lf)Month_Start#(lf), Year_Month#(lf), Cal_Year#(lf), CONCAT('20',Fin_Year_yy_yy) AS FinancialYear#(lf), Fin_Year_First_Part#(lf), Month_No#(lf), Fin_Month_No#(lf), Month_Name#(lf), Month_Short_Name#(lf), CONCAT(Month_Short_Name,'-',Cal_Year) AS MonthYearName#(lf), CONCAT(Month_Name,' ',Cal_Year) AS MonthYearName2#(lf), CONCAT(DATENAME(MONTH,GETDATE()),' ',YEAR(GETDATE())) AS RefreshMonthYear#(lf), ComparisonMonth = DATEDIFF(m,Month_Start,@enddate)#(lf)FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)WHERE Full_Date >= @startdate#(lf)AND Full_Date <= @enddate#(lf)AND Full_Date = Month_Start#(lf)ORDER BY Full_Date#(lf);"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

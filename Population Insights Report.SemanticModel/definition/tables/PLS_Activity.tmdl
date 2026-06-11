@@ -1,0 +1,1459 @@
+table PLS_Activity
+	lineageTag: d030c443-cacd-4ab5-aa0b-1a1dd96627ca
+
+	measure 'Cost per Person' =
+			
+			
+			SUM('PLS_Activity'[DerivedActivityCost]) / SUM('PLS_Summary'[Counter])
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: 1be37347-fa7d-4be8-aecc-5aaa04f0ec9c
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Activity per Person' =
+			
+			
+			SUM('PLS_Activity'[Counter]) / SUM('PLS_Summary'[Counter])
+		lineageTag: 31a29185-7ddf-4f81-9ee5-61689f07d6ee
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Primary Selection - Activity per Person' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+			/
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+		lineageTag: b60ea283-26be-4f40-8e72-4e5f8f1bac32
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Selection - Activity per Person' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+			/
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+		lineageTag: 189f0fb9-a5e3-4b56-b9db-5c5a2ba65f60
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Activity - Emergency Admissions Rate per 1,000' = ```
+			
+			
+			VAR _ACTIVITY = 
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[Counter]),
+			    'PLS_Activity'[ActivityType] = "Emergency Admission"
+			)
+			
+			VAR _POPULATION = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			RETURN
+			
+			(_ACTIVITY / _POPULATION) * 1000
+			```
+		formatString: 0.0
+		lineageTag: 9fc58d65-0a52-418a-b732-a01dedab9104
+
+	measure 'Primary Selection - All Activity' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+		formatString: #,0
+		lineageTag: 02ed59a3-1808-4c24-80fc-6422e5ca3de8
+
+	measure 'Secondary Selection - All Activity' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+		formatString: #,0
+		lineageTag: 0a4ab551-15b1-466b-8c8c-ff66f9dca868
+
+	measure 'Primary Selection - All Costs' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[DerivedActivityCost]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: 4d158643-3f7a-45da-8f49-a5419fead207
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Secondary Selection - All Costs' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[DerivedActivityCost]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: cb03632d-2547-4cc2-824e-ff8e9c58ff36
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Primary Selection - Cost per Person' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[DerivedActivityCost]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+			/
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: 970c4156-cc51-489f-aa61-60cff8ddf729
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Secondary Selection - Cost per Person' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[DerivedActivityCost]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+			/
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: 9b59efd2-b40b-4407-beaf-c7778b37a520
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Parameter Switch - Activity Metrics' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter])
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost])
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter])
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost])
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter])
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost])
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter])
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost])
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			```
+		lineageTag: 3a11ef5e-8102-43ae-be0d-b6c92d66166d
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - 111' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "111"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "111"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "111"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "111"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "111"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "111",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "111"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "111",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "111"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "111"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			```
+		displayFolder: Switch Measure
+		lineageTag: f6432db6-d23b-44d9-a18f-cf47c8890eee
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Community Care' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Community Care",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Community Care",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Community Care"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: cb58ae71-11f0-453e-909e-c7e629ea96da
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - ED' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "ED",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "ED",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "ED"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: 65683fc0-ecc2-470f-bc3e-6e0b726e7e7c
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Elective Admission' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Elective Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: be3898fb-1b6e-45c5-8ae5-451c464e934e
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Emergency Admission' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Emergency Admission"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: 7731628a-9a95-4448-88fc-aa5b74999920
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Mental Health' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Mental Health",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Mental Health",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "Mental Health"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: 2ae43e76-3bcf-4ced-8b7e-98637dccfd73
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - MIIU' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "MIIU",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "MIIU",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "MIIU"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: 0aa4c8f4-bb67-4b61-a4f1-f012b19e3da4
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Outpatient Appointment' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT APPOINTMENT"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: 44e43c38-2149-4432-a447-2df07620aa3d
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Outpatient Procedure' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "OUTPATIENT PROCEDURE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: b1c867ed-8079-466c-a6df-0112d89b44bb
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'Switch - Primary Care' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE",
+			        ALL('Ref_PNG')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        'PLS_Activity'[ActivityType] = "PRIMARY CARE"
+			        )
+			        /  
+			        SUM('PLS_Summary'[Counter])
+			    ) * 1000
+			)
+			
+			```
+		displayFolder: Switch Measure
+		lineageTag: 964426e8-c663-42e5-b675-a76341ecc57b
+
+		formatStringDefinition =
+				
+				SWITCH(
+				    TRUE(),
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), "#,##0",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"), "£#,#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), "0.00",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"), "£#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"), "0.0%",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"), "#,##0.#",
+				    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"), "£#,##0.#"
+				)
+
+	measure 'PNGs - Proportion of Costs' = ```
+			
+			
+			VAR _NUMERATOR = SUM('PLS_Activity'[DerivedActivityCost])
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Activity'[DerivedActivityCost]),
+			    ALL('Ref_PNG')
+			)
+			
+			RETURN
+			
+			_NUMERATOR / _DENOMINATOR
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b40f80e3-2848-4487-8dbc-0e95cab40f98
+
+	measure 'Activity Period' = ```
+			
+			
+			VAR _ACTIVITY_MIN =  
+			
+			FORMAT(
+			    MIN('PLS_Activity'[FirstDateofMonth]),
+			    "MMM-YYYY"
+			)
+			
+			VAR _ACTIVITY_MAX =  
+			
+			FORMAT(
+			    MAX('PLS_Activity'[FirstDateofMonth]),
+			    "MMM-YYYY"
+			)
+			
+			RETURN
+			
+			"Activity Period: " & _ACTIVITY_MIN & " to " & _ACTIVITY_MAX
+			```
+		lineageTag: f15aed0a-85e5-489b-bbea-ad668cf7e724
+
+	measure 'Parameter Switch - Activity Metrics (ICB)' = ```
+			
+			
+			SWITCH(
+			    TRUE(),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Activity"), 
+			        CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			        ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Total Cost £"),
+			        CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			        ),
+			    
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Activity per Person per Year (PPPY)"), 
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			        )
+			        /  
+			        CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    )),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Cost per Person per Year £ (PPPY)"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			        )
+			        /  
+			        CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    )),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Activity by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        ALL('Ref_PNG'),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "% of Cost by PNG"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    )
+			    /
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        ALL('Ref_PNG'),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    ))
+			    ),
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Activity"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			        )
+			        /  
+			        CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    )) * 1000,
+			
+			    CONTAINSSTRINGEXACT('Par_Activity_Switch'[Switch Selection], "Rate per 1,000 - Cost"),
+			    (   CALCULATE(
+			        SUM('PLS_Activity'[DerivedActivityCost]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			        )
+			        /  
+			        CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('Ref_GP_Primary'),
+			        ALL('Ref_Age'),
+			        ALL('Ref_LTC')
+			    )) * 1000
+			)
+			```
+		lineageTag: c1d746df-d826-48c6-a962-ac7b6bf005e9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: f9b370a1-b196-4e46-a038-236d4119d54c
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityType
+		dataType: string
+		lineageTag: 48b20e74-4c71-487a-a4f2-8d674808b3db
+		summarizeBy: none
+		sourceColumn: ActivityType
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedActivityCost
+		dataType: double
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: 4b7299dd-0f9f-4ee0-b7a9-eede22fa7934
+		summarizeBy: sum
+		sourceColumn: DerivedActivityCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: 370bb80f-337b-4b62-aa5d-26ba896b110d
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 524b3e4a-8734-4e37-8de1-7918f2dfaf6b
+		summarizeBy: none
+		sourceColumn: FirstDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PLS_Activity = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_ACTIVITY') IS NOT NULL DROP TABLE #TEMP_ACTIVITY#(lf);#(lf)#(lf)SELECT [ACT].[PseudoNHSNumber]#(lf)      ,[ACT].[ActivityType]#(lf)      ,[DATE].[FirstDateofMonth]#(lf)      ,[DerivedActivityCost] = CASE WHEN [ActivityType] = 'Community Care' THEN 83.20 /* Average Unit Cost for 2023/24 GHC */#(lf)                                    WHEN [ActivityType] = 'Mental Health' THEN 265 /* Average Unit Cost for 2023/24 GHC */#(lf)                                    WHEN [ActivityType] = '111' THEN 15.00 /* Average Unit Cost for 2023/24 GHC */#(lf)                                    ELSE [DerivedActivityCost] END#(lf)      ,[ACT].[Counter]#(lf)#(lf)INTO #TEMP_ACTIVITY#(lf)FROM [ICB_Products].[Patient].[vw_Activity] AS [ACT]#(lf)#(lf)LEFT JOIN (#(lf)           SELECT DISTINCT [Date]#(lf)#(tab)                ,[FirstDateofMonth]#(lf)           FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(tab)) AS [DATE]#(lf)ON [DATE].[Date] = [ACT].[ActivityStartDate]#(lf)#(lf)WHERE [ActivityStartDate] BETWEEN (SELECT DISTINCT [ActivityPeriodStart] FROM  [ICB_Products].[Patient].[vw_Activity_Summary])#(lf)AND (SELECT DISTINCT [ActivityPeriodEnd] FROM  [ICB_Products].[Patient].[vw_Activity_Summary])#(lf);#(lf)#(lf)SELECT [PseudoNHSNumber]#(lf)      ,[ActivityType]#(lf)      ,[FirstDateofMonth]#(lf)      ,[DerivedActivityCost] = SUM([DerivedActivityCost])#(lf)      ,[Counter] = SUM([Counter])#(lf)#(lf)FROM #TEMP_ACTIVITY#(lf)#(lf)GROUP BY [PseudoNHSNumber]#(lf)        ,[ActivityType]#(lf)        ,[FirstDateofMonth]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

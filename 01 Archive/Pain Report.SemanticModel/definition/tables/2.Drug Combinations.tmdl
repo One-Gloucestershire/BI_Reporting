@@ -1,0 +1,995 @@
+table '2.Drug Combinations'
+	lineageTag: 731efce3-a728-4816-8f67-c86d0a94be8d
+
+	measure Drug_Combinations_Rate_Per_1000_Opioids =
+			
+			(CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid] = 1
+			) / SUM(REF_Average_GP_Practice_Populations_Over_Time_Periods[Average_GP_Population])) *1000
+		formatString: 0.00
+		lineageTag: 363ec915-8329-4b35-981c-0760ee62e07d
+
+		changedProperty = IsHidden
+
+	measure Distinct_Count_NHS_Number = DISTINCTCOUNT('2.Drug Combinations'[NHS_Number])
+		formatString: 0
+		lineageTag: 09e5df4e-af1b-4411-abfc-8337b725bc59
+
+		changedProperty = IsHidden
+
+	measure Drug_Combinations_Rate_Per_1000_Opioids+Anti_Depressants =
+			
+			(CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid + Anti_Depressants] = 1
+			) / SUM(REF_Average_GP_Practice_Populations_Over_Time_Periods[Average_GP_Population])) *1000
+		lineageTag: e5d10aef-a3a0-4895-8c4c-706b19375398
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Drug_Combinations_Rate_Per_1000_Opioids+Diazepam =
+			
+			(CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid + Diazepam] = 1
+			) / SUM(REF_Average_GP_Practice_Populations_Over_Time_Periods[Average_GP_Population])) *1000
+		lineageTag: fc531561-a590-47cb-b033-a3c03dedfa7a
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Drug_Combinations_Rate_Per_1000_Opioids+Epilepsy_Drugs =
+			
+			(CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid + Epliepsy Drugs] = 1
+			) / SUM(REF_Average_GP_Practice_Populations_Over_Time_Periods[Average_GP_Population])) *1000
+		lineageTag: a7d17dd5-fe39-41e5-8e3b-20b2301a1943
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Latest_Average_Population = ```
+			
+			CALCULATE(
+			    SUM('REF_Average_GP_Practice_Populations_Over_Time_Periods'[Average_GP_Population]),
+			    FILTER(
+			        'REF_Average_GP_Practice_Populations_Over_Time_Periods',
+			        'REF_Average_GP_Practice_Populations_Over_Time_Periods'[Time_Period_Order] = MAX('REF_Average_GP_Practice_Populations_Over_Time_Periods'[Time_Period_Order])
+			    )
+			)
+			
+			```
+		lineageTag: c940b70e-f6d0-4622-9b21-47123e7ce650
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Latest_Rate_Opiods_6months_ago =
+			
+			VAR Latest_Population = CALCULATE(
+			    SUM('REF_Average_GP_Practice_Populations_Over_Time_Periods'[Average_GP_Population]),
+			    FILTER(
+			        'REF_Average_GP_Practice_Populations_Over_Time_Periods',
+			        'REF_Average_GP_Practice_Populations_Over_Time_Periods'[Time_Period_Order] = (MAX('REF_Average_GP_Practice_Populations_Over_Time_Periods'[Time_Period_Order])-6)
+			    )
+			)
+			
+			
+			RETURN
+			
+			(CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid] = 1,
+			    (max('2.Drug Combinations'[TimePeriod_Order])-6) = '2.Drug Combinations'[TimePeriod_Order]
+			)/ Latest_Population) *1000
+		lineageTag: 5628bcb2-c21d-4c8f-bccb-705aa496030e
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Latest_Rate_Opiods_12months_ago =
+			
+			VAR Latest_Population = CALCULATE(
+			    SUM('REF_Average_GP_Practice_Populations_Over_Time_Periods'[Average_GP_Population]),
+			    FILTER(
+			        'REF_Average_GP_Practice_Populations_Over_Time_Periods',
+			        'REF_Average_GP_Practice_Populations_Over_Time_Periods'[Time_Period_Order] = (MAX('REF_Average_GP_Practice_Populations_Over_Time_Periods'[Time_Period_Order])-12)
+			    )
+			)
+			
+			
+			RETURN
+			
+			(CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid] = 1,
+			    (max('2.Drug Combinations'[TimePeriod_Order])-12) = '2.Drug Combinations'[TimePeriod_Order]
+			)/ Latest_Population) *1000
+		lineageTag: 1d2c5001-c914-4eb9-9c17-4748feec6c21
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Start_date_for_drugs_combinations_date_Test =
+			DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    1)
+		formatString: General Date
+		lineageTag: b6d76c74-9445-45d2-be98-4734e7aa5141
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Current_6_time_periods_Opioids = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), 0)
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids", [Drug_Combinations_Rate_Per_1000_Opioids]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			    [Drug_Rate_Opioids]
+			)
+			
+			
+			
+			
+			```
+		formatString: 0.00
+		displayFolder: Measures for Opiod Rate Per 1000 Graph Cards
+		lineageTag: 9436906e-c6a4-4b77-aac8-92d61ade18ef
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Previous_6_time_periods_Opioids = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -6) // Shift the end date back by 6 more months
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)), 
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids", [Drug_Combinations_Rate_Per_1000_Opioids]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			    [Drug_Rate_Opioids]
+			)
+			
+			
+			
+			
+			```
+		formatString: 0.00
+		displayFolder: Measures for Opiod Rate Per 1000 Graph Cards
+		lineageTag: 61a8c63b-81d6-48f1-83cc-f9122668115a
+
+		changedProperty = IsHidden
+
+	measure Variance_between_Average_Opioid_practive_rates_current_6_months_to_previous_6_months = [Average_Rate_Current_6_time_periods_Opioids] - [Average_Rate_Previous_6_time_periods_Opioids]
+		displayFolder: Measures for Opiod Rate Per 1000 Graph Cards
+		lineageTag: 1cfc9002-252e-4146-be10-624e2789dabb
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Variance_between_Average_Opioids_practive_rates_current_6_months_to_previous_6_months_percentage = [Variance_between_Average_Opioid_practive_rates_current_6_months_to_previous_6_months]/[Average_Rate_Previous_6_time_periods_Opioids]
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Opiod Rate Per 1000 Graph Cards
+		lineageTag: 010589a8-d00d-4240-8e41-4aa5c07d527a
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_dispensing_arrow = ```
+			
+			    IF(
+			        [Variance_between_Average_Opioids_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, UNICHAR(9650),
+			        IF(
+			            [Variance_between_Average_Opioids_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, UNICHAR(9660), 
+			            BLANK()
+			        )
+			    )
+			```
+		displayFolder: Measures for Opiod Rate Per 1000 Graph Cards
+		lineageTag: 72627cd1-945a-4e5f-ab5b-bc68de563416
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_dispensing_arrow_colour = ```
+			
+			    IF([Variance_between_Average_Opioids_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, "Orange",
+			        IF([Variance_between_Average_Opioids_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, "Green", BLANK())
+			    )
+			
+			```
+		displayFolder: Measures for Opiod Rate Per 1000 Graph Cards
+		lineageTag: 074d2841-f141-4c48-bef6-90f29d1d860e
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Current_6_time_periods_Opioids+Anti_Depressants = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), 0)
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids+Anti_Depressants", [Drug_Combinations_Rate_Per_1000_Opioids+Anti_Depressants]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			    [Drug_Rate_Opioids+Anti_Depressants]
+			)
+			
+			```
+		formatString: 0.00
+		displayFolder: Measures of Opioid + Anti_Depressants rate per 1000 Graph Cards
+		lineageTag: 95d863aa-107c-4f3d-902c-7355a22a872b
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Previous_6_time_periods_Opioids+Anti_Depressants = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -6) // Shift the end date back by 6 more months
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)), 
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids+Anti_Depressants", [Drug_Combinations_Rate_Per_1000_Opioids+Anti_Depressants]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			    [Drug_Rate_Opioids+Anti_Depressants]
+			)
+			
+			
+			```
+		formatString: 0.00
+		displayFolder: Measures of Opioid + Anti_Depressants rate per 1000 Graph Cards
+		lineageTag: a2515825-de18-45a7-b653-cd2669e12f03
+
+		changedProperty = IsHidden
+
+	measure Variance_between_Average_Opioid+Anti_Depressants_practive_rates_current_6_months_to_previous_6_months = [Average_Rate_Current_6_time_periods_Opioids+Anti_Depressants] - [Average_Rate_Previous_6_time_periods_Opioids+Anti_Depressants]
+		displayFolder: Measures of Opioid + Anti_Depressants rate per 1000 Graph Cards
+		lineageTag: 4e673fa0-ae52-4f46-845e-d6fe61e54d1f
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Variance_between_Average_Opioids_+_Antidepressants_practive_rates_current_6_months_to_previous_6_months_percentage = [Variance_between_Average_Opioid+Anti_Depressants_practive_rates_current_6_months_to_previous_6_months]/[Average_Rate_Previous_6_time_periods_Opioids+Anti_Depressants]
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures of Opioid + Anti_Depressants rate per 1000 Graph Cards
+		lineageTag: 7659d178-9135-492f-82a8-74f140bac583
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_+_Antidepressants_dispensing_arrow = ```
+			
+			    IF(
+			        [Variance_between_Average_Opioids_+_Antidepressants_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, UNICHAR(9650),
+			        IF(
+			            [Variance_between_Average_Opioids_+_Antidepressants_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, UNICHAR(9660), 
+			            BLANK()
+			        )
+			    )
+			```
+		displayFolder: Measures of Opioid + Anti_Depressants rate per 1000 Graph Cards
+		lineageTag: 8f808813-6ac7-465b-b4c4-dcfb886d7c40
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_+_Antidepressants_dispensing_arrow_colour = ```
+			
+			    IF([Variance_between_Average_Opioids_+_Antidepressants_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, "Orange",
+			        IF([Variance_between_Average_Opioids_+_Antidepressants_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, "Green", BLANK())
+			    )
+			
+			```
+		displayFolder: Measures of Opioid + Anti_Depressants rate per 1000 Graph Cards
+		lineageTag: 3be40814-8c79-42a5-ad86-175885bf2eed
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Current_6_time_periods_Opioids+Diazepam = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), 0)
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids+Diazepam", [Drug_Combinations_Rate_Per_1000_Opioids+Diazepam]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			[Drug_Rate_Opioids+Diazepam]
+			)
+			
+			```
+		formatString: 0.00
+		displayFolder: Measures for  Opiod + Diazepam Rate per 1000 Graph Cards
+		lineageTag: dba32aec-43aa-47d4-af6a-119aa1b4f587
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Previous_6_time_periods_Opioids+Diazepam = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -6) // Shift the end date back by 6 more months
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)), 
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids+Diazepam", [Drug_Combinations_Rate_Per_1000_Opioids+Diazepam]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			    [Drug_Rate_Opioids+Diazepam]
+			)
+			
+			
+			```
+		formatString: 0.00
+		displayFolder: Measures for  Opiod + Diazepam Rate per 1000 Graph Cards
+		lineageTag: 37acd332-80f3-44f1-a0e8-cb77d391e81a
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_+_Diazepam_dispensing_arrow = ```
+			
+			        IF(
+			            [Variance_between_Average_Opioids_+_Diazepam_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, UNICHAR(9650),
+			            IF(
+			                [Variance_between_Average_Opioids_+_Diazepam_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, UNICHAR(9660), 
+			                BLANK()
+			            )
+			        )
+			```
+		displayFolder: Measures for  Opiod + Diazepam Rate per 1000 Graph Cards
+		lineageTag: 0f5f5215-3d91-4c57-9127-fff917968890
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_+_Diazepam_dispensing_arrow_colour = ```
+			
+			    IF([Variance_between_Average_Opioids_+_Diazepam_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, "Orange",
+			        IF([Variance_between_Average_Opioids_+_Diazepam_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, "Green", BLANK())
+			    )
+			
+			```
+		displayFolder: Measures for  Opiod + Diazepam Rate per 1000 Graph Cards
+		lineageTag: 674b7d6a-b50c-4073-b832-ad3d03f80b7b
+
+		changedProperty = IsHidden
+
+	measure Variance_between_Average_Opioid+Diazepam_practive_rates_current_6_months_to_previous_6_months = [Average_Rate_Current_6_time_periods_Opioids+Diazepam] - [Average_Rate_Previous_6_time_periods_Opioids+Diazepam]
+		displayFolder: Measures for  Opiod + Diazepam Rate per 1000 Graph Cards
+		lineageTag: c302ead0-bd84-4249-b63b-5567ac004021
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Variance_between_Average_Opioids_+_Diazepam_practive_rates_current_6_months_to_previous_6_months_percentage = [Variance_between_Average_Opioid+Diazepam_practive_rates_current_6_months_to_previous_6_months]/[Average_Rate_Previous_6_time_periods_Opioids+Diazepam]
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for  Opiod + Diazepam Rate per 1000 Graph Cards
+		lineageTag: 1efbb13c-a257-4afc-a7f1-730f29e9f332
+
+		changedProperty = IsHidden
+
+	measure Average_Rate_Current_6_time_periods_Opioids+Pregabalin/Gabapentin = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), 0)
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -5)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids+Epilepsy", [Drug_Combinations_Rate_Per_1000_Opioids+Epilepsy_Drugs]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			[Drug_Rate_Opioids+Epilepsy]
+			)
+			
+			```
+		displayFolder: Measures for Opiod + Epilepsy Drugs per 1000 Graph Cards
+		lineageTag: de7daa89-d95c-42af-a226-73475ea436e5
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_Rate_Previous_6_time_periods_Opioids+Epilepsy_Drugs = ```
+			
+			
+			VAR End_date_for_drugs_combinations_data = EOMONTH(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -6) // Shift the end date back by 6 more months
+			
+			VAR Start_date_for_drugs_combinations_date = DATE(
+			    YEAR(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)), 
+			    MONTH(EDATE(MAX('2.Drug Combinations'[TimePeriod_End_Date]), -11)),
+			    1
+			)
+			
+			Var Pivot_Table_Drug_Rate_Per_Practice =     FILTER(
+			    SUMMARIZE(
+			        '2.Drug Combinations',
+			        '2.Drug Combinations'[TimePeriod_Order],
+			        '2.Drug Combinations'[TimePeriod],
+			        '2.Drug Combinations'[TimePeriod_Start_Date],
+			        '2.Drug Combinations'[TimePeriod_End_Date],
+			        REF_GP_Practice_Ref[ReportingOrganisationCode],
+			        "Drug_Rate_Opioids+Epliepsy_Drugs", [Drug_Combinations_Rate_Per_1000_Opioids+Epilepsy_Drugs]
+			    ),
+			    '2.Drug Combinations'[TimePeriod_End_Date] >= Start_date_for_drugs_combinations_date && 
+			    EOMONTH('2.Drug Combinations'[TimePeriod_End_Date], 0) <= End_date_for_drugs_combinations_data
+			)
+			
+			RETURN
+			
+			AVERAGEX(
+			    Pivot_Table_Drug_Rate_Per_Practice,
+			    [Drug_Rate_Opioids+Epliepsy_Drugs]
+			)
+			
+			
+			```
+		displayFolder: Measures for Opiod + Epilepsy Drugs per 1000 Graph Cards
+		lineageTag: fbb24bdd-11d8-4f98-8880-620e172195a7
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_variance_between_6_time_periods_opioid_+_Epilepsy_Drugs_dispensing_arrow = ```
+			
+			    IF(
+			        [Variance_between_Average_Opioids_+_Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, UNICHAR(9650),
+			        IF(
+			            [Variance_between_Average_Opioids_+_Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, UNICHAR(9660), 
+			            BLANK()
+			        )
+			    )
+			```
+		displayFolder: Measures for Opiod + Epilepsy Drugs per 1000 Graph Cards
+		lineageTag: 017b69bb-00d3-433c-bfd1-050565173887
+
+		changedProperty = IsHidden
+
+	measure Average_variance_between_6_time_periods_opioid_+_Epilepsy_Drugs_dispensing_arrow_colour = ```
+			
+			    IF([Variance_between_Average_Opioids_+_Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months_percentage] > 0, "Orange",
+			        IF([Variance_between_Average_Opioids_+_Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months_percentage] < 0, "Green", BLANK())
+			    )
+			
+			```
+		displayFolder: Measures for Opiod + Epilepsy Drugs per 1000 Graph Cards
+		lineageTag: 3d31e6ec-2e6b-4f78-a135-393f520f6b7b
+
+		changedProperty = IsHidden
+
+	measure Variance_between_Average_Opioid+Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months = [Average_Rate_Current_6_time_periods_Opioids+Pregabalin/Gabapentin] - [Average_Rate_Previous_6_time_periods_Opioids+Epilepsy_Drugs]
+		displayFolder: Measures for Opiod + Epilepsy Drugs per 1000 Graph Cards
+		lineageTag: 6a3467b7-30c9-4853-b677-ec502066773b
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Variance_between_Average_Opioids_+_Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months_percentage = [Variance_between_Average_Opioid+Epilepsy_Drugs_practive_rates_current_6_months_to_previous_6_months]/[Average_Rate_Previous_6_time_periods_Opioids+Epilepsy_Drugs]
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Measures for Opiod + Epilepsy Drugs per 1000 Graph Cards
+		lineageTag: 1216eefd-98b9-4408-b1aa-ee83fdc70f34
+
+		changedProperty = IsHidden
+
+	measure Dispensed_Rate_per_1000_Opioids_Dynamic_Variable = ```
+			
+			 
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "Locality",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('REF_Area Legend'[Field]) = "PCN",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "GP practice",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[ReportingOrganisationName])
+			    ),
+			    BLANK())
+			```
+		displayFolder: Dynamic Variables for Drug Combinations Rates
+		lineageTag: 122517dc-2ab1-4dce-ab9a-9074680cd7ca
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Dispensed_Rate_per_1000_Opioids+Anti_Depressants_Dynamic_Variable = ```
+			
+			 
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "Locality",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Anti_Depressants],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('REF_Area Legend'[Field]) = "PCN",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Anti_Depressants],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "GP practice",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Anti_Depressants],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[ReportingOrganisationName])
+			    ),
+			    BLANK())
+			```
+		displayFolder: Dynamic Variables for Drug Combinations Rates
+		lineageTag: 60a95514-a820-4306-a8fc-17b2716eec05
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Dispensed_Rate_per_1000_Opioids+Diazepam_Dynamic_Variable = ```
+			
+			 
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "Locality",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Diazepam],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('REF_Area Legend'[Field]) = "PCN",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Diazepam],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "GP practice",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Diazepam],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[ReportingOrganisationName])
+			    ),
+			    BLANK())
+			```
+		displayFolder: Dynamic Variables for Drug Combinations Rates
+		lineageTag: bfe98099-8277-495b-80d7-f5a254f7ed73
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Dispensed_Rate_per_1000_Opioids+Epilepsy_Drugs_Dynamic_Variable = ```
+			
+			 
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "Locality",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Epilepsy_Drugs],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('REF_Area Legend'[Field]) = "PCN",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Epilepsy_Drugs],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "GP practice",
+			    CALCULATE([Drug_Combinations_Rate_Per_1000_Opioids+Epilepsy_Drugs],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[ReportingOrganisationName])
+			    ),
+			    BLANK())
+			```
+		displayFolder: Dynamic Variables for Drug Combinations Rates
+		lineageTag: a1890d02-c7e4-4e57-9ab6-d7d5c49672a3
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Title_Dispenses_Opioid_Drug_Rate = ```
+			
+			"Dispenses Opioid drug rate per 1000 average population by " & 
+			IF(
+			    HASONEVALUE('REF_Area Legend'[Field]),
+			    VALUES('REF_Area Legend'[Field]),
+			    "GP Practice"
+			)
+			```
+		displayFolder: Dynamic Chart Titles
+		lineageTag: 6b75c85c-430b-43ed-a51a-25a94ff79f85
+
+		changedProperty = IsHidden
+
+	measure Title_Dispenses_Opioid+Anti_Depressants_Drug_Rate = ```
+			
+			"Dispenses Opioids + Anti Depressant drug rate per 1000 average population by " & 
+			IF(
+			    HASONEVALUE('REF_Area Legend'[Field]),
+			    VALUES('REF_Area Legend'[Field]),
+			    "GP Practice"
+			)
+			```
+		displayFolder: Dynamic Chart Titles
+		lineageTag: cf01cc46-9535-4080-a834-d3b5cd61946e
+
+		changedProperty = IsHidden
+
+	measure Title_Dispenses_Opioid+Diazepam_Drug_Rate = ```
+			
+			"Dispenses Opioid + Diazepam drug rate per 1000 average population by " & 
+			IF(
+			    HASONEVALUE('REF_Area Legend'[Field]),
+			    VALUES('REF_Area Legend'[Field]),
+			    "GP Practice"
+			)
+			```
+		displayFolder: Dynamic Chart Titles
+		lineageTag: dc94344e-b93a-4c50-86db-68424a5dc4e9
+
+		changedProperty = IsHidden
+
+	measure Title_Dispenses_Opioid+Pregabalin/Gabapentin_Drug_Rate = ```
+			
+			"Dispenses Opioid + Pregabalin/Gabapentin drug rate per 1000 average population by " & 
+			IF(
+			    HASONEVALUE('REF_Area Legend'[Field]),
+			    VALUES('REF_Area Legend'[Field]),
+			    "GP Practice"
+			)
+			```
+		displayFolder: Dynamic Chart Titles
+		lineageTag: edcc6bc7-966a-4ec0-b0e9-4ead4349a704
+
+		changedProperty = IsHidden
+
+	measure Only_relevant_items_in_drugs_combinations_dataset = countrows('2.Drug Combinations')
+		formatString: 0
+		lineageTag: 4bc8d197-98c7-4f34-933d-9e5a5c6539cf
+
+	column TimePeriod_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 07995b50-1045-42b4-833a-e4ce4d0c7601
+		summarizeBy: sum
+		sourceColumn: TimePeriod_Order
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimePeriod
+		dataType: string
+		lineageTag: 60d694c8-5b27-4bbc-bf80-1b0b0ad736a3
+		summarizeBy: none
+		sourceColumn: TimePeriod
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: ab98e5c9-5c3b-435f-91b7-edc49a14fc9a
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dispensisng_GP_Surgery
+		dataType: string
+		lineageTag: c267011a-a35a-43af-aed5-19a6b8f48fa5
+		summarizeBy: none
+		sourceColumn: Dispensisng_GP_Surgery
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 8d084f2d-86fc-471b-a9a1-3797d607bcf9
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reporting_Practice_Name
+		dataType: string
+		lineageTag: 68b0c598-c414-4903-9981-27748def556c
+		summarizeBy: none
+		sourceColumn: Reporting_Practice_Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 249fedbd-71c8-4af7-84b1-a262702c7c91
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: dac7d775-f79a-4453-99e2-2a21ee03e077
+		summarizeBy: none
+		sourceColumn: locality
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Opioid
+		dataType: int64
+		formatString: 0
+		lineageTag: cdd2faa5-6411-46a2-ac54-509f8b6f58bc
+		summarizeBy: sum
+		sourceColumn: Opioid
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Opioid + Anti_Depressants'
+		dataType: int64
+		formatString: 0
+		lineageTag: 297da9c9-07e3-47f1-bdc7-ac91a52919f7
+		summarizeBy: sum
+		sourceColumn: Opioid + Anti_Depressants
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Opioid + Epliepsy Drugs'
+		dataType: int64
+		formatString: 0
+		lineageTag: fdfb1fed-837d-45a0-9822-7242776394dd
+		summarizeBy: sum
+		sourceColumn: Opioid + Epliepsy Drugs
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Opioid + Diazepam'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1409027a-c175-4201-bd54-0c254632b753
+		summarizeBy: sum
+		sourceColumn: Opioid + Diazepam
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Average_GP_Population
+		dataType: double
+		lineageTag: 718f08a4-6393-4673-ba44-a4b69cb762e2
+		summarizeBy: sum
+		sourceColumn: Average_GP_Population
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TimePeriod_Start_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 662c2d81-6e07-423d-b263-1e4bb38f39a5
+		summarizeBy: none
+		sourceColumn: TimePeriod_Start_Date
+
+		variation Variation
+			isDefault
+			relationship: 59da3aa2-4b6d-4b29-b889-d1b978d3330d
+			defaultHierarchy: LocalDateTable_2a3933be-a1f6-41f8-951c-8daba50a6f5b.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimePeriod_End_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ccd4ca5d-3be2-4118-b66b-526793dc776b
+		summarizeBy: none
+		sourceColumn: TimePeriod_End_Date
+
+		variation Variation
+			isDefault
+			relationship: 58d345a5-097c-4da6-a73f-242c1a664608
+			defaultHierarchy: LocalDateTable_6f066520-1d00-4aa7-ae65-d7afc5937e55.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d531d47c-6a61-46e3-a9bb-a4bf50255ed1
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: d9b0ad17-0d06-4cb1-84a5-039400eecd34
+			defaultHierarchy: LocalDateTable_43bccc11-c789-4bb2-a9bd-779dc24a3d75.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '2.Drug Combinations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)select *#(lf)from [PowerBI_Reporting].[Prescribing].[tbl02_Pain_Dashboard_Drug_Combinations]#(lf)#(lf)order by timeperiod_order desc"])
+				in
+				    Source
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

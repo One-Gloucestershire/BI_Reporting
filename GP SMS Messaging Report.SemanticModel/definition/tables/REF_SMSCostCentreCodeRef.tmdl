@@ -1,0 +1,150 @@
+table REF_SMSCostCentreCodeRef
+	lineageTag: a8283aa2-0f23-4e2e-b500-43af03f52422
+
+	column CostCentreCode
+		dataType: string
+		lineageTag: 05d78c04-c2ec-43e0-a0f2-0aaeeb962e27
+		summarizeBy: none
+		sourceColumn: CostCentreCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoCostCentreCode
+		dataType: string
+		lineageTag: 773d1110-89fb-45b7-b2f3-f59bb47546c7
+		summarizeBy: none
+		sourceColumn: PseudoCostCentreCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 375625e3-73ad-42e9-96fd-86b4acaca54a
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: ec3cb339-1c52-4ad6-b9fc-c5eb5b16fa71
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: 07760180-8a63-4766-8567-fa400b9605ae
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 860cbade-ad11-4d99-99ad-bd04dc179a9f
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Close_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 372ecec6-0c0c-4dd0-9773-59a17c3bbb6d
+		summarizeBy: none
+		sourceColumn: Close_Date
+
+		variation Variation
+			isDefault
+			relationship: fcb0711f-04d8-4a49-b426-3c23072eed97
+			defaultHierarchy: LocalDateTable_8f4e0929-75de-4fad-be9a-bf14129493f6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column CostCentreType
+		dataType: string
+		lineageTag: 62017eb3-678c-4e34-8c95-cafd24d44354
+		summarizeBy: none
+		sourceColumn: CostCentreType
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 62d9fd3e-ec3c-48e9-b446-8effa0210fb5
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reporting_PrimaryCareNetwork
+		dataType: string
+		lineageTag: 7af4d490-605d-4574-ae32-6111a19fa87b
+		summarizeBy: none
+		sourceColumn: Reporting_PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: bd8ae9d5-b268-4f63-90ed-4317c6f582f1
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reporting_Locality
+		dataType: string
+		lineageTag: eabe68e9-3944-44fc-bd1c-1cc3bbcceff8
+		summarizeBy: none
+		sourceColumn: Reporting_Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingChangeFlag
+		dataType: int64
+		formatString: 0
+		lineageTag: 850c586e-571b-4b07-b7c1-ce80b7bb615d
+		summarizeBy: sum
+		sourceColumn: ReportingChangeFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingPseudoCostCentreCode
+		dataType: string
+		lineageTag: 694a236e-26a2-4b32-9792-dd8787e249fd
+		summarizeBy: none
+		sourceColumn: ReportingPseudoCostCentreCode
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Reporting_PrimaryCareNetwork Hierarchy'
+		lineageTag: 4cf7005c-013a-414a-9ad3-4e659bd3b720
+
+		level Reporting_PrimaryCareNetwork
+			lineageTag: cad61f7d-cf45-458f-b949-53bd842d48c3
+			column: Reporting_PrimaryCareNetwork
+
+		level ReportingOrganisationName
+			lineageTag: 185dea58-6c01-41d4-bb29-e57df4a2ee08
+			column: ReportingOrganisationName
+
+	partition REF_SMSCostCentreCodeRef = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT * FROM [PowerBI_Reporting].[PrimaryCare].[tbl04_SMSCostCentreCodeRef]#(lf)#(lf)UNION#(lf)#(lf)SELECT 'Mean GP value' AS CostCentreCode#(lf), 'Mean GP value' AS OrganisationCode#(lf), 'Mean GP value' AS ReportingOrganisationCode#(lf), NULL AS ReportingChangeFlag#(lf), 'Mean GP value' AS PseudoCostCentreCode#(lf), 'Mean GP value' AS ReportingPseudoCostCentreCode#(lf), 'Mean GP value' AS OrganisationName#(lf), 'Mean GP value' AS ReportingOrganisationName#(lf), NULL AS Close_Date#(lf), NULL AS CostCentreType#(lf), 'Mean GP value' AS PrimaryCareNetwork#(lf), 'Mean GP value' AS Reporting_PrimaryCareNetwork#(lf), NULL AS Locality#(lf), NULL AS Reporting_Locality#(lf)#(lf)FROM [PowerBI_Reporting].[PrimaryCare].[tbl04_SMSCostCentreCodeRef]"]),
+				    #"Capitalized Each Word" = Table.TransformColumns(Source,{{"ReportingOrganisationName", Text.Proper, type text}, {"OrganisationName", Text.Proper, type text}}),
+				    #"Rte fix" = Table.ReplaceValue(#"Capitalized Each Word","Rte","RTE",Replacer.ReplaceText,{"OrganisationName","ReportingOrganisationName"}),
+				    #"'S fix" = Table.ReplaceValue(#"Rte fix","'S","'s",Replacer.ReplaceText,{"OrganisationName","ReportingOrganisationName"}),
+				    #"Gp fix" = Table.ReplaceValue(#"'S fix","Gp","GP",Replacer.ReplaceText,{"OrganisationName","ReportingOrganisationName"}),
+				    #"Pcn fix" = Table.ReplaceValue(#"Gp fix","Pcn","PCN",Replacer.ReplaceText,{"OrganisationName", "ReportingOrganisationName"})
+				in
+				    #"Pcn fix"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

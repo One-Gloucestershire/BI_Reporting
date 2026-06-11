@@ -1,0 +1,159 @@
+table DAT_ADG
+	lineageTag: 5c5df96e-2256-4704-b85f-a3cffb1084c3
+
+	measure 'Top1 EDC' =
+			
+			VAR RankedTable =
+			    ADDCOLUMNS(
+			        VALUES(DAT_ADG[EDCDescription]),
+			        "CounterValue", CALCULATE(SUM(DAT_ADG[Counter])),
+			        "RankValue",
+			            RANKX(
+			                VALUES(DAT_ADG[EDCDescription]),
+			                CALCULATE(SUM(DAT_ADG[Counter])),
+			                ,
+			                DESC,
+			                DENSE
+			            )
+			    )
+			
+			VAR TopRow =
+			    FILTER(RankedTable, [RankValue] = 1)
+			
+			RETURN
+			IF(
+			    NOT ISEMPTY(TopRow),
+			    CONCATENATEX(
+			        TopRow,
+			        DAT_ADG[EDCDescription]
+			            & " ("
+			            & FORMAT([CounterValue], "#,##0")
+			            & " | "
+			            & FORMAT(DIVIDE([CounterValue], [Total Population]), "0%")
+			            & ")"
+			    )
+			)
+		lineageTag: ad2df54c-16e9-4753-9559-904504e0b3c0
+
+	measure 'Top2 EDC' =
+			
+			VAR RankedTable =
+			    ADDCOLUMNS(
+			        VALUES(DAT_ADG[EDCDescription]),
+			        "CounterValue", CALCULATE(SUM(DAT_ADG[Counter])),
+			        "RankValue",
+			            RANKX(
+			                VALUES(DAT_ADG[EDCDescription]),
+			                CALCULATE(SUM(DAT_ADG[Counter])),
+			                ,
+			                DESC,
+			                DENSE
+			            )
+			    )
+			
+			VAR TopRow =
+			    FILTER(RankedTable, [RankValue] = 2)
+			
+			RETURN
+			IF(
+			    NOT ISEMPTY(TopRow),
+			    CONCATENATEX(
+			        TopRow,
+			        DAT_ADG[EDCDescription]
+			            & " ("
+			            & FORMAT([CounterValue], "#,##0")
+			            & " | "
+			            & FORMAT(DIVIDE([CounterValue], [Total Population]), "0%")
+			            & ")"
+			    )
+			)
+		lineageTag: 1e1e4176-10e8-48db-ac00-fca22239d8e8
+
+	measure 'Top3 EDC' =
+			
+			VAR RankedTable =
+			    ADDCOLUMNS(
+			        VALUES(DAT_ADG[EDCDescription]),
+			        "CounterValue", CALCULATE(SUM(DAT_ADG[Counter])),
+			        "RankValue",
+			            RANKX(
+			                VALUES(DAT_ADG[EDCDescription]),
+			                CALCULATE(SUM(DAT_ADG[Counter])),
+			                ,
+			                DESC,
+			                DENSE
+			            )
+			    )
+			
+			VAR TopRow =
+			    FILTER(RankedTable, [RankValue] = 3)
+			
+			RETURN
+			IF(
+			    NOT ISEMPTY(TopRow),
+			    CONCATENATEX(
+			        TopRow,
+			        DAT_ADG[EDCDescription]
+			            & " ("
+			            & FORMAT([CounterValue], "#,##0")
+			            & " | "
+			            & FORMAT(DIVIDE([CounterValue], [Total Population]), "0%")
+			            & ")"
+			    )
+			)
+		lineageTag: 8221c970-cd16-4624-8acb-76d363ea1274
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: a8fe8cff-c207-4c95-84cc-460d59cbc15d
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column EDCDescription
+		dataType: string
+		lineageTag: 384a5f1a-677b-4248-a905-a0f779451c52
+		summarizeBy: none
+		sourceColumn: EDCDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Need_Group
+		dataType: string
+		lineageTag: 07cbdf9a-776d-4c9b-bba5-dc2eadf17b57
+		summarizeBy: none
+		sourceColumn: Patient_Need_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column rn
+		dataType: int64
+		formatString: 0
+		lineageTag: e0101cbc-1a3f-4dd1-a45d-85c929173fab
+		summarizeBy: sum
+		sourceColumn: rn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Group'
+		dataType: string
+		lineageTag: 0735cb2a-1d7b-4ee8-b769-ffb3d8312cb5
+		summarizeBy: none
+		sourceColumn: Age Group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DAT_ADG = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Current", [Query="#(lf)--drop table #maxmonth#(lf)select cast(max([Month]) as date)  as [MM] #(lf)into #MaxMonth#(lf)from ccg_current.acg.[vw_EDCCodes]#(lf)#(lf)--SELECT MAX([month])#(lf)--from  ccg_current.acg.vw_ACGResults#(lf)#(lf)select *#(lf)from (#(lf)    select#(lf)        sum(1) as [Counter],#(lf)        EDCDescription,#(lf)        Patient_Need_Group,#(lf)#(tab)#(tab)case #(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) between 0 and 17 then 'Paediatric (0-17)'#(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) between 18 and 64 then 'Adult (18-64)'#(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) >= 65 then 'Older Adult (65+)'#(lf)#(tab)#(tab)end as [Age Group],#(lf)        row_number() over (#(lf)            partition by Patient_Need_Group,#(lf)#(tab)#(tab)#(tab)case #(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) between 0 and 17 then 'Paediatric (0-17)'#(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) between 18 and 64 then 'Adult (18-64)'#(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) >= 65 then 'Older Adult (65+)'#(lf)#(tab)#(tab)end#(lf)            order by sum(1) desc#(lf)        ) as rn#(lf)    from ccg_current.acg.[vw_EDCCodes] [a]#(lf)    left join ccg_current.acg.vw_ACGResults [b] #(lf)        on [a].PseudoNHSNumber = [b].PseudoNHSNumber #(lf)        and cast([a].[Month] as date) = cast([b].[Month] as date)#(lf)    left join ICB_Products.Patient.vw_Summary [sum] #(lf)        on [a].PseudoNHSNumber = [sum].PseudoNHSNumber #(lf)    left join #MaxMonth [c] #(lf)        on 1 = 1#(lf)    where cast([a].[Month] as date) = [c].MM#(lf)#(tab)and #(tab)EDCDescription NOT IN ('Medical counseling/advice','Administrative concerns and non-specific laboratory abnormalities')#(lf)    group by #(lf)        EDCDescription, #(lf)        Patient_Need_Group,#(lf)#(tab)#(tab)case #(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) between 0 and 17 then 'Paediatric (0-17)'#(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) between 18 and 64 then 'Adult (18-64)'#(lf)#(tab)#(tab)#(tab)when cast([sum].[DerivedAge] as int) >= 65 then 'Older Adult (65+)'#(lf)#(tab)#(tab)end#(lf)) t#(lf)where rn <= 5#(lf)order by Patient_Need_Group, [Counter] desc;"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

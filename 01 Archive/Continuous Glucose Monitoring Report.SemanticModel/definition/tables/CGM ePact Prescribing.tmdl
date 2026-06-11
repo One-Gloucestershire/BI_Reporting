@@ -1,0 +1,246 @@
+table 'CGM ePact Prescribing'
+	lineageTag: 91cfa9a3-8a52-4a40-80ce-464b81c03fd4
+
+	measure Cost_per_patient = sum('CGM ePact Prescribing'[Cost (£)])/distinctcount('NDA Diabetic Population'[Derived_Pseudo_NHS_Number])
+		lineageTag: d9a82fbb-a112-45d3-b4cf-55fb45dc7369
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Current_YTD_Cost = calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[FinancialYear] = "2024/25")
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 241596a6-f169-4d9b-9bc4-5a5e160b9419
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Previous_YTD_Cost = calculate(sum('CGM ePact Prescribing'[Cost (£)]),datesytd(sameperiodlastyear(date_table[date]),"31/3"))
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 39499a54-fad1-4dee-87a4-77177243cd01
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Previous_YTD = calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[FinancialYear] = "2022/23",'CGM ePact Prescribing'[ytd_months] = 1)
+		lineageTag: f8046b9b-3dae-4ee1-b45a-c6040980bf72
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Cost_per_1000 = (DIVIDE('CGM ePact Prescribing'[Current_YTD_Cost],'Cohort'[Diabetic_population])) * 1000
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 39e90335-24cf-4549-a47d-59090f08b3de
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Current_YTD_quantity = calculate(sum('CGM ePact Prescribing'[Quantity]),datesytd(date_table[date],"31/3"))
+		formatString: 0
+		lineageTag: 2d5361a0-e7c2-46ab-b8e4-909631102975
+
+	measure Quantity_per_1000 = (DIVIDE([Current_YTD_quantity],Cohort[Diabetic_population])) * 1000
+		lineageTag: 78847d45-767d-48b4-bed5-a20b014b27a0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure max_financial_month = maxx(filter('date_table',date_table[financial_year] = "2023/24"),date_table[financial_month])
+		formatString: 0
+		lineageTag: bcedf783-9489-4475-b437-ac58aab458c7
+
+	measure 'Bars over projection colour' =
+			if(
+			    sum('CGM ePact Prescribing'[Cost (£)]) > sum(cost_projection[Projection (linear)]),"#E02C20", "")
+		lineageTag: 0d2777b8-d058-4577-b8e1-83e2eefa0f1d
+
+	measure 'Gauge colour' =
+			if(
+			    [Current_YTD_Cost]>[ytd_projection],"#BA1200","#007875")
+		lineageTag: 18f010da-9a01-4de3-8f16-cab8f256ade4
+
+	measure Cost_per_month_-_rebate = calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[Rebate_recieved] = "Yes")-sum(Rebate[ConfirmedRebate])
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 741d5108-3168-4c93-acd8-314864725747
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Full_year_cost_-_rebate = calculate(sum('CGM ePact Prescribing'[Cost (£)])-sum(Rebate[ConfirmedRebate]))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 96cddf69-2527-4cd2-930c-ecd263ca54cb
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Cost_before_rebate = if(calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[Rebate_recieved] = "No")-sum(Rebate[ConfirmedRebate])<0,0,calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[Rebate_recieved] = "No")-sum(Rebate[ConfirmedRebate]))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 7e3d0a79-ee17-4e24-a688-de48765f5391
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 2023_24_Cost_-_Rebate = calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[FinancialYear] = "2023/24")-sum(Rebate[ConfirmedRebate])
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: d9ed51f3-9965-4314-8778-93a9b50d4570
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 2023_24_Cost_with_rebate_and_test_strip_savings = (calculate(sum('CGM ePact Prescribing'[Cost (£)]),'CGM ePact Prescribing'[FinancialYear] = "2023/24")-sum(Rebate[ConfirmedRebate]))+'Test strips ePact Prescribing'[23_24_test_strip_savings]
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 23ea2cfa-05eb-4c2f-933b-fb2495aa70f5
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column YearMonth
+		dataType: int64
+		lineageTag: ee6f616b-59db-4fa2-9002-03f138adca14
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column HSPracticeCode
+		dataType: string
+		lineageTag: 67e6abca-7f85-4132-8732-8963b5245c35
+		summarizeBy: none
+		sourceColumn: HSPracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column HSPractice
+		dataType: string
+		lineageTag: 2ffbd0da-579d-49ab-bd94-5cf72e82fecd
+		summarizeBy: none
+		sourceColumn: HSPractice
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFPresentationCode
+		dataType: string
+		lineageTag: f1e9925b-dc9a-4601-b898-96f121ae4471
+		summarizeBy: none
+		sourceColumn: BNFPresentationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BNF Product Name'
+		dataType: string
+		lineageTag: 1a2bb7d7-ac38-4fa8-91a0-d5003e1e824c
+		summarizeBy: none
+		sourceColumn: BNF Product Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Items
+		dataType: int64
+		formatString: #,0
+		lineageTag: f940f5ad-7635-4600-bb26-0591b3ba5e66
+		summarizeBy: sum
+		sourceColumn: Items
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1a548383-d86f-4915-bb94-944c09df88bf
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 6165f349-43c0-427d-ad25-8500bf0f280c
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 8c45b5f6-57c6-45a8-9671-9912c94decf7
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cost (£)'
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: f0a21999-fadd-4b95-b87c-a7137d51d274
+		summarizeBy: sum
+		sourceColumn: Cost (£)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Age
+		dataType: string
+		lineageTag: a410ab4b-e7a8-44fc-baa2-bcabafe7e8dc
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 67ff7cc8-d76f-436f-b9d4-3a25d8ca7f45
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastDateofMonth
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: bee137c4-1309-433a-9128-028b9e74ada8
+		summarizeBy: none
+		sourceColumn: LastDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column FinancialMonth
+		dataType: string
+		lineageTag: 1dc2d158-112b-4579-aa3d-0203729f0905
+		summarizeBy: none
+		sourceColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 5dada42f-4293-4909-ab83-702482724600
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column ytd_months
+		dataType: int64
+		formatString: 0
+		lineageTag: ca92328c-8960-4714-b89a-8cbef5c9d826
+		summarizeBy: sum
+		sourceColumn: ytd_months
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rebate_recieved = if(isblank(related(Rebate[YearMonth])),"No","Yes")
+		lineageTag: ae7e668a-4d64-41ac-a433-123fdf451ace
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'CGM ePact Prescribing' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="SET ANSI_NULLS ON#(lf)SET QUOTED_IDENTIFIER ON#(lf)set nocount on#(lf)set ansi_warnings off #(lf)#(lf)IF OBJECT_ID('tempdb..#temp_ytd') is not null#(lf)drop table #temp_ytd#(lf)#(lf)SELECT distinct [A].[YearMonth]#(lf)#(tab)  ,[D].[FinancialMonth]#(lf)into #temp_ytd#(lf)#(tab)  #(lf)#(lf)FROM [CCG_Current].[ePACT2].[vw_Extract] as [A]#(lf)#(lf)#(tab)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] as [B]#(lf)#(tab)#(tab)ON [A].[HSPracticeCode] = [B].[OrganisationCode]#(lf)#(lf)#(tab)#(tab)left join [CCG_Reference].[Reference].[vw_DateLookup][D]#(lf)#(tab)#(tab)on [A].[YearMonth] = [D].[YearMonth]#(lf)#(lf)WHERE [BNFChemicalSubstanceCode] in ('0601060D0','0601060X0')#(lf)  AND [A].[YearMonth] >= '202304'#(lf)  and [HSCommissioner_or_ProviderCode] like '11M%'#(lf)  and [D].[Date] = [D].[LastDateofMonth]#(lf)#(lf)/*------------------------------------------------------------------------#(lf)------------------------------------------------------------------------*/#(lf)#(lf)SELECT [A].[YearMonth]#(lf)      ,[A].[Month]#(lf)#(tab)  ,[D].[LastDateofMonth]#(lf)#(tab)  ,[D].[FinancialMonth]#(lf)#(tab)  ,[D].[FinancialYear]#(lf)      ,[HSPracticeCode]#(lf)      ,[HSPractice]#(lf)      ,[BNFPresentationCode]#(lf)      ,[BNFPresentation]#(lf)      ,[Items] #(lf)      ,[ActualCost]#(lf)      ,[Quantity]#(lf)      ,[fiveyearsageband]#(lf)#(tab)  ,[B].[OrganisationName]#(lf)#(tab)  ,[B].[ReportingOrganisationName]#(lf)#(tab)  ,[B].[PrimaryCareNetwork]#(lf)#(tab)  ,[ytd_months] = case when [D].[financialmonth] in (select distinct [financialmonth] from #temp_ytd) then 1 else 0 end#(lf)#(tab)  #(lf)#(lf)FROM [CCG_Current].[ePACT2].[vw_Extract] as [A]#(lf)#(lf)#(tab)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] as [B]#(lf)#(tab)#(tab)ON [A].[HSPracticeCode] = [B].[OrganisationCode]#(lf)#(lf)#(tab)#(tab)left join [CCG_Reference].[Reference].[vw_DateLookup][D]#(lf)#(tab)#(tab)on [A].[YearMonth] = [D].[YearMonth]#(lf)#(lf)WHERE [BNFPresentationCode] like '2148%'#(lf)  AND [A].[YearMonth] >= '201904'#(lf)  and [HSCommissioner_or_ProviderCode] like '11M%'#(lf)  and [D].[Date] = [D].[LastDateofMonth]#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"ActualCost", "Cost (£)"}, {"BNFPresentation", "BNF Product Name"}, {"fiveyearsageband", "Age"}, {"ReportingOrganisationName", "Practice Name"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns",{"Month"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Columns",{{"LastDateofMonth", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

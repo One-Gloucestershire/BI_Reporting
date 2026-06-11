@@ -1,0 +1,134 @@
+table REF_DateRef
+	lineageTag: e2934b88-3247-4cb2-9979-3e7ff172d838
+
+	column Year_Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 450e4f42-babe-4f72-97c1-fcb4e809786e
+		summarizeBy: sum
+		sourceColumn: Year_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cal_Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 0a3277e7-8a39-4100-9ec6-ab3ad946dabd
+		summarizeBy: sum
+		sourceColumn: Cal_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 34189e66-3569-4970-9d0b-d642df0a9470
+		summarizeBy: none
+		sourceColumn: FinancialYear
+		sortByColumn: Fin_Year_First_Part
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fin_Year_First_Part
+		dataType: int64
+		formatString: 0
+		lineageTag: a596c782-6868-4c10-bd9e-d683b89025cd
+		summarizeBy: sum
+		sourceColumn: Fin_Year_First_Part
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_No
+		dataType: int64
+		formatString: 0
+		lineageTag: 0fabe0c7-6b4c-45a4-a8cb-f742b0f24747
+		summarizeBy: sum
+		sourceColumn: Month_No
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fin_Month_No
+		dataType: int64
+		formatString: 0
+		lineageTag: 10f49dc1-e9dd-45be-991e-e29874f32617
+		summarizeBy: sum
+		sourceColumn: Fin_Month_No
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Name
+		dataType: string
+		lineageTag: c637cc97-572d-4c55-969c-685b5615f42a
+		summarizeBy: none
+		sourceColumn: Month_Name
+		sortByColumn: Fin_Month_No
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Short_Name
+		dataType: string
+		lineageTag: c2631e5a-952c-4065-89b5-c71f7be67a39
+		summarizeBy: none
+		sourceColumn: Month_Short_Name
+		sortByColumn: Fin_Month_No
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Start
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 127951ba-627f-4bef-9d0c-3ce6d0abd9c9
+		summarizeBy: none
+		sourceColumn: Month_Start
+
+		variation Variation
+			isDefault
+			relationship: 4d635bb3-08cb-4eb0-9cb1-3363e0a9e420
+			defaultHierarchy: LocalDateTable_8ba8ca91-afa7-4a0a-8296-578b96f159e6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column RefreshMonthYear
+		dataType: string
+		lineageTag: 0f8297b7-653e-4299-8f4e-342d127d4563
+		summarizeBy: none
+		sourceColumn: RefreshMonthYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthYearName
+		dataType: string
+		lineageTag: 91375a0a-1d54-4342-97f3-0cf044aff612
+		summarizeBy: none
+		sourceColumn: MonthYearName
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'FinancialYear Hierarchy'
+		lineageTag: 3ced0cb9-04ac-4bb2-9604-571a8c2216c3
+
+		level FinancialYear
+			lineageTag: d08fb303-986d-455f-acb6-2054a8447483
+			column: FinancialYear
+
+		level Month_Short_Name
+			lineageTag: fa9bea83-ef1c-4fdd-a5fb-f0fdb3cd7f35
+			column: Month_Short_Name
+
+	partition REF_DateRef = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "DSCRO_NATIONAL_LOOKUPS", [Query="DECLARE @startdate DATE = (SELECT MIN([Date]) FROM PowerBI_Reporting.primarycare.[tbl08_SMS]);#(lf)DECLARE @enddate DATE = (SELECT MAX([Date]) FROM PowerBI_Reporting.primarycare.[tbl08_SMS]);#(lf)#(lf)SELECT Month_Start, Year_Month, Cal_Year, CONCAT('20',Fin_Year_yy_yy) AS FinancialYear, Fin_Year_First_Part, Month_No, Fin_Month_No, Month_Name, Month_Short_Name, CONCAT(Month_Name,' ',Cal_Year) AS MonthYearName, CONCAT(DATENAME(MONTH,GETDATE()),' ',YEAR(GETDATE())) AS RefreshMonthYear#(lf)FROM [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates]#(lf)WHERE Full_Date >= @startdate #(lf)AND Full_Date <= @enddate#(lf)AND Full_Date = Month_Start#(lf)ORDER BY Full_Date#(lf);"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,91 @@
+table 'NDA Diabetic Population'
+	lineageTag: f7444764-3174-4cd6-bfb9-1827ee8c7400
+
+	measure 'Diabetic Population' = DISTINCTCOUNT('NDA Diabetic Population'[Derived_Pseudo_NHS_Number])
+		formatString: #,0
+		lineageTag: e71df4f3-b129-4b79-a772-ecd702775e6d
+
+	column Derived_Pseudo_NHS_Number
+		dataType: string
+		lineageTag: 7a0a543b-d626-4fe2-9cd3-082ed6743908
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: double
+		lineageTag: 95a4726c-5cfe-4ad0-992f-bb9949637fc8
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DiabetesType
+		dataType: string
+		lineageTag: acbcab54-9a2b-489c-b39b-b5c29c43c039
+		summarizeBy: none
+		sourceColumn: DiabetesType
+
+		annotation SummarizationSetBy = Automatic
+
+	column adult/paeds
+		dataType: string
+		lineageTag: 20aeb71a-0496-46e6-8a74-ee296305f438
+		summarizeBy: none
+		sourceColumn: adult/paeds
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareProvider
+		dataType: string
+		lineageTag: 3f1a4873-a3c9-4286-ac36-29dc463dc4b7
+		summarizeBy: none
+		sourceColumn: PrimaryCareProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeName
+		dataType: string
+		lineageTag: 79eccca3-a2ae-4158-9e54-377561088cb7
+		summarizeBy: none
+		sourceColumn: PracticeName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN
+		dataType: string
+		lineageTag: ded7d96e-b07f-4ce4-84ff-5f6ffd81fea6
+		summarizeBy: none
+		sourceColumn: PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column refresh_date
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: 7593a8b7-163e-40ce-847c-a8a0488e3e15
+		summarizeBy: none
+		sourceColumn: refresh_date
+
+		variation Variation
+			isDefault
+			relationship: 752a04c7-c66f-4a3b-8c72-3a95fc4a9447
+			defaultHierarchy: LocalDateTable_0b16caea-d962-4f84-b0bb-325c1740f37e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	partition 'NDA Diabetic Population' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Data_Mart_National_Diabetes_Audit", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT distinct [Derived_Pseudo_NHS_Number]#(lf)      ,[Age]#(lf)#(tab)  ,[DiabetesType] = case when [Derived_Clean_Diabetes_Type] not in ('1','2') then 'Other/Unknown' else [Derived_Clean_Diabetes_Type] end#(lf)#(tab)  ,[adult/paeds] = case when [age] < '16' then '<16'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when [age] >= '16' then '16+' else null end#(lf)#(tab)  ,[P].[PrimaryCareProvider]#(lf)#(tab)  ,[PracticeName] = case when [G].[Commissioner] <> '11M' then 'Out of County' else [G].[ReportingOrganisationName] end#(lf)#(tab)  ,[PCN] = case when [G].[Commissioner] <> '11M' then 'Out of County' else [G].[PrimaryCareNetwork] end#(lf)#(tab)  ,[refresh_date] = getdate()#(lf)  FROM [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA][D]#(lf)#(lf)  left join [CCG_Reference].[population].[vw_PDS_Current][P]#(lf)  on [D].[Derived_Pseudo_NHS_Number] = [P].[Derived_NHS_Number]#(lf)#(lf)  left join [CCG_Reference].[Reference].[vw_GPPractice][G]#(lf)  on [P].[PrimaryCareProvider] = [G].[OrganisationCode]#(lf)#(lf)  where Derived_Pseudo_NHS_Number is not null #(lf)  and [Audit_Year] = '2022_23_E4'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

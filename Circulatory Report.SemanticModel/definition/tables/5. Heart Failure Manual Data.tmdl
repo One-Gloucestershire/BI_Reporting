@@ -1,0 +1,106 @@
+table '5. Heart Failure Manual Data'
+	lineageTag: ded7a82c-4c6e-4c08-95b5-ce9fa9270ece
+
+	column 'Indicator ID'
+		dataType: string
+		lineageTag: 58353b5f-66c7-426b-b82c-d51a389fc9f4
+		summarizeBy: none
+		sourceColumn: Indicator ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric
+		dataType: string
+		lineageTag: 1d1772f3-19a6-476d-a77b-3f23298ed0d6
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Extra Detail'
+		dataType: string
+		lineageTag: a24e2449-bf10-41a3-be1f-ecfb05059fcb
+		summarizeBy: none
+		sourceColumn: Extra Detail
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Year'
+		dataType: string
+		lineageTag: e6734ef3-6c1a-4ce4-99eb-acfd63c3a31c
+		summarizeBy: none
+		sourceColumn: Financial Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Name'
+		dataType: string
+		lineageTag: fe6fdc8e-d239-4c17-baf2-1920ba516f2e
+		summarizeBy: none
+		sourceColumn: Month Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'First Date of Month'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 4d988c80-0832-4077-986b-97eb3f24ebf2
+		summarizeBy: none
+		sourceColumn: First Date of Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Value
+		dataType: double
+		lineageTag: 61cd91f2-4802-4d33-a6b8-993d656e7e5a
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Data Source'
+		dataType: string
+		lineageTag: 5e3d780e-8249-4e28-82c6-49408df78772
+		summarizeBy: none
+		sourceColumn: Data Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rank
+		dataType: string
+		lineageTag: fe28fdc4-e256-4c4f-b78e-df5b5b6ad0ad
+		summarizeBy: none
+		sourceColumn: Rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column Target
+		dataType: int64
+		formatString: 0
+		lineageTag: 581782ca-c7e2-4254-8110-812fb2a69d43
+		summarizeBy: sum
+		sourceColumn: Target
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '5. Heart Failure Manual Data' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\Circulatory\Dashboard\Manual HF Metrics.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Indicator ID", type text}, {"Metric", type text}, {"Extra Detail", type text}, {"Financial Year", type text}, {"Month Name", type text}, {"First Date of Month", type date}, {"Value", type number}, {"Data Source", type text}})
+				in
+				    #"Changed Type"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

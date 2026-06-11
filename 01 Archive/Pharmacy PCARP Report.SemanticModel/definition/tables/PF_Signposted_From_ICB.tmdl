@@ -1,0 +1,128 @@
+table PF_Signposted_From_ICB
+	lineageTag: 4d01a687-e9d2-45b6-81cf-7f07ca35d680
+
+	column 'Region Code'
+		dataType: string
+		lineageTag: 26dd9136-59eb-4fcc-9aee-1f08d56cf599
+		summarizeBy: none
+		sourceColumn: Region Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Region Name'
+		dataType: string
+		lineageTag: 57c052f8-6f8b-43d6-81a7-180398a518d3
+		summarizeBy: none
+		sourceColumn: Region Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB Code'
+		dataType: string
+		lineageTag: 314b9a42-ef17-4ea9-bcb4-9df878667b90
+		summarizeBy: none
+		sourceColumn: ICB Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB Name'
+		dataType: string
+		lineageTag: 0392fbbe-90a6-4073-80dc-8950f5f2a79c
+		summarizeBy: none
+		sourceColumn: ICB Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Consultation_Month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b05dc623-b767-49bb-997b-d48f4ff18f02
+		summarizeBy: none
+		sourceColumn: Consultation_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ambulance
+		dataType: int64
+		formatString: 0
+		lineageTag: 7383333d-2f2b-4ffd-aae9-41d387a62008
+		summarizeBy: sum
+		sourceColumn: Ambulance
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Emergency Department'
+		dataType: int64
+		formatString: 0
+		lineageTag: 569cf8a3-d737-4618-84f5-14bd6d5b2b71
+		summarizeBy: sum
+		sourceColumn: Emergency Department
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice'
+		dataType: int64
+		formatString: 0
+		lineageTag: 27b644c6-8354-44fc-b1f8-c4cacc56d6d3
+		summarizeBy: sum
+		sourceColumn: GP Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS 111'
+		dataType: int64
+		formatString: 0
+		lineageTag: aea060b7-079a-4bac-a184-d85a91739b46
+		summarizeBy: sum
+		sourceColumn: NHS 111
+
+		annotation SummarizationSetBy = Automatic
+
+	column Other
+		dataType: int64
+		formatString: 0
+		lineageTag: 37e93423-ee92-4a96-aa8c-2ade69287c34
+		summarizeBy: sum
+		sourceColumn: Other
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Urgent Treatment Centre'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0cfff499-f3ff-4d2c-b08f-42e51f123c2c
+		summarizeBy: sum
+		sourceColumn: Urgent Treatment Centre
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Walk in Centre'
+		dataType: int64
+		formatString: 0
+		lineageTag: 121bd706-fe11-401c-89f0-ab5309ce5109
+		summarizeBy: sum
+		sourceColumn: Walk in Centre
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: 0
+		lineageTag: e184505c-0c47-459d-aaa6-0514a8860097
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PF_Signposted_From_ICB = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIReports", [Query="-- Pulls data from one table only. UNIONs use group bys to add England and SW average rows. #(lf)-- ICB level data#(lf)SELECT #(lf)  [Region Code]#(lf), [Region Name]#(lf), [ICB Code]#(lf), [ICB Name]#(lf), [Consultation_Month]#(lf), [Ambulance]#(lf), [Emergency Department]#(lf), [GP Practice]#(lf), [NHS 111]#(lf), [Other]#(lf), [Urgent Treatment Centre]#(lf), [Walk in Centre]#(lf), [Total]#(lf)FROM [BIReports].dbo.PharmFirst_Signposted_From_ICB#(lf)#(lf)UNION -- England average#(lf)#(lf)SELECT #(lf)  'ENG' AS [Region Code]#(lf), 'ENGLAND' AS [Region Name]#(lf), 'ENG' AS [ICB Code]#(lf), 'ENGLAND' AS [ICB Name]#(lf), [Consultation_Month]#(lf), SUM([Ambulance]) AS [Ambulance]#(lf), SUM([Emergency Department]) AS [Emergency Department]#(lf), SUM([GP Practice]) AS [GP Practice]#(lf), SUM([NHS 111]) AS [NHS 111]#(lf), SUM([Other]) AS [Other]#(lf), SUM([Urgent Treatment Centre]) AS [Urgent Treatment Centre]#(lf), SUM([Walk in Centre]) AS [Walk in Centre]#(lf), SUM([Total]) AS [Total]#(lf)FROM [BIReports].dbo.PharmFirst_Signposted_From_ICB#(lf)GROUP BY [Consultation_Month]#(lf)#(lf)UNION -- South West region average#(lf)#(lf)SELECT #(lf)  [Region Code]#(lf), [Region Name]#(lf), [Region Code] AS [ICB Code]#(lf), [Region Name] AS [ICB Name]#(lf), [Consultation_Month]#(lf), SUM([Ambulance]) AS [Ambulance]#(lf), SUM([Emergency Department]) AS [Emergency Department]#(lf), SUM([GP Practice]) AS [GP Practice]#(lf), SUM([NHS 111]) AS [NHS 111]#(lf), SUM([Other]) AS [Other]#(lf), SUM([Urgent Treatment Centre]) AS [Urgent Treatment Centre]#(lf), SUM([Walk in Centre]) AS [Walk in Centre]#(lf), SUM([Total]) AS [Total]#(lf)FROM [BIReports].dbo.PharmFirst_Signposted_From_ICB#(lf)WHERE [Region Code] = 'Y58'#(lf)GROUP BY [Region Code], [Region Name], Consultation_Month;"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

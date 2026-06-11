@@ -1,0 +1,738 @@
+table '4. Hypertension'
+	lineageTag: dc9f5387-3c46-4ebb-8836-0ed29fa9a492
+
+	measure 'Treated to Target Target' =
+			
+			VAR HypPatients = calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,REMOVEFILTERS('4. Hypertension'[Summary Cohort]))
+			
+			RETURN
+			iferror(HypPatients*0.8,0)
+		lineageTag: ff3bcf6b-2f13-4ce1-9ddc-01cb7735f869
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Diagnosis Target' =
+			
+			VAR AllPatients = calculate('4. Hypertension'[Counter_Supressed],REMOVEFILTERS('4. Hypertension'[HypertensionNew]))
+			
+			RETURN
+			iferror((AllPatients*0.285)*0.8,0)
+		lineageTag: 93cf0ab7-83a2-4b1f-9360-9866f9b6d38e
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Diagnosis Gap' = [Diagnosis Target] - iferror(calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1),0)
+		formatString: #,0
+		lineageTag: 125964fb-070f-4a7d-8e99-cfcedbcdfcf5
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Diagnosis Progress' =
+			iferror(calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[LatestMonth] = 1)-
+			calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[Latest YearEnd] = 1),0)
+		lineageTag: 4621d863-0f2f-4cdf-a3f8-4c72911b3d58
+
+		changedProperty = IsHidden
+
+	measure 'Treatment Gap' = iferror([Treated to Target Target] - calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[Summary Cohort]="Diagnosed Controlled BP"),0)
+		formatString: #,0
+		lineageTag: ed2f25ed-57c8-4ecf-9798-026deb603801
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Treatment Progress' =
+			
+			iferror(calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[LatestMonth] = 1,'4. Hypertension'[Summary Cohort] = "Diagnosed Controlled BP")-
+			calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[Latest YearEnd] = 1,'4. Hypertension'[Summary Cohort] = "Diagnosed Controlled BP"),0)
+		formatString: #,0
+		lineageTag: 2a7a9438-0182-4846-b8ba-20c6b9401cdb
+
+		changedProperty = IsHidden
+
+	measure Counter_Supressed =
+			IF(
+			    ISBLANK(SUM('4. Hypertension'[Counter])),0,
+			    IF(
+			        SUM('4. Hypertension'[Counter])<5,0,sum('4. Hypertension'[Counter])))
+		formatString: #,0
+		lineageTag: b3d3aa36-5ce3-4cf0-8d4c-961d4fdc550e
+
+		changedProperty = IsHidden
+
+	measure Rate_per_1000_Hyp = (calculate(sum('4. Hypertension'[Counter]),'4. Hypertension'[HypertensionNew]=1)/sum('4. Hypertension'[Counter]))*1000
+		lineageTag: c46fa7fc-3587-4689-959e-df5e24083300
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure BlankDateFilter = COUNTROWS('4. Hypertension')
+		formatString: 0
+		lineageTag: fefb5797-c3e0-4c26-b0fc-2fde11d0f930
+
+		changedProperty = IsHidden
+
+	measure TTT =
+			calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[Summary Cohort] = "Diagnosed Controlled BP")/
+			calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bbe3e951-2c6e-4c96-9d6a-927faf335987
+
+		changedProperty = IsHidden
+
+	measure Hypertension_Diagnosed =
+			calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1)/
+			calculate('4. Hypertension'[Counter_Supressed])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7ea9dd63-e673-47c0-a026-9466eb0c1cbb
+
+		changedProperty = IsHidden
+
+	measure TTT_Number = calculate('4. Hypertension'[Counter_Supressed],'4. Hypertension'[HypertensionNew] = 1,'4. Hypertension'[Summary Cohort] = "Diagnosed Controlled BP")
+		formatString: 0
+		lineageTag: 41c59f5f-321b-4035-beec-ca4d81f51990
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure Scatter_Background =
+			if(and([TTT]<0.80,'4. Hypertension'[Hypertension_Diagnosed]<0.228),"#FFA3A3",
+			if(and([TTT]<0.80,'4. Hypertension'[Hypertension_Diagnosed]>0.228),"#FFDCA6",
+			if(and([TTT]>0.80,'4. Hypertension'[Hypertension_Diagnosed]<0.228),"#FFDCA6",
+			if(and([TTT]>0.80,'4. Hypertension'[Hypertension_Diagnosed]>0.228),"#AAFFBE"))))
+		lineageTag: 27f42e57-16a1-410c-8d79-33229b1f5435
+
+		changedProperty = IsHidden
+
+	column Counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: 76cfa021-2d55-4d25-9d18-68ff4ff81240
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Summary Cohort'
+		dataType: string
+		displayFolder: Summary Cohorts
+		lineageTag: 2bdca02c-f247-4450-987c-8f40d37e0583
+		summarizeBy: none
+		sourceColumn: Summary Cohort
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand10yr
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: bbbf7748-9662-4f8e-9ad4-37503a661361
+		summarizeBy: none
+		sourceColumn: AgeBand10yr
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 4a05161b-82bc-4fae-93ed-728f5846f9f6
+		summarizeBy: none
+		sourceColumn: Gender
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: int64
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: f31e849d-525a-4cf9-997a-a9563789f95c
+		summarizeBy: sum
+		sourceColumn: IMDcountyDecile
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column District
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: de06db6a-b031-4d50-8955-1de399bf410c
+		summarizeBy: none
+		sourceColumn: District
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalityName
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: db903907-f577-4b57-ab5c-c5c5a1278ccc
+		summarizeBy: none
+		sourceColumn: LocalityName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: ae2d69cd-ba65-40d7-9bd4-39c76a559fe7
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracNameCurrent
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 3b3df8ec-8186-47b2-a480-286a7c0d1079
+		summarizeBy: none
+		sourceColumn: PracNameCurrent
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column EthnicOriginWiderGroups
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 2c16897e-acf7-48f9-a9d5-a7dfeb332a28
+		summarizeBy: none
+		sourceColumn: EthnicOriginWiderGroups
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Catgory_derived
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 85c39378-5503-46fc-8fa3-bfd4453e879a
+		summarizeBy: none
+		sourceColumn: eFI_Catgory_derived
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SmokerDerived
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: d218f30e-10e8-4d84-aeaa-acaab6b37221
+		summarizeBy: none
+		sourceColumn: SmokerDerived
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column LearningDisabilityDerived
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Demographics
+		lineageTag: 0d8d97c5-460f-4c1d-8bd0-f1e2e090c050
+		summarizeBy: none
+		sourceColumn: LearningDisabilityDerived
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MentalIllnessDerived
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Demographics
+		lineageTag: 3ed1aa00-9242-4b16-85c4-d522787041e1
+		summarizeBy: none
+		sourceColumn: MentalIllnessDerived
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BMI_Category
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: bf8bda27-bf92-4544-be17-bb46d00b93bf
+		summarizeBy: none
+		sourceColumn: BMI_Category
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BP Within 12 months'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Summary Cohorts
+		lineageTag: 73664e97-0bee-463c-bb29-41dd4f6592fd
+		summarizeBy: none
+		sourceColumn: BP Within 12 months
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PC within 12 months'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Summary Cohorts
+		lineageTag: 68eb6533-11ed-4cea-a1ce-9aa2b45ddab1
+		summarizeBy: none
+		sourceColumn: PC within 12 months
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diagnosis Financial Year'
+		dataType: string
+		displayFolder: Summary Cohorts
+		lineageTag: 6984e7ad-179b-4ee0-a4dc-b2c6de481749
+		summarizeBy: none
+		sourceColumn: Diagnosis Financial Year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diagnosis Month'
+		dataType: string
+		displayFolder: Summary Cohorts
+		lineageTag: ca6b63c0-4e81-48ae-b8f2-058ae0240adf
+		summarizeBy: none
+		sourceColumn: Diagnosis Month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateRun
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Dates
+		lineageTag: 2ff421d5-306d-4609-a8ef-42d5d903846a
+		summarizeBy: none
+		sourceColumn: DateRun
+
+		variation Variation
+			isDefault
+			relationship: 66b4abcb-3b6b-4026-a9f8-749696129322
+			defaultHierarchy: LocalDateTable_2d6bbcc7-17b8-41ba-8892-433ad1b94942.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinishDate
+		dataType: dateTime
+		formatString: Short Date
+		displayFolder: Dates
+		lineageTag: 901f00fc-7ee9-4884-9d22-5c2f08b832b9
+		summarizeBy: none
+		sourceColumn: FinishDate
+
+		changedProperty = DataType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'NEW Summary Cohort'
+		dataType: string
+		displayFolder: Summary Cohorts
+		lineageTag: c9633839-8aeb-4ed0-835a-c286c32f3a99
+		summarizeBy: none
+		sourceColumn: NEW Summary Cohort
+		sortByColumn: 'NEW Summary Cohort ORDER'
+
+		changedProperty = SortByColumn
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NEW Summary Cohort ORDER'
+		dataType: int64
+		formatString: 0
+		displayFolder: Summary Cohorts
+		lineageTag: cdea09bc-77af-43af-a5dd-f7c92bd0b469
+		summarizeBy: sum
+		sourceColumn: NEW Summary Cohort ORDER
+
+		changedProperty = DataType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: d17a3b2f-6b18-4fa6-9339-4095698b4266
+		summarizeBy: sum
+		sourceColumn: LatestMonth
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column HypertensionNew
+		dataType: int64
+		formatString: 0
+		lineageTag: 497bba6c-07cc-4e07-bb8f-5fe71801b783
+		summarizeBy: sum
+		sourceColumn: HypertensionNew
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BP Reading Time Frame'
+		dataType: string
+		lineageTag: 3e5da090-16a2-4d20-9521-6a59ad948db4
+		summarizeBy: none
+		sourceColumn: BP Reading Time Frame
+		sortByColumn: 'BP Reading Time Frame Order'
+
+		changedProperty = SortByColumn
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BP Reading Time Frame Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: b85413ec-ac22-41ec-a4d7-7f608af23bb5
+		summarizeBy: sum
+		sourceColumn: BP Reading Time Frame Order
+
+		changedProperty = DataType
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 7bf10162-9c2e-4426-b798-5441241fdb65
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Summary Cohort Overview'
+		dataType: string
+		lineageTag: cc69852c-b1a0-4156-95a3-c8b7173110a2
+		summarizeBy: none
+		sourceColumn: Summary Cohort Overview
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Summary Cohort Overview Number'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8deba694-d58e-45d3-aa66-0e92d45ce865
+		summarizeBy: sum
+		sourceColumn: Summary Cohort Overview Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedAge
+		dataType: int64
+		formatString: 0
+		lineageTag: 7df28d74-f79b-47b5-b0c3-e18ab36a0406
+		summarizeBy: sum
+		sourceColumn: DerivedAge
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedEthnicityDescription
+		dataType: string
+		lineageTag: 09ee298e-d538-4559-be37-139b35a162c3
+		summarizeBy: none
+		sourceColumn: DerivedEthnicityDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column BMI
+		dataType: string
+		lineageTag: 2b6606d7-8854-4d43-a537-5fe2a36d49b0
+		summarizeBy: none
+		sourceColumn: BMI
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hypertension
+		dataType: string
+		lineageTag: b49b0de2-3d77-4072-b229-576d143892a9
+		summarizeBy: none
+		sourceColumn: Hypertension
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICBofRegistration
+		dataType: string
+		lineageTag: 32961a5e-8c9c-44c7-9b3c-3a084ab079db
+		summarizeBy: none
+		sourceColumn: ICBofRegistration
+
+		annotation SummarizationSetBy = Automatic
+
+	column StartDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f6a95c12-99be-49c1-bf82-5d9ec339658d
+		summarizeBy: none
+		sourceColumn: StartDate
+
+		variation Variation
+			isDefault
+			relationship: f1a20438-c42b-4ac1-80ef-e9193a4f4dd7
+			defaultHierarchy: LocalDateTable_c7221e77-5dcd-454e-9954-5110a0df4df6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diagnosis Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7206bf1a-87c0-4ea4-96c8-7c3f248fa7d2
+		summarizeBy: none
+		sourceColumn: Diagnosis Date
+
+		variation Variation
+			isDefault
+			relationship: 60bb2b99-c281-4477-8964-3d5879b1f3fa
+			defaultHierarchy: LocalDateTable_7ea83f42-1b0b-4482-bac7-87a0c8bfb6f8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Snomed_Code
+		dataType: int64
+		formatString: 0
+		lineageTag: 16a3b2ae-11b3-4e1a-89c3-029330de05a5
+		summarizeBy: count
+		sourceColumn: Snomed_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column preferredTerm
+		dataType: string
+		lineageTag: ee75225d-ce1f-406b-b1fa-879e57696175
+		summarizeBy: none
+		sourceColumn: preferredTerm
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Exclusion Flag'
+		dataType: string
+		lineageTag: a9437289-334d-4c1d-9615-ba2b6845dd68
+		summarizeBy: none
+		sourceColumn: Exclusion Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestBloodPressureReadingDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ee62cfc2-1742-4b11-ad09-d58ff93ce3c6
+		summarizeBy: none
+		sourceColumn: LatestBloodPressureReadingDate
+
+		variation Variation
+			isDefault
+			relationship: 838e6de2-340a-4bf0-8611-8e7281ada47b
+			defaultHierarchy: LocalDateTable_f7f7274b-a34f-4c0f-9a29-f07ceed3c210.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestSystolicReading
+		dataType: string
+		lineageTag: b6f2190a-56ce-4125-8928-507f7ee4728b
+		summarizeBy: none
+		sourceColumn: LatestSystolicReading
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestDiastolicReading
+		dataType: string
+		lineageTag: 563b806b-89c7-49f0-a2b5-c5212847f4f3
+		summarizeBy: none
+		sourceColumn: LatestDiastolicReading
+
+		annotation SummarizationSetBy = Automatic
+
+	column BloodPressureReadingDate2
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4d5aec2f-ff72-4718-a0a2-a0c0b3e750f0
+		summarizeBy: none
+		sourceColumn: BloodPressureReadingDate2
+
+		variation Variation
+			isDefault
+			relationship: 6a566a4b-badc-4e18-8243-55af62a2a886
+			defaultHierarchy: LocalDateTable_1bd93116-ad3d-4581-b400-c4a4dacf25d4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column SystolicReading2
+		dataType: string
+		lineageTag: 8b4457e5-0800-4af1-a534-7ee08e5153db
+		summarizeBy: none
+		sourceColumn: SystolicReading2
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiastolicReading2
+		dataType: string
+		lineageTag: 7369f8c0-98ba-415b-87d9-89a2705ae3ba
+		summarizeBy: none
+		sourceColumn: DiastolicReading2
+
+		annotation SummarizationSetBy = Automatic
+
+	column MissingBloodPressureReading
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 41bf0dbb-b11e-48a0-a22d-ce2ea985009c
+		summarizeBy: none
+		sourceColumn: MissingBloodPressureReading
+
+		annotation SummarizationSetBy = Automatic
+
+	column HighBloodPressure
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: ff519d07-4e21-4914-9743-c612a7585c3f
+		summarizeBy: none
+		sourceColumn: HighBloodPressure
+
+		annotation SummarizationSetBy = Automatic
+
+	column UncertainBloodPressure
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 37979c99-91e9-4a30-b0ef-2bb4a24e72aa
+		summarizeBy: none
+		sourceColumn: UncertainBloodPressure
+
+		annotation SummarizationSetBy = Automatic
+
+	column UndiagnosedHighBloodPressure
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: db7f370b-6c58-4715-a0b3-e07ec09d2ffd
+		summarizeBy: none
+		sourceColumn: UndiagnosedHighBloodPressure
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiagnosedControlledBloodPressure
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f8cf3322-87e6-4057-861f-54108d9021d1
+		summarizeBy: none
+		sourceColumn: DiagnosedControlledBloodPressure
+
+		annotation SummarizationSetBy = Automatic
+
+	column NotHypertensive
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 757a5424-1d02-4e50-a1b9-49e267c3d8c4
+		summarizeBy: none
+		sourceColumn: NotHypertensive
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unknown
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f10b3161-f23f-43d1-a9a4-ebed906d1060
+		summarizeBy: none
+		sourceColumn: Unknown
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9d12fc1e-5f41-4109-843e-284f53bada7d
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: f6b82bd9-7f47-4e08-b423-b2183e312b56
+			defaultHierarchy: LocalDateTable_db4e9d21-a597-4597-9aa1-816a1d585b3a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Latest YearEnd'
+		dataType: int64
+		formatString: 0
+		lineageTag: e4fde367-5414-430d-bcaf-f099e13ab977
+		summarizeBy: sum
+		sourceColumn: Latest YearEnd
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestReadingSetting
+		dataType: string
+		lineageTag: 22c3273d-741b-4ef2-97f6-8e2ec09e135e
+		summarizeBy: none
+		sourceColumn: LatestReadingSetting
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReadingSetting2
+		dataType: string
+		lineageTag: af3ccb7e-6544-4eaf-93fc-bfa90212a5e6
+		summarizeBy: none
+		sourceColumn: ReadingSetting2
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '4. Hypertension' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select *#(lf),CASE WHEN cast(FinishDate as date) = ( SELECT MAX([Date]) FROM CCG_Reference.[Reference].[vw_DateLookup][a] WHERE month = 3 AND day = 31 AND replace(financialyear,'/','') #(lf)                                    = (select max(replace(FinancialYear,'/',''))-101 #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)from PowerBI_Reporting.Circulatory.tbl04_HypertensionCohorts [a] left join CCG_Reference.[Reference].[vw_DateLookup] [d] on cast([a].FinishDate as date) = [d].[date]) ) THEN 1 ELSE 0 END AS [Latest YearEnd]#(lf)from PowerBI_Reporting.Circulatory.tbl04_HypertensionCohorts#(lf)where DerivedAge >= 40"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"AgeBand10yr", "AgeBand10yr"}, {"eFI_Catgory_derived", "eFI_Catgory_derived"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"HypertensionNew", Int64.Type}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each true)
+				in
+				    #"Filtered Rows"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

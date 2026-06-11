@@ -1,0 +1,472 @@
+table '3. Secondary Care Explorer'
+	lineageTag: 87f3a580-50a2-425f-9efb-a8a7b59b8255
+
+	measure MonthlyTotal_SCE_Activity =
+			SUMX (
+			    VALUES ( '3. Secondary Care Explorer'[Year Month] ),
+			    CALCULATE ( SUM ( '3. Secondary Care Explorer'[Counter] ),
+			    '3. Secondary Care Explorer'[SPC Flag] = 1 )
+			)
+		displayFolder: SPC
+		lineageTag: 22736ca8-6188-4ce6-97ef-cd94d2b24b8e
+
+	measure NumberOfMonths_SCE_Activity = CALCULATE(DISTINCTCOUNT('3. Secondary Care Explorer'[Year Month]),ALLSELECTED('3. Secondary Care Explorer'),'3. Secondary Care Explorer'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: f2c1b62f-2eb6-4320-a74c-10f4cf9341a4
+
+	measure TotalPerMonth_SCE_Activity =
+			
+			calculate(SUM('3. Secondary Care Explorer'[Counter]),ALLSELECTED('3. Secondary Care Explorer'),'3. Secondary Care Explorer'[SPC Flag]=1)
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 04ab4877-d735-4083-ace4-da4a7a7b9f05
+
+	measure Mean_SCE_Activity =
+			
+			[TotalPerMonth_SCE_Activity]/[NumberOfMonths_SCE_Activity]
+		displayFolder: SPC
+		lineageTag: 84c49df3-8f75-4ccc-a3b0-699b50a401d8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure StdDev_SCE_Activity = ```
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( '3. Secondary Care Explorer'[Year Month]), [MonthlyTotal_SCE_Activity]), ALLEXCEPT('Date Table', 'Date Table'[year_month]))
+			 
+			RETURN IFERROR(STD_DEV, 0)
+			```
+		displayFolder: SPC
+		lineageTag: 15973588-e3bb-4909-84d7-ff35a2aa6137
+
+	measure UCL_SCE_Activity = [Mean_SCE_Activity]+(3*[StdDev_SCE_Activity])
+		displayFolder: SPC
+		lineageTag: 59c05230-c068-4d96-8f94-61fa44f65347
+
+	measure LCL_SCE_Activity = [Mean_SCE_Activity]-(3*[StdDev_SCE_Activity])
+		displayFolder: SPC
+		lineageTag: daf04cca-cba6-4ee6-b4f4-037e43c0c658
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure NumberOfMonths_SCE_Cost = CALCULATE(DISTINCTCOUNT('3. Secondary Care Explorer'[Year Month]),ALLSELECTED('3. Secondary Care Explorer'),'3. Secondary Care Explorer'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: 1cd00d77-9947-4109-9b8a-4ce4a81ea74b
+
+	measure MonthlyTotal_SCE_Cost =
+			SUMX (
+			    VALUES ( '3. Secondary Care Explorer'[Year Month] ),
+			    CALCULATE ( SUM ( '3. Secondary Care Explorer'[Total Cost] ),
+			    '3. Secondary Care Explorer'[SPC Flag] = 1 )
+			)
+		displayFolder: SPC
+		lineageTag: fcb7b512-ba72-46c0-bba5-7634f7efbf80
+
+	measure TotalPerMonth_SCE_Cost =
+			
+			calculate(SUM('3. Secondary Care Explorer'[Total Cost]),ALLSELECTED('3. Secondary Care Explorer'),'3. Secondary Care Explorer'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: 003b7617-db99-4b1c-aa92-0825002b1020
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Mean_SCE_Cost =
+			
+			[TotalPerMonth_SCE_Cost]/[NumberOfMonths_SCE_Cost]
+		displayFolder: SPC
+		lineageTag: 74ebce25-5a2f-47e7-b8b5-d2a50a2334e8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure StdDev_SCE_Cost = ```
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( '3. Secondary Care Explorer'[Year Month]), [MonthlyTotal_SCE_Cost]), ALLEXCEPT('Date Table', 'Date Table'[year_month]))
+			 
+			RETURN IFERROR(STD_DEV, 0)
+			```
+		displayFolder: SPC
+		lineageTag: f63a929b-bfc8-44c5-9f62-60e48f2403f2
+
+	measure LCL_SCE_Cost = [Mean_SCE_Cost]-(3*[StdDev_SCE_Cost])
+		displayFolder: SPC
+		lineageTag: a8641ed7-51fa-4fb4-b17e-3674a23bfc7a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure UCL_SCE_Cost = [Mean_SCE_Cost]+(3*[StdDev_SCE_Cost])
+		displayFolder: SPC
+		lineageTag: 4cd0db08-aa25-4409-b64f-23c2e239953b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column counter
+		dataType: int64
+		formatString: #,0
+		displayFolder: Data
+		lineageTag: 72f90a24-509f-43be-bebe-2dfb7f8100bd
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 2f59a1af-f110-4e60-8985-a4a7fc6cb9c1
+		summarizeBy: sum
+		sourceColumn: SPC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data Source'
+		dataType: string
+		displayFolder: Data
+		lineageTag: 0ee94bc3-0627-4391-b8bd-154c6dc8b232
+		summarizeBy: none
+		sourceColumn: Data Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS Number'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 230f7430-d0b5-427f-a0f7-a42646378c5c
+		summarizeBy: none
+		sourceColumn: NHS Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CDS Unique ID'
+		dataType: string
+		displayFolder: Misc
+		lineageTag: c48ee270-1490-4610-8d0f-55b414652395
+		summarizeBy: none
+		sourceColumn: CDS Unique ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column HPSN
+		dataType: string
+		displayFolder: Admission Information
+		lineageTag: 43e0a3bf-b68f-4edb-9caa-6020e75b4476
+		summarizeBy: none
+		sourceColumn: HPSN
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 6cd37c75-e2c4-4aa8-a65b-a17f95f42097
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Band'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 4f13f44f-e753-41be-b8db-d921f281acaf
+		summarizeBy: none
+		sourceColumn: Age Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Deprivation
+		dataType: double
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: 1a08f483-5251-46dd-9821-124c9bdeba92
+		summarizeBy: sum
+		sourceColumn: Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnic Origin'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: d601d269-1bf1-4928-9232-f8f61616e11f
+		summarizeBy: none
+		sourceColumn: Ethnic Origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 9984d861-aaba-413a-99e5-7900be38b901
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 17bf1687-cb6b-4ef9-b87d-1ae680138023
+		summarizeBy: none
+		sourceColumn: PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 04fa889e-930e-4c82-9e5c-b178a7e64691
+		summarizeBy: none
+		sourceColumn: GP Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Group'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: a98b9578-cc1c-45a6-88c6-05354678ea10
+		summarizeBy: none
+		sourceColumn: Provider Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 13355667-25bb-4e93-8804-90294d58c333
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Site Name'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: a4716896-3e9f-42ae-ab99-727a4e5389a9
+		summarizeBy: none
+		sourceColumn: Site Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 Chapter'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 5ba415bf-3f53-4480-b6b1-aab47e4704ec
+		summarizeBy: none
+		sourceColumn: ICD10 Chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 SubChapter'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 31c55e9d-075e-464c-8eb9-4340c903a531
+		summarizeBy: none
+		sourceColumn: ICD10 SubChapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICD10 Description'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 8af7ecdc-85eb-4a6e-9f2e-ce86bd954654
+		summarizeBy: none
+		sourceColumn: ICD10 Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column TFC
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 5cd9817d-7567-4299-bd3e-93a3a9fd678a
+		summarizeBy: none
+		sourceColumn: TFC
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Primary Procedure'
+		dataType: string
+		displayFolder: Slicers
+		lineageTag: 652d7346-131e-48b7-b971-fc79f7220b15
+		summarizeBy: none
+		sourceColumn: Primary Procedure
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission Method Group'
+		dataType: string
+		displayFolder: Admission Information
+		lineageTag: 46d70d67-fc98-41e0-8cc2-7be7a83f3930
+		summarizeBy: none
+		sourceColumn: Admission Method Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission Method Description'
+		dataType: string
+		displayFolder: Admission Information
+		lineageTag: f1e355a4-7431-4053-8176-a645ed2a23f6
+		summarizeBy: none
+		sourceColumn: Admission Method Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Assessment Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Information
+		lineageTag: 9664c3ed-f593-4a20-9b85-0fd64c996f83
+		summarizeBy: sum
+		sourceColumn: Assessment Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SDEC Flag'
+		dataType: string
+		displayFolder: Admission Information
+		lineageTag: e77d8862-c241-4b51-ab64-c94c4f4ad304
+		summarizeBy: none
+		sourceColumn: SDEC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NCTR Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Information
+		lineageTag: 85c1f3c7-00bb-42ab-bc45-14e561eef196
+		summarizeBy: sum
+		sourceColumn: NCTR Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ReAdmission Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Information
+		lineageTag: 50ace0aa-1fe3-4e60-a783-2494da5d1b94
+		summarizeBy: sum
+		sourceColumn: ReAdmission Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LoS Bands'
+		dataType: string
+		displayFolder: Admission Information
+		lineageTag: 504a25da-31bf-448f-bdf0-fa599d40ccc9
+		summarizeBy: none
+		sourceColumn: LoS Bands
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LoS Bands - Order'
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Information
+		lineageTag: a8b01320-eba7-4e02-8ec7-42d083fb27f5
+		summarizeBy: sum
+		sourceColumn: LoS Bands - Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Beddays'
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Information
+		lineageTag: 45cae5db-9759-4aa8-a4a9-41b87fb0f396
+		summarizeBy: sum
+		sourceColumn: Total Beddays
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Cost'
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: Data
+		lineageTag: 3f909f7b-149a-4455-acb2-e9cec94828c8
+		summarizeBy: sum
+		sourceColumn: Total Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Date
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Date
+		lineageTag: 43911ee1-171a-443f-b8bc-adee44096bd5
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YTD Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Date
+		lineageTag: 52f2e8df-a7fc-4d52-a526-2641e860855c
+		summarizeBy: sum
+		sourceColumn: YTD Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Latest Month Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Date
+		lineageTag: 6367bac8-9a54-4da2-bfc1-d380a3a81ced
+		summarizeBy: sum
+		sourceColumn: Latest Month Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'HRG Code'
+		dataType: string
+		displayFolder: Misc
+		lineageTag: 89c7cb51-4af7-42d6-aa41-94fbe9f0d80d
+		summarizeBy: none
+		sourceColumn: HRG Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Department Type'
+		dataType: string
+		displayFolder: ED Information
+		lineageTag: e4a1b9c8-0b0b-4aa1-bc42-0656750b60e8
+		summarizeBy: none
+		sourceColumn: Department Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Arrival Mode'
+		dataType: string
+		displayFolder: ED Information
+		lineageTag: f3a81d11-41f5-4964-b911-2e60a77630ec
+		summarizeBy: none
+		sourceColumn: Arrival Mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Month'
+		dataType: int64
+		formatString: 0
+		displayFolder: Misc
+		lineageTag: 437c17c2-689a-4012-9b94-0a88450f904d
+		summarizeBy: sum
+		sourceColumn: Year Month
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '3. Secondary Care Explorer' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select#(lf)[Data] = 'Inpatients',#(lf)[NHS Number] = nhs_number,#(lf)[CDS Unique ID] = UniqueCDSidentifier,#(lf)[HPSN] = hospital_provider_spell_number,#(lf)--Demographics#(lf)[Gender] = gender,#(lf)[Age Band]= [10yr_age_band],#(lf)[Deprivation] = deprivation,#(lf)[Ethnic Origin] = ethnic_origin_group,#(lf)[Locality] = locality,#(lf)[PCN] = primary_care_network,#(lf)[GP Practice] = practice_name,#(lf)--Provider information#(lf)[Provider Group] = provider_group,#(lf)[Provider Name] = provider_name,#(lf)[Site Name] = site_name,#(lf)--Activity Information#(lf)[ICD10 Chapter] = ICD10_chapter,#(lf)[ICD10 SubChapter] =ICD10_subchapter,#(lf)[ICD10 Description] =ICD10_description,#(lf)[TFC] = treatment_function_description,#(lf)[Primary Procedure] = primaryprocedure_opcs_description,#(lf)[HRG Code] = hrg_code,#(lf)--Admission Specific Stuff#(lf)[Admission Method Group] = admission_method_group_grouped,#(lf)[Admission Method Description] = admission_method_group,#(lf)[Assessment Flag] = assessment_flag,#(lf)[SDEC Flag] = sdec_flag,#(lf)[NCTR Flag] = NCTR_flag,#(lf)[ReAdmission Flag] = readmission_flag,#(lf)[LoS Bands] = LoS_Bands,#(lf)[LoS Bands - Order] = LoS_Bands_Order,#(lf)--ED Specific Stuff#(lf)[Department Type] = NULL,#(lf)[Arrival Mode] = NULL,#(lf)--Data#(lf)[counter],#(lf)[Total Beddays] = total_bed_days,#(lf)[Total Cost] = total_tariff_plus_mff,#(lf)--Dates#(lf)[Date] = discharge_date,#(lf)[Year Month] = year_month,#(lf)[YTD Flag] = YTD_Flag,#(lf)[Latest Month Flag] = Latest_Month_Flag,#(lf)[SPC Flag]#(lf)from [PowerBI_Reporting].[SecondaryCare].[tbl07_Inpatients]#(lf)where (icd10_code like 'i%' or icd10_code like 'R07%')#(lf)and (commissioner_code like '11M%' or commissioner_code like 'QR1%')#(lf)and year_month >= '202304'#(lf)#(lf)UNION#(lf)#(lf)select#(lf)[Data] = 'ECDS',#(lf)[NHS Number] = nhs_number,#(lf)[CDS Unique ID] = CDS_Unique_Identifier,#(lf)[HPSN] = NULL,#(lf)--Demographics#(lf)[Gender] = gender,#(lf)[Age Band]= [10yr_age_band],#(lf)[Deprivation] = deprivation_decile,#(lf)[Ethnic Origin] = ethnic_origin_group,#(lf)[Locality] = locality,#(lf)[PCN] = primary_care_network,#(lf)[GP Practice] = practice_name,#(lf)--Provider information#(lf)[Provider Group] = provider_group,#(lf)[Provider Name] = provider_name,#(lf)[Site Name] = site_name,#(lf)--Activity Information#(lf)[ICD10 Chapter] = [ECDS_Diagnosis_ICD10_Equivalent_Chapter],#(lf)[ICD10 SubChapter] =[ECDS_Diagnosis_ICD10_Equivalent_SubChapter],#(lf)[ICD10 Description] =[ECDS_Diagnosis_ICD10_Equivalent_Description],#(lf)[TFC] = NULL,#(lf)[Primary Procedure] = NULL,#(lf)[HRG Code] = hrg_code,#(lf)--Admission Specific Stuff#(lf)[Admission Method Group] = NULL,#(lf)[Admission Method Description] = NULL,#(lf)[Assessment Flag] = NULL,#(lf)[SDEC Flag] = NULL,#(lf)[NCTR Flag] = NULL,#(lf)[ReAdmission Flag] = NULL,#(lf)[LoS Bands] = NULL,#(lf)[LoS Bands - Order] = NULL,#(lf)--ED Specific Stuff#(lf)[Department Type] = department_type,#(lf)[Arrival Mode] = arrival_mode_grouped,#(lf)--Data#(lf)[counter],#(lf)[Total Beddays] = NULL,#(lf)[Total Cost] = [total_tariff_plus_MFF],#(lf)--Dates#(lf)[Date] = [arrival_date],#(lf)[Year Month] = year_month,#(lf)[YTD Flag] = [YTD Flag],#(lf)[Latest Month Flag] = Latest_Month_Flag,#(lf)[SPC Flag]#(lf)from [PowerBI_Reporting].[UrgentCare].[tbl01_ECDS]#(lf)where#(lf)([ECDS_Diagnosis_ICD10_Equivalent] like 'i%' or [ECDS_Diagnosis_ICD10_Equivalent] like 'R07%' or [ECDS_Diagnosis_Group1] like '%cardio%' )#(lf)and (code_of_commissioner like '11M%' or code_of_commissioner like 'QR1%')#(lf)and year_month >= '202304'#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Data", "Data Source"}})
+				in
+				    #"Renamed Columns"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

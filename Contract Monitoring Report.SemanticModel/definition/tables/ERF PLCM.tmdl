@@ -1,0 +1,66 @@
+table 'ERF PLCM'
+	isHidden
+	lineageTag: df1c6d46-a523-4791-a81e-ab3170b5fc36
+
+	column 'Provider Code'
+		dataType: string
+		isHidden
+		lineageTag: 91bca84b-b9f1-4bd8-9094-86b8e6b01bd2
+		summarizeBy: none
+		sourceColumn: Provider Code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column POD
+		dataType: string
+		isHidden
+		lineageTag: b0c6b7aa-dcb0-444c-8e42-a4c049b6df4d
+		summarizeBy: none
+		sourceColumn: POD
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		isHidden
+		lineageTag: 68ee449b-66c4-484c-8f22-6527ea90858e
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: double
+		isHidden
+		lineageTag: ef1abbd4-8063-4c22-97f6-5efbcc9608e9
+		summarizeBy: sum
+		sourceColumn: Value
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'ERF PLCM' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT #(lf)SUM([Total Actual Cost]) AS [Value]#(lf)      ,isnull(organisation_code,ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER) AS [Provider Code]#(lf)#(tab)  ,[IAP POD Group] as [POD]#(lf)#(tab)  ,yearmonth#(lf)FROM [BIReports].dbo.[OOC_IPR_Summary_Table_2425] [a]#(lf)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)[a].[Derived_FinancialYear] = [dat].[FinancialYear] and#(lf)#(tab)#(tab)#(tab)#(tab)[a].financial_month = [dat].FinancialMonth#(lf)WHERE#(lf) ([Mapped POD Group] in (#(lf)'Elective Daycase Spells',#(lf)'Elective Inpatient Spells',#(lf)'Excluded HRGs - Daycase',#(lf)'Excluded HRGs - Elective',#(lf)'Excluded Outpatient Procedures',#(lf)'Outpatient First Attendances',#(lf)'Outpatient Procedures') or#(lf)TARIFF_CODE like 'RD%' or#(lf)TARIFF_CODE like 'RN%')#(lf)and (ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER like '11M%' OR ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER like 'QR1%')#(lf)group by#(lf)isnull(organisation_code,ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER)#(lf)#(tab)  ,[IAP POD Group]#(lf)#(tab)  ,yearmonth#(lf)#(lf)UNION ALL#(lf)#(lf)SELECT #(lf)SUM([Total Actual Cost]) AS [Value]#(lf)      ,isnull(organisation_code,ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER)#(lf)#(tab)  ,[IAP POD Group]#(lf)#(tab)  ,YearMonth#(lf)FROM [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526] [a]#(lf)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)[a].[Derived_FinancialYear] = [dat].[FinancialYear] and#(lf)#(tab)#(tab)#(tab)#(tab)[a].financial_month = [dat].FinancialMonth#(lf)WHERE#(lf) ([Mapped POD Group] in (#(lf)'Elective Daycase Spells',#(lf)'Elective Inpatient Spells',#(lf)'Excluded HRGs - Daycase',#(lf)'Excluded HRGs - Elective',#(lf)'Excluded Outpatient Procedures',#(lf)'Outpatient First Attendances',#(lf)'Outpatient Procedures') or#(lf)TARIFF_CODE like 'RD%' or#(lf)TARIFF_CODE like 'RN%')#(lf)and (ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER like '11M%' OR ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER like 'QR1%')#(lf)group by#(lf)isnull(organisation_code,ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER)#(lf)#(tab)  ,[IAP POD Group]#(lf)#(tab)  ,yearmonth"]),
+				    #"Reordered Columns" = Table.ReorderColumns(Source,{"Provider Code", "POD", "yearmonth", "Value"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Reordered Columns",{{"yearmonth", "YearMonth"}})
+				in
+				    #"Renamed Columns"
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

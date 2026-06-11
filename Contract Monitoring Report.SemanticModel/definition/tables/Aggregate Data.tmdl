@@ -1,0 +1,135 @@
+table 'Aggregate Data'
+	lineageTag: 8a3f1e74-76a3-4edb-b5a4-77166f76aba9
+
+	measure Over_Under_Spend_YTD = calculate(sum(IAPs[YTD_IAP_Col]))-CALCULATE(SUM('Aggregate Data'[Total Actual Cost]))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 31712839-9869-4232-b2d3-43c33800a5d0
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Over_Under_Spend_FOT = CALCULATE(SUM(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))-CALCULATE(SUM('Aggregate Data'[FC Cost based on YTD]))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 7d35bc7e-d24d-4085-b061-e82a21d66838
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Total Actual Activity'
+		dataType: double
+		lineageTag: 315499f4-eddf-421f-a131-0202ef594c48
+		summarizeBy: sum
+		sourceColumn: Total Actual Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Total Actual Cost'
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: a8f0ab5c-d194-4080-9b1a-1a2f2433c572
+		summarizeBy: sum
+		sourceColumn: Total Actual Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'FC Activity based on YTD'
+		dataType: double
+		formatString: #,0.00
+		lineageTag: dbf9c43a-6604-4f2b-8c8c-9949b013058b
+		summarizeBy: sum
+		sourceColumn: FC Activity based on YTD
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FC Cost based on YTD'
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: afb9ccb7-ccaa-48e8-80a4-a08b92cb8ce9
+		summarizeBy: sum
+		sourceColumn: FC Cost based on YTD
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column organisation_name
+		dataType: string
+		lineageTag: b60e527c-01c7-46cc-8cd9-915a0037bc88
+		summarizeBy: none
+		sourceColumn: organisation_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisation_Code
+		dataType: string
+		lineageTag: 2e41e22f-52c5-4b4f-8bc4-97d689d632f3
+		summarizeBy: none
+		sourceColumn: Organisation_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'IAP POD Group'
+		dataType: string
+		lineageTag: f704d282-373e-49e2-ac0f-a341314d2035
+		summarizeBy: none
+		sourceColumn: IAP POD Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PbR Flag'
+		dataType: string
+		lineageTag: df3a99f5-378c-47ab-8f82-fc5b138643b3
+		summarizeBy: none
+		sourceColumn: PbR Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentFunctionDescription
+		dataType: string
+		lineageTag: ce60f0ae-7644-44a2-aa83-dbcff845bca6
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column TARIFF_CODE
+		dataType: string
+		lineageTag: 8627f70b-6e2c-4423-9c1b-a8c826c0f84b
+		summarizeBy: none
+		sourceColumn: TARIFF_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_fin_month
+		dataType: int64
+		formatString: 0
+		lineageTag: b3831d15-c9e1-4501-94e7-a3ac5e874c07
+		summarizeBy: sum
+		sourceColumn: Latest_fin_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'IAP Join'
+		dataType: string
+		lineageTag: 3f4b42d3-1241-46cb-bc09-8a8fa453aea7
+		summarizeBy: none
+		sourceColumn: IAP Join
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Aggregate Data' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT #(lf)SUM([Total Actual Activity]) AS [Total Actual Activity]#(lf),SUM([Total Actual Cost]) AS [Total Actual Cost]#(lf),SUM([FC Activity based on YTD]) AS [FC Activity based on YTD]#(lf),SUM([FC Cost based on YTD]) AS [FC Cost based on YTD]#(lf)      ,[organisation_name]#(lf)      ,[Organisation_Code] = case when [Organisation_Code] = 'NXV00' then 'NXV' else [Organisation_Code] end#(lf)#(tab)  ,[IAP POD Group]#(lf)      ,[A].[PbR Flag]#(lf)      ,[TreatmentFunctionDescription]#(lf)      ,[TARIFF_CODE]#(lf)#(tab)  ,Latest_fin_month#(lf)#(tab)  ,CONCAT(Organisation_Code,[PbR Flag],[IAP POD Group],TreatmentFunctionDescription COLLATE Latin1_General_CI_AS,TARIFF_CODE) AS [IAP Join]#(lf)FROM [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Summary_Table_2526] [a]#(lf) WHERE [Error Group] IS  NULL AND (#(lf) [ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER] like '11M%' or [ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER] like 'QR1%'#(lf) )#(lf) GROUP BY       [organisation_name]#(lf)      ,case when [Organisation_Code] = 'NXV00' then 'NXV' else [Organisation_Code] end#(lf)#(tab)  ,[IAP POD Group]#(lf)      ,[A].[PbR Flag]#(lf)      ,[TreatmentFunctionDescription]#(lf)      ,[TARIFF_CODE]#(lf)#(tab)  ,CONCAT(Organisation_Code,[PbR Flag],[IAP POD Group],TreatmentFunctionDescription COLLATE Latin1_General_CI_AS,TARIFF_CODE)#(lf)#(tab)  ,Latest_fin_month"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each true),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Filtered Rows",{{"Total Actual Activity", type number}, {"Total Actual Cost", type number}, {"FC Activity based on YTD", type number}, {"FC Cost based on YTD", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

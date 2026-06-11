@@ -1,0 +1,109 @@
+table DAT_ACG
+	lineageTag: a403c1eb-ab22-498c-b5e0-377bc455828c
+
+	measure 'Median Chronic Condition Count' =
+			
+			
+			MEDIAN(
+			    'DAT_ACG'[Chronic_Condition_Count]
+			)
+		formatString: 0
+		lineageTag: 8e39512a-70cf-4589-a858-c5b7b35cbfd4
+
+	measure 'Median Prescribed Drug Count' =
+			
+			
+			MEDIAN(
+			    'DAT_ACG'[Active_Ingredient_Count]
+			)
+		formatString: 0
+		lineageTag: e9c2f584-0278-4532-ae24-ad450f988ac4
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: eda5e103-e36e-4162-827b-510c4ad1c40b
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Chronic_Condition_Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 38386484-83c1-463f-a2a2-ce0d986dcdd5
+		summarizeBy: sum
+		sourceColumn: Chronic_Condition_Count
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Active_Ingredient_Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 7afe11e9-c0eb-4dcb-a6cd-832145d8eba4
+		summarizeBy: sum
+		sourceColumn: Active_Ingredient_Count
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Emergency_Admission_Risk
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8d320447-9c33-44c8-ac56-ed944a70b4c2
+		summarizeBy: sum
+		sourceColumn: Emergency_Admission_Risk
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column High_User_Risk
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 6da85b6a-d5ab-4e39-a1f6-f00aced79e4e
+		summarizeBy: sum
+		sourceColumn: High_User_Risk
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column High_Pharmacy_Risk
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 58074952-c39d-49d0-9dec-1aa70e3bee02
+		summarizeBy: sum
+		sourceColumn: High_Pharmacy_Risk
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Long_Stay_Risk
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 926bf752-0bb2-42ef-b2ba-019e8582c01e
+		summarizeBy: sum
+		sourceColumn: Long_Stay_Risk
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DAT_ACG = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="SELECT [PseudoNHSNumber]#(lf)      ,[Chronic_Condition_Count]#(lf)      ,[Active_Ingredient_Count]#(lf)      ,[Emergency_Admission_Risk] = [Probability_IP_Hosp]#(lf)      ,[High_User_Risk] = [Probability_Persistent_High_User]#(lf)      ,[High_Pharmacy_Risk] = [Probability_Unexpected_Pharmacy_Cost]#(lf)      ,[Long_Stay_Risk] = [Probability_Extended_Hosp]#(lf)#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults]#(lf)#(lf)WHERE [IsLatest] = 1"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

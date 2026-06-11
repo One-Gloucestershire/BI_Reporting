@@ -1,0 +1,107 @@
+table LTCs
+	lineageTag: c003531e-eba4-4939-9068-34f64486d423
+
+	measure 'Total Optom patients2' = CALCULATE(COUNTROWS('Population Overview'), 'Population Overview'[Cohortflag] = 1)
+		formatString: 0
+		lineageTag: 99cd3750-a97d-415b-9b13-e8e1d3b7f178
+
+	measure 'Total ICB Rate per 1,000' =
+			
+			
+			VAR LTCS_ = SUM('LTCs'[Value])
+			
+			VAR POP_ = CALCULATE(
+			    SUM('Population Overview'[Counter]),
+			    ALL('LTCs')
+			)
+			
+			RETURN
+			
+			(LTCS_ / POP_) * 1000
+		lineageTag: 17625929-9bcf-46ef-97d7-536b8409b826
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure POP = ```
+			
+			
+			CALCULATE(
+			    SUM('Population Overview'[Counter]),
+			    ALL('LTCs')
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 24f41e93-7027-4d93-96d2-895f101dc6e8
+
+	measure 'Total Optom Rate per 1,000' =
+			
+			
+			VAR LTC_ = CALCULATE(
+			    SUM('LTCs'[Value]),
+			    'Population Overview'[Cohortflag] = 1
+			)
+			
+			VAR POP_ = CALCULATE(
+			    COUNTROWS('Population Overview'),
+			    'Population Overview'[Cohortflag] = 1
+			)
+			
+			RETURN
+			
+			(LTC_ / POP_) * 1000
+		lineageTag: 69192d0c-2d67-4467-8724-8cfcad157907
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: 5fcc7965-12e7-4f36-b601-5dd9f2ac5594
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: 99eb24f9-c31f-49a5-b997-f8c91e073c59
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 3eaaa645-3f8f-43d8-b9b4-0240be954865
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCName =
+			
+			IF(
+			    RIGHT('LTCs'[Attribute], 7) = "Derived",
+			    LEFT('LTCs'[Attribute], LEN('LTCs'[Attribute]) - 7),
+			    'LTCs'[Attribute]
+			)
+		lineageTag: 0ae201ba-083b-4f3f-a728-f062d3fd2c3c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition LTCs = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIreports", [Query="SELECT DISTINCT PseudoNHSNumber as [Derived_Pseudo_NHS]#(lf)               ,Obesity as [ObesityDerived]#(lf)               ,Smoker as [SmokerDerived]#(lf)               ,Asthma as [AsthmaDerived]#(lf)               ,COPD as [COPDDerived]#(lf)               ,Dementia as[Dementia]#(lf)               ,Depression as [DepressionDerived]#(lf)               ,Diabetes as [DiabetesDerived]#(lf)               ,PalliativeCare as [PalliativeCareDerived]#(lf)               ,ChronicKidneyDisease as [ChronicKidneyDiseaseDerived]#(lf)               ,Epilepsy as [EpilepsyDerived]#(lf)               ,HeartFailure as [HeartFailureDerived]#(lf)               ,Stroke as [StrokeDerived]#(lf)               ,AtrialFibrillation as [AtrialFibrillationDerived]#(lf)               ,Cancer as [CancerDerived]#(lf)               ,CoronaryHeartDisease as [CoronaryHeartDiseaseDerived]#(lf)               ,Hypertension as [HypertensionDerived]#(lf)               --,[HypothyroidismDerived] not in new table#(lf)               ,LearningDisability as [LearningDisabilityDerived]#(lf)               ,Mentalillness as [MentalIllnessDerived]#(lf) #(lf)  --FROM [PowerBI_Reporting].[PHM].[tbl01_MPI_Current]#(lf)  FROM [ICB_Products].[Patient].[vw_Summary]#(lf)#(lf) #(lf)  WHERE [ICBofRegistration] = '11M'"]),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(Source, {"Derived_Pseudo_NHS"}, "Attribute", "Value"),
+				    #"Filtered Rows" = Table.SelectRows(#"Unpivoted Columns", each ([Value] = 1))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

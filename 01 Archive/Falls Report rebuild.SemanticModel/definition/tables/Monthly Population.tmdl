@@ -1,0 +1,151 @@
+table 'Monthly Population'
+	lineageTag: d32a260d-3906-4d5a-b1e9-5c391694f641
+
+	measure April_Pop =
+			
+			
+			CALCULATE(SUM('Monthly Population'[population]),'Date Table'[month_name] = "Apr")
+		formatString: 0
+		lineageTag: a3f24ebe-da57-415a-a43d-e58d3b1e5034
+
+	measure 'Monthly Population' = CALCULATE(SUM('Monthly Population'[population]))
+		formatString: 0
+		lineageTag: 9b5bae4c-3f2f-466f-ad8b-da711cee3d14
+
+	measure 'Average Population' =
+			
+			AVERAGEX(
+			    VALUES('Date Table'[year_month]),
+			    CALCULATE(SUM('Monthly Population'[population]))
+			)
+		lineageTag: 835d4f16-8f51-4d45-a9ef-600c09f6a643
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column population
+		dataType: int64
+		formatString: 0
+		lineageTag: 87c35874-9336-4d9d-8542-bfffd84c1715
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Census_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: b8f42e24-678e-43b1-8d9c-8db796246dab
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Census_Month_Name
+		dataType: string
+		lineageTag: d8891d9f-aa4c-4d47-a453-6c1265987409
+		summarizeBy: none
+		sourceColumn: Census_Month_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareProvider
+		dataType: string
+		lineageTag: f75db8c4-7be6-4e4b-8381-009aa90155ea
+		summarizeBy: none
+		sourceColumn: PrimaryCareProvider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sex
+		dataType: string
+		lineageTag: 0c2d1bbc-154e-418d-8040-b995fd1240de
+		summarizeBy: none
+		sourceColumn: Sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDcountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 40a4696a-c056-43fe-87b9-8ac1a375a445
+		summarizeBy: none
+		sourceColumn: IMDcountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5yr_age_band
+		dataType: string
+		lineageTag: b66d4878-c0fd-457c-abf0-74944bfdf26d
+		summarizeBy: none
+		sourceColumn: 5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20_Status
+		dataType: string
+		lineageTag: 31390741-c757-4dc3-9f55-555f2f8d1a67
+		summarizeBy: none
+		sourceColumn: Core20_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: 8fac8220-65a2-4027-b120-7e2b2501310a
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_Status
+		dataType: string
+		lineageTag: e15e88e9-5a48-4c7b-8919-d4eb8016db97
+		summarizeBy: none
+		sourceColumn: LD_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_Status
+		dataType: string
+		lineageTag: 4abfc0d6-06cd-4faf-8c14-f4eb3a691a13
+		summarizeBy: none
+		sourceColumn: MH_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_flag = IF('Monthly Population'[LD_Status] = "Non-Learning Disability Patients",0,1)
+		formatString: 0
+		lineageTag: 6e9957f1-a9f1-4587-b51f-f513fcd7f54f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_flag = IF('Monthly Population'[MH_Status] = "Non-Mental Health Patients",0,1)
+		formatString: 0
+		lineageTag: 5f1e7210-379c-42a0-9c08-ec7de5531a68
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20_flag = ```
+			IF('Monthly Population'[Core20_Status] = "Not Core20",0,1) 
+			```
+		formatString: 0
+		lineageTag: 01a5c85e-a992-4ca9-a423-b0b02e4eff98
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Monthly Population' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Cancer].[tbl06_Population]#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Census_Date", type datetime}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

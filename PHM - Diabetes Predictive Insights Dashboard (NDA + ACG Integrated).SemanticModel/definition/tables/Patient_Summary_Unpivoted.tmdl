@@ -1,0 +1,103 @@
+table Patient_Summary_Unpivoted
+	lineageTag: dbc41afc-b35b-4011-99e0-f4b8c2c325b6
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 6ffe89d0-a522-410b-9ef0-54c10e2dc843
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column PLS_PracticeCode
+		dataType: string
+		lineageTag: b829232a-5e1f-4069-ab4a-322ca7a9acc1
+		summarizeBy: none
+		sourceColumn: PLS_PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PLS_PracticeName
+		dataType: string
+		lineageTag: 1af78139-4c3d-4bb1-bfdc-4a7276031dcb
+		summarizeBy: none
+		sourceColumn: PLS_PracticeName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 0cb7f55b-9fb5-4360-8f46-3d0bc55dc856
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 345bded8-903f-4f2d-8ffc-b01b5abea19d
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTC_Name
+		dataType: string
+		lineageTag: a9771888-e570-4b07-a32e-d866cd98d511
+		summarizeBy: none
+		sourceColumn: LTC_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Has_LTC
+		dataType: int64
+		formatString: 0
+		lineageTag: 40df7654-5bf9-4264-a57b-2ea8972f6dfb
+		summarizeBy: sum
+		sourceColumn: Has_LTC
+
+		annotation SummarizationSetBy = Automatic
+
+	column PatientCount
+		dataType: int64
+		formatString: 0
+		lineageTag: 8a6b3542-b9d0-40dc-8b65-9f38a7bcb358
+		summarizeBy: sum
+		sourceColumn: PatientCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Obesity
+		dataType: int64
+		formatString: 0
+		lineageTag: 1998bdf1-c759-490c-ad9b-f65aa4b3e853
+		summarizeBy: sum
+		sourceColumn: Obesity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Patient_Summary_Unpivoted = m
+		mode: import
+		source =
+				let
+				    Source = Patient_Summary,
+				    KeepCols = Table.SelectColumns(Source,{"PseudoNHSNumber", "PLS_PracticeCode", "PLS_PracticeName", "PrimaryCareNetwork", "Locality", "Asthma", "COPD", "Dementia", "Depression", "Diabetes", "PalliativeCare", "ChronicKidneyDisease", "Epilepsy", "HeartFailure", "Stroke", "AtrialFibrillation", "Cancer", "CoronaryHeartDisease", "Hypertension", "LearningDisability", "Obesity", "MentalIllness"}),
+				    Unpivoted = Table.Unpivot(
+				        KeepCols,
+				        {
+				            "Asthma","COPD","Dementia","Depression","Diabetes","PalliativeCare","ChronicKidneyDisease",
+				            "Epilepsy","HeartFailure","Stroke","AtrialFibrillation","Cancer","CoronaryHeartDisease",
+				            "Hypertension","LearningDisability","MentalIllness"
+				        },
+				        "LTC_Name","Has_LTC"
+				    ),
+				    Typed      = Table.TransformColumnTypes(Unpivoted, {{"Has_LTC", Int64.Type}}),
+				    FilterYes  = Table.SelectRows(Typed, each [Has_LTC] = 1),
+				    AddCount   = Table.AddColumn(FilterYes, "PatientCount", each 1, Int64.Type)
+				in
+				    AddCount
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

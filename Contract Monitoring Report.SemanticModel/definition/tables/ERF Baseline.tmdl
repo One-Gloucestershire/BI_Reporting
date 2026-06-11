@@ -1,0 +1,118 @@
+table 'ERF Baseline'
+	lineageTag: adcd88eb-8398-4651-a603-eb71c6b0ed91
+
+	measure MaxMonth =
+			
+			VAR MaxYearMonth = CALCULATE(
+			    MAX('ERF Baseline'[YearMonth]),
+			    ALL('ERF Baseline')  // Ignores filters so you always get the true latest period
+			)
+			RETURN
+			CALCULATE(
+			    MAX('Date Table (First Day of Month)'[FinancialMonth]),
+			    FILTER(
+			        ALL('Date Table (First Day of Month)'),
+			        'Date Table (First Day of Month)'[YearMonth] = MaxYearMonth
+			    )
+			)
+		formatString: 0
+		lineageTag: a068f966-6dd9-4b17-8426-1854b8c872b1
+
+	measure YTD_2019 =
+			
+			CALCULATE(
+			    SUM('ERF Baseline'[Value]),
+			    FILTER(
+			        'Date Table (First Day of Month)',
+			        'Date Table (First Day of Month)'[FinancialYear] = "2019/20"
+			            && 'Date Table (First Day of Month)'[FinancialMonth] <= [MaxMonth]
+			    )
+			)
+		lineageTag: 226c99b8-d073-4862-8a82-e01247b275c0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure YTD_2025 =
+			
+			CALCULATE(
+			    SUM('ERF Baseline'[Value]),
+			    FILTER(
+			        'Date Table (First Day of Month)',
+			        'Date Table (First Day of Month)'[FinancialYear] = "2025/26"
+			            && 'Date Table (First Day of Month)'[FinancialMonth] <= [MaxMonth]
+			    )
+			)
+		lineageTag: db6b035b-a937-48a5-9230-5269415d0c42
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure YTD_Flag = if(calculate(max('Date Table (First Day of Month)'[financialmonth]))=[MaxMonth],1,0)
+		formatString: 0
+		lineageTag: 29b15ee5-5a40-4316-8431-e7c11a499b04
+
+	measure YTD_%_Performance = [YTD_2025]/[YTD_2019]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3bbf1ab5-62eb-46d8-a417-fb4ec67d98ca
+
+	column 'Provider Code'
+		dataType: string
+		lineageTag: 98d6196b-abe2-4625-ad9a-aa1ddb021bcc
+		summarizeBy: none
+		sourceColumn: Provider Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column POD
+		dataType: string
+		lineageTag: 17bb618c-c44e-44c5-bba5-05e43c0c5513
+		summarizeBy: none
+		sourceColumn: POD
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 2db5a974-b0da-4cf7-942b-7666e51cddcc
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 8d432457-a2eb-428f-ae38-c0095bfa18e3
+		summarizeBy: sum
+		sourceColumn: Value
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition 'ERF Baseline' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Planning\2025_26 Planning\Working Files\ERF Baselines 2025_26 (Uplifted from 2024_25).xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(Sheet1_Sheet,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type number}, {"Column7", type number}, {"Column8", type number}, {"Column9", type number}, {"Column10", type number}, {"Column11", type number}, {"Column12", type number}, {"Column13", type number}, {"Column14", type number}, {"Column15", type number}, {"Column16", type number}, {"Column17", type number}, {"Column18", type any}, {"Column19", type any}, {"Column20", type any}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Sector", type text}, {"Provider Code", type text}, {"Provider Name", type text}, {"POD", type text}, {"Data Source", type text}, {"201904", type number}, {"201905", type number}, {"201906", type number}, {"201907", type number}, {"201908", type number}, {"201909", type number}, {"201910", type number}, {"201911", type number}, {"201912", type number}, {"202001", type number}, {"202002", type number}, {"202003", type number}, {"Column18", type any}, {"Column19", type any}, {"Column20", type any}}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Changed Type1", {"Sector", "Provider Code", "Provider Name", "POD", "Data Source"}, "YearMonth", "Value"),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Unpivoted Other Columns",{"YearMonth", "Value", "Data Source", "POD", "Provider Code"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Other Columns", each ([Data Source] = "2023_24 Granular Baseline (Uplifted)")),
+				    #"Removed Columns" = Table.RemoveColumns(#"Filtered Rows",{"Data Source"}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Removed Columns",{"Provider Code", "POD", "YearMonth", "Value"}),
+				    #"Appended Query" = Table.Combine({#"Reordered Columns", #"ERF PLCM"})
+				in
+				    #"Appended Query"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

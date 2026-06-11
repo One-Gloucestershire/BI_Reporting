@@ -1,0 +1,58 @@
+table 'ED Investigations'
+	lineageTag: e57ad9fa-854e-41d2-b0e1-996901ce085e
+
+	measure 'Total investigations' = SUM('ED Investigations'[counter])
+		formatString: 0
+		lineageTag: 15c61922-f867-4eb0-9181-308895a6e1b3
+
+	measure '% of Investigations' = ```
+			SUM('ED Investigations'[counter]) / CALCULATE([Total investigations], ALLSELECTED('ED Investigations'[Coding])) 
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ab955588-8794-4d5e-a9a0-0a9f2902058d
+
+	column cds_unique_identifier
+		dataType: string
+		lineageTag: 69d9e88d-746e-4a99-b6db-6de462d9caf8
+		summarizeBy: none
+		sourceColumn: cds_unique_identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 6be13394-f52e-402a-8f8b-3e0ea67e0310
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: 837b1e85-c7af-4630-a15b-49af9847996f
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Coding
+		dataType: string
+		lineageTag: 380218eb-fbde-4a38-adc7-6ce978c830fc
+		summarizeBy: none
+		sourceColumn: Coding
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ED Investigations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[Falls].[tbl09_ED_Investigations]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

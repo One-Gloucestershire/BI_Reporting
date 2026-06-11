@@ -1,0 +1,126 @@
+table 'Pre and Post HbA1c'
+	lineageTag: b7a907ae-fad8-471c-9886-144723deb3bf
+
+	column NHS_number
+		dataType: string
+		lineageTag: 1be7dd17-3cce-40c4-98ff-5ba3e33088d0
+		summarizeBy: none
+		sourceColumn: NHS_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstPrescribedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: bfbb6fbe-8dbf-4192-9d41-fbda7dd892c8
+		summarizeBy: none
+		sourceColumn: FirstPrescribedDate
+
+		variation Variation
+			isDefault
+			relationship: 070fe1fd-8a57-4def-b82f-c11f5d461206
+			defaultHierarchy: LocalDateTable_69b04bf8-6c1c-4ffd-8f2e-fd5830b4c00d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Event_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fea00a94-febb-4682-a4f4-15f18838e874
+		summarizeBy: none
+		sourceColumn: Event_Date
+
+		variation Variation
+			isDefault
+			relationship: 8dc6d9dc-5045-40b7-8016-3de01e6d2a6a
+			defaultHierarchy: LocalDateTable_43f6f7d1-b8dc-4456-98d7-4d48b88e4662.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value_1
+		dataType: int64
+		formatString: 0
+		lineageTag: 6770e7ac-a840-450c-aa7b-cc831d0bfd48
+		summarizeBy: sum
+		sourceColumn: Value_1
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: e37f90af-703a-4e96-b13f-7682982b0369
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column flag
+		dataType: string
+		lineageTag: 45d56e2a-b895-4f3c-8a19-e20d4d2ff2bd
+		summarizeBy: none
+		sourceColumn: flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column months_since_first_CGM
+		dataType: int64
+		formatString: 0
+		lineageTag: 039af50b-1dfb-475e-adc1-15ae3ef7ea4f
+		summarizeBy: sum
+		sourceColumn: months_since_first_CGM
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_number_axis
+		dataType: int64
+		formatString: 0
+		lineageTag: 15e35d71-6442-49a7-8988-174643e7b1f5
+		summarizeBy: sum
+		sourceColumn: month_number_axis
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year_Financial
+		dataType: string
+		lineageTag: 7a520d97-9ada-4518-832d-ac00f9bb514c
+		summarizeBy: none
+		sourceColumn: Year_Financial
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_Name_Short
+		dataType: string
+		lineageTag: b08a097a-0658-4080-9494-577828552dfc
+		summarizeBy: none
+		sourceColumn: Month_Name_Short
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month_date
+		dataType: string
+		lineageTag: e6af63bd-21b0-4bf5-9200-ae6d96eb5752
+		summarizeBy: none
+		sourceColumn: Month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeDescription
+		dataType: string
+		lineageTag: 321ee143-3580-435f-aabc-740892ed6bc7
+		summarizeBy: none
+		sourceColumn: PracticeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Pre and Post HbA1c-151d9af3-794e-4e18-911f-16df3a8e6649' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="set nocount on set ansi_nulls on #(lf)set dateformat dmy#(lf)#(lf)IF OBJECT_ID('tempdb..#temp1') is not null#(lf)drop table #temp1#(lf)#(lf)SELECT [A].[NHS_Number],#(lf)MIN([Processing_Period_Date]) as [FirstPrescribedDate]#(lf)into #TEMP1#(lf)  FROM [Data_Mart_Primary_Care_Meds].[Import].[Patient_Medication] as [A]   #(lf)   WHERE [Paid_BNF_Code] like '2148%'#(lf)  AND [PARTITION_KEY] >= '201904'#(lf)GROUP BY [NHS_Number]#(lf)#(lf)--DECLARE @report_month DATE, @referral_end DATE, @referral_start DATE#(lf)--SET @referral_end = '20220630' -- report_month minus 6 months#(lf)--SET @referral_start = '20171001'#(lf)#(lf)select        distinct#(lf)#(tab)#(tab)#(tab)#(tab)a.[NHS_number]#(lf)#(tab)#(tab)#(tab)#(tab), a.[FirstPrescribedDate]#(lf)#(tab)#(tab)#(tab)#(tab), b.Event_Date#(lf)#(tab)#(tab)#(tab)#(tab), b.Value_1#(lf)#(tab)#(tab)#(tab)#(tab), 1 as counter#(lf)#(tab)#(tab)#(tab)#(tab), case when Event_Date < a.FirstPrescribedDate then 'Pre' else 'Post' end as flag#(lf)#(tab)#(tab)#(tab)#(tab), datediff(month, FirstPrescribedDate, GETDATE()) as months_since_first_CGM#(lf)#(tab)#(tab)#(tab)#(tab), datediff(month, FirstPrescribedDate, b.Event_Date) as month_number_axis#(lf)                , f.[FinancialYear] Year_Financial#(lf)                , left(f.[monthname],3) [Month_Name_Short]#(lf)                , f.[yearmonth] [Month_date]#(lf)#(tab)#(tab)#(tab)#(tab), b.PracticeDescription#(lf)#(lf)from          #temp1  a#(lf)#(lf)left join     CCG_Current.primarycare.vw_Events b #(lf)#(tab)#(tab)#(tab)#(tab)on b.Pseudo_NHS_Number = a.[NHS_number]#(lf)and#(tab)#(tab)#(tab)#(tab)#(tab)snomed_code = '999791000000106'#(lf)and                  datediff(month, a.FirstPrescribedDate, b.Event_Date) between -12 AND 12 --- ++++++#(lf)#(lf)left join#(tab)  ccg_reference.reference.vw_DateLookup f on cast(b.event_date as date) = f.[date]#(lf)#(lf)left join     CCG_Reference.Population.vw_PDS_Deaths h on h.Derived_NHS_Number = a.[NHS_number]#(lf)#(lf)where         isnull([FirstPrescribedDate], '') != ''#(lf)and           ([DateOfDeath] is null or datediff(month, [FirstPrescribedDate], [DateOfDeath]) > 12) --- +++++++#(lf)and           a.[NHS_number] is not null#(lf)and           b.Event_Date is not null#(lf)and#(tab)#(tab)#(tab)  isnumeric(b.value_1)=1#(lf)and value_1 <> '0'#(lf)--and           date_assessment_attended between @referral_start and @referral_end#(lf)--and#(tab)#(tab)#(tab)  a.assessment_attended_flag = 'Yes'#(lf)--and#(tab)#(tab)#(tab)  b.AppointmentStatus <> 'DNA'"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Value_1", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

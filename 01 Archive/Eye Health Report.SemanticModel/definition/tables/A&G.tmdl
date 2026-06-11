@@ -1,0 +1,321 @@
+table A&G
+	lineageTag: 8486cdd8-8012-4925-af75-9bbab4ad90eb
+
+	measure 'KPI AG Latest' = (CALCULATE(SUM('A&G'[Counter]), 'A&G Date Table'[latest_month_flag] = 1)) +0
+		formatString: 0
+		lineageTag: 3b03ca7a-f6df-4f6e-8162-a0365374f1c2
+
+	measure 'KPI AG Previous' = CALCULATE(SUM('A&G'[Counter]), 'A&G Date Table'[previous_month_flag] = 1 ) +0
+		formatString: 0
+		lineageTag: fec005d3-fb13-44f2-933d-76f9bd393f32
+
+	measure 'KPI AG SameM LastY' = CALCULATE(SUM('A&G'[Counter]), 'A&G Date Table'[same_month_last_year_flag] = 1) +0
+		formatString: 0
+		lineageTag: ad461f23-1373-4e6b-8951-89c99943d9ea
+
+	measure 'KPI AG Savings Calc' = ```
+			
+			VAR CurrentMonthCount = CALCULATE(
+			    [KPI Monthly Count AG],
+			    DATESMTD('A&G Date Table'[date])  // Focuses on the current month
+			)
+			VAR LastYearCount = CALCULATE(
+			    [KPI Monthly Count AG],
+			    DATEADD(DATESMTD('A&G Date Table'[date]), -1, YEAR)  // Same month last year
+			)
+			VAR YoYDiff = CurrentMonthCount - LastYearCount
+			RETURN
+			COALESCE((YoYDiff * 0.77 * 0.74 * 142), 0) 
+			
+			```
+		formatString: 0
+		lineageTag: c637d84e-abbd-4c6f-a849-2c1c344f3853
+
+	measure 'KPI Monthly Count AG' = SUM('A&G'[Counter])
+		formatString: 0
+		lineageTag: 80dbe2ad-3f56-413b-8114-ed3bf97cca04
+
+	measure 'KPI AG YTD Latest' = ```
+			
+			VAR _CurrentFY = 'A&G Date Table'[AGCurrentFY]
+			RETURN 
+			CALCULATE(
+			    SUM('A&G'[Counter]),
+			    'A&G Date Table'[ytd_flag] = 1,
+			    'A&G Date Table'[Financial Year] = _CurrentFY ) +0
+			
+			```
+		formatString: 0
+		lineageTag: 903c2bd2-6765-4fef-9674-3b049c212ae5
+
+	measure 'KPI AG YTD Previous' = ```
+			
+			VAR _PreviousFY = 'A&G Date Table'[AGPreviousFY]
+			RETURN 
+			CALCULATE(
+			    SUM('A&G'[Counter]),
+			    'A&G Date Table'[ytd_flag] = 1,
+			    'A&G Date Table'[Financial Year] = _PreviousFY ) +0
+			```
+		formatString: 0
+		lineageTag: 0fe88e2b-763a-4eef-84af-8f316e122e5a
+
+	measure 'KPI AG Savings PreviousM' = ```
+			
+			VAR CurrentMonthCount = CALCULATE(
+			    [KPI Monthly Count AG],
+			    DATEADD(DATESMTD('A&G Date Table'[date]), -1, MONTH)  // Previous month
+			)
+			VAR LastYearCount = CALCULATE(
+			    [KPI Monthly Count AG],
+			    DATEADD(DATEADD(DATESMTD('A&G Date Table'[date]), -1, MONTH), -1, YEAR)
+			)
+			VAR YoYDiff = CurrentMonthCount - LastYearCount
+			RETURN
+			COALESCE((YoYDiff * 0.77 * 0.74 * 142), 0)
+			
+			```
+		lineageTag: 49b41ad9-81cb-4de4-8901-13bf32b4208a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI AG Savings YTD' =
+			
+			VAR _CurrentFY = 'A&G Date Table'[AGCurrentFY]
+			VAR _PreviousFY = 'A&G Date Table'[AGPreviousFY]
+			
+			VAR _CurrentYTD = CALCULATE([KPI Monthly Count AG], 'A&G Date Table'[ytd_flag] = 1, 'A&G Date Table'[Financial Year] = _CurrentFY)
+			VAR _PreviousYTD = CALCULATE([KPI Monthly Count AG], 'A&G Date Table'[ytd_flag] = 1, 'A&G Date Table'[Financial Year] = _PreviousFY)
+			
+			VAR _Difference = _CurrentYTD - _PreviousYTD
+			RETURN COALESCE((_Difference * 0.77 * 0.74 * 142), 0)
+		lineageTag: 6d7dea44-8cc0-444a-ab76-07784cbfd862
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI AG Savings Last YTD' =
+			
+			VAR _PreviousPreviousFY = 'A&G Date Table'[AGPreviousPreviousFY]
+			VAR _PreviousFY = 'A&G Date Table'[AGPreviousFY]
+			
+			VAR _PreviousPreviousYTD = CALCULATE([KPI Monthly Count AG], 'A&G Date Table'[ytd_flag] = 1, 'A&G Date Table'[Financial Year] = _PreviousPreviousFY)
+			VAR _PreviousYTD = CALCULATE([KPI Monthly Count AG], 'A&G Date Table'[ytd_flag] = 1, 'A&G Date Table'[Financial Year] = _PreviousFY)
+			
+			VAR _Difference = _PreviousYTD - _PreviousPreviousYTD
+			RETURN COALESCE((_Difference * 0.77 * 0.74 * 142),0)
+		lineageTag: ccbfc85f-aacb-4731-80d5-f9851d1445a0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure PreviousFY = ```
+			
+			VAR CurrentFY = MAX('E-Referrals Date Table'[financial_year])
+			VAR StartYear = LEFT(CurrentFY, 4)
+			VAR EndYear = RIGHT(CurrentFY, 2)
+			RETURN 
+			FORMAT(VALUE(StartYear) - 1, "0000") & "/" & FORMAT(VALUE(EndYear) - 1, "00")
+			```
+		lineageTag: d83d5440-4a4c-4247-b7a7-6c0fd510678b
+
+	measure 'KPI AG Diff' = [KPI AG Latest] - [KPI AG Previous]
+		formatString: 0
+		lineageTag: dfd41cad-b128-4f1b-be3d-6639c8ccf80b
+
+	measure 'KPI AG YTD Diff' = [KPI AG YTD Latest] - [KPI AG YTD Previous]
+		formatString: 0
+		lineageTag: 0a4ddc70-fcb9-4c61-9fb0-bc968fe719f1
+
+	measure 'KPI AG Savings Diff' = [KPI AG Savings Calc] - [KPI AG Savings PreviousM]
+		lineageTag: 3a1a897b-52f9-454b-9794-c6add0047cf5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI AG Savings YTD Diff' = [KPI AG Savings YTD] - [KPI AG Savings Last YTD]
+		lineageTag: 4e57e2cf-354f-4ead-a3e2-1570abe7404a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI AG SameM LastY Diff' = [KPI AG Latest] - [KPI AG SameM LastY]
+		formatString: 0
+		lineageTag: 3abe811c-0aac-4157-9824-e5f67690c707
+
+	measure 'KPI AG Latest 12m' = CALCULATE(SUM('A&G'[Counter]), 'A&G Date Table'[latest_12_months_flag] = 1) +0
+		formatString: 0
+		lineageTag: f774e1cb-9626-49f6-b8a4-f1253a6eeaa4
+
+	measure 'KPI AG Previous 12m' = CALCULATE(SUM('A&G'[Counter]), 'A&G Date Table'[previous_12_months_flag] = 1) +0
+		formatString: 0
+		lineageTag: a925bd4f-a112-41da-949c-5c016828d7b0
+
+	measure 'KPI AG 12m Diff' = [KPI AG Latest 12m] - [KPI AG Previous 12m]
+		formatString: 0
+		lineageTag: b457ce3c-6c67-4d2a-835a-b9ee57cbc0c1
+
+	measure 'AG Total' = COALESCE((SUM('A&G'[Counter])), 0)
+		formatString: 0
+		lineageTag: f97fdcdb-26fc-4d62-9978-a6689fe8bf66
+
+	measure 'AG Total Last Year' = CALCULATE([AG Total], SAMEPERIODLASTYEAR('A&G Date Table'[day_month_year]))
+		formatString: 0
+		lineageTag: 5c01f8ec-fd70-45d2-a8c0-3b6e7c8cf1aa
+
+	measure 'KPI AG Monthly Savings' = ```
+			
+			VAR _CurrentM = [AG Total]
+			VAR _LastYear = [AG Total Last Year]
+			VAR Difference = _CurrentM - _LastYear
+			
+			RETURN Difference * 0.77 * 0.74 * 142
+			
+			```
+		lineageTag: 5f0c126c-d2c3-4477-b918-d89cf82e6176
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Derived_actionYearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 7eae0489-81cc-4c7f-989f-ec4006733bd4
+		summarizeBy: sum
+		sourceColumn: Derived_actionYearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_PriorityDescription
+		dataType: string
+		lineageTag: 5e6a7ced-5efa-4d80-b9ef-a17b9bac9085
+		summarizeBy: none
+		sourceColumn: Derived_PriorityDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ActionDescription
+		dataType: string
+		lineageTag: a88117ee-9b95-455a-8311-d3b17f3899cd
+		summarizeBy: none
+		sourceColumn: Derived_ActionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column actioncode
+		dataType: string
+		lineageTag: c4d1e2f8-6129-4b0d-8d31-fa92d6c5bdb6
+		summarizeBy: none
+		sourceColumn: actioncode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_TreatmentFunctionDescription
+		dataType: string
+		lineageTag: 495de45b-2d27-48fc-b444-a8f9a1624c2a
+		summarizeBy: none
+		sourceColumn: Derived_TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ProviderOrganisationDescription
+		dataType: string
+		lineageTag: 2f29b0d1-f225-4538-8e87-b1fd33120e66
+		summarizeBy: none
+		sourceColumn: Derived_ProviderOrganisationDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ReferringOrganisationDescription
+		dataType: string
+		lineageTag: 8923e12d-7996-436f-b0cd-ea24b0a8cd50
+		summarizeBy: none
+		sourceColumn: Derived_ReferringOrganisationDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column derived_locationorganisationdescription
+		dataType: string
+		lineageTag: 55904fc7-58a5-4b4c-8b8c-9d6a27f4b7dc
+		summarizeBy: none
+		sourceColumn: derived_locationorganisationdescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ClinicTypeDescription
+		dataType: string
+		lineageTag: be97010a-d163-4a00-8328-928845363f55
+		summarizeBy: none
+		sourceColumn: Derived_ClinicTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceName
+		dataType: string
+		lineageTag: 254b0ad2-2493-472d-b850-714adb7bb52d
+		summarizeBy: none
+		sourceColumn: ServiceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Specialty
+		dataType: string
+		lineageTag: 2fd91913-ea64-4133-bf0d-7cf909c7b12e
+		summarizeBy: none
+		sourceColumn: Specialty
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 445d58b7-be3b-4102-ae27-ba7a77239ab2
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column SavingsZero = 0
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 2b47897f-6c15-46eb-a7fa-6f7bcdd57265
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 8d5a43fd-40d3-40f6-b1b4-5fad688a7e2e
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActionMonthDate = ```
+			
+			DATE(
+			    LEFT('A&G'[Derived_actionYearMonth], 4),
+			    RIGHT('A&G'[Derived_actionYearMonth], 2), 
+			    1 )
+			```
+		formatString: Long Date
+		lineageTag: 16a02988-a21c-44bc-9582-994bde0c7e18
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition A&G = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[EyeHealth].[tbl01_Advice_Guidance]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Derived_actionYearMonth", Int64.Type}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type","Paediatrics","Paediatric Service",Replacer.ReplaceText,{"Derived_TreatmentFunctionDescription"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","Ophthalmology","Ophthalmology Service",Replacer.ReplaceValue,{"Derived_TreatmentFunctionDescription"})
+				in
+				    #"Replaced Value1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

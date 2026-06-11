@@ -1,0 +1,90 @@
+table 'DQ Errors'
+	lineageTag: 1530a2e2-f1b8-4961-ba3a-98642e04037c
+
+	column 'Submitted Cost'
+		dataType: double
+		formatString: "£"#,0.0;-"£"#,0.0;"£"#,0.0
+		lineageTag: a67615e0-dfaa-4293-82c8-8e62fecc66cd
+		summarizeBy: sum
+		sourceColumn: Submitted Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Provider
+		dataType: string
+		lineageTag: cd4de97e-b717-451c-88c9-25ed877b64cb
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		lineageTag: 280d4738-c375-4b21-917e-ace7ddd344b4
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Site Code'
+		dataType: string
+		lineageTag: f2718f15-dd87-4dbc-830b-eb3c08f93b28
+		summarizeBy: none
+		sourceColumn: Site Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column POD
+		dataType: string
+		lineageTag: ce73503e-0719-464b-a810-3bfb6bb6d180
+		summarizeBy: none
+		sourceColumn: POD
+
+		annotation SummarizationSetBy = Automatic
+
+	column TFC
+		dataType: string
+		lineageTag: 2e78ca78-d87c-456b-a418-1d07ff32ddc3
+		summarizeBy: none
+		sourceColumn: TFC
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRG
+		dataType: string
+		lineageTag: c8675c82-aee3-46c3-a5ec-2442069e15ed
+		summarizeBy: none
+		sourceColumn: HRG
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YearMonth Activity'
+		dataType: string
+		lineageTag: 8163826b-ee35-4a51-a43f-645586327e86
+		summarizeBy: none
+		sourceColumn: YearMonth Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'IAP POD'
+		dataType: string
+		lineageTag: 02fd484c-a0fd-4691-8c61-106147c397bb
+		summarizeBy: none
+		sourceColumn: IAP POD
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'DQ Errors' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT #(lf)      [POD]#(lf)      ,[IAP POD]#(lf)      ,[TFC]#(lf)      ,[HRG]#(lf)      ,[YearMonth Activity]#(lf)      ,[Provider]#(lf)      ,[Provider Name]#(lf)      ,[Site Code]#(lf)      ,sum([Submitted Cost]) as [Submitted Cost]#(lf)  FROM [PowerBI_Reporting].[ContractMonitoring].[tbl01_ContractingDQLog]#(lf)  WHERE#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) (MISSING_NHS_NUMBER + MISSING_UNIQUE_ID + MISSING_START_DATE_OF_ACTIVITY --MISSING_MANDATORY_DATA#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)+ NON_GLOS_COMMISSIONER_SUBMITTED + NON_GLOS_GP_SUBMITTED + NON_GLOS_GP_DERIVED --COMMISSIONING_ERROR#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)+ DUPLICATE_OP_ATT_ID + DUPLICATE_H_SPELL_ID + DUPLICATE_ACTIVITY --DUPLICATED_INFORMATION#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)+ OP_DURING_IP + NON_CONTRACTED_SPECIALTY + INCORRECT_FIRST_ATTENDANCE + DIAGNOSTICS_CHARGE_WHILE_INPATIENT + UNEXPECTED_LoS + UNCODED_COST + MISMATCH_HRG--TARIFF_ERRORS#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)) > 0#(lf)  GROUP BY #(lf)   [POD]#(lf)      ,[IAP POD]#(lf)      ,[TFC]#(lf)      ,[HRG]#(lf)      ,[YearMonth Activity]#(lf)      ,[Provider]#(lf)      ,[Provider Name]#(lf)      ,[Site Code]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

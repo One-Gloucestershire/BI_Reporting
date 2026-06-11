@@ -1,0 +1,361 @@
+table 'Activity Type Table'
+	lineageTag: 729a7dd2-f587-41bb-bf80-862b49afa8df
+
+	measure 'Y-axis data' = ```
+			
+			
+			VAR activity_type = SELECTEDVALUE('Activity Type Table'[Activity Type])
+			
+			VAR activity_selection = SELECTEDVALUE('Activity Selection Table'[Activity Selection])
+			
+			VAR time_frame = 
+			    SELECTCOLUMNS (
+			        SUMMARIZE ( 'X-axis Parameter Selection', 'X-axis Parameter Selection'[X-axis Parameter Selection], 'X-axis Parameter Selection'[X-axis Parameter Selection Fields]),
+			        'X-axis Parameter Selection'[X-axis Parameter Selection])
+			
+			
+			RETURN IFERROR(if(activity_type = "Actual Activity" && activity_selection = "ED Attendance"
+			        ,[Number of ED Attendances],
+			
+			        if(activity_type = "Actual Activity" && activity_selection = "Hospital Admission"
+			        ,[Number of Admission Falls],
+			
+			        if(activity_type = "Actual Activity" && activity_selection = "SWAST Call"
+			        ,[Number of SWAST Falls],
+			
+			        if(activity_type = "Age Standardised Rate per 1000"
+			        ,[Age standardisation rate per 1000], 
+			
+			        if(activity_type = "Crude Rate per 1000"
+			        ,[Crude rate per 1000]
+			       
+			        ,BLANK()))))),BLANK())
+			```
+		lineageTag: 62f67e14-8115-463a-96f3-750f7ec34a45
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Age standardisation rate per 1000' =
+			
+			
+			VAR activity_selection =
+			    SELECTEDVALUE('Activity Selection Table'[Activity Selection])
+			
+			VAR SummaryTable =
+			    ADDCOLUMNS(
+			        VALUES('Age Band Ref'[5YR_Age_Band]),
+			
+			        "Total_Local_Observed_Events",
+			            CALCULATE(
+			                SWITCH(
+			                    activity_selection,
+			                    "ED Attendance", [Number of ED Attendances],
+			                    "Hospital Admission", [Number of Admission Falls],
+			                    "SWAST Call", [Number of SWAST Falls]
+			                )
+			            ),
+			
+			        "Total_Local_Population",
+			            CALCULATE([Average Population]),
+			
+			        "Reference_Events",
+			            CALCULATE(
+			                SWITCH(
+			                    activity_selection,
+			                    "ED Attendance", [Number of ED Attendances],
+			                    "Hospital Admission", [Number of Admission Falls],
+			                    "SWAST Call", [Number of SWAST Falls]
+			                ),
+			                REMOVEFILTERS('GP Reference'),
+			                REMOVEFILTERS('Ethnicity Ref'),
+			                REMOVEFILTERS('Core20 Ref'),
+			                REMOVEFILTERS('LD Ref'),
+			                REMOVEFILTERS('Mental Health Ref'),
+			                REMOVEFILTERS('IMD Ref')
+			            ),
+			
+			        "Reference_Population",
+			            CALCULATE(
+			                [Average Population],
+			                REMOVEFILTERS('GP Reference'),
+			                REMOVEFILTERS('Ethnicity Ref'),
+			                REMOVEFILTERS('Core20 Ref'),
+			                REMOVEFILTERS('LD Ref'),
+			                REMOVEFILTERS('Mental Health Ref'),
+			                REMOVEFILTERS('IMD Ref')
+			            )
+			    )
+			
+			VAR SummaryWithRates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rate",
+			            DIVIDE([Reference_Events], [Reference_Population])
+			    )
+			
+			VAR SummaryWithExpected =
+			    ADDCOLUMNS(
+			        SummaryWithRates,
+			        "Local_Expected_Events",
+			            [Reference_Rate] * [Total_Local_Population]
+			    )
+			
+			VAR total_observed =
+			    SUMX(SummaryWithExpected, [Total_Local_Observed_Events])
+			
+			VAR total_expected =
+			    SUMX(SummaryWithExpected, [Local_Expected_Events])
+			
+			VAR total_reference_events =
+			    SUMX(SummaryWithExpected, [Reference_Events])
+			
+			VAR total_reference_population =
+			    SUMX(SummaryWithExpected, [Reference_Population])
+			
+			VAR reference_crude_rate =
+			    DIVIDE(total_reference_events, total_reference_population) * 1000
+			
+			VAR final =
+			DIVIDE(total_observed, total_expected) * reference_crude_rate
+			
+			RETURN
+			final
+		formatString: 0
+		lineageTag: a5cd30f2-744b-48d0-ab6e-7da8c4e3cc71
+
+	measure 'Yearly age standardisation rate' = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR activity_selection = SELECTEDVALUE('Activity Selection Table'[Activity Selection])
+			
+			VAR observed_events_for_activity_selection =    IF(activity_selection = "ED Attendance", [Number of ED Attendances],
+			                                                IF(activity_selection = "Hospital Admission", [Number of Admission Falls],
+			                                                IF(activity_selection = "SWAST Call", [Number of SWAST Falls],BLANK())))
+			                                                    
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        'Age Band Ref',
+			        'Age Band Ref'[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events", observed_events_for_activity_selection, -- set you local observed measure 
+			        "Total_Local_Population", [April_Pop], -- set your local population figures
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			            CALCULATE(
+			                observed_events_for_activity_selection,'Age Band Ref'[5YR_Age_Band] <> BLANK(), 
+			                REMOVEFILTERS('GP Reference'),REMOVEFILTERS('Ethnicity Ref'),REMOVEFILTERS('Core20 Ref'),REMOVEFILTERS('LD Ref'),REMOVEFILTERS('Mental Health Ref'),REMOVEFILTERS('IMD Ref') -- remove filters from your GP practice reference table 
+			            ),
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			                [April_Pop],
+			                REMOVEFILTERS('GP Reference'),REMOVEFILTERS('Ethnicity Ref'),REMOVEFILTERS('Core20 Ref'),REMOVEFILTERS('LD Ref'),REMOVEFILTERS('Mental Health Ref'),REMOVEFILTERS('IMD Ref')-- remove filters from your GP practice reference table 
+			            )
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		lineageTag: 035ffef2-74d6-4f0f-81e0-632d3ff82a64
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly age standardisation rate' = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR activity_selection = SELECTEDVALUE('Activity Selection Table'[Activity Selection])
+			
+			VAR observed_events_for_activity_selection =    IF(activity_selection = "ED Attendance", [Number of ED Attendances],
+			                                                IF(activity_selection = "Hospital Admission", [Number of Admission Falls],
+			                                                IF(activity_selection = "SWAST Call", [Number of SWAST Falls],BLANK())))
+			                                                    
+			
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        'Age Band Ref',
+			        'Age Band Ref'[5YR_Age_Band], -- set your age bands 
+			                "Total_Local_Observed_Events",
+			            CALCULATE(
+			                SWITCH(
+			                    activity_selection,
+			                    "ED Attendance", [Number of ED Attendances],
+			                    "Hospital Admission", [Number of Admission Falls],
+			                    "SWAST Call", [Number of SWAST Falls]
+			                )
+			            ),
+			        "Total_Local_Population", [Average Population], -- set your local population figures
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			            CALCULATE(
+			                observed_events_for_activity_selection, 'Age Band Ref'[5YR_Age_Band] <> BLANK(),
+			                REMOVEFILTERS('GP Reference'),REMOVEFILTERS('Ethnicity Ref'),REMOVEFILTERS('Core20 Ref'),REMOVEFILTERS('LD Ref'),REMOVEFILTERS('Mental Health Ref'),REMOVEFILTERS('IMD Ref') -- remove filters from your GP practice reference table 
+			            ),
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			                [Average Population],
+			                REMOVEFILTERS('GP Reference'),REMOVEFILTERS('Ethnicity Ref'),REMOVEFILTERS('Core20 Ref'),REMOVEFILTERS('LD Ref'),REMOVEFILTERS('Mental Health Ref'),REMOVEFILTERS('IMD Ref')-- remove filters from your GP practice reference table 
+			            )
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		lineageTag: 6c5055fd-9c8a-41bf-ae3f-4730696654ee
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total crude rate' =
+			
+			
+			VAR activity_selection = SELECTEDVALUE('Activity Selection Table'[Activity Selection])
+			
+			VAR observed_events_for_activity_selection =    IF(activity_selection = "ED Attendance", [Number of ED Attendances],
+			                                                IF(activity_selection = "Hospital Admission", [Number of Admission Falls],
+			                                                IF(activity_selection = "SWAST Call", [Number of SWAST Falls],BLANK())))
+			
+			return observed_events_for_activity_selection / [Current Population]*1000
+		lineageTag: 02fb1b09-580f-4c46-a0c8-c7d9b9c82d73
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Crude rate per 1000' =
+			
+			
+			VAR activity_selection = SELECTEDVALUE('Activity Selection Table'[Activity Selection])
+			
+			VAR observed_events_for_activity_selection =    IF(activity_selection = "ED Attendance", [Number of ED Attendances],
+			                                                IF(activity_selection = "Hospital Admission", [Number of Admission Falls],
+			                                                IF(activity_selection = "SWAST Call", [Number of SWAST Falls],BLANK())))
+			
+			return observed_events_for_activity_selection / [Average Population]*1000
+		lineageTag: c0a8f999-181c-4c00-a418-843d34e45e36
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Activity Type'
+		dataType: string
+		lineageTag: cdadf592-5ad7-4cdc-98b2-3dc17f42b4e7
+		summarizeBy: none
+		sourceColumn: Activity Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Activity Type Table' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WckwuKU3MUQBSmWWZJZVKsTpAsfRUheCSxLyUxKKUzOLUFIWgxJJUhYLUIgVDAwMDsBLnotKUVHTxWAA=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Activity Type" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Activity Type", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

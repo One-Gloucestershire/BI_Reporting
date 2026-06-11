@@ -1,0 +1,402 @@
+table Test
+	lineageTag: c8ea6ed9-6086-4c5b-a946-204bb95925ba
+
+	measure 'Test Total Denominator' = SUM('Test'[Denominator])
+		formatString: 0
+		lineageTag: 330ba2bf-5d3d-4186-af09-2acf954af742
+
+	measure 'Test Total Numerator' = SUM('Test'[Numerator])
+		formatString: 0
+		lineageTag: d56a010d-0311-4fe5-afd7-9baf66764a17
+
+	measure 'Test Total Value' = SUM('Test'[Value])
+		lineageTag: 2e341ceb-c268-4f53-8e7d-b72797c41f94
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Test P Prime Z Value' = ```
+			
+			
+			var percentage_check = MAX('Test'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), 'Test'[Test Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT('Test'[Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Test Total Value])
+			
+			Var z_value =  (p - p_values) / 
+			SQRT((((1 - p_values) * p_values) / n_value)) 
+			
+			RETURN z_value
+			
+			```
+		lineageTag: 93159662-b124-40b0-b79d-9a86344494dc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Test P' = ```
+			
+			
+			var percentage_check = MAX('Test'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), 'Test'[Test Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT('Test'[Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Test Total Value])
+			
+			Var z_value =  (p - p_values) / 
+			SQRT((((1 - p_values) * p_values) / n_value)) 
+			
+			RETURN p
+			
+			```
+		lineageTag: e52cd58a-970d-4a75-a008-05709bda19d4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Test P value' = ```
+			
+			
+			var percentage_check = MAX('Test'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), 'Test'[Test Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT('Test'[Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Test Total Value])
+			
+			Var z_value =  (p - p_values) / 
+			SQRT((((1 - p_values) * p_values) / n_value)) 
+			
+			RETURN p_values
+			
+			```
+		formatString: 0.0000
+		lineageTag: 65f8c9fc-11d3-4648-98fd-32a9ef3852af
+
+	measure 'Test N value' = ```
+			
+			
+			var percentage_check = MAX('Test'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), 'Test'[Test Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT('Test'[Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Test Total Value])
+			
+			Var z_value =  (p - p_values) / 
+			SQRT((((1 - p_values) * p_values) / n_value)) 
+			
+			RETURN N_value
+			
+			```
+		lineageTag: 0d9f1162-cff7-4c3c-939b-7a6b27bc859e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum of Total Denominator' = CALCULATE([Test Total Denominator],ALL('Date Reference'))
+		formatString: 0
+		lineageTag: d4414841-920c-44fe-9aed-bfe25c89db2f
+
+	measure 'Sum of Total Numerator' = CALCULATE([Test Total Numerator],ALL('Date Reference'))
+		formatString: 0
+		lineageTag: 83d49227-fd87-4d90-a35e-7a65dd4d5e10
+
+	measure 'Doesnt Work Moving Range Test' = ```
+			
+			VAR FilteredTable_ =
+			    FILTER(
+			        ALL('Date Reference'),
+			        'Date Reference'[YearMonthIndex] >= 1 && 'Date Reference'[Test_SPC_flag] = 1
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[Test_SPC_flag],
+			        "Total Value", [Test P Prime Z Value]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = [YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MINX(
+			                    FILTER(
+			                        SummaryTable,
+			                        [YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                   [Test P Prime Z Value]
+			                )
+			            )
+			        RETURN IF(ISBLANK(NextValue), BLANK(),  abs([Test P Prime Z Value] - NextValue))
+			    )
+			
+			VAR Differences =
+			    SELECTCOLUMNS(SummaryTableWithDifference, "Diff", [Difference])
+			
+			    RETURN (AVERAGEX(Differences, [Diff])) 
+			
+			```
+		lineageTag: d8f853ed-ac3c-4897-8049-8c04ace053bd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Doesnt Work New Moving Range Test' =
+			
+			
+			VAR EarlierTime =
+			    CALCULATE (
+			        MAX ( 'Date Reference'[Full_Date] ),
+			        FILTER (
+			            ALLSELECTED ( 'Date Reference'[Full_Date] ),
+			            'Date Reference'[Full_Date] < SELECTEDVALUE ( 'Date Reference'[Full_Date] )
+			        )
+			    )
+			VAR EarlierMeasureValue =
+			    CALCULATE ( ( 'Test'[Test P Prime Z Value] ), 'Date Reference'[Full_Date] = EarlierTime )
+			RETURN
+			     ABS ( EarlierMeasureValue - ( 'Test'[Test P Prime Z Value]) )
+		lineageTag: 7602f237-5c09-48f2-a213-4e5ba77e75d5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Test Moving Range' = CALCULATE(AVERAGE('Test'[Test Moving Range]),ALL('Date Reference'))
+		lineageTag: 9938b9df-88d5-4db4-adc0-9ecb4049188e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Test Standard Deviation Z Value' = 'Test'[Average Test Moving Range] / 1.128
+		lineageTag: 9ac4834c-eb46-4d05-9f85-998e3015fb19
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Test P UCL' = ```
+			
+			
+			    var percentage_check = MAX('Test'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), 'Test'[Test Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT('Test'[Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Test Total Value])
+			
+			RETURN p_values + 3*[Test Standard Deviation Z Value] *
+			    ((SQRT(((p_values*(1-p_values)) /n_total))))
+			
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8babf8d1-2df6-46db-9b35-fba03d44b55b
+
+	measure 'Test P LCL' = ```
+			
+			
+			    var percentage_check = MAX('Test'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), 'Test'[Test Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT('Test'[Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Test Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Test Total Value])
+			
+			RETURN p_values - 3*[Test Standard Deviation Z Value] *
+			    ((SQRT(((p_values*(1-p_values)) /n_total))))
+			
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1c440adb-0559-410c-ba87-518329a874e5
+
+	column Reporting_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 9546cf29-d2ff-4803-938d-b6528b07e8b3
+		summarizeBy: none
+		sourceColumn: Reporting_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Denominator
+		dataType: int64
+		formatString: 0
+		lineageTag: 85c3583e-e749-4e6f-931f-bc79dbe30f12
+		summarizeBy: sum
+		sourceColumn: Denominator
+
+		annotation SummarizationSetBy = Automatic
+
+	column Numerator
+		dataType: int64
+		formatString: 0
+		lineageTag: 69c50ba1-c9e9-425f-b41f-9e7897e237d5
+		summarizeBy: sum
+		sourceColumn: Numerator
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d705a0f0-dbe0-4f1d-bb1d-55adeb408ef0
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Is a Percentage Metric' = 1
+		formatString: 0
+		lineageTag: cf2f2d3c-4d18-4cd3-989d-cbf1afeea5f6
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Prior Z Value' = ```
+			
+			     CALCULATE(
+			         ('Test'[Test P Prime Z Value]),
+			         FILTER('Test','Test'[Test_YearMonthIndex]=EARLIER('Test'[Test_YearMonthIndex])-1) --filter to prior index value to grab value
+			     )
+			```
+		lineageTag: 96659dfb-a4ec-49c0-9273-bda0bd2a93d4
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Test_YearMonthIndex =
+			
+			
+			
+			RANKX(
+			    ALL('Test'[Reporting_Date]),
+			    'Test'[Reporting_Date],
+			    ,
+			    ASC,
+			    DENSE
+			) - 1
+		formatString: 0
+		lineageTag: b454a9ea-8c6d-4b0e-b4ca-26285f7a9896
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Test Moving Range' = ```
+			
+			     if('Test'[Test_YearMonthIndex]<=1,0, --ignore the first record
+			     ABS('Test'[Test P Prime Z Value]-'Test'[Prior Z Value])
+			 )
+			
+			 //calculate the absolute difference between the current game and the prior game yards
+			
+			```
+		formatString: 0
+		lineageTag: f3ea7db0-bdaa-4064-95ec-d49decce91ad
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Test = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("TdG9akMxDAXgd7nQLTWSLNnyGCgdAm2HjpcMaQhdShJKU+jbN75Hhjtp8Id+fOZ52h3Oj6LTZvJqdi/ZTe5FNRE9TPvNPD2fPiCaE/UnjpJcIV4O3xBcaXmr5BmkFJDtdZCiIDk3zKk2uvwFabaQplQ68SQxaHc7D4JdWuZll5pIBvkCERYMEusla5I4aHv7DCJ5IUzYSUsqMen9dB1tCiahjUrymPR2/AlCsW8D8WTR5fXyG/t6BXHtJ5mkElc/nY6DtCCmIDyu7hH1bFixr1NeSEnsq4xA8DHOpcdolthWIYFYEBF0IV6FBIKjHV/YB/Uc9/8=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Reporting_Date = _t, Denominator = _t, Numerator = _t, Value = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Reporting_Date", type date}, {"Denominator", Int64.Type}, {"Numerator", Int64.Type}, {"Value", Percentage.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

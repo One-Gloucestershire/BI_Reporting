@@ -1,0 +1,32 @@
+table REF_PNG
+	lineageTag: 70f51013-e7bb-4c69-ac19-12f39e13c133
+
+	column ACGPatientNeedsGroup
+		dataType: string
+		lineageTag: ff098d39-c8dd-4580-9e46-9373ae3d388c
+		summarizeBy: none
+		sourceColumn: ACGPatientNeedsGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ACG Group Number'
+		dataType: string
+		lineageTag: 014ad1bf-71ee-4598-baee-40e23ae415d2
+		summarizeBy: none
+		sourceColumn: ACG Group Number
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_PNG = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="SELECT DISTINCT [ACGPatientNeedsGroup]#(lf)FROM [ICB_Products].[Patient].[vw_Summary]#(lf)WHERE [ACGPatientNeedsGroup] IS NOT NULL"]),
+				    #"Added Custom" = Table.AddColumn(Source, "ACG Group Number", each Text.Start([ACGPatientNeedsGroup], 2))
+				in
+				    #"Added Custom"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

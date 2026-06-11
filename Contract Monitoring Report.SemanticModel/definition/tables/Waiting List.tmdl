@@ -1,0 +1,134 @@
+table 'Waiting List'
+	lineageTag: a3e0acd4-93d4-40a7-b2a7-002d9560f41b
+
+	measure Per_0_18_Weeks = calculate(sum('Waiting List'[0-18 Wait for 1st]),'Waiting List'[Waiting_List_Type]="Non-Admitted")/calculate(sum('Waiting List'[Wait List]),'Waiting List'[Waiting_List_Type]="Non-Admitted")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2f8cab6e-b961-4a4b-ac4a-a15e66c4ad43
+
+	column 'Wait List'
+		dataType: int64
+		formatString: #,0
+		lineageTag: 87394261-a5a2-43c7-a19b-ff9ff399dcf3
+		summarizeBy: sum
+		sourceColumn: Wait List
+
+		annotation SummarizationSetBy = Automatic
+
+	column Waiting_List_Type
+		dataType: string
+		lineageTag: c883cc26-8965-4070-968d-d47388c739e9
+		summarizeBy: none
+		sourceColumn: Waiting_List_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column TFC
+		dataType: string
+		lineageTag: b8f7e102-e5e0-4b5f-be28-1461df558aac
+		summarizeBy: none
+		sourceColumn: TFC
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: d8b22367-2e15-4c40-bb96-37df410df926
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		lineageTag: ac4e0391-c4fe-49c8-8fe0-33b92c65cbb1
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Site Code'
+		dataType: string
+		lineageTag: d8b3e7c5-4ebd-41b9-aac8-70d0aeec842f
+		summarizeBy: none
+		sourceColumn: Site Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 81437cd0-c8d6-4958-aad6-2d5d23c4cb02
+		summarizeBy: none
+		sourceColumn: Week
+
+		variation Variation
+			isDefault
+			relationship: c1a2697c-444d-4051-8a15-46eb3b932e73
+			defaultHierarchy: LocalDateTable_06a170d6-c256-429f-b508-52a067d47fa5.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Latest Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 70c29d76-0c6c-42fa-a62c-67bd9d6ec135
+		summarizeBy: sum
+		sourceColumn: Latest Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code_Der
+		dataType: string
+		lineageTag: 5110eef4-f43a-4f2a-8f4d-42ef0b55c457
+		summarizeBy: none
+		sourceColumn: Provider_Code_Der
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weeks_Waiting
+		dataType: int64
+		formatString: 0
+		lineageTag: de93d5dc-f0b6-422e-b7da-8f73902a9bf6
+		summarizeBy: sum
+		sourceColumn: Weeks_Waiting
+
+		annotation SummarizationSetBy = Automatic
+
+	column '0-18 Wait for 1st'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6275a663-e713-4aee-a4c1-632ec92ecd5f
+		summarizeBy: sum
+		sourceColumn: 0-18 Wait for 1st
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'MaxMonth - PLCM'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2d8d7331-6803-4538-a9b9-7695a790dab8
+		summarizeBy: sum
+		sourceColumn: MaxMonth - PLCM
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: adba1828-235a-4f1c-9a43-9b4aed5f9ef5
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Waiting List' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select #(lf)sum([Number_of_pathways]) as [Wait List],#(lf)Waiting_List_Type,#(lf)Weeks_Waiting,#(lf)[TFC] = Activity_Treatment_Function_Code,#(lf)[Provider] = ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER,#(lf)[Provider Name] = isnull(isnull([Site].[Organisation Name],[Prov].[Organisation Name]),[Prov2].[Organisation Name]),#(lf)Provider_Code_Der = isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]),#(lf)[Site Code] = NULLIF(ORGANISATION_SITE_IDENTIFIER_OF_TREATMENT, ''),#(lf)[Week] = Week_Ending_Date_CORR,#(lf)sum(Number_of_pathways_0to18_1st_Activity) as [0-18 Wait for 1st],#(lf)[MaxMonth - PLCM] = CASE WHEN [Yearmonth] = [Max].[Max] then 1 else 0 end,#(lf)YearMonth,#(lf)[Latest Flag] = #(lf)CASE #(lf)#(tab)WHEN Week_Ending_Date_CORR = (SELECT MAX(Week_Ending_Date_CORR) from [PowerBI_Processing].[PrimaryCare].[tbl05_RTTcounts] [a]#(lf)#(tab)#(tab)#(tab)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth,[Date] from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].Week_Ending_Date_CORR = [dat].[Date] #(lf)#(tab)LEFT JOIN (select max(yearmonth) as [Max], organisation_code from [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526] [a]#(lf)#(tab)#(tab)#(tab)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].[Derived_FinancialYear] = [dat].[FinancialYear] and#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].financial_month = [dat].FinancialMonth#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)group by organisation_code) [Max]   on isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]) = [max].organisation_code#(lf)#(tab)#(tab)#(tab)WHERE yearmonth <= [Max].[Max])#(lf)#(tab)#(tab)THEN 1 else 0 #(lf)END#(lf)from [PowerBI_Processing].[PrimaryCare].[tbl05_RTTcounts] [a]#(lf)#(tab)#(tab)LEFT JOIN [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Prov] on#(lf)#(tab)#(tab)#(tab)[a].ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER = ISNULL([Prov].[Site Code],[Prov].[Organisation Code])#(lf)#(tab)#(tab)left join [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Prov2] on  #(lf)#(tab)#(tab)#(tab)[a].ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER = [Prov2].[Site Code]#(lf)#(tab)#(tab)LEFT JOIN [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Site] on #(lf)#(tab)#(tab)#(tab)[a].organisation_site_identifier_of_treatment = #(lf)#(tab)#(tab)#(tab)ISNULL([Site].[Site Code],[Site].[Organisation Code])#(lf)#(tab)#(tab)LEFT JOIN CCG_Reference.Reference.vw_DateLookup [dat] on cast([a].Week_Ending_Date_CORR as date) = [dat].[Date]#(lf)#(tab)#(tab)LEFT JOIN (select max(yearmonth) as [Max], organisation_code from [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526] [a]#(lf)#(tab)#(tab)#(tab)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].[Derived_FinancialYear] = [dat].[FinancialYear] and#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].financial_month = [dat].FinancialMonth#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)group by organisation_code) [Max]  on isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]) = [max].organisation_code#(lf)WHERE (Organisation_Identifier_Code_Of_Commissioner like '%11M%' or Organisation_Identifier_Code_Of_Commissioner like '%QR1%')#(lf)#(tab)#(tab)#(tab)#(tab)AND YearMonth <= [Max].[Max]#(lf)GROUP BY Waiting_List_Type,#(lf)Weeks_Waiting,#(lf)Activity_Treatment_Function_Code,#(lf)ORGANISATION_IDENTIFIER_CODE_OF_PROVIDER,#(lf)isnull(isnull([Site].[Organisation Name],[Prov].[Organisation Name]),[Prov2].[Organisation Name]),#(lf)NULLIF(ORGANISATION_SITE_IDENTIFIER_OF_TREATMENT, ''),#(lf)Week_Ending_Date_CORR,#(lf)CASE WHEN [Yearmonth] = [Max].[Max] then 1 else 0 end,#(lf)isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]),#(lf)YearMonth#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

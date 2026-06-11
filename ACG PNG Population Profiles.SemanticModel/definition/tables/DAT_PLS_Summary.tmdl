@@ -1,0 +1,304 @@
+table DAT_PLS_Summary
+	lineageTag: c8ddb53b-4f70-49fb-b6bd-0b5a7d0ee3be
+
+	measure 'Total Population' =
+			
+			
+			SUM('DAT_PLS_Summary'[Counter])
+		formatString: #,0
+		lineageTag: e00109a4-353b-48fa-a312-334dd1a78d64
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure '% PNG of Overall ICB Population' =
+			
+			
+			[Total Population]
+			/
+			CALCULATE(
+			    [Total Population],
+			    ALL('REF_PNG')
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5d6b8c6b-ca7d-49a0-bb8b-ad92bf2fb9e3
+
+	measure 'Value for 100% Bar' = 1
+		formatString: 0%;-0%;0%
+		lineageTag: 17ca9566-5cde-495a-9088-81b79a28955f
+
+	measure 'Median Age' =
+			
+			
+			MEDIAN('DAT_PLS_Summary'[DerivedAge])
+		formatString: 0
+		lineageTag: b00cfba4-c91a-4817-9d15-6026ceafacf4
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Selected PNG' = MAX('REF_PNG'[ACGPatientNeedsGroup])
+		lineageTag: eb54b4d4-8d03-496e-a342-1c1796192693
+
+	measure 'Latest Date' = ```
+			
+			
+			VAR _PLS_SUMMARY_DATE = 
+			
+			FORMAT(
+			    MAX('DAT_PLS_Summary'[Last_Updated]),
+			    "MMM-YYYY"
+			)
+			
+			RETURN
+			
+			CONCATENATE("Data taken: ", _PLS_SUMMARY_DATE)
+			```
+		lineageTag: 7253accc-ad43-4704-beba-85815fbfd663
+
+	measure 'Most Common Deprivation' =
+			
+			VAR IMDSummary =
+			    ADDCOLUMNS(
+			        VALUES(DAT_PLS_Summary[Gloucester_Deprivation]),
+			        "IMDCount", CALCULATE(COUNT(DAT_PLS_Summary[Gloucester_Deprivation]))
+			    )
+			
+			VAR TopRow =
+			    TOPN(1, IMDSummary, [IMDCount], DESC)
+			
+			VAR TotalCohort =
+			    COUNT(DAT_PLS_Summary[Gloucester_Deprivation])
+			
+			VAR CountOfTop =
+			    MAXX(TopRow, [IMDCount])
+			
+			VAR IMDName =
+			    MAXX(TopRow, DAT_PLS_Summary[Gloucester_Deprivation])
+			
+			VAR Pct =
+			    DIVIDE(CountOfTop, TotalCohort)
+			
+			RETURN
+			    IMDName
+			        & " ("
+			        & FORMAT(Pct, "0%")
+			        & ")"
+		lineageTag: b653c359-e1c8-4849-bb8d-86a89861ec2c
+
+	measure 'Most Common Gender' =
+			
+			VAR GenderSummary =
+			    ADDCOLUMNS(
+			        VALUES(DAT_PLS_Summary[Gender]),
+			        "GenderCount", CALCULATE(COUNT(DAT_PLS_Summary[Gender]))
+			    )
+			
+			VAR TopRow =
+			    TOPN(1, GenderSummary, [GenderCount], DESC)
+			
+			VAR TotalCohort =
+			    COUNT(DAT_PLS_Summary[Gender])
+			
+			VAR CountOfTop =
+			    MAXX(TopRow, [GenderCount])
+			
+			VAR GenderName =
+			    MAXX(TopRow, DAT_PLS_Summary[Gender])
+			
+			VAR Pct =
+			    DIVIDE(CountOfTop, TotalCohort)
+			
+			RETURN
+			    GenderName
+			        & " ("
+			        & FORMAT(Pct, "0%")
+			        & ")"
+		lineageTag: ca1bb736-eca0-4974-a2bf-aaef0d58e29c
+
+	measure 'Median High Service Use Risk' =
+			
+			
+			MEDIAN(
+			    'DAT_ACG'[High_User_Risk]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d3c4ac6a-8440-47e8-bd55-675afd31e2d6
+
+	measure 'Median Emergency Admission Risk' =
+			
+			
+			MEDIAN(
+			    'DAT_ACG'[Emergency_Admission_Risk]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fc36eb91-6dd2-41ef-9a78-beb58bbbd834
+
+	measure 'Median High Prescription Risk' =
+			
+			
+			MEDIAN(
+			    'DAT_ACG'[High_Pharmacy_Risk]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 71f28630-6818-4031-b3ec-b2f9e188166b
+
+	measure 'Median Long Stay Risk' =
+			
+			
+			MEDIAN(
+			    'DAT_ACG'[Long_Stay_Risk]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 925fb91f-a098-41c3-828a-f2a6c890f422
+
+	measure 'Total Population (% Card)' =
+			
+			VAR FilteredPop =
+			    SUM('DAT_PLS_Summary'[Counter])
+			
+			VAR AllPop =
+			    CALCULATE(
+			        SUM('DAT_PLS_Summary'[Counter]),
+			        ALL(REF_PNG[ACGPatientNeedsGroup])
+			    )
+			
+			RETURN
+			FORMAT(FilteredPop, "#,##0")
+			    & " ("
+			    & FORMAT(DIVIDE(FilteredPop, AllPop), "0%")
+			    & ")"
+		lineageTag: b5649c87-27e1-4e32-bee5-71a2e54118ab
+
+	measure 'Median Emergency Admission Risk ''1''' =
+			
+			
+			1 - [Median Emergency Admission Risk]
+		lineageTag: cf308a7e-1cfb-4bcd-88a5-aff97f04d63e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Median High Service Use Risk ''1''' =
+			
+			
+			1 - [Median High Service Use Risk]
+		lineageTag: bc84d7e6-beff-4783-8029-2b8d6af73f3f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Median High Prescription Risk ''1''' =
+			
+			
+			1 - [Median High Prescription Risk]
+		lineageTag: 5166f3be-ebc2-4245-b95f-086c1b1ec16b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Median Long Stay Risk ''1''' =
+			
+			
+			1 - [Median Long Stay Risk]
+		lineageTag: b896b720-c3bc-4c18-93e1-b0ea2df002b7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 31207fa1-73b8-40de-9926-ebb857a65272
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 8539a35f-cad1-46bf-aeb1-d51baab9b56a
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedAge
+		dataType: int64
+		formatString: 0
+		lineageTag: 6922be8f-724c-4ca4-99cb-3b00ec9986b2
+		summarizeBy: sum
+		sourceColumn: DerivedAge
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		lineageTag: 94f6be14-23f3-4c42-a3ec-928dbc8aefec
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column England_Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: ff1d3899-3bb9-4b48-a1d4-87c08537578a
+		summarizeBy: sum
+		sourceColumn: England_Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gloucester_Deprivation
+		dataType: int64
+		formatString: 0
+		lineageTag: fed6b6a1-e7af-4c04-a436-f36e7048eeec
+		summarizeBy: sum
+		sourceColumn: Gloucester_Deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFICategoryDerived
+		dataType: string
+		lineageTag: 8c35c990-ea3f-4ed2-a2da-5f56b5e5410b
+		summarizeBy: none
+		sourceColumn: eFICategoryDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column ACGPatientNeedsGroup
+		dataType: string
+		lineageTag: 24a2d590-cde1-47a9-a92b-4ee9f792d99c
+		summarizeBy: none
+		sourceColumn: ACGPatientNeedsGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 345a27ec-ff6a-4703-ba51-27d72c6ecbee
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: b0f552e0-f0c4-4608-a7a6-356d068c381f
+			defaultHierarchy: LocalDateTable_88f9f17d-e74c-4266-8a25-b23b1d56f25a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: 99a63017-eab3-4ba9-972c-a8492388135c
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition DAT_PLS_Summary = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="SELECT [PseudoNHSNumber]#(lf)      ,[Gender] = CASE WHEN [Gender] = 'F' THEN 'Female'#(lf)                       WHEN [Gender] = 'M' THEN 'Male'#(lf)#(tab)#(tab)   ELSE 'Not Recorded' END#(lf)      ,[DerivedAge]#(lf)      ,[Ethnicity] = [DerivedEthnicityGroup]#(lf)      ,[England_Deprivation] = [IMDNationalDecile]#(lf)      ,[Gloucester_Deprivation] = [IMDCountyDecile]#(lf)      ,[eFICategoryDerived]#(lf)      ,[ACGPatientNeedsGroup]#(lf)      ,[Last_Updated] = CAST([ProcessedDate] AS DATE)#(lf)      ,[Counter] = 1#(lf)#(lf)FROM [ICB_Products].[Patient].[vw_Summary]#(lf)#(lf)WHERE [ICBofRegistration] = '11M'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,67 @@
+table 'Ref. HRG Reference'
+	lineageTag: 4a1e78e7-8d0c-4fa9-8dd4-fb21ccf475c1
+
+	column 'HRG Code'
+		dataType: string
+		lineageTag: 24e2199a-49d3-41ea-911b-3e0d88d7b541
+		summarizeBy: none
+		sourceColumn: HRG Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'HRG Description'
+		dataType: string
+		lineageTag: 3c1f6ed4-3ef4-41df-b801-b010063199f6
+		summarizeBy: none
+		sourceColumn: HRG Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'HRG Chapter'
+		dataType: string
+		lineageTag: 08217e33-6b9a-4f7c-8121-75e737be83ea
+		summarizeBy: none
+		sourceColumn: HRG Chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'HRG SubChapter'
+		dataType: string
+		lineageTag: a6b2637a-b9c4-42c5-ac1a-02087a5b207b
+		summarizeBy: none
+		sourceColumn: HRG SubChapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Distinct
+		dataType: int64
+		formatString: 0
+		lineageTag: 201f51f0-5b42-4a06-86cf-201d01bf5347
+		summarizeBy: sum
+		sourceColumn: Distinct
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'HRG Chapter Hierarchy'
+		lineageTag: 80c6ea9c-c577-4821-b71d-5075459967b7
+
+		level 'HRG Chapter'
+			lineageTag: 364e4314-45c6-4439-bd45-f6958aba6d20
+			column: 'HRG Chapter'
+
+		level 'HRG Description'
+			lineageTag: 507ff2a5-4a83-4fa9-9ffa-990d51e50b9e
+			column: 'HRG Description'
+
+	partition 'Ref. HRG Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="select *#(lf)from #(lf)(#(lf)#(tab)select *, #(lf)#(tab)row_number() over(partition by [HRG Code] order by [HRG Description]) as [Distinct]#(lf)#(tab)from #(lf)#(tab)#(tab)(#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)TARIFF_CODE as [HRG Code],#(lf)#(tab)#(tab)concat(TARIFF_CODE,' - ',[hrg].HRGCodeDescription) as [HRG Description],#(lf)#(tab)#(tab)concat(HRG_Chapter,' - ',HRG_Chapter_Description) AS [HRG Chapter],#(lf)#(tab)#(tab)concat(HRG_SubChapter,' - ',HRG_SubChapter_Description) AS [HRG SubChapter]#(lf)#(tab)#(tab)from [BIReports].dbo.[OOC_IPR_Summary_Table_PL_2425] [A]#(lf)#(tab)#(tab)left join [BIReports].[dbo].Tariff_2425_HRG_Reference [hrg] on left([a].TARIFF_CODE,5) = [hrg].[HRGCode]#(lf)#(tab)#(tab)where [hrg].HRGCodeDescription is not null#(lf)#(tab)#(tab)UNION #(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[HRG Code],#(lf)#(tab)#(tab)concat([HRG Code],' - ',[hrg].HRGCodeDescription) as [HRG Description],#(lf)#(tab)#(tab)concat(HRG_Chapter,' - ',HRG_Chapter_Description) AS [HRG Chapter],#(lf)#(tab)#(tab)concat(HRG_SubChapter,' - ',HRG_SubChapter_Description) AS [HRG SubChapter]#(lf)#(tab)#(tab)FROM BIReports.dbo.IAPs_IS_2526  [A]#(lf)#(tab)#(tab)left join [BIReports].[dbo].Tariff_2526_HRG_Reference [hrg] on left([a].[HRG Code],5) = [hrg].[HRGCode]#(lf)#(tab)#(tab)where [hrg].HRGCodeDescription is not null#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)TARIFF_CODE,#(lf)#(tab)#(tab)concat(TARIFF_CODE,' - ',[hrg].HRGCodeDescription) as [HRG Description],#(lf)#(tab)#(tab)concat(HRG_Chapter,' - ',HRG_Chapter_Description) AS [HRG Chapter],#(lf)#(tab)#(tab)concat(HRG_SubChapter,' - ',HRG_SubChapter_Description) AS [HRG SubChapter]#(lf)#(tab)#(tab)from [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526] [A]#(lf)#(tab)#(tab)left join [BIReports].[dbo].Tariff_2526_HRG_Reference [hrg] on left([a].TARIFF_CODE,5) = [hrg].[HRGCode]#(lf)#(tab)#(tab)where [hrg].HRGCodeDescription is not null#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[HRG (Most likely)],#(lf)#(tab)#(tab)concat([HRG (Most likely)],' - ',[HRG Description]) as [HRG Description],#(lf)#(tab)#(tab)concat(HRG_Chapter,' - ',HRG_Chapter_Description) AS [HRG SubChapter],#(lf)#(tab)#(tab)concat(HRG_SubChapter,' - ',HRG_SubChapter_Description) AS [HRG Chapter]#(lf)#(lf)#(tab)#(tab)from bireports.dbo.Tariff_2526_CDC_Final [A]#(lf)#(tab)#(tab)left join (select #(lf)#(tab)#(tab)distinct #(lf)#(tab)#(tab)HRG_Chapter, HRG_Chapter_Description, #(lf)#(tab)#(tab)HRG_SubChapter, HRG_SubChapter_Description #(lf)#(tab)#(tab)from [BIReports].[dbo].Tariff_2526_HRG_Reference) [hrg] on left([a].[HRG (Most likely)],2) = [hrg].HRG_SubChapter#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)Select#(lf)#(tab)#(tab)'WF01A',#(lf)#(tab)#(tab)'WF01A - F2F Follow Up Outpatient',#(lf)#(tab)#(tab)'W - Outpatient Appointment',#(lf)#(tab)#(tab)'WF - Outpatient Appointment'#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)Select#(lf)#(tab)#(tab)'WF01A',#(lf)#(tab)#(tab)'WF01A - F2F Follow Up Outpatient',#(lf)#(tab)#(tab)'W - Outpatient Appointment',#(lf)#(tab)#(tab)'WF - Outpatient Appointment'#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)Select#(lf)#(tab)#(tab)'WF01B',#(lf)#(tab)#(tab)'WF01B - F2F First Outpatient',#(lf)#(tab)#(tab)'W - Outpatient Appointment',#(lf)#(tab)#(tab)'WF - Outpatient Appointment'#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)Select#(lf)#(tab)#(tab)'WF01C',#(lf)#(tab)#(tab)'WF01C - NF2F Follow Up Outpatient',#(lf)#(tab)#(tab)'W - Outpatient Appointment',#(lf)#(tab)#(tab)'WF - Outpatient Appointment'#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)Select#(lf)#(tab)#(tab)'WF01D',#(lf)#(tab)#(tab)'WF01D - NF2F First Outpatient',#(lf)#(tab)#(tab)'W - Outpatient Appointment',#(lf)#(tab)#(tab)'WF - Outpatient Appointment'#(lf)#(tab)#(tab)) [y]#(lf)#(tab)) [z]#(lf)where [Distinct] = 1#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

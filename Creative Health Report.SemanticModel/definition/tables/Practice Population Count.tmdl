@@ -1,0 +1,62 @@
+table 'Practice Population Count'
+	lineageTag: cf28cc70-e3a5-4f20-b62a-1956640427a6
+
+	measure 'Referral Rates' =
+			
+			
+			Sum(Referrals[count])/[Population Counts - Average Population]*1000
+		lineageTag: 1591193a-b615-490d-99db-8c6b284b52ee
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Population Counts - Average Population' =
+			
+			
+			VAR _TOTALMONTHS = DISTINCTCOUNT('Practice Population Count'[first_date_of_month])
+			
+			RETURN
+			
+			SUM('Practice Population Count'[Population]) / _TOTALMONTHS
+		lineageTag: 02ce03b8-bf3c-4ef0-8bf8-9135a2c48661
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Population
+		dataType: double
+		lineageTag: 81f9cac3-8ea9-494a-8ba0-a78ecef2114a
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column practice_code
+		dataType: string
+		lineageTag: 2a5f5526-fd80-467a-aa8d-4823fb838e7e
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_date_of_month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: dd1f2227-0139-44af-88c9-e79ceb725819
+		summarizeBy: none
+		sourceColumn: first_date_of_month
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Practice Population Count' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT [Population] = SUM([population])#(lf)      ,[practice_code]#(lf)      ,[first_date_of_month]#(lf) #(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations]#(lf) #(lf)WHERE [first_date_of_month] >= '20210401'#(lf) #(lf)GROUP BY [practice_code], [first_date_of_month]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

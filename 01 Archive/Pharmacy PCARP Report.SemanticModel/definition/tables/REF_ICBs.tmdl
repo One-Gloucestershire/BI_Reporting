@@ -1,0 +1,55 @@
+table REF_ICBs
+	lineageTag: a1b6d183-716a-40fd-99ad-7f7558fb9624
+
+	column 'Region Code'
+		dataType: string
+		lineageTag: 51ff5b03-8334-4815-82bc-75bb40e9ba38
+		summarizeBy: none
+		sourceColumn: Region Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Region Name'
+		dataType: string
+		lineageTag: 71c8ab58-78c1-436e-bf55-3b0db2e4b37f
+		summarizeBy: none
+		sourceColumn: Region Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB Code'
+		dataType: string
+		lineageTag: e410225d-ee4a-4b9c-a8df-faadcb25acf2
+		summarizeBy: none
+		sourceColumn: ICB Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB Name'
+		dataType: string
+		lineageTag: a2d5a651-628d-49fb-9d4d-8ceecac291e4
+		summarizeBy: none
+		sourceColumn: ICB Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Benchmarking_Flag
+		dataType: string
+		lineageTag: 6fe51689-b3ca-48a6-a99d-db9fe5857a55
+		summarizeBy: none
+		sourceColumn: Benchmarking_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_ICBs = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIReports", [Query="SELECT DISTINCT [Region Code], [Region Name], [ICB Code], [ICB Name], #(lf)Benchmarking_Flag = CASE WHEN [ICB Code] IN ('QR1', 'QUY') THEN 'Focus View' END#(lf)FROM BIReports.dbo.Pharm_Consultations_ICB#(lf)#(lf)UNION#(lf)#(lf)SELECT #(lf)  'ENG' AS [Region Code]#(lf), 'ENGLAND' AS [Region Name]#(lf), 'ENG' AS [ICB Code]#(lf), 'ENGLAND' AS [ICB Name]#(lf), Benchmarking_Flag = 'Focus View'#(lf)#(lf)UNION#(lf)#(lf)SELECT   #(lf)  [Region Code]#(lf), [Region Name]#(lf), [Region Code] AS [ICB Code]#(lf), [Region Name] AS [ICB Name]#(lf), Benchmarking_Flag = 'Focus View'#(lf)FROM BIReports.dbo.Pharm_Consultations_ICB#(lf)WHERE [Region Code] = 'Y58'#(lf);"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

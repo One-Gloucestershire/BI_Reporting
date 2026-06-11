@@ -1,0 +1,132 @@
+table 'Service Use'
+	lineageTag: ab350d49-5331-4528-a2c5-2156dc147f47
+
+	measure 'Distict patients' = ```
+			DISTINCTCOUNT('Service Use'[Derived_Pseudo_NHS]) 
+			```
+		formatString: 0
+		lineageTag: ea7a76b2-8a3e-40e3-b1a1-8fceb33af99c
+
+	measure 'Total usage pre' = ```
+			CALCULATE(sum('Service Use'[Count]), 'Service Use'[Pre/Post] = "pre") 
+			```
+		formatString: 0
+		lineageTag: 81391497-c7a5-427e-8621-8cd2f9458d32
+
+	measure 'Total usage post' = ```
+			CALCULATE(sum('Service Use'[Count]), 'Service Use'[Pre/Post] = "post") 
+			```
+		formatString: 0
+		lineageTag: 11942234-e071-4397-9000-e60bd5c5ace5
+
+	measure 'Service use variation count' = [Total usage post]-[Total usage pre]
+		formatString: 0
+		lineageTag: 04acb7fb-462c-41ba-ba71-8e0845f25567
+
+	measure 'Service use variation %' = ([Total usage post]-[Total usage pre])/[Total usage pre]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: a0702783-1f0a-439c-b5f3-299331a9939a
+
+	column Programme_name
+		dataType: string
+		lineageTag: 285ac97b-6608-493e-9478-1fe3b1df4c44
+		summarizeBy: none
+		sourceColumn: Programme_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Programme_provider
+		dataType: string
+		lineageTag: a607b73e-ea10-48f3-a6c7-6c852ab40aa6
+		summarizeBy: none
+		sourceColumn: Programme_provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity_Type
+		dataType: string
+		lineageTag: 850b8f4f-978c-40ab-a782-fdc8d2130f99
+		summarizeBy: none
+		sourceColumn: Activity_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Urgent/Planned
+		dataType: string
+		lineageTag: 65e76c43-f524-4c26-afb5-6d89c3133ea4
+		summarizeBy: none
+		sourceColumn: Urgent/Planned
+
+		annotation SummarizationSetBy = Automatic
+
+	column Count
+		dataType: int64
+		formatString: 0
+		lineageTag: d1a30999-7b65-4a91-b781-a780aa6114f1
+		summarizeBy: sum
+		sourceColumn: Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: fb057136-05ba-4f7d-9b7b-609be711059e
+		summarizeBy: sum
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pre/Post
+		dataType: string
+		lineageTag: 8ba05ec1-d2f4-43ac-bd89-884c25554bec
+		summarizeBy: none
+		sourceColumn: Pre/Post
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthsElapsed
+		dataType: int64
+		formatString: 0
+		lineageTag: 1a4f5984-8396-4536-b650-14d77107b7e2
+		summarizeBy: sum
+		sourceColumn: MonthsElapsed
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Course Name'
+		dataType: string
+		lineageTag: 450cab84-706b-46fc-8ce3-038f668eec1c
+		summarizeBy: none
+		sourceColumn: Course Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Programme Provider'
+		dataType: string
+		lineageTag: a9d410d3-5494-4fd5-8e9e-3cb21f7b1070
+		summarizeBy: none
+		sourceColumn: Programme Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: a168f7b1-b151-4b4c-8ad3-d6b3edc7320b
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Service Use' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="SELECT * FROM [PowerBI_Reporting].[community].[tbl01_CreativeHealthServiceUse]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

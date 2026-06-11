@@ -1,0 +1,306 @@
+table BundlingPayments
+	lineageTag: 757ff9b4-339f-4de1-8666-653237ea2563
+
+	column 'Pharmacy ODS Code'
+		dataType: string
+		lineageTag: 72715d93-384e-492d-8c22-e6d12995b675
+		summarizeBy: none
+		sourceColumn: Pharmacy ODS Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column AllThreeOpt
+		dataType: int64
+		formatString: 0
+		lineageTag: 854a9987-d4d3-4b79-8e0f-8d95935cb701
+		summarizeBy: sum
+		sourceColumn: AllThreeOpt
+
+		annotation SummarizationSetBy = Automatic
+
+	column ABPM
+		dataType: int64
+		formatString: 0
+		lineageTag: 1092a000-736e-46ff-b916-c4d4baeed1d8
+		summarizeBy: sum
+		sourceColumn: ABPM
+
+		annotation SummarizationSetBy = Automatic
+
+	column OC_Total
+		dataType: int64
+		formatString: 0
+		lineageTag: f31b5a48-fc42-44da-aa84-280314e722e4
+		summarizeBy: sum
+		sourceColumn: OC_Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Clinical pathways consultation'
+		dataType: int64
+		formatString: 0
+		lineageTag: 57207877-ab5b-44a2-86b4-f601180bf74b
+		summarizeBy: sum
+		sourceColumn: Clinical pathways consultation
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ba017543-55e2-4863-ba32-2630e94b63e6
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Threshold £1000'
+		dataType: int64
+		formatString: 0
+		lineageTag: 3720a15a-a493-4253-b6db-a9b85b922087
+		summarizeBy: sum
+		sourceColumn: Threshold £1000
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Threshold £500'
+		dataType: int64
+		formatString: 0
+		lineageTag: eac5b38c-c52a-4f21-ab6e-17ffe81d07f8
+		summarizeBy: sum
+		sourceColumn: Threshold £500
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Bundling opt in needed'
+		dataType: int64
+		formatString: 0
+		lineageTag: 55e16bf6-3ecd-44cc-988f-6e4877272837
+		summarizeBy: sum
+		sourceColumn: Bundling opt in needed
+
+		annotation SummarizationSetBy = Automatic
+
+	column '1+ ABPM needed'
+		dataType: int64
+		formatString: 0
+		lineageTag: bef5948a-0cf3-44b5-994b-a1618da0a0c0
+		summarizeBy: sum
+		sourceColumn: 1+ ABPM needed
+
+		annotation SummarizationSetBy = Automatic
+
+	column '#+ OC needed'
+		dataType: int64
+		formatString: 0
+		lineageTag: af60bb74-f5bd-4354-a29a-108a28b6cc71
+		summarizeBy: sum
+		sourceColumn: #+ OC needed
+
+		annotation SummarizationSetBy = Automatic
+
+	column '£1000 threshold met' = ```
+			IF(BundlingPayments[Threshold £1000]=0,BLANK(), -- if threshold doesn't exist then flag = blank
+			                        IF(BundlingPayments[Clinical pathways consultation]>=BundlingPayments[Threshold £1000] -- elif threshold does exist compare to PF CP consultations. 
+			                        ,1,0) 
+			                        )
+			```
+		formatString: 0
+		lineageTag: 601bbf76-abb4-4706-8822-cd1342197f45
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column '£500 threshold met' = ```
+			IF(BundlingPayments[Threshold £500]=0,BLANK(), -- if threshold doesn't exist then flag = blank
+			                        IF(BundlingPayments[Clinical pathways consultation]>=BundlingPayments[Threshold £500] -- elif threshold does exist compare to PF CP consultations. 
+			                        ,1,0) 
+			                        )
+			```
+		formatString: 0
+		lineageTag: 9deb4878-1bd1-4910-b54e-a629f8c99080
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Bundling opt req met' = ```
+			IF(BundlingPayments[Bundling opt in needed]=0,BLANK(), -- if threshold doesn't exist then flag = blank
+			                        IF(BundlingPayments[AllThreeOpt]=1,1,0) -- elif threshold does exist check AllThreeOpt. 
+			                        )
+			```
+		formatString: 0
+		lineageTag: 8357aea5-28dc-4559-9fdf-018271a868d1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ABPM req met' =
+			IF(BundlingPayments[1+ ABPM needed]=0,BLANK(), -- if threshold doesn't exist then flag = blank
+			                    IF(BundlingPayments[ABPM]>=1,1,0) -- elif threshold does exist check ABPM for consultations.
+			                    )
+		formatString: 0
+		lineageTag: 8c9aa59c-0588-4052-abe4-b5be67fe6818
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OC req met' =
+			IF(BundlingPayments[#+ OC needed]=0,BLANK(), -- if threshold doesn't exist then flag = blank
+			                        IF(BundlingPayments[OC_Total]>=10000,1,0) -- elif threshold does exist check OC_Total for consultations. Note threshold unknown currently.
+			                        )
+		formatString: 0
+		lineageTag: 8be1a598-89cb-4dcf-8c1f-cfd4018597b0
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Jun25_£1000_met = ```
+			IF(BundlingPayments[AllThreeOpt] = 1 
+			                    && BundlingPayments[Clinical pathways consultation] >= 30
+			                    , 1) 
+			```
+		formatString: 0
+		lineageTag: f012a120-14b6-46d0-b769-0efbf9b58204
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Jun25_£500_met = ```
+			IF(BundlingPayments[AllThreeOpt] = 1 
+			                    && BundlingPayments[Clinical pathways consultation] >= 20 
+			                    && BundlingPayments[Clinical pathways consultation] < 30
+			                    , 1) 
+			```
+		formatString: 0
+		lineageTag: b75a5e7d-1bc5-4770-9b0d-fc08226b8c92
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Oct25_£1000_met = ```
+			IF(BundlingPayments[AllThreeOpt] = 1 
+			                    && BundlingPayments[Clinical pathways consultation] >= 30
+			                    && BundlingPayments[ABPM] >= 1
+			                    , 1) 
+			```
+		formatString: 0
+		lineageTag: ebe04eed-3bd6-4cb4-a396-ed0e1fd136a2
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Oct25_£500_met = ```
+			IF(BundlingPayments[AllThreeOpt] = 1 
+			                    && BundlingPayments[Clinical pathways consultation] >= 20 
+			                    && BundlingPayments[Clinical pathways consultation] < 30
+			                    && BundlingPayments[ABPM] >= 1
+			                    , 1) 
+			```
+		formatString: 0
+		lineageTag: ec172222-d623-4c73-81a3-823d7da2e4a3
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mar26_£500_met = ```
+			IF(BundlingPayments[AllThreeOpt] = 1 
+			                    && BundlingPayments[Clinical pathways consultation] >= 20 
+			                    && BundlingPayments[Clinical pathways consultation] < 30
+			                    && BundlingPayments[ABPM] >= 1
+			                    && BundlingPayments[OC_Total] >= 5 -- OC threshold not known yet
+			                    , 1)
+			```
+		formatString: 0
+		lineageTag: 64e4604b-b03a-48ae-a9c6-ce3ecfec0881
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mar26_£1000_met = ```
+			IF(BundlingPayments[AllThreeOpt] = 1 
+			                    && BundlingPayments[Clinical pathways consultation] >= 30
+			                    && BundlingPayments[ABPM] >= 1
+			                    && BundlingPayments[OC_Total] >= 5 -- OC threshold not known yet
+			                    , 1) 
+			```
+		formatString: 0
+		lineageTag: 94c1cf3e-1531-499a-8f08-72e54d891e8e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Payment_May25 =
+			
+			SWITCH (
+			    TRUE (),
+			    [£1000 threshold met]=1 , 1000
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: ed895796-a611-4d26-a58a-1d29bb16b5f2
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Payment_Jun25 =
+			
+			SWITCH (
+			    TRUE (),
+			    [Jun25_£1000_met]=1 , 1000,
+			    [Jun25_£500_met]=1 , 500
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 11253c7c-2921-465b-98c9-5250bfb5fef1
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Payment_Oct25 =
+			
+			SWITCH (
+			    TRUE (),
+			    [Oct25_£1000_met]=1 , 1000,
+			    [Oct25_£500_met]=1 , 500
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: c5d3c9ca-6928-4973-9288-3394a3c9cb1f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Payment_Mar26 =
+			
+			SWITCH (
+			    TRUE (),
+			    [Mar26_£1000_met]=1 , 1000,
+			    [Mar26_£500_met]=1 , 500
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 6df18daf-7286-4490-92f7-c50ac2dc6425
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition BundlingPayments = m
+		mode: import
+		source =
+				let
+				    Source = Table.NestedJoin(Consultations, {"Consultation_Month"}, BundlingPaymentCriteria, {"Month"}, "PF CP Payment thresholds", JoinKind.RightOuter),
+				    #"Expanded PF CP Payment thresholds" = Table.ExpandTableColumn(Source, "PF CP Payment thresholds", {"Month", "Threshold £1000", "Threshold £500", "Bundling opt in needed", "1+ ABPM needed", "#+ OC needed"}, {"Month", "Threshold £1000", "Threshold £500", "Bundling opt in needed", "1+ ABPM needed", "#+ OC needed"}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Expanded PF CP Payment thresholds",{"Pharmacy ODS Code", "AllThreeOpt", "ABPM", "OC_Total", "Clinical pathways consultation", "Month", "Threshold £1000", "Threshold £500", "Bundling opt in needed", "1+ ABPM needed", "#+ OC needed"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

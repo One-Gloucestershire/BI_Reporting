@@ -1,0 +1,912 @@
+table 'Call Activity'
+	lineageTag: 83f456d2-24f2-4deb-91fe-bc70092c4486
+
+	measure Call_Answer_% = ```
+			
+			    DIVIDE(CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[CallAnswered] = "yes"), SUM('Call Activity'[Call_Counter]), 0) +0
+			```
+		lineageTag: 3c84071b-2445-4a44-8ca9-7ef8663316c7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure METRIC_Call_Count = SUM('Call Activity'[Call_Counter]) +0
+		formatString: 0
+		lineageTag: 4fab566a-830b-41d3-8ad5-94ce7e3e7dcc
+
+	measure METRIC_Missed_Count =
+			
+			CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[CallAnswered] = "no" ) +0
+		formatString: 0
+		lineageTag: 3b1fe2e2-97ab-485d-8502-729b8c495cfa
+
+	measure METRIC_Missed_Count_% =
+			
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[CallAnswered] = "no"),
+			    SUM('Call Activity'[Call_Counter])
+			)
+		lineageTag: 253cfe4d-993d-443f-8f1d-9fa87be6486e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure METRIC_Answered_Count_% =
+			
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[CallAnswered] = "yes"),
+			    SUM('Call Activity'[Call_Counter])
+			) +0
+		lineageTag: 9b34c040-19c8-4efc-822a-21aa86deed90
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure METRIC_Answered_Count =
+			
+			CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[CallAnswered] = "yes" ) +0
+		formatString: 0
+		lineageTag: 25275ef8-b9df-42c2-ac23-f5ea5eb072e0
+
+	measure Latest_weekend_date = FORMAT(MAX('Date Table'[week_end_date]), "DD MMMm YYYY")
+		lineageTag: ed8be077-30b9-4780-ade1-352d34fdc0cd
+
+	measure Current_Month_Year = FORMAT(TODAY(), "MMMM YYYY")
+		lineageTag: 5eb7566b-6e79-402e-9a97-d4ba3037eb64
+
+	measure METRIC_ED_Attended = CALCULATE(COUNTROWS('Call Activity'), 'Call Activity'[ED_Attendance_FLAG] = "Attended ED"  )
+		formatString: 0
+		lineageTag: 49616a9a-361f-4ea9-a077-d27275b83f3d
+
+	measure METRIC_ED_Advised = CALCULATE(COUNTROWS('Call Activity'), 'Call Activity'[Grouped Outcome] = "ED Attendance" )
+		formatString: 0
+		lineageTag: ec7fafe7-7c37-49e5-a3ee-ba59f45f6eb7
+
+	measure Avg_response_time = AVERAGE('Call Activity'[TimeDifferenceDays])
+		lineageTag: bab2460b-2281-4b52-80f3-0411e6804525
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_Advised_% =
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[ED_Attendance_Advised] = "ED Attendance Advised"),  SUM('Call Activity'[Call_Counter])   ) +0
+		lineageTag: b23621c0-0ed3-4e29-9a82-69c925a39b8d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_Attendance_% =
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[ED_Attendance_FLAG] = "Attended ED" ),  SUM('Call Activity'[Call_Counter])   )
+		lineageTag: 1c5bc473-8b2c-4d23-bc89-c725e48016bb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Admitted_% =
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[Admission_or_Assessment] = "Admission"), SUM('Call Activity'[Call_Counter])   ) +0
+		lineageTag: 8861afba-f968-4b3d-8f07-2415e7398bcd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Advice_only_% =
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[Grouped Outcome] = "Advice only"),  SUM('Call Activity'[Call_Counter])   )
+		lineageTag: 97f8c404-9e82-44a2-b373-dc0d2f42bfb7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Assessment_advised_% =
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[Grouped Outcome] = "Assessment"),  SUM('Call Activity'[Call_Counter])   )
+		lineageTag: 84b496e9-daef-41d5-9f17-341be2d5e376
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_Attendance_%_within_24h =
+			DIVIDE(
+			    CALCULATE(SUM('Call Activity'[Call_Counter]), 'Call Activity'[ED_Attendance_Timing]= "Attended ED within 24 hours" ),  SUM('Call Activity'[Call_Counter])   ) +0
+		lineageTag: 082fe581-87c3-4726-b01f-825cef4d5daa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Call_Counter_Measure = SUM('Call Activity'[Call_Counter]) +0
+		formatString: 0
+		lineageTag: 9a350f9f-4a3b-493a-8cc2-edea2463f195
+
+	column NHSNumber
+		dataType: string
+		lineageTag: 881f9de1-9f37-4dba-8cf7-dc1db78c895d
+		summarizeBy: none
+		sourceColumn: NHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Registered_GP
+		dataType: string
+		lineageTag: cd122fdb-8fea-439c-909b-f4579d16631c
+		summarizeBy: none
+		sourceColumn: Patient_Registered_GP
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Registered_PCN
+		dataType: string
+		lineageTag: 701dd88f-781a-4bab-a469-e20b5a788d5c
+		summarizeBy: none
+		sourceColumn: Patient_Registered_PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Registered_Locality
+		dataType: string
+		lineageTag: de395d8d-ad01-4c22-a8c5-d1b12e5169e9
+		summarizeBy: none
+		sourceColumn: Patient_Registered_Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Age_at_Call
+		dataType: int64
+		formatString: 0
+		lineageTag: 387a89a6-1b83-45bf-b883-94b50c9a5715
+		summarizeBy: sum
+		sourceColumn: Patient_Age_at_Call
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Gender
+		dataType: string
+		lineageTag: c5f87dc7-8278-4e82-8131-341f676899f1
+		summarizeBy: none
+		sourceColumn: Patient_Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Ethnicity
+		dataType: string
+		lineageTag: cb91d11c-c9c0-45de-8bd7-4cc41b405687
+		summarizeBy: none
+		sourceColumn: Patient_Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_eFi
+		dataType: string
+		lineageTag: 85fcac95-a126-441f-be44-7fa9105da906
+		summarizeBy: none
+		sourceColumn: Patient_eFi
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocalPatientIdentifier
+		dataType: string
+		lineageTag: 20e8c0d2-4c96-465c-a86d-7b1fcc62881f
+		summarizeBy: none
+		sourceColumn: LocalPatientIdentifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column CaseID
+		dataType: string
+		lineageTag: 3d1ca07d-f25b-4dc9-9d12-ac46e8347290
+		summarizeBy: none
+		sourceColumn: CaseID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CaseType
+		dataType: string
+		lineageTag: 023240e7-79e3-4bd9-bb0c-178a261bfa32
+		summarizeBy: none
+		sourceColumn: CaseType
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN_of_Caller
+		dataType: string
+		lineageTag: c5d112c7-d32a-4827-8ae2-bb4d79483769
+		summarizeBy: none
+		sourceColumn: PCN_of_Caller
+
+		annotation SummarizationSetBy = Automatic
+
+	column Place_of_Caller
+		dataType: string
+		lineageTag: 2ea0727b-e0d4-4880-819f-2b562614a4b9
+		summarizeBy: none
+		sourceColumn: Place_of_Caller
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCodeofCaller
+		dataType: string
+		lineageTag: 6fb5aac8-73fe-482d-88f4-8fb20f8f2da6
+		summarizeBy: none
+		sourceColumn: OrganisationCodeofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationNameofCaller
+		dataType: string
+		lineageTag: da61a443-df39-4f94-9900-56eb99375c8a
+		summarizeBy: none
+		sourceColumn: OrganisationNameofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegistrationCodeofCaller
+		dataType: string
+		lineageTag: 6f070588-6d6e-431f-b0bb-659435532c6b
+		summarizeBy: none
+		sourceColumn: RegistrationCodeofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column NameofCaller
+		dataType: string
+		lineageTag: 4f4310a5-98d7-4b96-a51e-5d572bf8a574
+		summarizeBy: none
+		sourceColumn: NameofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegistrationCodeofSpecialist
+		dataType: string
+		lineageTag: dced3422-f700-4458-895c-fd4aa255462d
+		summarizeBy: none
+		sourceColumn: RegistrationCodeofSpecialist
+
+		annotation SummarizationSetBy = Automatic
+
+	column NameofSpecialist
+		dataType: string
+		lineageTag: 7b778023-7113-44f2-a76b-6698f696572e
+		summarizeBy: none
+		sourceColumn: NameofSpecialist
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReasonforCall
+		dataType: string
+		lineageTag: 9c82dc01-fb66-465f-8970-97ed9389028c
+		summarizeBy: none
+		sourceColumn: ReasonforCall
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: 1c471caa-21e8-46e0-ad7a-99dd99fabf4a
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service
+		dataType: string
+		lineageTag: 23f84112-8699-4ffd-938a-9e8b9ce5f2e4
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Service Type'
+		dataType: string
+		lineageTag: e18a5060-78cd-4fc4-b75e-079f0b496c53
+		summarizeBy: none
+		sourceColumn: Service Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pathway
+		dataType: string
+		lineageTag: 88eec87b-12ea-4f76-a881-9799078acdec
+		summarizeBy: none
+		sourceColumn: Pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	column TriageHub
+		dataType: string
+		lineageTag: 2f3b4539-482d-4fc3-8357-9a250f7b1742
+		summarizeBy: none
+		sourceColumn: TriageHub
+
+		annotation SummarizationSetBy = Automatic
+
+	column PresentingComplaingFreeText
+		dataType: string
+		lineageTag: d713bb51-717c-4779-92de-9f7be2a28ca1
+		summarizeBy: none
+		sourceColumn: PresentingComplaingFreeText
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Initiated_Datetime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 39db0e56-478d-48aa-8f59-3605a930e836
+		summarizeBy: none
+		sourceColumn: Call_Initiated_Datetime
+
+		variation Variation
+			isDefault
+			relationship: 29f119d7-0d77-4751-b48f-37817cf8fc71
+			defaultHierarchy: LocalDateTable_230525e9-61b0-4f03-be18-b665ba471b70.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Initiated_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b5314c76-ab68-4603-868f-f803cc4b4793
+		summarizeBy: none
+		sourceColumn: Call_Initiated_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Initiated_Weekday
+		dataType: string
+		lineageTag: c78e19cb-7e06-4db3-854f-2f1fbef78370
+		summarizeBy: none
+		sourceColumn: Call_Initiated_Weekday
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Initiated_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 2c32deb7-d7b7-466c-bb9e-ab6e8219c117
+		summarizeBy: none
+		sourceColumn: Call_Initiated_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Call_Initiated_Hour
+		dataType: string
+		lineageTag: 94571ab3-73bb-4e88-8475-3e1d142d153b
+		summarizeBy: none
+		sourceColumn: Call_Initiated_Hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Initiated_Month
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: b1d9b40a-c6ea-421b-b3de-e9e3b09c2feb
+		summarizeBy: none
+		sourceColumn: Call_Initiated_Month
+
+		variation Variation
+			isDefault
+			relationship: 0ca50fd4-5d86-49eb-bbc3-6cd269ce76fb
+			defaultHierarchy: LocalDateTable_55a396af-5706-4963-a3ff-077c9da473dd.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column TimeWaiting
+		dataType: string
+		lineageTag: bcb54845-4292-4c58-aad6-d75f8c2cbade
+		summarizeBy: none
+		sourceColumn: TimeWaiting
+
+		annotation SummarizationSetBy = Automatic
+
+	column CallAnswered
+		dataType: string
+		lineageTag: ed2b35ca-c469-4c49-acaa-300b7e3b5b87
+		summarizeBy: none
+		sourceColumn: CallAnswered
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Answered_Datetime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 80d1d08b-6592-43b6-a166-7c7f17397a45
+		summarizeBy: none
+		sourceColumn: Call_Answered_Datetime
+
+		variation Variation
+			isDefault
+			relationship: 713cbdc6-b112-4f58-bf70-da16f51c20ff
+			defaultHierarchy: LocalDateTable_40f51c27-a054-4a1a-b094-d7168bc270f3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Answered_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 80162616-917c-424f-990f-a0a7e5be1244
+		summarizeBy: none
+		sourceColumn: Call_Answered_Date
+
+		variation Variation
+			isDefault
+			relationship: 881712f8-109e-475b-bb36-4ca782b53650
+			defaultHierarchy: LocalDateTable_c5c7d0ad-bf0c-469a-b912-e6ec1deb626a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Ended_Datetime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 713d7e49-b3f1-476e-b307-14ea7f06d6a4
+		summarizeBy: none
+		sourceColumn: Call_Ended_Datetime
+
+		variation Variation
+			isDefault
+			relationship: 3c276411-6728-47a6-9bd8-34b8f005a03f
+			defaultHierarchy: LocalDateTable_cc9db7b1-1537-4b36-9ad6-64e6a9156292.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Ended_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: dcc2abfe-210b-4898-a936-aacb735e7cd6
+		summarizeBy: none
+		sourceColumn: Call_Ended_Date
+
+		variation Variation
+			isDefault
+			relationship: ad1d1fb4-d22e-4ad6-8fc3-174bcba2667f
+			defaultHierarchy: LocalDateTable_1cd9d6bf-46d9-49e5-856c-2e2054cedfa4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Ended_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 6f72c1e8-9e6e-4b55-9ba1-6f6af66db2d9
+		summarizeBy: none
+		sourceColumn: Call_Ended_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column AnsweredCallLength
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 486f819f-1cd7-43ed-b18f-fefdaa34f26b
+		summarizeBy: none
+		sourceColumn: AnsweredCallLength
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column CallerCancelledCall
+		dataType: string
+		lineageTag: 88a0943e-8d9d-407f-aa01-75c91ae83d99
+		summarizeBy: none
+		sourceColumn: CallerCancelledCall
+
+		annotation SummarizationSetBy = Automatic
+
+	column OutcomeCategory
+		dataType: string
+		lineageTag: cd0f1c2d-a55a-4f96-aebf-fc512a74e05a
+		summarizeBy: none
+		sourceColumn: OutcomeCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpecialistOutcome
+		dataType: string
+		lineageTag: 14bef57b-e084-4b4a-a462-99ac909695a2
+		summarizeBy: none
+		sourceColumn: SpecialistOutcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column CallerStarRating
+		dataType: string
+		lineageTag: d4d40bd7-487a-480a-ac41-b28bc9dfcf2e
+		summarizeBy: none
+		sourceColumn: CallerStarRating
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patientsregisteredpractice
+		dataType: string
+		lineageTag: 72f24e04-c537-4291-ba3f-5bf137ad1628
+		summarizeBy: none
+		sourceColumn: Patientsregisteredpractice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referrersreportdecision
+		dataType: string
+		lineageTag: f34e414b-4b73-44ba-866d-75e16cd07b9a
+		summarizeBy: none
+		sourceColumn: Referrersreportdecision
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reportsenttoreferrerchosendestination
+		dataType: string
+		lineageTag: 02cb67b0-d67a-48a5-af83-d7adc728af69
+		summarizeBy: none
+		sourceColumn: Reportsenttoreferrerchosendestination
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reportsenttootheremailsautomatically
+		dataType: string
+		lineageTag: e571f159-4978-4248-9475-0f4cdedbcbbf
+		summarizeBy: none
+		sourceColumn: Reportsenttootheremailsautomatically
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reportsenttootheremailsmanually
+		dataType: string
+		lineageTag: 3acc2123-fb2d-4447-8d14-ab08196bff48
+		summarizeBy: none
+		sourceColumn: Reportsenttootheremailsmanually
+
+		annotation SummarizationSetBy = Automatic
+
+	column EROCtreatmentfunction
+		dataType: string
+		lineageTag: e2caac16-da90-4ac3-828b-46d3837a47bd
+		summarizeBy: none
+		sourceColumn: EROCtreatmentfunction
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpecialtyCode
+		dataType: string
+		lineageTag: 33f16e74-24ac-46b1-84f0-d6e89940db8a
+		summarizeBy: none
+		sourceColumn: SpecialtyCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpecialityDescription
+		dataType: string
+		lineageTag: 6c13d33e-fd52-471d-889d-571b8c50ef97
+		summarizeBy: none
+		sourceColumn: SpecialityDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column EROCoutcome
+		dataType: string
+		lineageTag: bdb5d0d8-be0b-4745-8956-6ec1595a9b37
+		summarizeBy: none
+		sourceColumn: EROCoutcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column CommissionerOrganisationCode
+		dataType: string
+		lineageTag: ff7a597d-ae8b-445a-9c31-30be4ac75166
+		summarizeBy: none
+		sourceColumn: CommissionerOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Completed_Call
+		dataType: string
+		lineageTag: c3bb8000-1399-48f1-a35c-c17cf8194b3b
+		summarizeBy: none
+		sourceColumn: Completed_Call
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: eaebb2e0-ebae-4742-85e4-7b9a0800400d
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_CallInitiatedDateTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2b69d89c-6e6b-4597-b5cc-31baee1a52ad
+		summarizeBy: none
+		sourceColumn: Derived_CallInitiatedDateTime
+
+		variation Variation
+			isDefault
+			relationship: b29947cd-5bcf-44b0-8325-0e9e44c1c778
+			defaultHierarchy: LocalDateTable_fd44415a-42d2-498c-8694-581c1f32683e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ED_Arrival_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4f548a93-1f8f-499b-ab6f-5f3b267477d6
+		summarizeBy: none
+		sourceColumn: ED_Arrival_Date
+
+		variation Variation
+			isDefault
+			relationship: c42f2f63-8275-443f-bbb3-38c0ea16be3a
+			defaultHierarchy: LocalDateTable_c1fd011b-f9af-436d-8c1c-78645a2c06e4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column ED_Arrival_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 9bfffc4a-af78-48a4-ac14-bb49efd66689
+		summarizeBy: none
+		sourceColumn: ED_Arrival_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Time_between_call_and_ED
+		dataType: int64
+		formatString: 0
+		lineageTag: 25a49881-c600-44a4-8a68-7619cb7acc5f
+		summarizeBy: sum
+		sourceColumn: Time_between_call_and_ED
+
+		annotation SummarizationSetBy = Automatic
+
+	column ED_Rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e14187a-0950-4067-a3e9-f0ce261a97a7
+		summarizeBy: sum
+		sourceColumn: ED_Rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column ED_Attendance_FLAG
+		dataType: string
+		lineageTag: 576fd016-2eed-4772-a3ba-d3ca00a8fc21
+		summarizeBy: none
+		sourceColumn: ED_Attendance_FLAG
+
+		annotation SummarizationSetBy = Automatic
+
+	column ED_Attendance_Timing
+		dataType: string
+		lineageTag: d7bc400c-ef9b-428b-8031-6a0d73d65109
+		summarizeBy: none
+		sourceColumn: ED_Attendance_Timing
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Date_Time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 552bf040-4b0f-49e9-b4c3-ce7ed2890f96
+		summarizeBy: none
+		sourceColumn: Admission_Date_Time
+
+		variation Variation
+			isDefault
+			relationship: 4079bd76-fca8-4b56-986c-ff3cf5537e01
+			defaultHierarchy: LocalDateTable_c558be6b-b661-4164-9ff4-bfe84073d588.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date_Time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 28bf6621-d49f-41bf-9c8d-06c42e24cd86
+		summarizeBy: none
+		sourceColumn: Discharge_Date_Time
+
+		variation Variation
+			isDefault
+			relationship: 9f4162fc-9687-40f6-b8e2-ad57e67ed951
+			defaultHierarchy: LocalDateTable_38c729ff-841a-4698-8d39-364b70b21d48.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Method
+		dataType: string
+		lineageTag: b453a1d1-262a-46a7-8c41-decd531aad8d
+		summarizeBy: none
+		sourceColumn: Admission_Method
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_or_Assessment
+		dataType: string
+		lineageTag: 5efd15ac-da03-4568-a1ad-a01e6541d64e
+		summarizeBy: none
+		sourceColumn: Admission_or_Assessment
+
+		annotation SummarizationSetBy = Automatic
+
+	column Inpatient_LOS_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 5431d57a-00bf-4b89-9be0-55a8bd468747
+		summarizeBy: sum
+		sourceColumn: Inpatient_LOS_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column Time_between_Call_and_Admission
+		dataType: int64
+		formatString: 0
+		lineageTag: d7745a8e-d18b-4289-8c14-9b581ca1195d
+		summarizeBy: sum
+		sourceColumn: Time_between_Call_and_Admission
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Timing
+		dataType: string
+		lineageTag: a065aa30-21a8-4f0a-a0ec-b79762b0740c
+		summarizeBy: none
+		sourceColumn: Admission_Timing
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationGroupsofCaller
+		dataType: string
+		lineageTag: c54134c7-1f82-4f21-a177-a835a98c3d90
+		summarizeBy: none
+		sourceColumn: OrganisationGroupsofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeWaitingSeconds
+		dataType: int64
+		formatString: 0
+		lineageTag: 95270d9c-5946-4cd8-8414-84de5248c154
+		summarizeBy: sum
+		sourceColumn: TimeWaitingSeconds
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeWaitingMinutes
+		dataType: double
+		lineageTag: 4026da7c-5be7-48bc-9266-39b5c5cc8cda
+		summarizeBy: sum
+		sourceColumn: TimeWaitingMinutes
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TimeWaitingGroups
+		dataType: string
+		lineageTag: 11a51aa4-3845-423d-9021-b75ffd72dc51
+		summarizeBy: none
+		sourceColumn: TimeWaitingGroups
+		sortByColumn: TimeWaitingGroupOrder
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column CallOutcome
+		dataType: string
+		lineageTag: a38d690c-5c56-4337-9bba-a99d27a2b653
+		summarizeBy: none
+		sourceColumn: CallOutcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeWaitingGroupOrder
+		dataType: int64
+		formatString: 0
+		lineageTag: 5bf2add5-1e95-4e96-aad6-9b81be793737
+		summarizeBy: sum
+		sourceColumn: TimeWaitingGroupOrder
+
+		annotation SummarizationSetBy = Automatic
+
+	column ED_Attendance_Advised = ```
+			
+			    IF(
+			        'Call Activity'[Grouped Outcome] = "ED Attendance" , 
+			        "ED Attendance Advised",
+			        "Other Advice Given" )
+			```
+		lineageTag: 3487af9a-3133-49af-9869-d09cbdca46c2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeWaitingHours
+		dataType: double
+		lineageTag: d47f0d52-ee1d-4021-94af-81ca69d06af5
+		summarizeBy: sum
+		sourceColumn: TimeWaitingHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TimeWaitingDays
+		dataType: double
+		lineageTag: b290fc66-39dd-4ea0-93e7-9301788ff5ba
+		summarizeBy: sum
+		sourceColumn: TimeWaitingDays
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TimeWaitingeOpinion
+		dataType: string
+		lineageTag: d5a8a9c6-2d0e-4b85-beb0-9e3698c3b540
+		summarizeBy: none
+		sourceColumn: TimeWaitingeOpinion
+		sortByColumn: TimeWaitingeOpinionOrder
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Grouped Outcome'
+		dataType: string
+		lineageTag: 69a7e789-b7b0-450f-8571-97ce5e7ea40f
+		summarizeBy: none
+		sourceColumn: Grouped Outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeDifferenceDays
+		dataType: int64
+		formatString: 0
+		lineageTag: 015cfcf9-f7ef-4dbf-8c48-31cff1e24dfb
+		summarizeBy: sum
+		sourceColumn: TimeDifferenceDays
+
+		annotation SummarizationSetBy = Automatic
+
+	column TimeWaitingeOpinionOrder
+		dataType: int64
+		formatString: 0
+		lineageTag: 062999bb-10dc-4f84-b40b-d41f07ac54e5
+		summarizeBy: sum
+		sourceColumn: TimeWaitingeOpinionOrder
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Answered_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 90c117c8-f48f-4e20-a0b1-b7e46cab82a6
+		summarizeBy: none
+		sourceColumn: Call_Answered_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Call_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 6b81bcee-25cd-468f-801f-c72472c1d1ee
+		summarizeBy: sum
+		sourceColumn: Call_Counter
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Call Activity' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[SecondaryCare].[tbl03_Cinapis_Call_Activity]"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([NHSNumber] <> "")),
+				    #"Added Custom" = Table.AddColumn(#"Filtered Rows", "Call_Counter", each 1)
+				in
+				    #"Added Custom"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,199 @@
+table '4.Creative Health Attendances'
+	lineageTag: b13f17c3-d754-45f4-b2b9-1bd9b47c8941
+
+	measure Number_of_referrals = calculate(sum('4.Creative Health Attendances'[count]),'4.Creative Health Attendances'[Accept/Exclude] = "Accept")
+		formatString: 0
+		lineageTag: 0c5d3e81-9203-403c-abca-1a66368c8db5
+
+		changedProperty = IsHidden
+
+	measure Total_Attended_Supressed = if(sum('4.Creative Health Attendances'[Attended])<6,0,sum('4.Creative Health Attendances'[Attended]))
+		formatString: #,0
+		lineageTag: 7faae14b-da58-4ac6-83e8-25e991bd85cf
+
+		changedProperty = IsHidden
+
+	measure Total_Available_Suppressed = IF(SUM('4.Creative Health Attendances'[Available])<6,0,SUM('4.Creative Health Attendances'[Available]))
+		formatString: #,0
+		lineageTag: a4627150-8147-45aa-abc6-56ecd199a95b
+
+		changedProperty = IsHidden
+
+	measure Total_disengaged_suppressed = if(sum('4.Creative Health Attendances'[Reason_for_disengagement2])<6,0,sum('4.Creative Health Attendances'[Reason_for_disengagement2]))
+		formatString: 0
+		lineageTag: 733e4616-4d03-4908-b019-e74cf5edd1f1
+
+		changedProperty = IsHidden
+
+	measure Number_of_Referrals_Suppressed = if([Number_of_referrals]<6,0,[Number_of_referrals])
+		formatString: 0
+		lineageTag: 00e82cda-eaf8-4419-98e0-758cf330fa94
+
+		changedProperty = IsHidden
+
+	measure Number_of_courses_without_a_disengagment_reason_suppressed = if((sum('4.Creative Health Attendances'[count]) - sum('4.Creative Health Attendances'[Reason_for_disengagement2])) <6,0,(sum('4.Creative Health Attendances'[count]) - sum('4.Creative Health Attendances'[Reason_for_disengagement2])))
+		formatString: 0
+		lineageTag: 87d96a24-b341-4cb3-a828-360d789beb8a
+
+		changedProperty = IsHidden
+
+	measure Average_Attended_Sessions = calculate(sum('4.Creative Health Attendances'[Attended])/sum('4.Creative Health Attendances'[count]),'4.Creative Health Attendances'[Accept/Exclude] = "Accept",'4.Creative Health Attendances'[Completed_programme_flag] = 1,all('4.Creative Health Attendances'[Attended]))
+		formatString: 0.000
+		lineageTag: d60f43b6-f060-4add-ae72-14b365156c1c
+
+		changedProperty = IsHidden
+
+	measure Median_Attended_Sessions = calculate(MEDIAN('4.Creative Health Attendances'[Attended]),'4.Creative Health Attendances'[Accept/Exclude] = "Accept",'4.Creative Health Attendances'[Completed_programme_flag] = 1,all('4.Creative Health Attendances'[Attended]))
+		lineageTag: f2e082af-ab66-469f-badb-a9413403a0f4
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Creative_Health_Attendances_Per_1000_population = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			RETURN
+			
+			
+			calculate((sum('4.Creative Health Attendances'[Attended])/sum(REF_GP_Practice_Populations[Total Population]))*1000,REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date)
+			```
+		lineageTag: d3c8173e-cf6f-4201-b7e1-e318787f113c
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Gloucestershire_Total_Creative_Health_Attendances_Per_1000_population = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			Var Latest_Gloucestershire_GP_Population_Total = 
+			
+			calculate(sum(REF_GP_Practice_Populations[Total Population])
+			,all(REF_GP_Practice_Populations)
+			,REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date)
+			
+			Var Latest_Gloucestershire_Attended_Total = 
+			
+			calculate(sum('4.Creative Health Attendances'[Attended])
+			,all(REF_GP_Practice_Ref)
+			,NOT(ISBLANK(REF_GP_Practice_Ref[OrganisationCode])))
+			
+			
+			RETURN
+			
+			calculate(IFERROR((Latest_Gloucestershire_Attended_Total/Latest_Gloucestershire_GP_Population_Total)*1000,BLANK())
+			)
+			```
+		lineageTag: 47762127-5f71-4319-9512-442ea4db1411
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Test_GP_Practice_Population_Figure = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			RETURN
+			
+			
+			calculate(SUM('4.Creative Health Attendances'[Attended])
+			
+			
+			,FILTER(ALL(REF_GP_Practice_Ref)
+			,NOT(ISBLANK(REF_GP_Practice_Ref[OrganisationCode])))
+			
+			,ALL(REF_GP_Practice_Populations)
+			,REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date
+			
+			)
+			```
+		formatString: 0
+		lineageTag: d7fd66d3-982d-4fc7-ad87-590c5628b9c1
+
+		changedProperty = IsHidden
+
+	measure Attended_Courses_per_1000_conditional_formatting =
+			if([Creative_Health_Attendances_Per_1000_population] > [Gloucestershire_Total_Creative_Health_Attendances_Per_1000_population] ,"#FE7A36"
+			    ,"#3652AD")
+		lineageTag: a5c42e06-81a5-42ad-8f43-21d0172eb38b
+
+		changedProperty = IsHidden
+
+	measure Number_of_programme_ends = calculate(sum('4.Creative Health Attendances'[count]),'4.Creative Health Attendances'[Accept/Exclude] = "Accept",USERELATIONSHIP('4.Creative Health Attendances'[Derived_ProgrammeEndDate],REF_Date_Ref[date]))
+		formatString: 0
+		lineageTag: e82ff0c0-5242-4fbc-b1e5-6c56909ffb04
+
+	measure Number_of_programme_ends_Suppressed = if([Number_of_programme_ends]<6,0,[Number_of_programme_ends])
+		formatString: 0
+		lineageTag: b9ba964c-96e0-4c20-84eb-8c68eb7b6f03
+
+	measure Only_relevant_items_in_creative_health_attendances_dataset = COUNTROWS('4.Creative Health Attendances')
+		formatString: 0
+		lineageTag: 285f0e58-5641-415a-bec7-a6a7b803127e
+
+	column count
+		dataType: int64
+		formatString: 0
+		lineageTag: 8c1d5019-cfac-4fdb-beee-0b42f0c694ab
+		summarizeBy: sum
+		sourceColumn: count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Completed_programme_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 49079606-c20e-4b60-8783-50c5bed774a4
+		summarizeBy: sum
+		sourceColumn: Completed_programme_flag
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Place_holder
+		dataType: int64
+		formatString: 0
+		lineageTag: 265788a7-dcfb-45da-b7bc-61b0dcbd2afe
+		summarizeBy: none
+		sourceColumn: Place_holder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '4.Creative Health Attendances' = m
+		mode: import
+		queryGroup: 'Creative Health'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)---DUMMY #(lf)#(lf)select [Place_holder] = 1#(lf),[count] = NULL#(lf),[Completed_programme_flag] = NULL#(lf)#(lf)------Attendance#(lf)#(lf)#(lf)--SELECT  [NHS_Number]#(lf)--,'1' as'count'#(lf)--      ,[Derived_DateofReferral]#(lf)--      --,[Referral_month]#(lf)--      --,[Referral_monthyear]#(lf)--      --,[Referral_fyear]#(lf)--#(tab)  ,date.monthname#(lf)--  ,date.financialyear#(lf)--      --,[GP_Practice_at_Referral]#(lf)--      --,[ReferralPracticeCode]#(lf)--      --,[Network]#(lf)--      ,[Source_of_referral]#(lf)--      ,[Referral_appropriate]#(lf)--      ,[Innapropriate_referral_reason]#(lf)--      ,[Derived_NumberofReferralToEachProgramme]#(lf)--#(tab) ,[Num_of_Referrals_to_each_programme] = ROW_NUMBER () over(partition by NHS_Number, [Programme_name] order by [Derived_DateofReferral], [Derived_ProgrammeStartDate])#(lf)--      ,[Derived_NumberofReferralsTotal]#(lf)--#(tab)  , [Num_of_Referrals_Total] = ROW_NUMBER () over(partition by NHS_Number order by [Derived_DateofReferral], [Derived_ProgrammeStartDate])#(lf)--      ,[Completion_of_personalised_support_plan]#(lf)--      ,[Carer_Family_Attendance]#(lf)--#(tab)  ,case when [Carer_Family_Attendance] in ('Yes', 'Carer') then 'Yes'#(lf)--#(tab)  else [Carer_Family_Attendance] end as 'Carer Family Attendence'#(lf)--      ,[Other_carer_responsibilities]#(lf)--#(tab)   ,case when [Reason_for_disengagment] in ('died', 'Person died', 'Deceased', 'Person died') then 'Person died'#(lf)--#(tab)  when [Reason_for_disengagment] like '%moved%' then 'Person moved away' #(lf)--#(tab)  when  [Reason_for_disengagment] = 'Deterioration in physical/mental state' then 'Deterioration in physical/mental state'#(lf)--#(tab)  when  [Reason_for_disengagment] = 'Inaccessible/time constraints' then 'Inaccessible/time constraints'#(lf)--#(tab)   when  [Reason_for_disengagment] like '%mobility%' then 'Inaccessible/time constraints'#(lf)--#(tab)  when  [Reason_for_disengagment] = 'Person no longer required service' then 'Person no longer required service'#(lf)--#(tab)  when  [Reason_for_disengagment] = 'Person did not consent to referral' then 'Person did not consent to referral'#(lf)--#(tab)  when  [Reason_for_disengagment] = 'Unable to contact' then 'Unable to contact'#(lf)--#(tab)  when  [Reason_for_disengagment] = 'Other reason' then 'Other reason'#(lf)--#(tab)  when  [Reason_for_disengagment] = 'No reason given' then 'Other reason'#(lf)--#(tab)  when [Reason_for_disengagment] like '%attended with%' then 'Family/Carer attendance no longer required'#(lf)--#(tab)  when [Reason_for_disengagment] like '%Support for %' then 'Family/Carer attendance no longer required'#(lf)--#(tab)    when [Reason_for_disengagment] like '%Support to %' then 'Family/Carer attendance no longer required'#(lf)--#(tab)  when [Reason_for_disengagment] = 'Illness' then 'Unwell'#(lf)--#(tab)  when  [Reason_for_disengagment] is Null then Null #(lf)--#(tab)  else [Reason_for_disengagment] end as 'Disengagement Reason' #(lf)--      ,[Programme_name]#(lf)-- ,case when [Programme_name] =  'CYP Pain' then 'CYP LTCs' else [Programme_name] end as 'Course Name' #(lf)--      ,[Programme_provider]#(lf)--#(tab)  ,case when  programme_provider is null and Programme_name = 'Adult Pain' then 'Artlift' else programme_provider end as 'Programme Provider'#(lf)--      ,[Programme_capacity]#(lf)--#(tab)  ,cast([Programme_capacity] as Int) 'Capacity'#(lf)--      ,[Derived_ProgrammeStartDate]#(lf)--      ,[Derived_ProgrammeEndDate]#(lf)--#(tab)  ,cast([Number_of_available_sessions] as Int) 'Available'#(lf)--#(tab)-- ,cast([Number_of_attended_sessions] as int) 'Attended'#(lf)--#(tab) ,[Attended] = case when number_of_attended_sessions = 'attended 3 over 2 terms' then '' else cast([Number_of_attended_sessions] as int) end#(lf)--#(tab) -- ,replace(left(cast([Number_of_attended_sessions] as numeric) / cast([Number_of_available_sessions] as Int)*100,2),'.','') + '%'  as '% attendance'#(lf)--      ,[Reason_for_disengagment]#(lf)#(lf)--#(tab)  ,Reason_for_disengagement2 = case when [Reason_for_disengagment] = '' then 0 else 1 end #(lf)#(lf)#(lf)--    --  ,[Completed_programme_flag] = [Derived_CompletedProgrammeFlag]#(lf)--#(tab)  ,[Completed_programme_flag] = case when [Derived_ProgrammeEndDate]< c.ProcessedDate and Number_of_attended_sessions >= 1 then '1'#(lf)--#(tab)  else '0' END#(lf)--#(tab)  ,case when  [Derived_ProgrammeEndDate] < c.[ProcessedDate] and cast([Number_of_attended_sessions] as int) >= '1' then 'Completed'#(lf)--#(tab)  when [Derived_ProgrammeEndDate] < c.[ProcessedDate] and cast([Number_of_attended_sessions] as int) = '0' then 'Did Not Complete (had a programme start date)'#(lf)--#(tab)  when [Derived_DateofReferral] is not NULL and [Derived_ProgrammeStartDate] is null and [Reason_for_disengagment] is not null then 'Did Not Complete (did not have a programme start date)'#(lf)--#(tab)  else 'Not Yet Completed' end as 'completed programme flag'#(lf)--      --,[Unique_identifier]#(lf)--      ,c.[FileName] -- Nick C: presuming c.filename is correct but don't know#(lf)--      ,c.ProcessedDate#(lf)--#(tab)  ,case when ([Derived_NumberofReferralsTotal]  = '1' and [Derived_DateofReferral] is null and NHS_Number is null and Referral_appropriate is Null and [Programme_name] is null) then 'Exclude' #(lf)--#(tab)  else 'Accept' end as 'Accept/Exclude'#(lf)--#(tab)  ,[Referral_Date] = case when [Derived_DateofReferral] > [Derived_ProgrammeStartDate] then [Derived_ProgrammeStartDate] #(lf)--  when [Derived_DateofReferral] is null then [Derived_ProgrammeStartDate]#(lf)--  else [Derived_DateofReferral] end #(lf)--  ,[Practice_Code] = case when gp.OrganisationCode IS null then MPI.PracticeCode else gp.OrganisationCode END #(lf)#(lf)#(lf)#(lf)--  FROM [CCG_Current].[CreativeHealth].[vw_CreativeHealthConsortium] as c #(lf)--   left join [CCG_Reference].[Reference].[vw_DateLookup] date on  date.date = case when [Derived_DateofReferral] > [Derived_ProgrammeStartDate] then [Derived_ProgrammeStartDate] #(lf)--  when [Derived_DateofReferral] is null then [Derived_ProgrammeStartDate]#(lf)--  else [Derived_DateofReferral] end #(lf)#(lf)--    left join  [ICB_Products].Patient.vw_Summary MPI on MPI.[PseudoNHSNumber] =c.NHS_Number#(lf)--#(tab)  left join [CCG_Reference].[Reference].[vw_GPPractice] gp on gp.[OrganisationCode] = c.[Derived_ReferralPracticeCode]#(lf)#(lf)#(lf)#(lf)--  where #(lf)--  ([Referral_appropriate] = 'Appropriate' or [Referral_appropriate] is NULL or [Referral_appropriate] = 'N/A' or [Referral_appropriate] = '' )#(lf)#(lf)#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"count", Int64.Type}, {"Completed_programme_flag", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

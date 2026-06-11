@@ -1,0 +1,52 @@
+table REF_LSOA
+	lineageTag: 0e7d4a93-7335-4918-a0d8-86d69b753245
+
+	column LSOACode
+		dataType: string
+		lineageTag: 7facf201-e809-415b-90f2-64b7f79efcdd
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDCountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 13d7199e-8f86-455b-a5b4-fe5d1004abad
+		summarizeBy: sum
+		sourceColumn: IMDCountyDecile
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA_in_Gloucestershire
+		dataType: int64
+		formatString: 0
+		lineageTag: cdaa52d0-c41b-4cff-8ca0-0bc86aa94032
+		summarizeBy: sum
+		sourceColumn: LSOA_in_Gloucestershire
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistrictName
+		dataType: string
+		lineageTag: 892ea4fa-d0a8-42ce-97ea-625d0f56e015
+		summarizeBy: none
+		sourceColumn: DistrictName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_LSOA = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_reference", [Query="#(lf)select DISTINCT p.LSOACode#(lf),[IMDCountyDecile] = Derived_IMDGloucestershireDecile#(lf)#(lf),[LSOA_in_Gloucestershire] = case when (m.IsGloucestershire = 'Y') then 1  else 0 end#(lf)#(lf),[DistrictName] = case when m.DistrictName IN ('Cheltenham','Cotswold','Stroud','Tewkesbury','Forest of Dean','Gloucester') then m.DistrictName else 'Out of County District' END #(lf)#(lf)from CCG_Reference.Reference.vw_LSOA_IMD as p #(lf)left join CCG_Reference.Reference.vw_GeographyMapping as m on m.LSOACode = p.LSOACode#(lf)where p.LSOACode is not null #(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,520 @@
+table '1.Drugs_Prescribed'
+	lineageTag: 77e5ab30-201a-4c82-b51d-44237d22519c
+
+	measure Countywide_Drug_Rate_Step_1 = ```
+			
+			VAR Total_Drugs_Prescribed_County = 
+			    CALCULATE(
+			        SUM('1.Drugs_Prescribed'[Total items]),
+			        ALL(REF_GP_Practice_Ref),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        ALL(REF_GP_Practice_Ref),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			VAR Latest_GP_Registered_Population =
+			    CALCULATE(
+			        SUM(REF_GP_Practice_Populations[Total Population]),
+			        ALL(REF_GP_Practice_Ref),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality])),
+			        REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date
+			    )
+			
+			RETURN
+			
+			            DIVIDE(
+			                Total_Drugs_Prescribed_County,
+			                Latest_GP_Registered_Population
+			            ) * 1000
+			```
+		displayFolder: Drug rate measures per 1000
+		lineageTag: 385fea13-6b80-45c6-95c0-b7358490236a
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Earliest_Date_In_date_range = MIN(REF_Date_Ref[date])
+		formatString: General Date
+		displayFolder: Testing
+		lineageTag: 696ee7b3-62a6-414c-8e95-b85693cde7e8
+
+		changedProperty = IsHidden
+
+	measure Countywide_Mean_Dispensed_Rate_Per_1000 =
+			
+			
+			CALCULATE(AVERAGEX(values(REF_Date_Ref[MonthYearName])
+			,calculate([Countywide_Drug_Rate_Step_1]))
+			,ALL(REF_Date_Ref)
+			,not(isblank(REF_Date_Ref[day_month_year])
+			
+			))
+		displayFolder: Drug rate measures per 1000
+		lineageTag: 334f005b-17eb-4e65-ba7e-5cf20daadf87
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Dispensed_Rate_per_1000_Population_Per_Month_OT = (sum('1.Drugs_Prescribed'[Total items])/sum(REF_GP_Practice_Populations[Total Population]))*1000
+		formatString: 0.00
+		displayFolder: Drug rate measures per 1000
+		lineageTag: d7e23685-f20f-4f30-b77e-c1ed92be70c0
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure Locality_Bars_Conditional_Formatting_compared_to_countywide_rate =
+			
+			SWITCH(
+			    True(),
+			    [Latest_dispensed_in_time_period_rate_per_1000] > [CountyWide_Latest_dispensed_in_time_period_rate_per_1000_for_locality_graph],"#FE7A36"
+			    ,"#3652AD"
+			
+			)
+		lineageTag: 29b9dc4b-9626-4a64-97ba-e66752421756
+
+		changedProperty = IsHidden
+
+	measure Latest_dispensed_in_time_period_rate_per_1000 = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			RETURN
+			Calculate((sum('1.Drugs_Prescribed'[Total items])/sum(REF_GP_Practice_Populations[Total Population]))*1000,REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date)
+			```
+		lineageTag: de591349-b4b1-4c74-b899-f91cbd9596f7
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CountyWide_Latest_dispensed_in_time_period_rate_per_1000_for_locality_graph = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			RETURN
+			CALCULATE(
+			    (SUM('1.Drugs_Prescribed'[Total items]) / SUM(REF_GP_Practice_Populations[Total Population])) * 1000,
+			    FILTER(
+			        ALL(REF_GP_Practice_Ref),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality])) &&
+			        REF_GP_Practice_Ref[Locality] <> "The Homeless Healthcare Team"
+			    ),
+			    FILTER(
+			        ALL(REF_GP_Practice_Populations[Locality],REF_GP_Practice_Populations[Practice_Code]),
+			        NOT(ISBLANK(REF_GP_Practice_Populations[Locality])) && 
+			        REF_GP_Practice_Populations[Locality] <> "The Homeless Healthcare Team"
+			    ),
+			    REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date
+			   
+			)
+			```
+		displayFolder: Drug rate measures per 1000
+		lineageTag: 1193a522-ffc2-4472-9c10-635ae880e3f1
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_Prescribed_Items_Per_Practice_Card = ```
+			
+			
+			VAR TOTAL_ITEMS = SUM('1.Drugs_Prescribed'[Total items])
+			 
+			VAR PRACTICES = DISTINCTCOUNT('REF_GP_Practice_Ref'[ReportingOrganisationCode])
+			 
+			RETURN TOTAL_ITEMS/PRACTICES
+			```
+		lineageTag: 78464c5a-4e95-430d-82ba-3d6dbfb90cd4
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Number_of_practices = ```
+			distinctcount(REF_GP_Practice_Ref[ReportingOrganisationCode]) 
+			```
+		formatString: 0
+		displayFolder: Testing
+		lineageTag: 369d6f01-6939-49b7-80dd-44a7791d83f1
+
+		changedProperty = IsHidden
+
+	measure Distinct_Count_Practices = DISTINCTCOUNT(REF_GP_Practice_Ref[ReportingOrganisationCode])
+		formatString: 0
+		displayFolder: Testing
+		lineageTag: 98ca7608-01fa-4470-86a1-7a498a2f9a00
+
+		changedProperty = IsHidden
+
+	measure Dispensed_Rate_per_1000_Dynamic_Variable = ```
+			
+			 
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "Locality",
+			    CALCULATE([Dispensed_Rate_per_1000_Population_Per_Month_OT],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('REF_Area Legend'[Field]) = "PCN",
+			    CALCULATE([Dispensed_Rate_per_1000_Population_Per_Month_OT],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('REF_Area Legend'[Field]) = "GP practice",
+			    CALCULATE([Dispensed_Rate_per_1000_Population_Per_Month_OT],
+			    USERELATIONSHIP('REF_Area Legend'[Area], 'REF_GP_Practice_Ref'[ReportingOrganisationName])
+			    ),
+			    BLANK())
+			```
+		lineageTag: 286fcb82-0dbe-4c3f-8f69-a6535e05bd7f
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Custom_header_dispensed_rate_area_selection = ```
+			
+			    "Dispensed Rate per 1000 population by " & VALUES('REF_Area Legend'[Field]) & " over time"
+			```
+		lineageTag: 89b1c3c6-b8a5-4918-8263-d32351ad34d7
+
+		changedProperty = IsHidden
+
+	measure Only_relevant_items_in_drugs_prescribed_dataset = countrows('1.Drugs_Prescribed')
+		formatString: 0
+		lineageTag: 0f321598-5753-411e-9b18-3c8c73b593ae
+
+	measure Total_dispensed_opioids_drugs_combinations =
+			CALCULATE(
+			    DISTINCTCOUNT('2.Drug Combinations'[NHS_Number]),
+			    '2.Drug Combinations'[Opioid] = 1)
+		formatString: 0
+		displayFolder: Testing
+		lineageTag: c6e2afb8-96c3-41a7-8289-c723c5600a16
+
+	measure Confidence_Interval_Lower_Latest_drug_dispensed_rates_per_1000 = ```
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			VAR CountVariable =
+			 SUM('1.Drugs_Prescribed'[Total items])
+			 
+			VAR DenominatorVariable = 
+			    CALCULATE(
+			        DISTINCTCOUNT(REF_GP_Practice_Populations[NHS_Number]),
+			        FILTER(
+			            REF_GP_Practice_Populations,
+			            REF_GP_Practice_Populations[Census_Date] = Latest_GP_Population_date
+			        ),
+			        FILTER(
+			            REF_GP_Practice_Ref,
+			            NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			        )
+			    )
+			
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			
+			// Byars Calculation
+			RETURN
+			 IF(
+			 CountVariable < 10, 
+			IFERROR( (CHISQ.INV(1 - (0.5 + ConfidenceLevel / 200), 2 * CountVariable) / 2),
+			 BLANK())
+			 
+			, CountVariable * (1 - 1 / (9 * CountVariable) - (ApproxNORM_INV / (3 * SQRT(CountVariable))))^3
+			 )
+			 / DenominatorVariable * ScalingFactor
+			```
+		displayFolder: Drug rate measures per 1000
+		lineageTag: fdc169d4-aec4-49ee-9d5a-db6b6a309c4c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Interval_Upper_Latest_drug_dispensed_rates_per_1000 = ```
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			VAR CountVariable =
+			 SUM('1.Drugs_Prescribed'[Total items])
+			 
+			VAR DenominatorVariable = 
+			    CALCULATE(
+			        DISTINCTCOUNT(REF_GP_Practice_Populations[NHS_Number]),
+			        FILTER(
+			            REF_GP_Practice_Populations,
+			            REF_GP_Practice_Populations[Census_Date] = Latest_GP_Population_date
+			        ),
+			        FILTER(
+			            REF_GP_Practice_Ref,
+			            NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			        )
+			    )
+			
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation
+			
+			// Byars Calculation for Upper Bound
+			RETURN
+			IF(
+			 CountVariable < 10, 
+			iferror( (CHISQ.INV(1 - (0.5 - ConfidenceLevel / 200), 2*CountVariable+2) / 2),
+			 BLANK()), 
+			(CountVariable + 1) * (1 - 1 / (9 * (CountVariable + 1)) + (ApproxNORM_INV / (3 * SQRT(CountVariable + 1))))^3
+			) / DenominatorVariable * ScalingFactor
+			```
+		displayFolder: Drug rate measures per 1000
+		lineageTag: 69bda77e-5ed5-4bbd-8f79-81a83b1fdc17
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Dispensed_moving_range = ```
+			
+			
+			VAR FilteredTable_ =
+			    FILTER(
+			        ALL(REF_Date_Ref),
+			        REF_Date_Ref[YearMonthIndex] >= 1 && REF_Date_Ref[SPC_Flag] = 1
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        ref_date_ref[financial_year],
+			        REF_Date_Ref[month_name],
+			        REF_Date_Ref[YearMonthIndex],
+			        REF_Date_Ref[SPC_Flag],
+			        "Dispensed_Rate_per_1000_Population_Per_Month_OT", [Dispensed_Rate_per_1000_Population_Per_Month_OT]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = [YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MINX(
+			                    FILTER(
+			                        SummaryTable,
+			                        [YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                    [Dispensed_Rate_per_1000_Population_Per_Month_OT]
+			                )
+			            )
+			        RETURN IF(ISBLANK(NextValue), BLANK(),  abs([Dispensed_Rate_per_1000_Population_Per_Month_OT] - NextValue))
+			    )
+			
+			VAR Differences =
+			    SELECTCOLUMNS(SummaryTableWithDifference, "Diff", [Difference])
+			
+			    VAR Cumulative_moving_range = (AVERAGEX(Differences, [Diff])) 
+			
+			RETURN Cumulative_moving_range *2.66
+			```
+		displayFolder: Drug rate measures per 1000
+		lineageTag: f67b7e06-adb4-401d-9847-7b6d5ab06220
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure UCL_Drugs_Dispensed_Rate = [average_total_dispensed_rate_per_1000]  + [Dispensed_moving_range]
+		formatString: 0
+		displayFolder: Drug rate measures per 1000
+		lineageTag: 709d963d-3106-449c-955f-610ec2ce58b3
+
+	measure average_total_dispensed_rate_per_1000 = ```
+			
+			
+			
+			VAR TOTAL_ITEMS_DISPENSED_OVER_TIME_PERIOD = 
+			calculate(sum('1.Drugs_Prescribed'[Total items])
+			,REMOVEFILTERS(REF_Date_Ref)
+			,REF_Date_Ref[SPC_Flag] = 1 
+			)
+			
+			
+			VAR TOTAL_GP_POPULATIONS_OVER_TIME_PERIOD = 
+			calculate(sum(REF_GP_Practice_Populations[Total Population])
+			,REMOVEFILTERS(REF_Date_Ref)
+			,REF_Date_Ref[SPC_Flag] = 1 
+			)
+			
+			
+			
+			
+			VAR AverageRate =
+			(TOTAL_ITEMS_DISPENSED_OVER_TIME_PERIOD/TOTAL_GP_POPULATIONS_OVER_TIME_PERIOD)*1000
+			
+			
+			RETURN
+			AverageRate
+			```
+		formatString: 0.00
+		displayFolder: Drug rate measures per 1000
+		lineageTag: d5c12ec6-a819-444f-8037-dd7def21e997
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure LCL_Drugs_Dispensed_Rate = [average_total_dispensed_rate_per_1000]  - [Dispensed_moving_range]
+		displayFolder: Drug rate measures per 1000
+		lineageTag: 2beb4701-598c-4108-8333-78bd87ae7954
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Practice Code'
+		dataType: string
+		lineageTag: 5f98c690-cf5e-40a5-b5fe-a918b7689425
+		summarizeBy: none
+		sourceColumn: Practice Code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Drug
+		dataType: string
+		lineageTag: 90d290e2-cc86-47bc-b587-62bd39de6de9
+		summarizeBy: none
+		sourceColumn: Drug
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFParagraph
+		dataType: string
+		lineageTag: c105ef8d-608c-49b7-b19b-02f21a635012
+		summarizeBy: none
+		sourceColumn: BNFParagraph
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSection
+		dataType: string
+		lineageTag: eb8c6657-b927-4c37-ae58-a476b37a14a2
+		summarizeBy: none
+		sourceColumn: BNFSection
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFPresentation
+		dataType: string
+		lineageTag: 0373f425-fff4-4523-87dd-15288bbb2b5d
+		summarizeBy: none
+		sourceColumn: BNFPresentation
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 460bd629-dd7f-4e41-85a5-9c5c13b0d9b0
+		summarizeBy: sum
+		sourceColumn: YearMonth
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total items'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5b5fb684-bfa1-43e9-803b-c2b714f77727
+		summarizeBy: sum
+		sourceColumn: Total items
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dispensing_YearMonth_as_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c318761e-b7bf-4909-b51b-9c8a58f22c52
+		summarizeBy: none
+		sourceColumn: Dispensing_YearMonth_as_Date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFPresentationCode
+		dataType: string
+		lineageTag: db2b9a1a-41ce-49da-9cc2-0f17d8e8861a
+		summarizeBy: none
+		sourceColumn: BNFPresentationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1.Drugs_Prescribed' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)#(lf)SELECT#(tab)[Practice Code] = a.HSPracticeCode#(lf),a.BNFPresentationCode#(lf)#(tab)#(tab)#(tab), a.[BNFChemicalSubstance] as 'Drug'#(lf)#(tab)#(tab)#(tab),bnf.BNFParagraph as 'BNFParagraph'#(lf)#(tab)#(tab)#(tab),bnf.[BNFSection]  as 'BNFSection' #(lf)#(tab)#(tab)#(tab), a.[BNFPresentation] as 'BNFPresentation'#(lf)#(tab)#(tab)#(tab), a.[YearMonth]#(lf)#(tab)#(tab),[Dispensing_YearMonth_as_Date] = CAST(CONCAT(SUBSTRING(CONVERT(VARCHAR, a.[YearMonth]), 1, 4), '-', SUBSTRING(CONVERT(VARCHAR, a.[YearMonth]), 5, 2), '-01') AS DATE) #(lf)#(tab)#(tab)#(tab), sum(CAST(a.[Items] AS INT) ) as 'Total items'#(lf)#(lf)FROM#(tab)#(tab)[CCG_Current].[ePACT2].[vw_Extract] a#(lf)left join [PowerBI_Reporting].[Prescribing].[tbl01_BNF_Reference] AS BNF on a.BNFPresentationCode = bnf.BNFPresentationCode#(lf)left join CCG_Reference.Reference.vw_GPPractice as gpr on a.HSPracticeCode = gpr.OrganisationCode#(lf)#(lf)WHERE#(tab)#(tab)((bnf.BNFParagraphCode = '40702') -- 4.7.2 -  Opioid analgesics#(lf)or (bnf.BNFSectionCode = '403')-- Anti-Depressants #(lf)  or (bnf.BNFChemicalSubstanceCode IN ('0408010G0','0408010AE')) -- Pregabalin,Gabapentin#(lf)  or (bnf.BNFChemicalSubstanceCode = '0401020K0')) -- Diazepam#(lf)#(lf)  and  CAST(CONCAT(SUBSTRING(CONVERT(VARCHAR, a.[YearMonth]), 1, 4), '-', SUBSTRING(CONVERT(VARCHAR, a.[YearMonth]), 5, 2), '-01') AS DATE)  >='20190401' #(lf)#(lf)#(lf)GROUP BY#(tab)a.HSPracticeCode#(lf)#(tab)#(tab)#(tab),a.BNFPresentationCode#(lf)#(tab)#(tab)#(tab), a.[BNFChemicalSubstance]#(lf)#(tab)#(tab)#(tab),bnf.[BNFParagraph]#(lf)#(tab)#(tab)#(tab),bnf.[BNFSection]  #(lf)#(tab)#(tab)#(tab), a.[BNFPresentation]#(lf)#(tab)#(tab)#(tab), a.yearmonth#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)--- TEST #(lf)"])
+				in
+				    Source
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

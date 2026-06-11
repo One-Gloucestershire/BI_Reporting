@@ -1,0 +1,47 @@
+table Dat_Patient_Weighting
+	lineageTag: 78bb67eb-8217-4a42-8bbc-4b49328cc142
+
+	measure 'Dat_Patient_Weighting - Weighted Population' =
+			
+			
+			SUM('Dat_Patient_Weighting'[Proportion_of_Year])
+		lineageTag: 6081e708-9322-44d7-9bd5-afc24ecf0b82
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: b3dc18b7-4a9b-4a38-9845-6e54fa6bbc47
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Months_in_Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 2994ea28-c841-4988-b65a-159af9ff027d
+		summarizeBy: sum
+		sourceColumn: Months_in_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Proportion_of_Year
+		dataType: double
+		formatString: 0.00
+		lineageTag: 06b436e6-5bd8-4608-97f4-999c3633ebaf
+		summarizeBy: sum
+		sourceColumn: Proportion_of_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dat_Patient_Weighting = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/*=======================================================================================#(lf)STAGE 1 - SETTING TIME FRAMES#(lf)=======================================================================================*/#(lf)#(lf)/* Time frame to match PLS activity table to allow data to be comparable */#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_TIME_RANGE') IS NOT NULL DROP TABLE #TEMP_TIME_RANGE#(lf);#(lf)#(lf)WITH CTE_DATE AS#(lf)(#(lf)SELECT [Start_Date] = MIN([ActivityEndDate])#(lf)      ,[End_Date] = MAX([ActivityEndDate])#(lf)#(lf)FROM [ICB_Products].[Patient].[vw_Activity]#(lf)#(lf)WHERE [ActivityEndDate] <> '1900-01-01'#(lf))#(lf)SELECT [Start_Date] = [DATE_START].[FirstDateofMonth]#(lf)      ,[End_Date] = [DATE_END].[FirstDateofMonth]#(lf)#(lf)INTO #TEMP_TIME_RANGE#(lf)FROM CTE_DATE AS [TR]#(lf)#(lf)LEFT JOIN (#(lf)           SELECT DISTINCT [Date]#(lf)#(tab)                ,[FirstDateofMonth]#(lf)           FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)          ) AS [DATE_START]#(lf)ON [DATE_START].[Date] = [TR].[Start_Date]#(lf)#(lf)LEFT JOIN (#(lf)           SELECT DISTINCT [Date]#(lf)#(tab)                ,[FirstDateofMonth]#(lf)           FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)          ) AS [DATE_END]#(lf)ON [DATE_END].[Date] = [TR].[End_Date]#(lf);#(lf)#(lf)/*=======================================================================================#(lf)STAGE 2 - FINAL OUTPUT#(lf)=======================================================================================*/#(lf)#(lf)WITH CTE_ACG AS#(lf)(#(lf)SELECT [ACG].[Month]#(lf)      ,[ACG].[PseudoNHSNumber]#(lf)      ,[Counter] = 1#(lf)#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults] AS [ACG]#(lf)#(lf)CROSS APPLY #TEMP_TIME_RANGE AS [TR]#(lf)#(lf)WHERE [ACG].[Month] BETWEEN [TR].[Start_Date] AND [TR].[End_Date]#(lf))#(lf)SELECT [PseudoNHSNumber]#(lf)      ,[Months_in_Year] = SUM([Counter])#(lf)      ,[Proportion_of_Year] = (SUM([Counter])/13.0)#(lf)#(lf)FROM CTE_ACG#(lf)#(lf)GROUP BY [PseudoNHSNumber]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

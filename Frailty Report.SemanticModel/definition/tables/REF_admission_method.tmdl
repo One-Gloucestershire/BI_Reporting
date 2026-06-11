@@ -1,0 +1,35 @@
+table REF_admission_method
+	lineageTag: f7c89c07-7b7e-4afc-bdd8-64c3fdcaa0da
+
+	column admission_method_code
+		dataType: string
+		lineageTag: 2b2e9264-6291-4c4f-a9a2-f5f75f3273ac
+		summarizeBy: none
+		sourceColumn: admission_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method_group
+		dataType: string
+		lineageTag: 91294a23-6463-42e3-a0c0-cec1472a8c87
+		summarizeBy: none
+		sourceColumn: admission_method_group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_admission_method = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = #"2.emergency_admissions",
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"admission_method_code", "admission_method_group"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Duplicates", each ([admission_method_code] <> null))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

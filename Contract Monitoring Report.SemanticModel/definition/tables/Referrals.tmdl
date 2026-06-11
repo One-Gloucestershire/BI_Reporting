@@ -1,0 +1,107 @@
+table Referrals
+	lineageTag: f06ba741-987b-4db4-98db-2a0905fc9ff9
+
+	column Referrals
+		dataType: int64
+		formatString: #,0
+		lineageTag: d8d9e907-fd7f-45ff-a4d7-32d0674ad174
+		summarizeBy: sum
+		sourceColumn: Referrals
+
+		annotation SummarizationSetBy = Automatic
+
+	column derived_treatmentfunctioncode
+		dataType: string
+		lineageTag: 3d978cd3-3391-433b-a6e3-39d4efb60498
+		summarizeBy: none
+		sourceColumn: derived_treatmentfunctioncode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code
+		dataType: string
+		lineageTag: d5b58638-ac9e-455b-a012-56ec6ea316db
+		summarizeBy: none
+		sourceColumn: Provider_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Location_Code
+		dataType: string
+		lineageTag: 039e8621-e2cb-49d7-b254-86ac68080b1c
+		summarizeBy: none
+		sourceColumn: Location_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referral_Type
+		dataType: string
+		lineageTag: 8c9b770b-0e28-4708-aa62-a6c7ac0f00af
+		summarizeBy: none
+		sourceColumn: Referral_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		lineageTag: de0aace0-a5a3-473e-969d-0eac2efcf0cb
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column yearmonth
+		dataType: string
+		lineageTag: 5808559c-06e9-4c0a-b400-94a9ba116dda
+		summarizeBy: none
+		sourceColumn: yearmonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Month'
+		dataType: int64
+		formatString: 0
+		lineageTag: b594e3b1-7c27-4ad5-b50f-2e87a46ab78a
+		summarizeBy: sum
+		sourceColumn: Max Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column firstdateofmonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 99d67101-002e-41f5-b245-eb9b9f9fd634
+		summarizeBy: none
+		sourceColumn: firstdateofmonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code_Der
+		dataType: string
+		lineageTag: f015cda0-091a-4936-807f-de5e46035cb1
+		summarizeBy: none
+		sourceColumn: Provider_Code_Der
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'MaxMonth - PLCM'
+		dataType: int64
+		formatString: 0
+		lineageTag: d358c844-5ff3-4ad8-9790-1c6676af7bdc
+		summarizeBy: sum
+		sourceColumn: MaxMonth - PLCM
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Referrals = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)select #(lf)sum(1) as [Referrals],#(lf)derived_treatmentfunctioncode, #(lf)Provider_Code_Der = isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]),#(lf)Provider_Code,#(lf)Location_Code,#(lf)Referral_Type,#(lf)[Provider Name] = isnull(isnull([Site].[Organisation Name], [Prov].[Organisation Name]), [Prov2].[Organisation Name]),#(lf)yearmonth,#(lf)[firstdateofmonth],#(lf)[MaxMonth - PLCM] = CASE WHEN [Yearmonth] = [Max].[Max] then 1 else 0 end,#(lf)case when yearmonth = (select max(yearmonth) as [Max] from PowerBI_Reporting.PlannedCare.tbl03_E_Referrals [a]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)LEFT JOIN CCG_Reference.Reference.vw_DateLookup [dat] on cast([a].[InitialReferralDate] as date) = [dat].[Date]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)) then 1 else 0 end as [Max Month]#(lf)from (#(lf)#(tab)SELECT [a].*,#(lf)#(tab)yearmonth,#(lf)#(tab)[firstdateofmonth],#(lf)#(tab)row_number() over(partition by UBRN order by [InitialReferralDate]) as [Distinct Referral]#(lf)#(tab)FROM PowerBI_Reporting.PlannedCare.tbl03_E_Referrals [a]#(lf)#(tab)#(tab)LEFT JOIN CCG_Reference.Reference.vw_DateLookup [dat] on cast([a].[InitialReferralDate] as date) = [dat].[Date]#(lf)#(tab)where Referral_Type = 'Directly Bookable'#(lf)#(tab)) [a]#(lf)#(tab)#(tab)LEFT JOIN [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Prov] on#(lf)#(tab)#(tab)#(tab)[a].Provider_Code = ISNULL([Prov].[Site Code],[Prov].[Organisation Code])#(lf)#(tab)#(tab)left join [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Prov2] on  #(lf)#(tab)#(tab)#(tab)[a].Provider_Code = [Prov2].[Site Code]#(lf)#(tab)#(tab)LEFT JOIN [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Site] on #(lf)#(tab)#(tab)#(tab)[a].Location_Code = #(lf)#(tab)#(tab)#(tab)ISNULL([Site].[Site Code],[Site].[Organisation Code])#(lf)#(tab)#(tab)LEFT JOIN (select max(yearmonth) as [Max], organisation_code from [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526] [a]#(lf)#(tab)#(tab)#(tab)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].[Derived_FinancialYear] = [dat].[FinancialYear] and#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].financial_month = [dat].FinancialMonth#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)group by organisation_code) [Max] on isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]) = [max].organisation_code#(lf)#(tab)#(tab)#(lf)where [Distinct Referral] = 1 and cast(yearmonth as int) >= 202404 and [Provider_Code] is not null #(lf)group by derived_treatmentfunctioncode, #(lf) isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]),#(lf)Location_Code,#(lf)Referral_Type,#(lf)isnull(isnull([Site].[Organisation Name], [Prov].[Organisation Name]), [Prov2].[Organisation Name]),#(lf)[firstdateofmonth],#(lf)yearmonth,#(lf)Provider_Code,#(lf)CASE WHEN [Yearmonth] = [Max].[Max] then 1 else 0 end#(lf)#(lf)UNION#(lf)#(lf)select #(lf)sum(1) as [Referrals],#(lf)derived_treatmentfunctioncode, #(lf)Provider_Code_Der = isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]),#(lf)Provider_Code,#(lf)Location_Code,#(lf)Referral_Type,#(lf)[Provider Name] = isnull(isnull([Site].[Organisation Name], [Prov].[Organisation Name]), [Prov2].[Organisation Name]),#(lf)yearmonth,#(lf)[firstdateofmonth],#(lf)[MaxMonth - PLCM] = CASE WHEN [Yearmonth] = [Max].[Max] then 1 else 0 end,#(lf)case when yearmonth = (select max(yearmonth) as [Max] from PowerBI_Reporting.PlannedCare.tbl03_E_Referrals [a]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)LEFT JOIN CCG_Reference.Reference.vw_DateLookup [dat] on cast([a].[InitialReferralDate] as date) = [dat].[Date]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)) then 1 else 0 end as [Max Month]#(lf)from (#(lf)#(tab)SELECT [a].*,#(lf)#(tab)yearmonth,#(lf)#(tab)[firstdateofmonth],#(lf)#(tab)row_number() over(partition by UBRN order by [InitialReferralDate]) as [Distinct Referral]#(lf)#(tab)FROM PowerBI_Reporting.PlannedCare.tbl03_E_Referrals [a]#(lf)#(tab)#(tab)LEFT JOIN CCG_Reference.Reference.vw_DateLookup [dat] on cast([a].[InitialReferralDate] as date) = [dat].[Date]#(lf)#(tab)where RAS = 1#(lf)#(tab)) [a]#(lf)#(tab)#(tab)LEFT JOIN [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Prov] on #(lf)#(tab)#(tab)#(tab)[a].Provider_Code = ISNULL([Prov].[Site Code],[Prov].[Organisation Code])#(lf)#(tab)#(tab)left join [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Prov2] on  #(lf)#(tab)#(tab)#(tab)[a].Provider_Code = [Prov2].[Site Code]#(lf)#(tab)#(tab)LEFT JOIN [BIReports].[dbo].[Contracting_ContractedProviders_2526] [Site] on #(lf)#(tab)#(tab)#(tab)[a].Location_Code = #(lf)#(tab)#(tab)#(tab)ISNULL([Site].[Site Code],[Site].[Organisation Code])#(lf)#(tab)#(tab)LEFT JOIN (select max(yearmonth) as [Max], organisation_code from [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526] [a]#(lf)#(tab)#(tab)#(tab)LEFT JOIN (select distinct yearmonth, financialyear, financialmonth from CCG_Reference.Reference.vw_DateLookup) [dat] on #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].[Derived_FinancialYear] = [dat].[FinancialYear] and#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)[a].financial_month = [dat].FinancialMonth#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)group by organisation_code) [Max] on isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]) = [max].organisation_code#(lf)where [Distinct Referral] = 1 and cast(yearmonth as int) >= 202404 and [Provider_Code] is not null #(lf)group by derived_treatmentfunctioncode, #(lf) isnull(isnull([Site].[Site Code],[Prov].[Organisation Code]), [Prov2].[Site Code]),#(lf)Location_Code,#(lf)Referral_Type,#(lf)isnull(isnull([Site].[Organisation Name], [Prov].[Organisation Name]), [Prov2].[Organisation Name]),#(lf)[firstdateofmonth],#(lf)yearmonth,#(lf)Provider_Code,#(lf)CASE WHEN [Yearmonth] = [Max].[Max] then 1 else 0 end#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

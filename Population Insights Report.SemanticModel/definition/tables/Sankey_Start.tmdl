@@ -1,0 +1,105 @@
+table Sankey_Start
+	lineageTag: 0c2cf78d-6775-4f1e-abce-c9b98e562876
+
+	measure 'Total Sankey Population - Start' =
+			
+			CALCULATE(
+			    SUM('Sankey_Start'[Counter]),
+			    USERELATIONSHIP('Sankey_Start'[PseudoNHSNumber], 'Sankey_End'[PseudoNHSNumber])
+			)
+		formatString: #,0
+		lineageTag: c67320be-98d6-4e7c-b364-248e46a5dfa3
+
+	measure 'Total Sankey Population - Start Table' =
+			
+			
+			CALCULATE(
+			    SUM('Sankey_Start'[Counter]),
+			    NOT 'Ref_Sankey_Group_Mapping'[Sankey_Health_Group] IN {"New Patient", "Patient Died", "Left Population"}
+			)
+		formatString: #,0
+		lineageTag: fc08736e-652b-422a-aca4-1efe87b26629
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: db1fdc74-096b-46be-a30a-6bdebf35b2e0
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 14bc0679-708c-4d81-b914-b22ef6eed995
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab181244-fac9-4dee-aa45-e02750cb9b7c
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 2ca58aaf-cb26-42dc-aeb6-baae04e0fe85
+			defaultHierarchy: LocalDateTable_a37b425f-7c87-413b-8111-1edd77fb9725.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sankey_Month
+		dataType: dateTime
+		formatString: MMM-YYYY
+		lineageTag: e53f3ea1-344c-4f7c-86f6-1b0203bae533
+		summarizeBy: none
+		sourceColumn: Sankey_Month
+
+		variation Variation
+			isDefault
+			relationship: 3508abe2-6ef3-465b-8a24-5b2db12122e6
+			defaultHierarchy: LocalDateTable_c6f474be-4566-4f01-90f8-e8760131df4c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Sankey_PNG
+		dataType: string
+		lineageTag: 5bf9d81c-0f02-4269-854f-90a6d3e2c5fc
+		summarizeBy: none
+		sourceColumn: Sankey_PNG
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sankey_Health_Group
+		dataType: string
+		lineageTag: 6e2275a1-97b6-4f3f-b6f3-9aebbc6d1836
+		summarizeBy: none
+		sourceColumn: Sankey_Health_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 4bc0a9b8-bb0a-4cac-b887-9f9445ee7c9d
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Sankey_Start = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)#(lf)FROM [PowerBI_Reporting].[PHM].[tbl08_ACG_Sankey_Populations]"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

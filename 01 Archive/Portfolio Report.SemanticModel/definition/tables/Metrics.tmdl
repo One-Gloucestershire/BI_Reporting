@@ -1,0 +1,4536 @@
+table Metrics
+	lineageTag: 35b678b6-c993-4b07-b7b5-925d1ac35f90
+
+	measure 'Baseline 24/25' = CALCULATE(AVERAGE(Metrics[Baseline Calculation per Metric]))
+		lineageTag: fe510a16-0325-4de2-b744-37114b017aba
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				var decimal_places = MAX('Metrics'[Decimal Places])
+				
+				return 
+				SWITCH(TRUE(),
+				percentage_check = 1 && decimal_places = "1 DP", "0.0%",
+				percentage_check = 1 && decimal_places = "2 DP", "0.00%",
+				percentage_check = 0 && decimal_places = "0 DP", "0",
+				percentage_check = 0 && decimal_places = "1 DP", "0.0",
+				percentage_check = 0 && decimal_places = "2 DP", "0.00",
+				percentage_check = 0 && decimal_places = "3 DP", "0.000",
+				"0.00")
+				```
+
+	measure 'Total Value' = SUM('Metrics'[Value])
+		lineageTag: da6357a8-fca4-4c2d-bc98-1914263617c6
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				var decimal_places = MAX('Metrics'[Decimal Places])
+				
+				return 
+				SWITCH(TRUE(),
+				percentage_check = 1 && decimal_places = "1 DP", "0.0%",
+				percentage_check = 1 && decimal_places = "2 DP", "0.00%",
+				percentage_check = 0 && decimal_places = "0 DP", "0",
+				percentage_check = 0 && decimal_places = "1 DP", "0.0",
+				percentage_check = 0 && decimal_places = "2 DP", "0.00",
+				percentage_check = 0 && decimal_places = "3 DP", "0.000",
+				"0.00")
+				```
+
+	measure 'Current Value' =
+			
+			
+			VAR max_date = MAX('Metrics'[Reporting_Date])
+			
+			RETURN CALCULATE(SUM(Metrics[Value]),'Metrics'[Reporting_Date] = max_date)
+		lineageTag: 8adc7c70-96d0-4a00-959a-740bc2629c4d
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				var decimal_places = MAX('Metrics'[Decimal Places])
+				
+				return 
+				SWITCH(TRUE(),
+				percentage_check = 1 && decimal_places = "1 DP", "0.0%",
+				percentage_check = 1 && decimal_places = "2 DP", "0.00%",
+				percentage_check = 0 && decimal_places = "0 DP", "0",
+				percentage_check = 0 && decimal_places = "1 DP", "0.0",
+				percentage_check = 0 && decimal_places = "2 DP", "0.00",
+				percentage_check = 0 && decimal_places = "3 DP", "0.000",
+				"0.00")
+				```
+
+	measure 'Current Value Card' = ```
+			
+			
+			VAR max_date = MAX('Metrics'[Reporting_Date])
+			
+			var current_value = ROUND(CALCULATE(SUM(Metrics[Value]),'Metrics'[Reporting_Date] = max_date),1)
+			
+			
+			VAR 
+			Target_string = 
+			CONVERT(current_value,STRING) //this is required as you can't have a number and a text value both as an outcome, so the interger needs to be converted to text
+			
+			VAR percentage_metric = MAX('Metrics'[Is a Percentage Metric])
+			
+			RETURN 
+			SWITCH(TRUE(),
+			percentage_metric = 1, CONCATENATE(CONVERT(((current_value) *100),STRING), "%"), //if the metric relates to a percentage, then this converts the target into a percentage then into text
+			Target_string)
+			```
+		lineageTag: 638810c3-b1aa-4f1f-ab2e-2119769d34cf
+
+	measure 'Baseline 24/25 Card' = ```
+			
+			
+			VAR baseline = ROUND([Baseline 24/25],1)
+			
+			VAR 
+			baseline_string = 
+			CONVERT(baseline,STRING) //this is required as you can't have a number and a text value both as an outcome, so the interger needs to be converted to text
+			
+			VAR percentage_metric = MAX('Metrics'[Is a Percentage Metric])
+			
+			RETURN 
+			SWITCH(TRUE(),
+			percentage_metric = 1, CONCATENATE(CONVERT(((baseline) *100),STRING), "%"), //if the metric relates to a percentage, then this converts the baseline into a percentage then into text
+			baseline_string)
+			```
+		lineageTag: 1752c91e-388b-4566-ade7-8ff755f12f4f
+
+	measure 'Half Way Date' =
+			
+			
+			var number_of_months = DATEDIFF(MIN('Metrics'[Reporting_Date]),MAX('Metrics'[Reporting_Date]),MONTH) / 2
+			
+			RETURN EOMONTH(MIN('Metrics'[Reporting_Date]), number_of_months)
+		formatString: General Date
+		lineageTag: 99d0cb21-1d30-4ab9-a828-1800bed580d0
+
+	measure 'Percentage selected' = SELECTEDVALUE('Metrics'[Is a Percentage Metric])
+		formatString: 0
+		lineageTag: fce5f7b7-6d4c-4a29-803b-ede3565f905e
+
+	measure 'Check Filtered' = ```
+			
+			   IF(MAX([Is a Percentage Metric]) = 1, TRUE(), FALSE()) -- Returns True when Any selection is made on the Category slicer
+			```
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7323b822-280a-4cc3-905c-f1550d69eff5
+
+	measure 'Value for SPC Calculations' =
+			
+			
+			CALCULATE([Total Value],'Date Reference'[Fin_Year_yy_yy] = "23/24" || 'Date Reference'[Fin_Year_yy_yy] = "24/25")
+		displayFolder: SPC - General Measures
+		lineageTag: 8fae2e8c-45cb-4512-8a65-5439c337d9f2
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Value STD DEV' =
+			
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( 'Date Reference'[year_month]), [Value for SPC Calculations]), ALLEXCEPT('Date Reference', 'Date Reference'[year_month]))
+			
+			RETURN IFERROR(STD_DEV, 0)
+		displayFolder: SPC - Old
+		lineageTag: 141c156c-3b00-4bb6-b5d2-f04f3ecdc4ae
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.00%")
+				```
+
+	measure 'Value UCL' = ```
+			IF(
+			            ('Metrics'[Total Value]) = BLANK(),  BLANK(), 
+			            IF(([Value SPC Mean]+[Value_moving_range]) < 0, 0, ([Value SPC Mean]+[Value_moving_range])))
+			
+			            //this ensures that UCL is not calculated for months with no data
+			```
+		displayFolder: SPC - Old
+		lineageTag: fcbeb5cf-7ab7-4cd2-9b63-cddfd591d1eb
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Value SPC Mean' = ```
+			
+			
+			VAR monthly_or_daily = SELECTEDVALUE('Metrics'[Monthly or Daily Data]) 
+			
+			VAR mean_ = 
+			
+			SWITCH(TRUE(),
+			monthly_or_daily = "Monthly",
+			IF([In Reporting Timeframe] = FALSE(), BLANK(),
+			        CALCULATE(AVERAGE('Metrics'[Value]),ALL('Date Reference'))),
+			monthly_or_daily = "Daily",
+			IF([In Reporting Timeframe] = FALSE(), BLANK(),
+			        CALCULATE(AVERAGE('Metrics'[Value]),'Metrics'[Last 28 Days Flag] = TRUE(),ALL('Date Reference')
+			     
+			        //,'Date Reference'[Fin_Year_yy_yy] = "23/24" || 'Date Reference'[Fin_Year_yy_yy] = "24/25",ALLSELECTED('Date Reference')) //should try and calculate this dynamically for a stable period
+			        ))
+			,BLANK())
+			
+			RETURN  mean_
+			```
+		displayFolder: SPC - General Measures
+		lineageTag: f8d641ac-b08e-4411-b736-a1f81b3170db
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Value LCL' = ```
+			IF
+			            (SUM('Metrics'[Value]) = BLANK(),  BLANK(), 
+			            IF(([Value SPC Mean] -[Value_moving_range]) < 0, 0, ([Value SPC Mean]-[Value_moving_range])))
+			
+			
+			
+			            //this ensures that LCL is not calculated for months with no data
+			```
+		displayFolder: SPC - Old
+		lineageTag: 815e8480-f9b5-40df-8429-9c01a2bc185b
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Metric Deep Dive Page Title' = CONCATENATE("Metric Selected: ", CONCATENATE(MAX('Metrics'[Metric_ID]), CONCATENATE(" - ", MAX('Metrics'[Metric_Description]))))
+		lineageTag: 1fb66f18-6d22-420c-964b-740aaf06ea33
+
+	measure 'SPC breached card (monthly)' = ```
+			
+			
+			var good_is = MAX('Metrics'[Good_Is])
+			
+			var spc_breached_high = IF([Current Value] > [Current UCL (Monthly)], 1, 0)
+			
+			var spc_breached_low = IF([Current Value] < [Current LCL (Monthly)], 1, 0)
+			
+			var final = 
+			SWITCH(TRUE(),
+			[Number of data points] < 13, "No SPC",
+			spc_breached_high = 1 && good_is = "High", "Positive Breach",
+			spc_breached_low = 1 && good_is = "Low", "Positive Breach",
+			spc_breached_high = 1 && good_is = "Low", "Negative Breach",
+			spc_breached_low = 1 && good_is = "High", "Negative Breach",
+			spc_breached_high = 1 && good_is = "N/A", "Breach",
+			spc_breached_low = 1 && good_is = "N/A", "Breach",
+			"No Breach"
+			)
+			
+			RETURN final
+			```
+		displayFolder: SPC - Breached Measures
+		lineageTag: 22cbff5f-4758-4c13-a70c-d73a956a50d7
+
+	measure 'SPC Breached Text' = ```
+			
+			
+			var good_is = MAX('Metrics'[Good Is Card])
+			
+			RETURN
+			
+			SWITCH(TRUE(),
+			[SPC breached card (monthly)] = "No breach", "This metric has not breached the upper or lower control limits over the past two years. This means there has not been any one month in which a highly unexpected value occured.",
+			
+			[SPC breached card (monthly)] = "Negative breach" && good_is = "High", "This metric has breached the lower control limits over the past two years. This means there has been an unexpectedly low value. As the lower the value the better the performance, this is not a positive sign.",
+			[SPC breached card (monthly)] = "Positive breach" && good_is = "High", "This metric has breached the upper control limits over the past two years. This means there has been an unexpectedly high value. As the higher the value the better the performance, this is not a positive sign.",
+			[SPC breached card (monthly)] = "Breach" && good_is = "N/A", "This metric has breached the control limits over the past two years. This means there has been an unexpected value which has occured.",
+			
+			[SPC breached card (monthly)] = "Positive breach" && good_is = "Low", "This metric has breached the lower control limits over the past two years. This means there has been an unexpectedly low value. As the lower the value the better the performance, this a positive sign.",
+			[SPC breached card (monthly)] = "Negative breach"  && good_is = "High", "This metric has breached the upper control limits over the past two years. This means there has been an unexpectedly high value, which is a positive result. As the higher the value the better the performance, this a positive sign.",
+			[SPC breached card (monthly)] = "Breach"  && good_is = "N/A", "This metric has breached the control limits over the past two years. This means there has been an unexpected value which has occured.",
+			
+			"Error")
+			
+			```
+		displayFolder: SPC - Breached Measures
+		lineageTag: ccc9c84f-b86f-4039-bd6f-34ab91b303e2
+
+	measure SPC_8_points_above_mean =
+			
+			VAR MeanValue = [Value SPC Mean]
+			
+			-- Current index for the row / point being evaluated
+			VAR CurrentIndex = MAX( 'Date Reference'[YearMonthIndex] )
+			
+			-- Available indexes in the current selection (ensures we only use months actually present)
+			VAR AvailableIndexes =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            ALLSELECTED( 'Date Reference' ),
+			            "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			        )
+			    )
+			
+			-- Helper: a small table containing the 8 expected indexes (CurrentIndex .. CurrentIndex-7)
+			VAR WindowIndexes =
+			    DISTINCT(
+			        UNION(
+			            ROW("YearMonthIndex", CurrentIndex),
+			            ROW("YearMonthIndex", CurrentIndex - 1),
+			            ROW("YearMonthIndex", CurrentIndex - 2),
+			            ROW("YearMonthIndex", CurrentIndex - 3),
+			            ROW("YearMonthIndex", CurrentIndex - 4),
+			            ROW("YearMonthIndex", CurrentIndex - 5),
+			            ROW("YearMonthIndex", CurrentIndex - 6),
+			            ROW("YearMonthIndex", CurrentIndex - 7)
+			        )
+			    )
+			
+			-- Join WindowIndexes to your actual Total Value (returns only values for indexes that exist)
+			VAR WindowWithValues =
+			    ADDCOLUMNS(
+			        WindowIndexes,
+			        "TotalValue",
+			            CALCULATE(
+			                [Total Value],
+			                FILTER(
+			                    ALLSELECTED( 'Date Reference' ),
+			                    'Date Reference'[YearMonthIndex] = EARLIER( [YearMonthIndex] )
+			                )
+			            )
+			    )
+			
+			-- Count how many of those 8 indexes actually had a TotalValue (non-blank)
+			VAR CountExists =
+			    COUNTROWS( FILTER( WindowWithValues, NOT( ISBLANK( [TotalValue] ) ) ) )
+			
+			-- Count how many of those existing ones are strictly below the mean
+			VAR CountBelow =
+			    COUNTROWS( FILTER( WindowWithValues, NOT( ISBLANK( [TotalValue] ) ) && [TotalValue] > MeanValue ) )
+			
+			-- This is TRUE only when all 8 expected indexes exist AND all 8 are < Mean
+			VAR IsEndOf8BelowRun =
+			    IF (
+			        CountExists = 8 &&
+			        CountBelow = CountExists &&
+			        CountBelow >= 8,
+			        1,
+			        0
+			    )
+			
+			/* -------------------------
+			   Collect every run-end index (those indexes which are the last point of an 8-point below-mean run)
+			   then enumerate the full 8-member runs from those ends (to flag all points in the run).
+			   This avoids back-propagation / false overlaps because we only derive members from confirmed run-ends.
+			   ------------------------- */
+			
+			VAR AllSummaryIndexes =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            ALLSELECTED( 'Date Reference' ),
+			            "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			        )
+			    )
+			
+			-- Table of run ends across the selection (we must evaluate per index, so we create a table)
+			VAR RunEnds =
+			    FILTER(
+			        ADDCOLUMNS(
+			            AllSummaryIndexes,
+			            "IsEnd",
+			                VAR ThisIdx = [YearMonthIndex]
+			                VAR Wnd =
+			                    DISTINCT(
+			                        UNION(
+			                            ROW("YearMonthIndex", ThisIdx),
+			                            ROW("YearMonthIndex", ThisIdx - 1),
+			                            ROW("YearMonthIndex", ThisIdx - 2),
+			                            ROW("YearMonthIndex", ThisIdx - 3),
+			                            ROW("YearMonthIndex", ThisIdx - 4),
+			                            ROW("YearMonthIndex", ThisIdx - 5),
+			                            ROW("YearMonthIndex", ThisIdx - 6),
+			                            ROW("YearMonthIndex", ThisIdx - 7)
+			                        )
+			                    )
+			                VAR WndWithVals =
+			                    ADDCOLUMNS(
+			                        Wnd,
+			                        "TotalValue",
+			                            CALCULATE(
+			                                [Total Value],
+			                                FILTER( ALLSELECTED( 'Date Reference' ), 'Date Reference'[YearMonthIndex] = EARLIER( [YearMonthIndex] ) )
+			                            )
+			                    )
+			                VAR ExistsCnt = COUNTROWS( FILTER( WndWithVals, NOT( ISBLANK( [TotalValue] ) ) ) )
+			                VAR BelowCnt = COUNTROWS( FILTER( WndWithVals, NOT( ISBLANK( [TotalValue] ) ) && [TotalValue] > MeanValue ) )
+			                RETURN     IF (
+			        CountExists = 8 &&
+			        CountBelow = CountExists &&
+			        CountBelow >= 8,
+			        1,
+			        0
+			    )
+			        ),
+			        [IsEnd] = 1
+			    )
+			
+			-- From confirmed run ends, enumerate all 8 member indexes for each run end
+			VAR RunMembers =
+			    DISTINCT(
+			        UNION(
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 1 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 2 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 3 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 4 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 5 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 6 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 7 )
+			        )
+			    )
+			
+			-- Final: is the current row in the set of confirmed run member indexes?
+			VAR IsMember = IF( CurrentIndex IN RunMembers, 1, 0 )
+			
+			RETURN
+			IsMember
+		displayFolder: SPC - Lines
+		lineageTag: 0719896d-ebd3-4463-87bb-9e052fcaf879
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure SPC_8_points_below_mean = ```
+			
+			VAR MeanValue = [Value SPC Mean]
+			
+			-- Current index for the row / point being evaluated
+			VAR CurrentIndex = MAX( 'Date Reference'[YearMonthIndex] )
+			
+			-- Available indexes in the current selection (ensures we only use months actually present)
+			VAR AvailableIndexes =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            ALLSELECTED( 'Date Reference' ),
+			            "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			        )
+			    )
+			
+			-- Helper: a small table containing the 8 expected indexes (CurrentIndex .. CurrentIndex-7)
+			VAR WindowIndexes =
+			    DISTINCT(
+			        UNION(
+			            ROW("YearMonthIndex", CurrentIndex),
+			            ROW("YearMonthIndex", CurrentIndex - 1),
+			            ROW("YearMonthIndex", CurrentIndex - 2),
+			            ROW("YearMonthIndex", CurrentIndex - 3),
+			            ROW("YearMonthIndex", CurrentIndex - 4),
+			            ROW("YearMonthIndex", CurrentIndex - 5),
+			            ROW("YearMonthIndex", CurrentIndex - 6),
+			            ROW("YearMonthIndex", CurrentIndex - 7)
+			        )
+			    )
+			
+			-- Join WindowIndexes to your actual Total Value (returns only values for indexes that exist)
+			VAR WindowWithValues =
+			    ADDCOLUMNS(
+			        WindowIndexes,
+			        "TotalValue",
+			            CALCULATE(
+			                [Total Value],
+			                FILTER(
+			                    ALLSELECTED( 'Date Reference' ),
+			                    'Date Reference'[YearMonthIndex] = EARLIER( [YearMonthIndex] )
+			                )
+			            )
+			    )
+			
+			-- Count how many of those 8 indexes actually had a TotalValue (non-blank)
+			VAR CountExists =
+			    COUNTROWS( FILTER( WindowWithValues, NOT( ISBLANK( [TotalValue] ) ) ) )
+			
+			-- Count how many of those existing ones are strictly below the mean
+			VAR CountBelow =
+			    COUNTROWS( FILTER( WindowWithValues, NOT( ISBLANK( [TotalValue] ) ) && [TotalValue] < MeanValue ) )
+			
+			-- This is TRUE only when all 8 expected indexes exist AND all 8 are < Mean
+			VAR IsEndOf8BelowRun =
+			    IF (
+			        CountExists = 8 &&
+			        CountBelow = CountExists &&
+			        CountBelow >= 8,
+			        1,
+			        0
+			    )
+			
+			/* -------------------------
+			   Collect every run-end index (those indexes which are the last point of an 8-point below-mean run)
+			   then enumerate the full 8-member runs from those ends (to flag all points in the run).
+			   This avoids back-propagation / false overlaps because we only derive members from confirmed run-ends.
+			   ------------------------- */
+			
+			VAR AllSummaryIndexes =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            ALLSELECTED( 'Date Reference' ),
+			            "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			        )
+			    )
+			
+			-- Table of run ends across the selection (we must evaluate per index, so we create a table)
+			VAR RunEnds =
+			    FILTER(
+			        ADDCOLUMNS(
+			            AllSummaryIndexes,
+			            "IsEnd",
+			                VAR ThisIdx = [YearMonthIndex]
+			                VAR Wnd =
+			                    DISTINCT(
+			                        UNION(
+			                            ROW("YearMonthIndex", ThisIdx),
+			                            ROW("YearMonthIndex", ThisIdx - 1),
+			                            ROW("YearMonthIndex", ThisIdx - 2),
+			                            ROW("YearMonthIndex", ThisIdx - 3),
+			                            ROW("YearMonthIndex", ThisIdx - 4),
+			                            ROW("YearMonthIndex", ThisIdx - 5),
+			                            ROW("YearMonthIndex", ThisIdx - 6),
+			                            ROW("YearMonthIndex", ThisIdx - 7)
+			                        )
+			                    )
+			                VAR WndWithVals =
+			                    ADDCOLUMNS(
+			                        Wnd,
+			                        "TotalValue",
+			                            CALCULATE(
+			                                [Total Value],
+			                                FILTER( ALLSELECTED( 'Date Reference' ), 'Date Reference'[YearMonthIndex] = EARLIER( [YearMonthIndex] ) )
+			                            )
+			                    )
+			                VAR ExistsCnt = COUNTROWS( FILTER( WndWithVals, NOT( ISBLANK( [TotalValue] ) ) ) )
+			                VAR BelowCnt = COUNTROWS( FILTER( WndWithVals, NOT( ISBLANK( [TotalValue] ) ) && [TotalValue] < MeanValue ) )
+			                RETURN 
+			    IF (
+			        CountExists = 8 &&
+			        CountBelow = CountExists &&
+			        CountBelow >= 8,
+			        1,
+			        0
+			    )
+			        ),
+			        [IsEnd] = 1
+			    )
+			
+			-- From confirmed run ends, enumerate all 8 member indexes for each run end
+			VAR RunMembers =
+			    DISTINCT(
+			        UNION(
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 1 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 2 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 3 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 4 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 5 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 6 ),
+			            SELECTCOLUMNS( RunEnds, "YearMonthIndex", [YearMonthIndex] - 7 )
+			        )
+			    )
+			
+			-- Final: is the current row in the set of confirmed run member indexes?
+			VAR IsMember = IF( CurrentIndex IN RunMembers, 1, 0 )
+			
+			RETURN
+			IsMember
+			```
+		displayFolder: SPC - Lines
+		lineageTag: f63d398f-f1fd-473d-aacc-007b41dd9666
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure SPC_decreasing_trend = ```
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED('Date Reference'),'Date Reference'[YearMonthIndex] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[YearMonthIndex]
+			        VAR PreviousValue =
+			            CALCULATE(
+			                MAXX(
+			                    FILTER(
+			                        SummaryTable,
+			                        'Date Reference'[YearMonthIndex] = CurrentYearMonthIndex - 1
+			                    ),
+			                    [Total Value]
+			                )
+			            )
+			        RETURN [Total Value] - PreviousValue
+			    )
+			
+			VAR SummaryTableWithDecreasingFlag =
+			    ADDCOLUMNS(
+			        SummaryTableWithDifference,
+			        "DecreasingFlag",
+			        IF([Difference] < 0, 1, 0)
+			    )
+			
+			VAR DecreasingSequence =
+			    FILTER(
+			        ADDCOLUMNS(
+			            SummaryTableWithDecreasingFlag,
+			            "DecreasingSequence",
+			            VAR CurrentYearMonthIndex = 'Date Reference'[YearMonthIndex]
+			            VAR DecreasingCount =
+			                COUNTROWS(
+			                    FILTER(
+			                        SummaryTableWithDecreasingFlag,
+			                        'Date Reference'[YearMonthIndex] >= CurrentYearMonthIndex - 4 &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentYearMonthIndex &&
+			                        [DecreasingFlag] = 1
+			                    )
+			                )
+			            RETURN IF(DecreasingCount =5 , 1, 0) -- Adjust the number of periods for your trend
+			        ),
+			        [DecreasingSequence] = 1
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			   
+			   SELECTCOLUMNS(
+			           ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 5),
+			           "YearMonthIndex", [OffsetIndex]
+			       ),
+			       SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 4),
+			           "YearMonthIndex", [OffsetIndex]
+			       ),
+			       SELECTCOLUMNS(
+			           ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 3),
+			           "YearMonthIndex", [OffsetIndex]
+			       ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			
+			
+			RETURN
+			IF(
+			    MIN('Date Reference'[YearMonthIndex]) IN AdditionalFlags,
+			    [Total Value],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC - Lines
+		lineageTag: 0a9eda65-1d8e-4cc8-99e6-b4eef4e2eedd
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure SPC_increasing_trend = ```
+			
+			VAR FilteredTable_ =
+			   filter(ALLSELECTED('Date Reference'),'Date Reference'[YearMonthIndex] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MAXX(
+			                    FILTER(
+			                        SummaryTable,
+			                        'Date Reference'[YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                    [Total Value]
+			                )
+			            )
+			        RETURN NextValue - [Total Value]
+			    )
+			
+			VAR SummaryTableWithIncreasingFlag =
+			    ADDCOLUMNS(
+			        SummaryTableWithDifference,
+			        "IncreasingFlag",
+			        IF([Difference] > 0, 1, 0)
+			    )
+			
+			VAR IncreasingSequence =
+			    FILTER(
+			        ADDCOLUMNS(
+			            SummaryTableWithIncreasingFlag,
+			            "IncreasingSequence",
+			            VAR CurrentYearMonthIndex = 'Date Reference'[YearMonthIndex]
+			            VAR IncreasingCount =
+			                COUNTROWS(
+			                    FILTER(
+			                        SummaryTableWithIncreasingFlag,
+			                        'Date Reference'[YearMonthIndex] >= CurrentYearMonthIndex &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentYearMonthIndex + 4 &&
+			                        [IncreasingFlag] = 1
+			                    )
+			                )
+			            RETURN 
+			            
+			            IF(IncreasingCount =5, 1, 0) -- Adjust the number of periods for your trend
+			        ),
+			        [IncreasingSequence] = 1
+			    )
+			
+			VAR AdditionalFlags =
+			   UNION(
+			   
+			              SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 5),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			   
+			              SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 4),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			   
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 3),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			    
+			RETURN
+			IF(    MIN('Date Reference'[YearMonthIndex]) IN AdditionalFlags,    [Total Value],    BLANK())
+			```
+		displayFolder: SPC - Lines
+		lineageTag: 0aec09ba-54c1-46ed-af4f-3dc3d22d0660
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure SPC_value_outside_of_LCL =
+			
+			IF([Total Value] <[LCL SPC],[Total Value],BLANK())
+		displayFolder: SPC - Lines
+		lineageTag: 2890b341-c1f3-4760-b803-9040d3b8ac49
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure SPC_outside_of_UCL =
+			
+			IF([Total Value] >[UCL SPC],[Total Value],BLANK())
+		displayFolder: SPC - Lines
+		lineageTag: 49bbac37-95b6-42c8-bc16-3ffdf8d9c730
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure SPC_Two_out_of_three_points_near_to_the_LCL = ```
+			
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED('Date Reference'),'Date Reference'[YearMonthIndex] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR MeanValue = [Value SPC Mean]
+			VAR ucl = [UCL SPC]
+			VAR lcl = [LCL SPC]
+			VAR sigma = (ucl - lcl) / 6
+			
+			VAR LowerOuterThird = [LowerOuterThird]
+			VAR UpperOuterThird = [UpperOuterThird]
+			
+			VAR SummaryTableWithFlags =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "IsBelowLowerOuterThird",
+			        IF([Total Value] < [LowerOuterThird], 1, 0),
+			        "IsBelowMean",
+			        IF([Total Value] < [Value SPC Mean], 1, 0),
+			         "IsAboveUpperOuterThird",
+			        IF([Total Value] > [UpperOuterThird], 1, 0),
+			        "IsAboveMean",
+			        IF([Total Value] > [Value SPC Mean], 1, 0)       
+			    )
+			
+			VAR PatternTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithFlags,
+			        "PatternFlag",
+			        VAR CurrentIndex = 'Date Reference'[YearMonthIndex]
+			
+			        // Check the range of two months behind the current month index
+			        VAR CheckPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 2, CurrentIndex - 1, CurrentIndex}
+			                    ),
+			                    [IsBelowLowerOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of one month either side of the current month index for lower third
+			        VAR CheckMidRange_Lower =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 1, CurrentIndex, CurrentIndex + 1}
+			                    ),
+			                    [IsBelowLowerOuterThird]
+			                )
+			            )
+			
+			        // Check the range of one month either side of the current month index for upper third
+			        VAR CheckMidRange_Upper =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 1, CurrentIndex, CurrentIndex + 1}
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )            
+			        
+			        // Check the range of two months in front of the current month index for lower third
+			        VAR CheckNextRange_Lower =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex, CurrentIndex + 1, CurrentIndex + 2}
+			                    ),
+			                    [IsBelowLowerOuterThird]
+			                )
+			            )
+			
+			        // Check the range of two months in front of the current month index for upper third
+			        VAR CheckNextRange_Upper =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex, CurrentIndex + 1, CurrentIndex + 2}
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )            
+			        
+			        // Ensure all points in the previous range are below the mean
+			        VAR CheckAllBelowMeanPrevRange_Below =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 2, CurrentIndex - 1, CurrentIndex}
+			                    ),
+			                    [IsBelowMean]
+			                )
+			            )
+			
+			        // Ensure all points in the previous range are above the mean
+			        VAR CheckAllBelowMeanPrevRange_Above =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 2, CurrentIndex - 1, CurrentIndex}
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )            
+			        
+			        // Ensure all points in the middle range are below the mean
+			        VAR CheckAllBelowMeanMidRange_Below =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 1, CurrentIndex, CurrentIndex + 1}
+			                    ),
+			                    [IsBelowMean]
+			                )
+			            )
+			
+			        // Ensure all points in the middle range are above the mean
+			        VAR CheckAllBelowMeanMidRange_Above =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex - 1, CurrentIndex, CurrentIndex + 1}
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )            
+			        
+			        // Ensure all points in the next range are below the mean
+			        VAR CheckAllBelowMeanNextRange_Below =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex, CurrentIndex + 1, CurrentIndex + 2}
+			                    ),
+			                    [IsBelowMean]
+			                )
+			            )
+			
+			        // Ensure all points in the next range are above the mean
+			        VAR CheckAllBelowMeanNextRange_Above =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] IN {CurrentIndex, CurrentIndex + 1, CurrentIndex + 2}
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )            
+			        
+			        RETURN
+			   
+			IF (
+			    [IsBelowLowerOuterThird] = 1 || [IsAboveUpperOuterThird] = 1 &&
+			    (
+			        (CheckPrevRange >= 2 && (CheckAllBelowMeanPrevRange_Below = 3 || CheckAllBelowMeanPrevRange_Above = 3)) ||
+			        (CheckMidRange_Lower >= 2 && (CheckAllBelowMeanMidRange_Below = 3 || CheckAllBelowMeanMidRange_Above = 3)) ||
+			        (CheckNextRange_Lower >= 2 && (CheckAllBelowMeanNextRange_Below = 3 || CheckAllBelowMeanNextRange_Above = 3))
+			    ),
+			    1,
+			    0
+			)
+			
+			    )
+			
+			VAR AdditionalFlags =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            PatternTable,
+			            [PatternFlag] = 1
+			        ),
+			        "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			    )
+			
+			RETURN
+			IF(
+			    MIN('Date Reference'[YearMonthIndex]) IN AdditionalFlags,
+			    [Total Value],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC - Old
+		lineageTag: 66b1f2a8-6b65-4850-8ee0-4fc0f5042d33
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure Value_moving_range = ```
+			
+			VAR FilteredTable_ =
+			    FILTER(
+			        ALL('Date Reference'),
+			        'Date Reference'[YearMonthIndex] >= 1 && 'Date Reference'[Test_SPC_flag] = 1
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = [YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MINX(
+			                    FILTER(
+			                        SummaryTable,
+			                        [YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                   [Total Value]
+			                )
+			            )
+			        RETURN IF(ISBLANK(NextValue), BLANK(),  abs([Total Value] - NextValue))
+			    )
+			
+			VAR Differences =
+			    SELECTCOLUMNS(SummaryTableWithDifference, "Diff", [Difference])
+			
+			    VAR Cumulative_moving_range = (AVERAGEX(Differences, [Diff])) 
+			
+			RETURN Cumulative_moving_range
+			```
+		formatString: 0.000
+		displayFolder: SPC - Old
+		lineageTag: 74f90d86-3d41-4245-a76d-fea3355ffedb
+
+	measure SPC_Two_out_of_three_points_near_to_the_UCL = ```
+			
+			
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED('Date Reference'),'Date Reference'[YearMonthIndex]>=1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR MeanValue = [Value SPC Mean]
+			VAR ucl = [UCL SPC]
+			VAR lcl = [LCL SPC]
+			VAR sigma = (ucl - lcl) / 6
+			
+			VAR UpperOuterThird = MeanValue + 2 * sigma
+			
+			VAR SummaryTableWithFlags =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "IsAboveUpperOuterThird",
+			        IF([Total Value] > UpperOuterThird, 1, 0),
+			        "IsAboveMean",
+			        IF([Total Value] > MeanValue, 1, 0)
+			    )
+			
+			VAR PatternTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithFlags,
+			        "PatternFlag",
+			        VAR CurrentIndex = 'Date Reference'[YearMonthIndex]
+			        
+			        // Check the range of two months behind the current month index
+			        VAR CheckPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] >= CurrentIndex - 2 &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentIndex
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of one month either side of the current month index
+			        VAR CheckMidRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] >= CurrentIndex - 1 &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentIndex + 1
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of two months in front of the current month index
+			        VAR CheckNextRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] >= CurrentIndex &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentIndex + 2
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )
+			        
+			        // Ensure all points in the previous range are above the mean
+			        VAR CheckAllAboveMeanPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] >= CurrentIndex - 2 &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentIndex
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )
+			        
+			        // Ensure all points in the middle range are above the mean
+			        VAR CheckAllAboveMeanMidRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] >= CurrentIndex - 1 &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentIndex + 1
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )
+			        
+			        // Ensure all points in the next range are above the mean
+			        VAR CheckAllAboveMeanNextRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        'Date Reference'[YearMonthIndex] >= CurrentIndex &&
+			                        'Date Reference'[YearMonthIndex] <= CurrentIndex + 2
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )
+			        
+			        RETURN
+			            IF(
+			                AND(
+			                    [IsAboveUpperOuterThird] = 1,
+			                    OR(
+			                        AND(CheckPrevRange >= 2, CheckAllAboveMeanPrevRange = 3),
+			                        OR(
+			                            AND(CheckMidRange >= 2, CheckAllAboveMeanMidRange = 3),
+			                            AND(CheckNextRange >= 2, CheckAllAboveMeanNextRange = 3)
+			                        )
+			                    )
+			                ),
+			                1,
+			                0
+			            )
+			    )
+			
+			VAR AdditionalFlags =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            PatternTable,
+			            [PatternFlag] = 1 
+			        ),
+			        "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			    )
+			
+			RETURN
+			IF(
+			    MIN('Date Reference'[YearMonthIndex]) IN AdditionalFlags ,
+			    [Total Value],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC - Old
+		lineageTag: 82e2f5b9-88e6-4616-90db-2452ea717f4b
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Data last updated' = TODAY()
+		formatString: mmmm yyyy
+		lineageTag: 33ed9289-fadc-468e-a613-1caa21e1e183
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	measure 'Data up to' = MAX('Metrics'[Reporting_Date])
+		formatString: mmmm yyyy
+		lineageTag: 2ba20d38-4ecc-4251-a261-5c20b92bd8b0
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	measure 'Total Numerator' = SUM('Metrics'[Numerator])
+		lineageTag: 988db1e9-90d1-4a21-a824-394e7e723872
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Denominator' = SUM('Metrics'[Denominator])
+		lineageTag: 0b95307b-0cc4-420d-93f5-ab5a3c2e58e7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'P value' = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Denominator],ALL('Date Reference')))  
+			
+			RETURN CALCULATE(np / n,ALL('Date Reference'))
+			```
+		displayFolder: SPC - Old
+		lineageTag: e61bc134-cd53-43d5-93b1-f67be924e389
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'N value' = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), [Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT([Reporting_Date]))  
+			
+			RETURN n / k
+			```
+		displayFolder: SPC - Old
+		lineageTag: ede2c882-22f6-4c0f-894f-01527a252e45
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'P UCL' = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), [Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT([Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			RETURN p_values + 
+			    (SQRT(((p_values*(1-p_values)) /n_total))*3)
+			```
+		displayFolder: SPC - Old
+		lineageTag: 5dd78011-7878-4f74-a88f-189a7dc2ae95
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'C LCL' = ```
+			
+			
+			
+			VAR c_total = CALCULATE([Total Value],ALL('Date Reference'))
+			
+			VAR k = CALCULATE(COUNT([Reporting_Date]),ALL('Date Reference'))
+			
+			VAR c_value = c_total / k
+			
+			VAR C_LCL = IF(SUM('Metrics'[Value]) = BLANK(), BLANK(), 
+			            c_value - 
+			            SQRT(c_value)*3)
+			
+			RETURN IF(C_LCL < 0, 0, C_LCL)
+			```
+		displayFolder: SPC - C Chart
+		lineageTag: 6ca2d0ce-f382-46b8-9262-af93e0a81781
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'U-Chart LCL' =
+			
+			
+			
+			VAR n = [Total Denominator]
+			
+			VAR c = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n_total = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR u_value = CALCULATE(c / n_total,ALL('Date Reference'))
+			
+			RETURN IFERROR((u_value - (sqrt(u_value) / SQRT(n)) * 3) * 1000,BLANK())
+		displayFolder: SPC - Old
+		lineageTag: e499485e-4a9a-464c-90b3-289566e7d5ab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'U-Chart UCL' =
+			
+			
+			
+			VAR n = [Total Denominator]
+			
+			VAR c = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n_total = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR u_value = CALCULATE(c / n_total,ALL('Date Reference'))
+			
+			RETURN IFERROR((u_value + ((sqrt(u_value) / SQRT(n)) * 3)) * 1000,BLANK())
+		displayFolder: SPC - Old
+		lineageTag: a52eaaf9-bc1b-44bc-a758-7d87c60d47c9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'P LCL' = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), [Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT([Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			RETURN p_values - 
+			    (SQRT(((p_values*(1-p_values)) /n_total))*3)
+			```
+		displayFolder: SPC - Old
+		lineageTag: ebf223fa-31d8-4eed-aa2f-1201efd83e5f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'C UCL' = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR c_total = CALCULATE([Total Value],ALL('Date Reference'))
+			
+			VAR k = CALCULATE(COUNT([Reporting_Date]),ALL('Date Reference'))
+			
+			VAR c_value = c_total / k
+			
+			
+			RETURN IF
+			            (SUM('Metrics'[Value]) = BLANK(),  BLANK(), c_value + 
+			    (SQRT(c_value))*3)
+			```
+		displayFolder: SPC - C Chart
+		lineageTag: 82f18f05-09a7-462a-8f1d-77c898d5abec
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure C-value =
+			
+			
+			VAR c_total = CALCULATE([Total Value],ALL('Date Reference'))
+			
+			VAR k = CALCULATE(COUNT([Reporting_Date]),ALL('Date Reference'))
+			
+			return c_total / k
+		displayFolder: SPC - C Chart
+		lineageTag: c1550b5e-db68-4802-9bb8-efd971f66760
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'I Prime UCL' =
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR denom_SR = SQRT(CALCULATE(SUM('Metrics'[Denominator])))
+			
+			RETURN IF([Total Value] = BLANK(), BLANK(), [Value SPC Mean] + ([avg std] / denom_SR)*3)
+		displayFolder: SPC - Old
+		lineageTag: 72fdad4e-2b68-4093-8be8-62dfc5488438
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'avg std' =
+			
+			
+			var months = DISTINCTCOUNTNOBLANK('Metrics'[Reporting_Date] )
+			
+			RETURN CALCULATE([Value STD DEV],ALL('Date Reference')) / months
+		lineageTag: 9ef41feb-559f-488e-a2d6-751a80223daa
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.00%")
+				```
+
+	measure 'P Prime Z Value' = ```
+			
+			
+			var percentage_check = MAX('metrics'[Is a Percentage Metric])
+			
+			VAR n_total = IF(
+			    percentage_check = 0, BLANK(), [Total Denominator])
+			
+			VAR k = IF(
+			    percentage_check = 0, BLANK(), COUNT([Reporting_Date]))  
+			
+			VAR N_value = n_total / k
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Total Value])
+			
+			Var z_value =  (p - p_values) / 
+			SQRT((((1 - p_values) * p_values) / n_value)) 
+			
+			RETURN z_value
+			
+			```
+		displayFolder: SPC - Old
+		lineageTag: fa3020fb-620c-44da-b660-080bbd4e5e15
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Moving Range' =
+			
+			VAR FilteredTable_ =
+			    FILTER(
+			        ALL('Date Reference'),
+			        'Date Reference'[YearMonthIndex] >= 1 && 'Date Reference'[SPC_Flag] = 1
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = [YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MINX(
+			                    FILTER(
+			                        SummaryTable,
+			                        [YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                   [Total Value]
+			                )
+			            )
+			        RETURN IF(ISBLANK(NextValue), BLANK(),  abs([Total Value] - NextValue))
+			    )
+			
+			VAR Differences =
+			    SELECTCOLUMNS(SummaryTableWithDifference, "Diff", [Difference])
+			
+			 RETURN   AVERAGEX(
+			        FILTER(SummaryTableWithDifference, NOT ISBLANK([Difference])),
+			        [Difference]
+			    )
+		displayFolder: SPC - Old
+		lineageTag: 2019880a-5549-4180-bd2b-420d20ce81ec
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney P Prime Z Value' = ```
+			
+			
+			VAR denominator = 'Metrics'[Total Denominator]
+			
+			VAR total_numerator  = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR total_denominator = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR total_value = CALCULATE(Total_numerator / Total_denominator)
+			
+			VAR value_ = [Total Value]
+			
+			Var z_value =  IFERROR( (value_ - total_value) / 
+			SQRT((((1 - total_value) * total_value) / denominator)) ,BLANK())
+			
+			RETURN z_value
+			
+			```
+		displayFolder: SPC - P Prime
+		lineageTag: c6e5843b-c267-46de-9cdd-975ca0d6ff2d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Proportion = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR p = IF(
+			    percentage_check = 0, BLANK(), [Total Value])
+			
+			RETURN p
+			
+			```
+		lineageTag: dd4e59f6-a6c5-40a8-86d9-bf67d68c804b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sample Proportion' = ```
+			
+			
+			var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+			
+			VAR np = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Numerator],ALL('Date Reference')))
+			
+			VAR n = IF(
+			    percentage_check = 0, BLANK(), CALCULATE([Total Denominator],ALL('Date Reference')))  
+			
+			VAR p_values = CALCULATE(np / n)
+			
+			RETURN p_values
+			
+			
+			
+			
+			
+			```
+		formatString: 0.0000
+		lineageTag: c10af34b-2f8e-4730-b51b-e33f43c4c22a
+
+	measure 'P Prime Standard Deviation Z Value' = 'Metrics'[Lanley P Prime Moving Range Average] / 1.128
+		formatString: 0.0000
+		displayFolder: SPC - P Prime
+		lineageTag: 0ba143da-70de-4404-b73a-dbc907f9bbb3
+
+	measure 'Laney P Prime UCL' = ```
+			
+			
+			var percentage_as_rate_per_1000 = SELECTEDVALUE('Metrics'[Percentage Metric as Rate per 1000])
+			
+			VAR denominator = 'Metrics'[Total Denominator]
+			
+			VAR total_numerator = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR total_denominator = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR total_value = CALCULATE(total_numerator / total_denominator,ALL('Date Reference'))
+			
+			VAR ucl = IFERROR(total_value + 3*[P Prime Standard Deviation Z Value] *
+			    ((SQRT(((total_value*(1-total_value)) /denominator)))),BLANK())
+			
+			RETURN 
+			SWITCH(TRUE(),
+			percentage_as_rate_per_1000 = TRUE() && ucl > 1000, 999    --this uses the same SPC logic as the P chart but as it is calculated as a rate per 1000 it ensures it can never   be over 1000 as that is 100%
+			,percentage_as_rate_per_1000 = FALSE() && ucl > 1,0.999         --this ensures any percentage metric doesn't go over 100%
+			,ucl)
+			
+			```
+		formatString: 0.0000
+		displayFolder: SPC - P Prime
+		lineageTag: 1c13de39-9d21-4f85-ac0b-b47b76e0a151
+
+	measure 'Laney P Prime LCL' =
+			
+			
+			VAR n_total = 'Metrics'[Total Denominator]
+			
+			VAR k = COUNT('Metrics'[Reporting_Date])
+			
+			VAR N_value = n_total / k
+			
+			VAR np = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = [Total Value]
+			
+			VAR lcl = IFERROR(p_values - 3*[P Prime Standard Deviation Z Value] *
+			    ((SQRT(((p_values*(1-p_values)) /n_total)))),BLANK())
+			
+			VAR final = IF(lcl <= 0, 0.001, lcl)
+			
+			RETURN final
+		displayFolder: SPC - P Prime
+		lineageTag: 26bddf28-9700-46fa-8f49-c755b86cf8d4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prior Laney P Prime Z Value' =
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[YearMonth_YYYYMM])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[YearMonth_YYYYMM] < CurrYM
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			
+			VAR final =
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Laney P Prime Z Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[YearMonth_YYYYMM]),
+			        TREATAS({PrevYM}, 'Date Reference'[YearMonth_YYYYMM])
+			    )
+			)
+			
+			RETURN IFERROR(final, BLANK())
+		displayFolder: SPC - P Prime
+		lineageTag: 4885fecc-fe0d-4a7d-a942-bb8190a10c7a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley P Prime Moving Range' = IF([Prior Laney P Prime Z Value] = BLANK(), BLANK(), ABS([Laney P Prime Z Value] - [Prior Laney P Prime Z Value]))
+		displayFolder: SPC - P Prime
+		lineageTag: c8a53600-55bb-4698-bc5b-613b7de3fe0e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley P Prime Moving Range Average' =
+			CALCULATE(
+			AVERAGEX(
+			    VALUES('Date Reference'[YearMonth_YYYYMM]),   -- iterate over each month
+			    [Lanley P Prime Moving Range]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+		formatString: 0.0000
+		displayFolder: SPC - P Prime
+		lineageTag: d3234a0f-0371-4567-8343-6c665eb2dfbb
+
+	measure 'Laney U Prime Z Value' = ```
+			
+			
+			VAR rate_helper = CALCULATE(SUM([Rate Helper]))
+			
+			VAR denominator = [Total Denominator]
+			
+			VAR total_numerator = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR total_denominator = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR total_rate = CALCULATE(total_numerator / total_denominator*rate_helper)
+			
+			VAR rate_ =  [Total Value]
+			
+			Var z_value =  IFERROR(
+			    (rate_ - total_rate) 
+			    / 
+			SQRT(
+			    ( total_rate / denominator)
+			    )
+			    ,BLANK()
+			    ) 
+			
+			RETURN z_value
+			```
+		displayFolder: SPC - U Prime
+		lineageTag: 3a71e1ef-198d-480c-a2ff-8d95f9233a36
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prior Laney U Prime Z Value' = ```
+			
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[YearMonth_YYYYMM])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[YearMonth_YYYYMM] < CurrYM
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			
+			RETURN
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Laney U Prime Z Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[YearMonth_YYYYMM]),
+			        TREATAS({PrevYM}, 'Date Reference'[YearMonth_YYYYMM])
+			    )
+			)
+			
+			```
+		displayFolder: SPC - U Prime
+		lineageTag: 6bd9fbc3-d0fb-482f-b0e4-97fa84f9ba83
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley U Prime Moving Range' = IF([Prior Laney U Prime Z Value] = BLANK(), BLANK(), ABS([Laney U Prime Z Value] - [Prior Laney U Prime Z Value]))
+		displayFolder: SPC - U Prime
+		lineageTag: 6a9b24f1-2570-49f5-9d2a-42dd7a72ebf1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley U Prime Moving Range Average' =
+			CALCULATE(
+			AVERAGEX(
+			    VALUES('Date Reference'[YearMonth_YYYYMM]),   -- iterate over each month
+			    [Lanley U Prime Moving Range]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+		displayFolder: SPC - U Prime
+		lineageTag: ac3fa263-54ba-4a74-b870-d283a29434fd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley U Prime Standard Deviation' = [Lanley U Prime Moving Range Average] / 1.128
+		displayFolder: SPC - U Prime
+		lineageTag: d1239c62-b6cb-4f46-9774-46d04aafaf3f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney U Prime UCL' = ```
+			
+			
+			VAR rate_helper = CALCULATE(SUM([Rate Helper]))
+			
+			VAR denominator = [Total Denominator]
+			
+			VAR total_numerator = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR total_denominator = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR total_rate = CALCULATE(total_numerator / total_denominator*rate_helper)
+			
+			VAR final = IFERROR(
+			total_rate + 3*[Lanley U Prime Standard Deviation] *
+			    (SQRT((total_rate /denominator))),BLANK())
+			
+			RETURN 
+			IF([Total Value] = BLANK(), BLANK(), final)
+			
+			```
+		displayFolder: SPC - U Prime
+		lineageTag: 00ba3db5-7322-4781-8616-a925c18503a0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney U Prime LCL' =
+			
+			
+			VAR rate_ = CALCULATE(SUM([Rate Helper]))
+			
+			VAR n = [Total Denominator]
+			
+			VAR c = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n_total = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR u_value = CALCULATE(c / n_total*rate_)
+			
+			VAR u =  [Total Value]
+			
+			VAR final = IFERROR(
+			u_value - 3*[Lanley U Prime Standard Deviation] *
+			    (SQRT((u_value /n))),BLANK())
+			
+			RETURN IF(final<=0, 0.001, final)
+		displayFolder: SPC - U Prime
+		lineageTag: bce786cc-5fab-4cdb-b1f2-a465a26e65aa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prior XmR Value' =
+			
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[YearMonth_YYYYMM])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[YearMonth_YYYYMM] < CurrYM
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			
+			var final =
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Total Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[YearMonth_YYYYMM]),
+			        TREATAS({PrevYM}, 'Date Reference'[YearMonth_YYYYMM])
+			    )
+			)
+			
+			RETURN final
+		formatString: 0
+		displayFolder: SPC - XmR
+		lineageTag: c614427c-7eb5-4724-8bdc-e352e8f443f1
+
+	measure 'XmR Moving Range' = IF([Prior XmR Value] = BLANK(), BLANK(), ABS([Total Value] - [Prior XmR Value]))
+		displayFolder: SPC - XmR
+		lineageTag: 1d79e81c-88cb-4c6a-959b-ee82484b855f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR Moving Range Average' =
+			CALCULATE(
+			AVERAGEX(
+			    VALUES('Date Reference'[YearMonth_YYYYMM]),   -- iterate over each month
+			    [XmR Moving Range]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+		displayFolder: SPC - XmR
+		lineageTag: f96ca606-5e1c-4c2b-a845-fa00394d4989
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR UCL' =
+			
+			
+			VAR k = CALCULATE(COUNT('Metrics'[Reporting_Date]),ALL('Date Reference'))
+			
+			VAR x_total = CALCULATE([Total Value],ALL('Date Reference')) / k
+			
+			VAR XmR_UCL = x_total+2.66*[XmR Moving Range Average]
+			
+			RETURN IFERROR(XmR_UCL,BLANK())
+		displayFolder: SPC - XmR
+		lineageTag: 3766824f-7403-4e88-b11f-b495d3ee5e46
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR LCL' =
+			
+			
+			VAR k = CALCULATE(COUNT('Metrics'[Reporting_Date]),ALL('Date Reference'))
+			
+			VAR x_total = CALCULATE([Total Value],ALL('Date Reference')) / k
+			
+			VAR XmR_LCL = x_total-2.66*[XmR Moving Range Average]
+			
+			VAR final = IFERROR(XmR_LCL,BLANK())
+			
+			RETURN IF(final <= 0, 0.001, final)
+		displayFolder: SPC - XmR
+		lineageTag: 0ddb0a69-e60f-4f20-9d4f-91823b55aa45
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure UpperOuterThird =
+			
+			
+			VAR MeanValue = [Value SPC Mean]
+			VAR ucl = [UCL SPC]
+			VAR lcl = [LCL SPC]
+			VAR sigma = (ucl - lcl) / 6
+			
+			VAR UpperOuterThird = MeanValue + 2 * sigma
+			
+			return UpperOuterThird
+		displayFolder: SPC - General Measures
+		lineageTag: 6deaa311-5922-4ba1-80b2-d4d44aed704e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'In Reporting Timeframe' = ```
+			
+			
+			IF(MAX(Metrics[Max Year Month for Metric]) = BLANK(), FALSE(), TRUE())        
+			```
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: d25005e5-4c17-424f-9639-203ebea4cfca
+
+	measure 'Current UCL (Monthly)' =
+			
+			VAR max_date_with_data =
+			    MAXX (
+			        FILTER (
+			            ALLSELECTED ( 'Date Reference'[YearMonth_YYYYMM] ),
+			            NOT ISBLANK (
+			                CALCULATE ( [UCL SPC] )
+			            )
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			RETURN
+			    CALCULATE (
+			        [UCL SPC] ,
+			        KEEPFILTERS ( 'Date Reference'[YearMonth_YYYYMM] = max_date_with_data )
+			    )
+		displayFolder: SPC - General Measures
+		lineageTag: 70492573-9e3c-4c27-aea4-f292e6033c9d
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Current LCL (Monthly)' =
+			
+			VAR max_date_with_data =
+			    MAXX (
+			        FILTER (
+			            ALLSELECTED ( 'Date Reference'[YearMonth_YYYYMM] ),
+			            NOT ISBLANK (
+			                CALCULATE ( [LCL SPC] )
+			            )
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			RETURN
+			    CALCULATE (
+			        [LCL SPC] ,
+			        KEEPFILTERS ( 'Date Reference'[YearMonth_YYYYMM] = max_date_with_data )
+			    )
+		displayFolder: SPC - General Measures
+		lineageTag: e04ca594-1fe9-4f4a-8668-9eef570b6eef
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Current Data Test' =
+			
+			VAR max_date_with_data =
+			    MAXX (
+			        FILTER (
+			            ALLSELECTED ( 'Date Reference'[YearMonth_YYYYMM] ),
+			            NOT ISBLANK ( CALCULATE ( [Total Value] ) )
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			VAR value_at_max =
+			    CALCULATE (
+			        [Total Value],
+			        KEEPFILTERS ( 'Date Reference'[YearMonth_YYYYMM] = max_date_with_data )
+			    )
+			RETURN max_date_with_data & " - " & value_at_max
+		lineageTag: ec92dd4a-3da8-482b-a46a-572f4fd80390
+
+	measure 'Four Weekly Average' =
+			
+			
+			
+			
+			var test = CALCULATE(AVERAGE('metrics'[Value]),DATESINPERIOD('Date Reference'[Full_Date],MAX('Date Reference'[Full_Date]),-28,DAY))
+			
+			
+			
+			RETURN test
+		lineageTag: 3aa8d757-1fff-49aa-af38-0f4bd4766e0c
+
+		formatStringDefinition = ```
+				var percentage_check = MAX('Metrics'[Is a Percentage Metric])
+				
+				return IF(
+				    percentage_check = 0, 
+				    "0.0","0.0%")
+				```
+
+	measure 'Data Available' = IF(MAX('Metrics'[Reporting_Date]) = BLANK(),0,1)
+		formatString: 0
+		lineageTag: 24c76f56-b16a-4229-9222-bee62536b326
+
+	measure 'Prior XmR Value Daily' =
+			
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[Date_112])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[Date_112] < CurrYM
+			        ),
+			        'Date Reference'[Date_112]
+			    )
+			
+			var final =
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Total Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[Date_112]),
+			        TREATAS({PrevYM}, 'Date Reference'[Date_112])
+			    )
+			)
+			
+			RETURN final
+		displayFolder: SPC - XmR
+		lineageTag: 36cc27c0-f56f-4335-bdcf-dacf8974ad64
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR Moving Range Daily' = IF([Prior XmR Value Daily] = BLANK(), BLANK(), ABS([Total Value] - [Prior XmR Value Daily]))
+		displayFolder: SPC - XmR
+		lineageTag: 6c0253ad-7807-47b3-8fd3-821b5241b243
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR Moving Range Average Daily' =
+			CALCULATE(
+			AVERAGEX(
+			    VALUES('Date Reference'[Date_112]),   -- iterate over each month
+			    [XmR Moving Range Daily]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+		displayFolder: SPC - XmR
+		lineageTag: 89b8f014-9746-423a-8d35-c25462880e94
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR UCL Daily' =
+			
+			
+			VAR k = CALCULATE(COUNT('Metrics'[Reporting_Date]),ALL('Date Reference'))
+			
+			VAR x_total = CALCULATE([Total Value],ALL('Date Reference')) / k
+			
+			VAR XmR_UCL = x_total+2.66*[XmR Moving Range Average Daily]
+			
+			RETURN IFERROR(XmR_UCL,BLANK())
+		displayFolder: SPC - XmR
+		lineageTag: f87fdd7f-d1c0-40fa-8489-4a8a88e6c0f1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'XmR LCL Daily' =
+			
+			
+			VAR k = CALCULATE(COUNT('Metrics'[Reporting_Date]),ALL('Date Reference'))
+			
+			VAR x_total = CALCULATE([Total Value],ALL('Date Reference')) / k
+			
+			VAR XmR_LCL = x_total-2.66*[XmR Moving Range Average Daily]
+			
+			VAR final = IFERROR(XmR_LCL,BLANK())
+			
+			RETURN IF(final <= 0, 0.001, final)
+		displayFolder: SPC - XmR
+		lineageTag: b945f5b8-1db0-43e0-80ab-e13e23a863c4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prior Laney P Prime Z Value Daily' =
+			
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[Date_112])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[Date_112] < CurrYM
+			        ),
+			        'Date Reference'[Date_112]
+			    )
+			
+			VAR final =
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Laney P Prime Z Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[Date_112]),
+			        TREATAS({PrevYM}, 'Date Reference'[Date_112])
+			    )
+			)
+			
+			RETURN IFERROR(final, BLANK())
+		displayFolder: SPC - P Prime
+		lineageTag: 97d28141-bc1b-4a5b-82f0-381c2d632803
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley P Prime Moving Range Daily' = IF([Prior Laney P Prime Z Value Daily] = BLANK(), BLANK(), ABS([Laney P Prime Z Value] - [Prior Laney P Prime Z Value Daily]))
+		displayFolder: SPC - P Prime
+		lineageTag: 0710e2ec-d653-4d6e-a17f-ed3db30fd07e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley P Prime Moving Range Average Daily' =
+			CALCULATE(
+			AVERAGEX(
+			    VALUES('Date Reference'[Date_112]),   -- iterate over each month
+			    [Lanley P Prime Moving Range Daily]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+		displayFolder: SPC - P Prime
+		lineageTag: 71f422b2-1961-4bd9-825f-ba7971d67815
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'P Prime Standard Deviation Z Value Daily' = 'Metrics'[Lanley P Prime Moving Range Average Daily] / 1.128
+		displayFolder: SPC - P Prime
+		lineageTag: 2992aac7-518c-47ac-8155-b75205930478
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney P Prime LCL Daily' =
+			
+			
+			VAR n_total = 'Metrics'[Total Denominator]
+			
+			VAR k = COUNT('Metrics'[Reporting_Date])
+			
+			VAR N_value = n_total / k
+			
+			VAR np = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = [Total Value]
+			
+			VAR lcl = IFERROR(p_values - 3*[P Prime Standard Deviation Z Value Daily] *
+			    ((SQRT(((p_values*(1-p_values)) /n_total)))),BLANK())
+			
+			VAR final = IF(lcl <= 0, 0.001, lcl)
+			
+			RETURN final
+		displayFolder: SPC - P Prime
+		lineageTag: b2952a95-2074-4367-8a9c-460346c7393a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney P Prime UCL Daily' = ```
+			
+			
+			var percentage_as_rate_per_1000 = SELECTEDVALUE('Metrics'[Percentage Metric as Rate per 1000])
+			
+			VAR n_total = 'Metrics'[Total Denominator]
+			
+			VAR k = COUNT('Metrics'[Reporting_Date])
+			
+			VAR N_value = n_total / k
+			
+			VAR np = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR p_values = CALCULATE(np / n,ALL('Date Reference'))
+			
+			VAR p = [Total Value]
+			
+			VAR ucl = IFERROR(p_values + 3*[P Prime Standard Deviation Z Value Daily] *
+			    ((SQRT(((p_values*(1-p_values)) /n_total)))),BLANK())
+			
+			RETURN 
+			SWITCH(TRUE(),
+			percentage_as_rate_per_1000 = TRUE() && ucl > 1000, 1000    --this uses the same SPC logic as the P chart but as it is calculated as a rate per 1000 it ensures it can never   be over 1000 as that is 100%
+			,percentage_as_rate_per_1000 = FALSE() && ucl > 1,0.999         --this ensures any percentage metric doesn't go over 100%
+			,ucl)
+			
+			```
+		displayFolder: SPC - P Prime
+		lineageTag: d44d66fd-7d54-442d-90c1-b7f2cdb4d217
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Prior Laney U Prime Z Value Daily' = ```
+			
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[Date_112])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[Date_112] < CurrYM
+			        ),
+			        'Date Reference'[Date_112]
+			    )
+			
+			RETURN
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Laney U Prime Z Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[Date_112]),
+			        TREATAS({PrevYM}, 'Date Reference'[Date_112])
+			    )
+			)
+			
+			```
+		displayFolder: SPC - U Prime
+		lineageTag: 97edf0bf-09f0-44a9-9b88-6347abe6bd00
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley U Prime Moving Range Daily' = IF([Prior Laney U Prime Z Value Daily] = BLANK(), BLANK(), ABS([Laney U Prime Z Value] - [Prior Laney U Prime Z Value Daily]))
+		displayFolder: SPC - U Prime
+		lineageTag: a871a3e6-a3a9-4fb4-a0fb-6535bf69afc8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley U Prime Moving Range Average Daily' =
+			CALCULATE(
+			AVERAGEX(
+			    VALUES('Date Reference'[Date_112]),   -- iterate over each month
+			    [Lanley U Prime Moving Range Daily]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+		displayFolder: SPC - U Prime
+		lineageTag: eff4c0c6-3376-4bd6-b7d1-771376b494fb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Lanley U Prime Standard Deviation Daily' = [Lanley U Prime Moving Range Average Daily] / 1.128
+		displayFolder: SPC - U Prime
+		lineageTag: 7589d711-cd00-47bb-a2f2-c9050b8b0f14
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney U Prime LCL Daily' =
+			
+			
+			VAR rate_ = CALCULATE(SUM([Rate Helper]))
+			
+			VAR n = [Total Denominator]
+			
+			VAR c = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n_total = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR u_value = CALCULATE(c / n_total*rate_)
+			
+			VAR u =  [Total Value]
+			
+			var final = IFERROR(
+			u_value - 3*[Lanley U Prime Standard Deviation Daily] *
+			    (SQRT((u_value /n))),BLANK())
+			
+			RETURN IF(final <= 0, 0.001, final)
+		displayFolder: SPC - U Prime
+		lineageTag: 0b2b4066-786d-4e48-82a6-b41437a4a68d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Laney U Prime UCL Daily' = ```
+			
+			
+			VAR rate_ = CALCULATE(SUM([Rate Helper]))
+			
+			VAR n = [Total Denominator]
+			
+			VAR c = CALCULATE([Total Numerator],ALL('Date Reference'))
+			
+			VAR n_total = CALCULATE([Total Denominator],ALL('Date Reference'))
+			
+			VAR u_value = CALCULATE(c / n_total*rate_)
+			
+			VAR u =  [Total Value]
+			
+			VAR final = IFERROR(
+			u_value + 3*[Lanley U Prime Standard Deviation Daily] *
+			    (SQRT((u_value /n))),BLANK())
+			
+			RETURN IF([Total Value] = BLANK(), BLANK(), final)
+			  
+			```
+		displayFolder: SPC - U Prime
+		lineageTag: 88871294-8b8e-465a-9bf6-03747ed6d662
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current Target' =
+			
+			
+			VAR max_date = MAX('Metrics'[Reporting_Date])
+			
+			VAR target = CALCULATE(MAX('Metrics'[Target Card]),'Metrics'[Reporting_Date] = max_date)
+			
+			RETURN target
+		lineageTag: 79ed728b-3a56-4cef-bc48-ad1d2bb66917
+
+	measure 'Current LCL (Daily)' =
+			
+			VAR max_date_with_data =
+			    MAXX (
+			        FILTER (
+			            ALLSELECTED ( 'Date Reference'[Date_112] ),
+			            NOT ISBLANK (
+			                CALCULATE ( [LCL SPC] )
+			            )
+			        ),
+			        'Date Reference'[Date_112]
+			    )
+			RETURN
+			    CALCULATE (
+			        [LCL SPC] ,
+			        KEEPFILTERS ( 'Date Reference'[Date_112] = max_date_with_data )
+			    )
+		displayFolder: SPC - General Measures
+		lineageTag: c8d5f535-f3cc-4f3d-8716-c8fe9ef0d9d4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current UCL (Daily)' =
+			
+			VAR max_date_with_data =
+			    MAXX (
+			        FILTER (
+			            ALLSELECTED ( 'Date Reference'[Date_112] ),
+			            NOT ISBLANK (
+			                CALCULATE ( [UCL SPC] )
+			            )
+			        ),
+			        'Date Reference'[Date_112]
+			    )
+			RETURN
+			    CALCULATE (
+			        [UCL SPC] ,
+			        KEEPFILTERS ( 'Date Reference'[Date_112] = max_date_with_data )
+			    )
+		displayFolder: SPC - General Measures
+		lineageTag: 9512e228-8a58-4ce3-b073-12d6db9b1129
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC breached card (daily) over whole period' = ```
+			
+			
+			var good_is = MAX('Metrics'[Good_Is])
+			
+			--var filtered = CALCULATE([Total Value],'Metrics'[Last 28 Days Flag] = TRUE())
+			
+			--var spc_breached_high = IF(CALCULATE([Total Value],'Metrics'[Last 28 Days Flag] = TRUE()) > CALCULATE([UCL SPC],'Metrics'[Last 28 Days Flag] = TRUE()), 1, 0)
+			--var spc_breached_low = IF(CALCULATE([Total Value],'Metrics'[Last 28 Days Flag] = TRUE()) < CALCULATE([LCL SPC],'Metrics'[Last 28 Days Flag] = TRUE()), 1, 0)
+			
+			var data_points = SELECTEDVALUE('Metrics'[Number of data points per metric])
+			
+			VAR HighMaxValue =
+			    MAXX ( ALLSELECTED ( 'Date Reference'[Full_Date] ), [Total Value] )
+			VAR MinUCL =
+			    MINX ( ALLSELECTED ( 'Date Reference'[Full_Date] ), [UCL SPC] )
+			VAR spc_breached_high =
+			    IF ( HighMaxValue > MinUCL, 1, 0 )
+			
+			
+			VAR LowMaxValue =
+			    MinX ( ALLSELECTED ( 'Date Reference'[Full_Date] ), [Total Value] )
+			VAR MinLCL =
+			    MaxX ( ALLSELECTED ( 'Date Reference'[Full_Date] ), [LCL SPC] )
+			VAR spc_breached_low =
+			    IF ( LowMaxValue < MinLCL, 1, 0 )
+			
+			
+			var final = 
+			SWITCH(TRUE(),
+			data_points < 13, "No SPC",
+			spc_breached_high = 1 && good_is = "N/A", "Breach",
+			spc_breached_low = 1 && good_is = "N/A", "Breach",
+			spc_breached_high = 1 && spc_breached_low = 1, "Postive & Negative Breach",
+			spc_breached_high = 1 && good_is = "High", "Positive Breach",
+			spc_breached_low = 1 && good_is = "Low", "Positive Breach",
+			spc_breached_high = 1 && good_is = "Low", "Negative Breach",
+			spc_breached_low = 1 && good_is = "High", "Negative Breach",
+			
+			"No Breach"
+			)
+			
+			RETURN final
+			```
+		displayFolder: SPC - Breached Measures
+		lineageTag: 62c778af-ca1f-438a-89e9-ecc619ce76e0
+
+	measure 'Number of data points' = CALCULATE(COUNT('Metrics'[Reporting_Date]),ALL('Date Reference'))
+		formatString: 0
+		lineageTag: a082598a-2285-4d03-ab1d-6c89879ae2ef
+
+	measure 'SPC breached card (daily) for current value' = ```
+			
+			
+			var good_is = MAX('Metrics'[Good_Is])
+			
+			var spc_breached_high = IF([Current Value] > [Current UCL (Daily)], 1, 0)
+			
+			var spc_breached_low = IF([Current Value]  < [Current LCL (Daily)], 1, 0)
+			
+			var final = 
+			SWITCH(TRUE(),
+			[Number of data points] < 13, "No SPC",
+			spc_breached_high = 1 && good_is = "High", "Positive Breach",
+			spc_breached_low = 1 && good_is = "Low", "Positive Breach",
+			spc_breached_high = 1 && good_is = "Low", "Negative Breach",
+			spc_breached_low = 1 && good_is = "High", "Negative Breach",
+			spc_breached_high = 1 && good_is = "N/A", "Breach",
+			spc_breached_low = 1 && good_is = "N/A", "Breach",
+			"No Breach"
+			)
+			
+			RETURN final
+			```
+		displayFolder: SPC - Breached Measures
+		lineageTag: bcf069dd-9757-4ab5-84eb-03420645e486
+
+	measure 'Performance against target (as measure)' = IF(MAX([Target]) = BLANK(), MAX([Value]), MAX([Value]) - MAX([Target]))
+		lineageTag: 5039cd19-a0d9-4684-a8a8-8d08a37cd549
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Date' = MAX('Metrics'[Reporting_Date])
+		formatString: General Date
+		lineageTag: faa3ceab-f122-4c0b-8f55-dc4795777825
+
+	measure LowerOuterThird =
+			
+			
+			VAR MeanValue = [Value SPC Mean]
+			VAR ucl = [UCL SPC]
+			VAR lcl = [LCL SPC]
+			VAR sigma = (ucl - lcl) / 6
+			
+			VAR LowerOuterThird = MeanValue - 2 * sigma
+			
+			return LowerOuterThird
+		displayFolder: SPC - General Measures
+		lineageTag: 30a00f46-717a-4d33-b26e-4d4679ebda4b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_two_out_of_three_in_outer_and_or_lower_third = ```
+			
+			
+			VAR current_value = [Total Value]
+			
+			VAR one_month_prior = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], -1, MONTH))
+			VAR two_month_prior = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], -2, MONTH))
+			
+			VAR one_month_after = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], +1, MONTH))
+			VAR two_month_after = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], +2, MONTH))
+			
+			VAR lower_outer_third = [LowerOuterThird]
+			VAR upper_outer_third = [UpperOuterThird]
+			
+			
+			VAR current_value_in_outer_third = IF(current_value = BLANK(),0, IF(current_value < lower_outer_third || current_value > upper_outer_third, 1, 0))
+			
+			VAR one_month_prior_in_outer_third = IF(one_month_prior = BLANK(),0, IF(one_month_prior < lower_outer_third || one_month_prior > upper_outer_third, 1, 0))
+			VAR two_month_prior_in_outer_third = IF(two_month_prior = BLANK(),0, IF(two_month_prior < lower_outer_third || two_month_prior > upper_outer_third, 1, 0))
+			
+			VAR one_month_after_in_outer_third = IF(one_month_after = BLANK(),0, IF(one_month_after < lower_outer_third || one_month_after > upper_outer_third, 1, 0))
+			VAR two_month_after_in_outer_third = IF(two_month_after = BLANK(),0, IF(two_month_after < lower_outer_third || two_month_after > upper_outer_third, 1, 0))
+			
+			VAR two_month_prior_to_current_flag = two_month_prior_in_outer_third + one_month_prior_in_outer_third + current_value_in_outer_third
+			VAR one_month_prior_to_one_month_after_flag = one_month_prior_in_outer_third + current_value_in_outer_third + one_month_after_in_outer_third
+			VAR current_to_two_month_after_flag = current_value_in_outer_third + one_month_after_in_outer_third + two_month_after_in_outer_third
+			
+			
+			VAR final = 
+			SWITCH(TRUE(),
+			current_value = BLANK(), BLANK(), 
+			two_month_prior_to_current_flag >= 2, [Total Value], 
+			one_month_prior_to_one_month_after_flag >= 2, [Total Value], 
+			current_to_two_month_after_flag >= 2, [Total Value], 
+			BLANK())
+			
+			RETURN final
+			```
+		displayFolder: SPC - Lines
+		lineageTag: aa3375fb-01ad-40e4-bd40-f11c23584c3b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure current_value_in_outer_third = IF([Total Value] = BLANK(),0, IF([Total Value] < [LowerOuterThird] || [Total Value] > [UpperOuterThird], 1, 0))
+		formatString: 0
+		displayFolder: SPC - General Measures
+		lineageTag: 50f74539-be32-4e5e-87a7-3d2d609903c8
+
+	measure UpperInnerThird =
+			
+			
+			VAR MeanValue = [Value SPC Mean]
+			VAR ucl = [UCL SPC]
+			VAR lcl = [LCL SPC]
+			VAR sigma = (ucl - lcl) / 6
+			
+			VAR UpperInnerThird = MeanValue + 1 * sigma
+			
+			return UpperInnerThird
+		lineageTag: 922feaf3-f0da-4021-a1f9-35f8a88cd4c7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LowerInnerThird =
+			
+			
+			VAR MeanValue = [Value SPC Mean]
+			VAR ucl = [UCL SPC]
+			VAR lcl = [LCL SPC]
+			VAR sigma = (ucl - lcl) / 6
+			
+			VAR LowerInnerThird = MeanValue - 1 * sigma
+			
+			return LowerInnerThird
+		lineageTag: dce7447b-0652-4e8f-97f1-904b2cb2c581
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_15_points_near_the_mean =
+			
+			
+			VAR FilteredTable_ =
+			    CALCULATETABLE(
+			        'Date Reference',
+			       filter(ALLSELECTED('Date Reference'),'Date Reference'[YearMonthIndex] >= 1)
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			       'Date Reference'[Fin_Year],
+			        'Date Reference'[month_name],
+			        'Date Reference'[YearMonthIndex],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR LatestYearMonthIndex = MAX('Date Reference'[YearMonthIndex])
+			
+			VAR MeanValue = [Value SPC Mean]
+			
+			VAR LowerInnerThird = [LowerInnerThird]
+			
+			VAR UpperInnerThird = [UpperInnerThird]
+			
+			VAR SummaryTableWithCount =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "NeartheMeanCount",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[YearMonthIndex]
+			        VAR CurrentLast15Months =
+			            FILTER(
+			                SummaryTable,
+			                'Date Reference'[YearMonthIndex] <= CurrentYearMonthIndex &&
+			                'Date Reference'[YearMonthIndex] > CurrentYearMonthIndex - 15
+			            )
+			        VAR In_Inner_Upper_or_Lower_Third =
+			    COUNTROWS(
+			        FILTER(
+			            CurrentLast15Months,
+			            (
+			                [Total Value] >= MeanValue &&
+			                [Total Value] <= UpperInnerThird
+			            )
+			            &&
+			            (
+			                [Total Value] <= MeanValue &&
+			                [Total Value] >= LowerInnerThird
+			            )
+			        ))
+			        RETURN IF(In_Inner_Upper_or_Lower_Third >= 15, 1, 0)
+			    )
+			
+			VAR FlaggedYearMonthIndexes =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            SummaryTableWithCount,
+			            [NeartheMeanCount] = 1
+			        ),
+			        "YearMonthIndex", 'Date Reference'[YearMonthIndex]
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 14),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 13),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 11),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 10),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 9),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 8),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 7),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 6),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 5),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 4),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 3),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			
+			VAR FinalTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithCount,
+			        "AdditionalFlag",
+			        IF(
+			            'Date Reference'[YearMonthIndex] IN AdditionalFlags, 1, 0
+			        )
+			    )
+			
+			
+			VAR final = if(min('Date Reference'[YearMonthIndex]) in  AdditionalFlags,[Total Value],BLANK())
+			
+			RETURN  final
+		displayFolder: SPC - Lines
+		lineageTag: 30173a1f-067e-4f3c-a973-4c3f9bdaa7e1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Numerator_Per_Period = ```
+			
+			
+			
+			VAR CurrentPeriod =
+			    CALCULATE(
+			        MAX('Metrics'[SPC Baseline Period])     
+			    )
+			RETURN
+			CALCULATE(
+			    sum('Metrics'[Denominator]),
+			    'Metrics'[SPC Baseline Period] = CurrentPeriod
+			    ,ALLEXCEPT('Date Reference','Date Reference'[YearMonth_YYYYMM])
+			    ,ALLEXCEPT('Metrics', 'Metrics'[SPC Baseline Period], 'Metrics'[Metric_Description])
+			    )
+			
+			
+			```
+		displayFolder: SPC - Baseline
+		lineageTag: 093e07ce-2d64-4f37-8071-ebe27acc435a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Denominator_Per_Period = ```
+			
+			
+			
+			VAR CurrentPeriod =
+			    CALCULATE(
+			        MAX('Metrics'[SPC Baseline Period])     
+			    )
+			RETURN
+			CALCULATE(
+			    sum('Metrics'[Denominator]),
+			    'Metrics'[SPC Baseline Period] = CurrentPeriod
+			    ,ALLEXCEPT('Date Reference','Date Reference'[YearMonth_YYYYMM])
+			    ,ALLEXCEPT('Metrics', 'Metrics'[SPC Baseline Period], 'Metrics'[Metric_Description])
+			    )
+			
+			
+			```
+		displayFolder: SPC - Baseline
+		lineageTag: dfda6dfe-9a07-47d6-ac04-aefe6ac1c452
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation concern' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "Low", [Total Value],
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "High", [Total Value],
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "High", BLANK(),
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "Low", BLANK(),
+			
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_decreasing_trend] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_decreasing_trend] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_increasing_trend] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_increasing_trend] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_15_points_near_the_mean] <> BLANK(), [Total Value],
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: 935956b6-4d69-4493-826d-4a026e6e68e9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation improvement' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "High", [Total Value],
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "Low", [Total Value],
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "Low", BLANK(),
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "High", BLANK(),
+			
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_decreasing_trend] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_decreasing_trend] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_increasing_trend] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_increasing_trend] <> BLANK() && good_is = "Low", BLANK(),
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: e04e1b98-de81-447f-8339-a37ccf1ae74d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation tooltip' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "High", "Concern - Value outside of LCL",
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "Low", "Improvement - Value outside of LCL",
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "NA", "Value outside of LCL",
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "Low", "Concern - Value outside of UCL",
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "High", "Improvement - Value outside of UCL",
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "NA", "Value outside of UCL",
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "Low", "Concern - Values near UCL",
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "High", "Concern - Values near LCL",
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "NA", "Values near LCL",
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "High", "Improvement - Value near UCL",
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "Low", "Improvement - Value near LCL",
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "NA", "Value near LCL",
+			
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "Low", "Concern - 8 values above the mean",
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "High", "Improvement - 8 values above the mean",
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "NA", "8 values above the mean",
+			
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "High", "Concern - 8 values below the mean",
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "Low", "Improvement - 8 values below the mean",
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "NA", "8 values below the mean",
+			
+			[SPC_decreasing_trend] <> BLANK() && good_is = "High", "Concern - decreasing trend",
+			[SPC_decreasing_trend] <> BLANK() && good_is = "Low", "Improvement - decreasing trend",
+			[SPC_decreasing_trend] <> BLANK() && good_is = "NA", "Improvement - decreasing trend",
+			
+			[SPC_increasing_trend] <> BLANK() && good_is = "Low", "Concern - increasing trend",
+			[SPC_increasing_trend] <> BLANK() && good_is = "High", "Improvement - increasing trend",
+			[SPC_increasing_trend] <> BLANK() && good_is = "NA", "Increasing trend",
+			
+			[SPC_15_points_near_the_mean] <> BLANK(), "Concern - large amount of points near the mean",
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: bcf50007-174e-4d1d-9e3d-2ffb46dc6502
+
+	measure 'test sybmols' = IF([Total Value] > [Value SPC Mean], "▲", "▼")
+		lineageTag: 842c76e1-1d12-4516-96af-bd65eb8e58ed
+
+	measure 'I Prime Standard Deviation' = ```
+			
+			
+			VAR current_denominator = [Total Denominator] 
+			VAR current_value = [Total Value]
+			VAR prior_denominator = [I Prime Prior Denominator]
+			VAR prior_value = [I Prime Prior Value]
+			
+			VAR value_compute =
+			ABS(current_value - prior_value)
+			
+			VAR denominator_compute =
+			1/current_denominator + 1/prior_denominator
+			
+			VAR sqrt_denominator =
+			IFERROR(SQRT(denominator_compute),BLANK())
+			
+			VAR divide_value_by_numerator =
+			IFERROR(value_compute / sqrt_denominator,BLANK())
+			
+			VAR pi_compute =
+			PI()/2
+			
+			--VAR pi_multiply =
+			--IFERROR(pi_compute * divide_value_by_numerator,BLANK())
+			
+			--VAR total_sqrt =
+			--IFERROR(SQRT(pi_multiply),BLANK())
+			
+			--VAR final =
+			--IFERROR(total_sqrt,BLANK())
+			
+			VAR sqrt_pi =
+			SQRT(pi_compute)
+			
+			VAR final = 
+			sqrt_pi * divide_value_by_numerator
+			
+			
+			
+			RETURN
+			final
+			
+			```
+		formatString: 0.000000
+		lineageTag: 80a72ef4-7bd5-4e3f-a5de-a7f8d3c47048
+
+	measure 'I Prime Prior Value' =
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[YearMonth_YYYYMM])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[YearMonth_YYYYMM] < CurrYM
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			
+			VAR final =
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Total Value],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[YearMonth_YYYYMM]),
+			        TREATAS({PrevYM}, 'Date Reference'[YearMonth_YYYYMM])
+			    )
+			)
+			
+			RETURN IFERROR(final, BLANK())
+		lineageTag: c4af330e-4826-4684-95ad-595a2a89ca34
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'I Prime Prior Denominator' =
+			
+			
+			VAR CurrMetric = SELECTEDVALUE('Metrics'[Metric_ID])
+			VAR CurrYM = MAX('Date Reference'[YearMonth_YYYYMM])   -- use Date Reference, not Metrics
+			
+			-- Find the previous month that exists in Date Reference
+			VAR PrevYM =
+			    MAXX(
+			        FILTER(
+			            ALL('Date Reference'),
+			            'Date Reference'[YearMonth_YYYYMM] < CurrYM
+			        ),
+			        'Date Reference'[YearMonth_YYYYMM]
+			    )
+			
+			VAR final =
+			IF(
+			    ISBLANK(PrevYM),
+			    BLANK(),
+			    CALCULATE(
+			        [Total Denominator],
+			        KEEPFILTERS(VALUES('Metrics'[Metric_ID])),
+			        REMOVEFILTERS('Date Reference'[YearMonth_YYYYMM]),
+			        TREATAS({PrevYM}, 'Date Reference'[YearMonth_YYYYMM])
+			    )
+			)
+			
+			RETURN IFERROR(final, BLANK())
+		lineageTag: 15d1dbed-63f0-44b8-884d-f459fafc6157
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'I Prime Average Standard Deviation' = ```
+			
+			
+			VAR sum_of_standard_deviation = 
+			CALCULATE(
+			sumx(
+			    VALUES('Date Reference'[YearMonth_YYYYMM]),   -- iterate over each month
+			    [I Prime Standard Deviation]                                        -- evaluate MR for that row/context
+			),ALL('Date Reference'))
+			
+			VAR number_of_data_points = CALCULATE([Number of data points],ALL('Date Reference')) -1
+			
+			VAR final =
+			sum_of_standard_deviation / number_of_data_points
+			
+			RETURN
+			final
+			```
+		formatString: 0.0000
+		lineageTag: 14ef9606-fd9b-47d8-9be3-33faeea7043c
+
+	measure 'I Prime UCL new' =
+			
+			
+			VAR sqrt_denominator =
+			SQRT([Total Denominator])
+			
+			VAR std_dev_divide_sqrt_denom =
+			[I Prime Average Standard Deviation] / sqrt_denominator
+			
+			VAR final =
+			CALCULATE([Total Numerator]/[Total Denominator],ALL('Date Reference')) + 3 * std_dev_divide_sqrt_denom
+			
+			RETURN
+			IFERROR(final,BLANK())
+		formatString: 0.0000
+		lineageTag: 41168767-16fc-4532-87ee-2165a4617b9b
+
+	measure SPC_15_points_near_the_mean_daily =
+			
+			
+			VAR FilteredTable_ =
+			    CALCULATETABLE(
+			        'Date Reference',
+			       filter(ALLSELECTED('Date Reference'),'Date Reference'[Date_112] >= 1)
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			       'Date Reference'[Full_Date],
+			        'Date Reference'[Date_112],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR LatestYearMonthIndex = MAX('Date Reference'[Date_112])
+			
+			VAR MeanValue = [Value SPC Mean]
+			
+			VAR LowerInnerThird = [LowerInnerThird]
+			
+			VAR UpperInnerThird = [UpperInnerThird]
+			
+			VAR SummaryTableWithCount =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "NeartheMeanCount",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			        VAR CurrentLast15Months =
+			            FILTER(
+			                SummaryTable,
+			                'Date Reference'[Date_112] <= CurrentYearMonthIndex &&
+			                'Date Reference'[Date_112] > CurrentYearMonthIndex - 15
+			            )
+			        VAR In_Inner_Upper_or_Lower_Third =
+			    COUNTROWS(
+			        FILTER(
+			            CurrentLast15Months,
+			            (
+			                [Total Value] >= MeanValue &&
+			                [Total Value] <= UpperInnerThird
+			            )
+			            ||
+			            (
+			                [Total Value] <= MeanValue &&
+			                [Total Value] >= LowerInnerThird
+			            )
+			        ))
+			        RETURN IF(In_Inner_Upper_or_Lower_Third >= 15, 1, 0)
+			    )
+			
+			VAR FlaggedYearMonthIndexes =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            SummaryTableWithCount,
+			            [NeartheMeanCount] = 1
+			        ),
+			        "Date_112", 'Date Reference'[Date_112]
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 14),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 13),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 11),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 10),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 9),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 8),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 7),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 6),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 5),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 4),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 3),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 2),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 1),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112]),
+			            "Date_112", [OffsetIndex]
+			        )
+			    )
+			
+			VAR FinalTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithCount,
+			        "AdditionalFlag",
+			        IF(
+			            'Date Reference'[Date_112] IN AdditionalFlags, 1, 0
+			        )
+			    )
+			
+			
+			VAR final = if(min('Date Reference'[Date_112]) in  AdditionalFlags,[Total Value],BLANK())
+			
+			RETURN  final
+		lineageTag: c494b025-f823-4dab-baca-d62cc481232c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_8_points_above_mean_daily = ```
+			
+			
+			VAR FilteredTable_ =
+			    CALCULATETABLE(
+			        'Date Reference',
+			        filter(ALLSELECTED('Date Reference'),'Date Reference'[Date_112] >= 1)
+			    )
+			
+			
+			VAR SummaryTable =
+			
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Full_Date],
+			        'Date Reference'[Date_112],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR LatestYearMonthIndex = MAX('Date Reference'[Date_112])
+			
+			--VAR Min_Date = CALCULATE(MIN('Date Reference'[Date_112]),'Metrics'[Last 28 Days Flag] = TRUE())
+			
+			VAR MeanValue = [Value SPC Mean]
+			   
+			VAR SummaryTableWithCount =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "AboveMeanCount",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			        VAR CurrentLastEightDays =
+			            FILTER(
+			                SummaryTable,
+			                'Date Reference'[Date_112] <= CurrentYearMonthIndex &&
+			                'Date Reference'[Date_112] > CurrentYearMonthIndex - 8
+			                --&& 'Date Reference'[Date_112] >= Min_Date
+			            )
+			        VAR CurrentAboveMeanCount =
+			            COUNTROWS(
+			                FILTER(
+			                    CurrentLastEightDays,
+			                    [Total Value] > MeanValue
+			                )
+			            )
+			        RETURN IF(CurrentAboveMeanCount >= 8, 1, 0)
+			    )
+			
+			VAR FlaggedYearMonthIndexes =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            SummaryTableWithCount,
+			            [AboveMeanCount] = 1
+			        ),
+			        "Date_112", 'Date Reference'[Date_112]
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 7),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 6),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 5),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 4),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 3),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 2),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 1),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112]),
+			            "Date_112", [OffsetIndex]
+			        )
+			    )
+			
+			VAR FinalTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithCount,
+			        "AdditionalFlag",
+			        IF(
+			            'Date Reference'[Date_112] IN AdditionalFlags, 1, 0
+			        )
+			    )
+			
+			
+			RETURN
+			--MeanValue
+			if(min('Date Reference'[Date_112]) in  AdditionalFlags,[Total Value],BLANK())
+			```
+		lineageTag: 4cce93e4-08b2-4dab-8d8a-82637ff4e517
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_8_points_below_mean_daily =
+			
+			
+			VAR FilteredTable_ =
+			    CALCULATETABLE(
+			        'Date Reference',
+			       filter(ALLSELECTED('Date Reference'),'Date Reference'[Date_112] >= 1)
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			       'Date Reference'[Full_Date],
+			        'Date Reference'[Date_112],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR Min_Date = CALCULATE(MIN('Date Reference'[Date_112]),'Metrics'[Last 28 Days Flag] = TRUE())
+			
+			VAR LatestYearMonthIndex = MAX('Date Reference'[Date_112])
+			
+			VAR MeanValue = [Value SPC Mean]
+			
+			VAR SummaryTableWithCount =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "BelowMeanCount",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			        VAR CurrentLastEightDays =
+			            FILTER(
+			                SummaryTable,
+			                'Date Reference'[Date_112] <= CurrentYearMonthIndex &&
+			                'Date Reference'[Date_112] > CurrentYearMonthIndex - 8 &&
+			                'Date Reference'[Date_112] >= Min_Date
+			            )
+			        VAR CurrentAboveMeanCount =
+			            COUNTROWS(
+			                FILTER(
+			                    CurrentLastEightDays,
+			                    [Total Value] < MeanValue
+			                )
+			            )
+			        RETURN IF(CurrentAboveMeanCount >= 8, 1, 0)
+			    )
+			
+			VAR FlaggedYearMonthIndexes =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            SummaryTableWithCount,
+			            [BelowMeanCount] = 1
+			        ),
+			        "Date_112", 'Date Reference'[Date_112]
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 7),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 6),
+			            "Date_112", [OffsetIndex]
+			        ),
+			
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 5),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 4),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 3),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 2),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112] - 1),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [Date_112]),
+			            "Date_112", [OffsetIndex]
+			        )
+			    )
+			
+			VAR FinalTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithCount,
+			        "AdditionalFlag",
+			        IF(
+			            'Date Reference'[Date_112] IN AdditionalFlags, 1, 0
+			        )
+			    )
+			
+			
+			RETURN
+			if(min('Date Reference'[Date_112]) in  AdditionalFlags,[Total Value],BLANK())
+		lineageTag: f9422706-1a06-4487-9a76-43ae4a4b0dfc
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_decreasing_trend_daily = ```
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED('Date Reference'),'Date Reference'[Date_112] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Full_Date],
+			        'Date Reference'[Date_112],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			        VAR PreviousValue =
+			            CALCULATE(
+			                MAXX(
+			                    FILTER(
+			                        SummaryTable,
+			                        'Date Reference'[Date_112] = CurrentYearMonthIndex - 1
+			                    ),
+			                    [Total Value]
+			                )
+			            )
+			        RETURN [Total Value] - PreviousValue
+			    )
+			
+			VAR SummaryTableWithDecreasingFlag =
+			    ADDCOLUMNS(
+			        SummaryTableWithDifference,
+			        "DecreasingFlag",
+			        IF([Difference] < 0, 1, 0)
+			    )
+			
+			VAR DecreasingSequence =
+			    FILTER(
+			        ADDCOLUMNS(
+			            SummaryTableWithDecreasingFlag,
+			            "DecreasingSequence",
+			            VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			            VAR DecreasingCount =
+			                COUNTROWS(
+			                    FILTER(
+			                        SummaryTableWithDecreasingFlag,
+			                        'Date Reference'[Date_112] >= CurrentYearMonthIndex - 4 &&
+			                        'Date Reference'[Date_112] <= CurrentYearMonthIndex &&
+			                        [DecreasingFlag] = 1
+			                    )
+			                )
+			            RETURN IF(DecreasingCount =5 , 1, 0) -- Adjust the number of periods for your trend
+			        ),
+			        [DecreasingSequence] = 1
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			   
+			   SELECTCOLUMNS(
+			           ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [Date_112] - 5),
+			           "Date_112", [OffsetIndex]
+			       ),
+			       SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [Date_112] - 4),
+			           "Date_112", [OffsetIndex]
+			       ),
+			       SELECTCOLUMNS(
+			           ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [Date_112] - 3),
+			           "Date_112", [OffsetIndex]
+			       ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [Date_112] - 2),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [Date_112] - 1),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [Date_112]),
+			            "Date_112", [OffsetIndex]
+			        )
+			    )
+			
+			
+			RETURN
+			IF(
+			    MIN('Date Reference'[Date_112]) IN AdditionalFlags,
+			    [Total Value],
+			    BLANK()
+			)
+			```
+		lineageTag: 856232a7-44f7-419f-bbf2-53d6c0d9ea07
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_increasing_trend_daily = ```
+			
+			VAR FilteredTable_ =
+			   filter(ALLSELECTED('Date Reference'),'Date Reference'[Date_112] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        'Date Reference'[Full_Date],
+			        'Date Reference'[Date_112],
+			        'Date Reference'[SPC_Flag],
+			        "Total Value", [Total Value]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			        VAR NextValue =
+			            CALCULATE(
+			                MAXX(
+			                    FILTER(
+			                        SummaryTable,
+			                        'Date Reference'[Date_112] = CurrentYearMonthIndex + 1
+			                    ),
+			                    [Total Value]
+			                )
+			            )
+			        RETURN NextValue - [Total Value]
+			    )
+			
+			VAR SummaryTableWithIncreasingFlag =
+			    ADDCOLUMNS(
+			        SummaryTableWithDifference,
+			        "IncreasingFlag",
+			        IF([Difference] > 0, 1, 0)
+			    )
+			
+			VAR IncreasingSequence =
+			    FILTER(
+			        ADDCOLUMNS(
+			            SummaryTableWithIncreasingFlag,
+			            "IncreasingSequence",
+			            VAR CurrentYearMonthIndex = 'Date Reference'[Date_112]
+			            VAR IncreasingCount =
+			                COUNTROWS(
+			                    FILTER(
+			                        SummaryTableWithIncreasingFlag,
+			                        'Date Reference'[Date_112] >= CurrentYearMonthIndex &&
+			                        'Date Reference'[Date_112] <= CurrentYearMonthIndex + 4 &&
+			                        [IncreasingFlag] = 1
+			                    )
+			                )
+			            RETURN 
+			            
+			            IF(IncreasingCount =5, 1, 0) -- Adjust the number of periods for your trend
+			        ),
+			        [IncreasingSequence] = 1
+			    )
+			
+			
+			VAR AdditionalFlags =
+			   UNION(
+			        
+			
+			   
+			              SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [Date_112] + 5),
+			            "Date_112", [OffsetIndex]
+			        ),
+			   
+			
+			              SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [Date_112] + 4),
+			            "Date_112", [OffsetIndex]
+			        ),
+			   
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [Date_112] + 3),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [Date_112] + 2),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [Date_112] + 1),
+			            "Date_112", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [Date_112]),
+			            "Date_112", [OffsetIndex]
+			        )
+			    )
+			
+			
+			
+			    
+			RETURN
+			IF(
+			    MIN('Date Reference'[Date_112]) IN AdditionalFlags,
+			    [Total Value],
+			    BLANK()
+			)
+			```
+		lineageTag: bcdceb78-1a07-45d2-817f-abce647c3e91
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SPC_two_out_of_three_in_outer_and_or_lower_third_daily = ```
+			
+			
+			VAR current_value = [Total Value]
+			
+			VAR one_month_prior = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], -1, DAY))
+			VAR two_month_prior = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], -2, DAY))
+			
+			VAR one_month_after = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], +1, DAY))
+			VAR two_month_after = CALCULATE([Total Value], DATEADD('Date Reference'[Full_Date], +2, DAY))
+			
+			VAR lower_outer_third = [LowerOuterThird]
+			VAR upper_outer_third = [UpperOuterThird]
+			
+			
+			VAR current_value_in_outer_third = IF(current_value = BLANK(),0, IF(current_value < lower_outer_third || current_value > upper_outer_third, 1, 0))
+			
+			VAR one_month_prior_in_outer_third = IF(one_month_prior = BLANK(),0, IF(one_month_prior < lower_outer_third || one_month_prior > upper_outer_third, 1, 0))
+			VAR two_month_prior_in_outer_third = IF(two_month_prior = BLANK(),0, IF(two_month_prior < lower_outer_third || two_month_prior > upper_outer_third, 1, 0))
+			
+			VAR one_month_after_in_outer_third = IF(one_month_after = BLANK(),0, IF(one_month_after < lower_outer_third || one_month_after > upper_outer_third, 1, 0))
+			VAR two_month_after_in_outer_third = IF(two_month_after = BLANK(),0, IF(two_month_after < lower_outer_third || two_month_after > upper_outer_third, 1, 0))
+			
+			VAR two_month_prior_to_current_flag = two_month_prior_in_outer_third + one_month_prior_in_outer_third + current_value_in_outer_third
+			VAR one_month_prior_to_one_month_after_flag = one_month_prior_in_outer_third + current_value_in_outer_third + one_month_after_in_outer_third
+			VAR current_to_two_month_after_flag = current_value_in_outer_third + one_month_after_in_outer_third + two_month_after_in_outer_third
+			
+			
+			VAR final = 
+			SWITCH(TRUE(),
+			current_value = BLANK(), BLANK(), 
+			two_month_prior_to_current_flag >= 2, [Total Value], 
+			one_month_prior_to_one_month_after_flag >= 2, [Total Value], 
+			current_to_two_month_after_flag >= 2, [Total Value], 
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: a5dead53-8e23-4c37-9427-ae6dd8876102
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation concern daily' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] >= [UpperOuterThird] && good_is = "Low", [Total Value],
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <= [LowerOuterThird] && good_is = "High", [Total Value],
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] >= [UpperOuterThird] && good_is = "High", BLANK(),
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <= [LowerOuterThird] && good_is = "Low", BLANK(),
+			
+			[SPC_8_points_above_mean_daily] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_8_points_above_mean_daily] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_8_points_below_mean_daily] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_8_points_below_mean_daily] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_decreasing_trend_daily] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_decreasing_trend_daily] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_increasing_trend_daily] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_increasing_trend_daily] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_15_points_near_the_mean_daily] <> BLANK(), [Total Value],
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: d8398c1f-2fd4-4a6d-870d-a95bbef369e8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation improvement daily' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] >= [UpperOuterThird] && good_is = "High", [Total Value],
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <= [LowerOuterThird] && good_is = "Low", [Total Value],
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] >= [UpperOuterThird] && good_is = "Low", BLANK(),
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <= [LowerOuterThird] && good_is = "High", BLANK(),
+			
+			[SPC_8_points_above_mean_daily] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_8_points_above_mean_daily] <> BLANK() && good_is = "Low", BLANK(),
+			
+			[SPC_8_points_below_mean_daily] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_8_points_below_mean_daily] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_decreasing_trend_daily] <> BLANK() && good_is = "Low", [Total Value],
+			[SPC_decreasing_trend_daily] <> BLANK() && good_is = "High", BLANK(),
+			
+			[SPC_increasing_trend_daily] <> BLANK() && good_is = "High", [Total Value],
+			[SPC_increasing_trend_daily] <> BLANK() && good_is = "Low", BLANK(),
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: a40d2475-7e76-43d9-bea3-31722eb2aba0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation tooltip daily' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "High", "Concern - Value outside of LCL",
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "Low", "Improvement - Value outside of LCL",
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "Low", "Concern - Value outside of UCL",
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "High", "Improvement - Value outside of UCL",
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] >= [UpperOuterThird] && good_is = "Low", "Concern - Value near UCL",
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <= [LowerOuterThird] && good_is = "High", "Concern - Value near LCL",
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] >= [UpperOuterThird] && good_is = "High", "Improvement - Value near UCL",
+			[SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third_daily] <= [LowerOuterThird] && good_is = "Low", "Improvement - Value near LCL",
+			
+			[SPC_8_points_above_mean_daily] <> BLANK() && good_is = "Low", "Concern - 6 values above the mean",
+			[SPC_8_points_above_mean_daily] <> BLANK() && good_is = "High", "Improvement - 6 values above the mean",
+			
+			[SPC_8_points_below_mean_daily] <> BLANK() && good_is = "High", "Concern - 6 values below the mean",
+			[SPC_8_points_below_mean_daily] <> BLANK() && good_is = "Low", "Improvement - 6 values below the mean",
+			
+			[SPC_decreasing_trend_daily] <> BLANK() && good_is = "High", "Concern - decreasing trend",
+			[SPC_decreasing_trend_daily] <> BLANK() && good_is = "Low", "Improvement - decreasing trend",
+			
+			[SPC_increasing_trend_daily] <> BLANK() && good_is = "Low", "Concern - increasing trend",
+			[SPC_increasing_trend_daily] <> BLANK() && good_is = "High", "Improvement - increasing trend",
+			
+			[SPC_15_points_near_the_mean_daily] <> BLANK(), "Concern - large amount of points near the mean",
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: a760c19b-a30a-4bb6-af1a-811b54922c64
+
+	measure 'Values for last 4 weeks' = CALCULATE(SUM('Metrics'[Value]),'Metrics'[Last 28 Days Flag] = TRUE())
+		lineageTag: 9e22c5b6-dc2d-4def-89b7-420cfe5ce51f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SPC special variation neutral' = ```
+			
+			
+			VAR good_is = max([Good_Is])
+			
+			VAR final =
+			SWITCH(TRUE(),
+			
+			[SPC_value_outside_of_LCL] <> BLANK() && good_is = "NA", [Total Value],
+			
+			[SPC_outside_of_UCL] <> BLANK() && good_is = "NA", [Total Value],
+			
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] >= [UpperOuterThird] && good_is = "NA", [Total Value],
+			[SPC_two_out_of_three_in_outer_and_or_lower_third] <> BLANK() 
+			&& [SPC_two_out_of_three_in_outer_and_or_lower_third] <= [LowerOuterThird] && good_is = "NA", [Total Value],
+			
+			[SPC_8_points_above_mean] <> BLANK() && good_is = "NA", [Total Value],
+			
+			[SPC_8_points_below_mean] <> BLANK() && good_is = "NA", [Total Value],
+			
+			[SPC_decreasing_trend] <> BLANK() && good_is = "NA", [Total Value],
+			
+			[SPC_increasing_trend] <> BLANK() && good_is = "NA", [Total Value],
+			
+			BLANK())
+			
+			RETURN final
+			```
+		lineageTag: 26302425-1fd6-4f06-a057-4f8f6e3d92ba
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Monthly UEC Values' = CALCULATE(SUM('Metrics'[Value]),'Metrics'[Staging_Table] = "[PowerBI_Processing].[Portfolio].[tbl05_Staging_Working_As_One]")
+		lineageTag: 17b455fd-c6fb-49b2-8851-37b147610144
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metric_ID
+		dataType: string
+		lineageTag: 7bb910ca-5374-4248-8595-80816d45cd71
+		summarizeBy: none
+		sourceColumn: Metric_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric_Description
+		dataType: string
+		lineageTag: c7cea871-0cbf-4e7c-9915-fb8be1dd584e
+		summarizeBy: none
+		sourceColumn: Metric_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Portfolio
+		dataType: string
+		lineageTag: 9969c1e0-1d27-40e9-b505-63a802f9ec98
+		summarizeBy: none
+		sourceColumn: Portfolio
+
+		annotation SummarizationSetBy = Automatic
+
+	column Healthcare_Area
+		dataType: string
+		lineageTag: b1e23c7e-c7c2-4236-a741-9633af207831
+		summarizeBy: none
+		sourceColumn: Healthcare_Area
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reporting_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 21047ca1-903f-4f73-9f82-44f6489f2869
+		summarizeBy: none
+		sourceColumn: Reporting_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Numerator
+		dataType: double
+		lineageTag: 9c86ee95-0267-4904-9dab-6f21ccf0ef3c
+		summarizeBy: sum
+		sourceColumn: Numerator
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Denominator
+		dataType: double
+		lineageTag: 5c0f2e12-7e27-4794-9cde-a26331fbad0f
+		summarizeBy: sum
+		sourceColumn: Denominator
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Value
+		dataType: double
+		formatString: 0.00
+		lineageTag: c58ec30b-ddd9-44d9-a44d-651a44a22504
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Target
+		dataType: double
+		lineageTag: c027957b-e06e-4aec-9e79-01fd71616ab7
+		summarizeBy: sum
+		sourceColumn: Target
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Good_Is
+		dataType: string
+		lineageTag: b87faa69-8da4-482d-8f3c-23a4cc3ed79c
+		summarizeBy: none
+		sourceColumn: Good_Is
+
+		annotation SummarizationSetBy = Automatic
+
+	column Script_Author
+		dataType: string
+		lineageTag: 92c1713a-2a8f-47c9-afd5-16c9c1a432a7
+		summarizeBy: none
+		sourceColumn: Script_Author
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Target Card' = ```
+			
+			
+			VAR 
+			Target_string = 
+			CONVERT('Metrics'[Target],STRING) //this is required as you can't have a number and a text value both as an outcome, so the interger needs to be converted to text
+			
+			VAR percentage_metric = CONTAINSSTRING('Metrics'[Metric_Description],"percentage") //checks if the metric contains the term percentage
+			
+			RETURN 
+			SWITCH(TRUE(),
+			Target_string = "NA", "N/A",
+			Target_string = "N/A", "N/A",
+			Target_string = BLANK(), "N/A",
+			ISBLANK('Metrics'[Target]) = FALSE() && percentage_metric = TRUE(), CONCATENATE(CONVERT((('Metrics'[Target]) *100),STRING), "%"), //if the target is not blank and relates to a percentage, then this converts the target into a percentage then into text
+			Target_string)
+			```
+		lineageTag: 2580b887-bbdd-486d-9d2c-44f76d7bc0e7
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Good Is Card' =
+			
+			
+			SWITCH(TRUE(),
+			[Good_Is] = "NA", "N/A",
+			[Good_Is] = "N/A", "N/A",
+			[Good_Is] = BLANK(), "N/A",
+			[Good_Is])
+		lineageTag: d79c3457-73cb-4f08-af0e-bd5356c90273
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Overall Max Date' = MAX('Metrics'[Reporting_Date])
+		formatString: General Date
+		lineageTag: e88df394-96b9-46d7-a128-869ee8f1a57f
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 80445be9-b47d-425f-a89f-34caa8cd6bc3
+			defaultHierarchy: LocalDateTable_e2ea6dcc-8694-4b00-a1ee-68c52ae27c06.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Date per Metric' =
+			
+			
+			var max_date = CALCULATE (
+			    MAX('Metrics'[Reporting_Date] ),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			RETURN CONCATENATE(LOOKUPVALUE('Date Reference'[Month_Name],'Date Reference'[Full_Date],max_date), CONCATENATE("-", RIGHT(LOOKUPVALUE('Date Reference'[Cal_Year],'Date Reference'[Full_Date],max_date),2)))
+		lineageTag: 406ba488-bdfa-4d7f-aec5-927d1e51a603
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Is a Percentage Metric' = IF(CONTAINSSTRING('Metrics'[Metric_Description],"percentage") = TRUE(),1,IF(CONTAINSSTRING('Metrics'[Portfolio],"test metric") = TRUE(),1,0)) //checks if the metric contains the term percentage)
+		formatString: 0
+		lineageTag: 797f6bc9-cab3-457d-a37b-2f25a8c06d8a
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Min Date' = MIN('Metrics'[Reporting_Date])
+		formatString: General Date
+		lineageTag: 974b0c68-6c8d-460b-9405-3ed877e1818e
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 4e5dd670-7e65-4f35-bcf1-e9dd614973b0
+			defaultHierarchy: LocalDateTable_22ef333a-1f45-47b7-bb86-b01f5e0caa07.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Value as String' = ```
+			
+			
+			VAR 
+			Target_string = 
+			CONVERT('Metrics'[Value],STRING) //this is required as you can't have a number and a text value both as an outcome, so the interger needs to be converted to text
+			
+			VAR percentage_metric = 'Metrics'[Is a Percentage Metric]
+			
+			RETURN 
+			SWITCH(TRUE(),
+			percentage_metric = 1, CONCATENATE(CONVERT((('Metrics'[Value]) *100),STRING), "%"), //if the metric relates to a percentage, then this converts the target into a percentage then into text
+			Target_string)
+			```
+		lineageTag: ee9f6475-1b4b-4915-81ba-955d92e0a4ba
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Good Is (Interger)' = IF('Metrics'[Good_Is] = "High", 2, IF(Metrics[Good_Is] = "Low", 1, 0))
+		formatString: 0
+		lineageTag: 128b2b1a-edbf-4b32-b092-7c1f3b04b7fc
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Histogram Bin' = ```
+			
+			
+			VAR max_value = CALCULATE (
+			    MAX('Metrics'[Value]),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			VAR min_value = CALCULATE (
+			    MIN('Metrics'[Value]),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			VAR bin_range = max_value - min_value
+			
+			VAR bin_width = bin_range / 6
+			
+			RETURN min_value + (bin_width*5)
+			
+			```
+		lineageTag: b6089437-1664-4526-a06a-1126230483de
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Bin Width' = ```
+			
+			
+			VAR max_value = CALCULATE (
+			    MAX('Metrics'[Value]),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			VAR min_value = CALCULATE (
+			    MIN('Metrics'[Value]),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			VAR bin_range = max_value - min_value
+			
+			VAR bin_width = bin_range / 6
+			
+			return 
+			 SWITCH(TRUE(),
+			
+			 'Metrics'[Value] <= min_value + bin_width, min_value,
+			 'Metrics'[Value] <= min_value + (bin_width*2) &&  'Metrics'[Value] > min_value + bin_width, min_value + bin_width,
+			 'Metrics'[Value] <= min_value + (bin_width*3) &&  'Metrics'[Value] > min_value + (bin_width*2), min_value + (bin_width*2),
+			 'Metrics'[Value] <= min_value + (bin_width*4) &&  'Metrics'[Value] > min_value + (bin_width*3), min_value + (bin_width*3),
+			 'Metrics'[Value] <= min_value + (bin_width*5) &&  'Metrics'[Value] > min_value + (bin_width*4), min_value + (bin_width*4),
+			 'Metrics'[Value] <= min_value + (bin_width*6)  &&  'Metrics'[Value] > min_value + (bin_width*5), min_value + (bin_width*5),
+			
+			BLANK())
+			```
+		lineageTag: bd23d409-7344-4998-9330-3e14b43d23b4
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Baseline Calculation per Metric' = ```
+			CALCULATE (
+			    AVERAGE('Metrics'[Value]),'Date Reference'[Fin_Year_yy_yy] = "24/25",
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			```
+		lineageTag: ca02fbbb-054f-4d05-929e-5be8935b6e49
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metrics_YearMonthIndex =
+			
+			
+			
+			RANKX (
+			    FILTER (
+			        ALL ( 'Metrics' ),
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    ),
+			    'Metrics'[Reporting_Date],
+			    ,
+			    ASC,
+			    DENSE
+			) - 1
+		formatString: 0
+		lineageTag: 7099d135-38f6-49ea-929a-de4eaf98eddb
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthIndex = YEAR([Reporting_Date]) * 100 + MONTH([Reporting_Date])
+		formatString: 0
+		lineageTag: 2dc8169a-5266-4fed-9a4c-c5ac6670b084
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Chart Type' = ```
+			
+			SWITCH(TRUE(),
+			[Metric_ID] = "25/26 Wao-M-06", "U Prime Chart", 
+			[Percentage Metric as Rate per 1000] = TRUE(),"P Prime Chart",
+			CONTAINSSTRING('Metrics'[Metric_Description],"percentage") = TRUE(),"P Prime Chart",
+			CONTAINSSTRING('Metrics'[Metric_Description],"inequalities") = TRUE(),"I/XmR Chart", --P/U chart seems inappropriate for these as value is not a proportion of the denominator
+			CONTAINSSTRING('Metrics'[Metric_Description],"rate") = TRUE(),"U Prime Chart", //likely need to add extra option as current U Prime Chart is rate per 1000, so might need new option for rates which are not rate per 1000
+			CONTAINSSTRING('Metrics'[Metric_Description],"time") = TRUE(),"I/XmR Chart",
+			CONTAINSSTRING('Metrics'[Metric_Description],"days") = TRUE(),"I/XmR Chart",
+			CONTAINSSTRING('Metrics'[Metric_Description],"length of stay") = TRUE(),"I/XmR Chart",
+			CONTAINSSTRING('Metrics'[Metric_Description],"spend") = TRUE(),"I/XmR Chart",
+			
+			"I/XmR Chart"
+			)
+			
+			--decision not to use C charts at the moment as they don't seem appropriate
+			--as per https://www.cec.health.nsw.gov.au/__data/assets/pdf_file/0011/605657/Understanding-Variation-with-Shewart-Charts.pdf, "the key to using a c-chart is that there should be an equal area of opportunity for a defect to occur. This condition frequently makes it difficult to use this chart in health care because the conditions under which we provide care do not always remain constant."  The XmR chart is used to answer "How many?" over a period of time which most metrics are reporting on i.e. a number of x per month
+			```
+		displayFolder: SPC - General Measures
+		lineageTag: 9af0710b-d6a2-4d41-8d5e-c9aaec808de4
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Staging_Table
+		dataType: string
+		lineageTag: afe561e2-8666-44bf-88bd-76e93b578f49
+		summarizeBy: none
+		sourceColumn: Staging_Table
+
+		annotation SummarizationSetBy = Automatic
+
+	column processed_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5a08b51a-2a4a-4792-832a-c50fa5c9150f
+		summarizeBy: none
+		sourceColumn: processed_date
+
+		variation Variation
+			isDefault
+			relationship: 53d75115-0c4b-4c58-ab88-c270472c1e63
+			defaultHierarchy: LocalDateTable_5ddfaff5-5065-46e4-90b4-01397f954ce1.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Year Month for Metric' =
+			
+			
+			VAR max_date = CALCULATE (
+			    MAX('Metrics'[Reporting_Date] ),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			RETURN LOOKUPVALUE('Date Reference'[YearMonth_YYYYMM],'Date Reference'[Full_Date],max_date)
+		formatString: 0
+		lineageTag: 1ffa4cf9-db5c-47d3-9dc2-8da16362dd78
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Min Year Month for Metric' =
+			
+			
+			VAR min_date = CALCULATE (
+			    MIN('Metrics'[Reporting_Date] ),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			RETURN LOOKUPVALUE('Date Reference'[YearMonth_YYYYMM],'Date Reference'[Full_Date],min_date)
+		formatString: 0
+		lineageTag: 4488fcf9-48b2-4b8a-a5b8-b9ec634680ec
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Last 28 Days Flag' =
+			
+			
+			var max_date = CALCULATE (
+			    MAX('Metrics'[Reporting_Date] ),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			var _28_days = max_date - 27
+			
+			RETURN IF([Monthly or Daily Data] = "Monthly", FALSE(),IF(Metrics[Reporting_Date] >= _28_days, TRUE(), FALSE()))
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6e3ee516-ed0d-46e4-9175-0e30212fe495
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Rate Helper' =
+			
+			SWITCH(TRUE(),
+			CONTAINSSTRING([Metric_Description], "1,000") = TRUE(), 1000,
+			CONTAINSSTRING([Metric_Description], "10,000") = TRUE(), 10000,
+			CONTAINSSTRING([Metric_Description], "100,000") = TRUE(), 100000,
+			BLANK())
+		formatString: 0
+		lineageTag: 9e0cc18b-3df2-4df9-a150-5fdda1fe2648
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Monthly or Daily Data' =
+			
+			IF(CONTAINSSTRING([Staging_Table], "daily") = TRUE(), "Daily", "Monthly")
+		lineageTag: 85dff81a-caa6-448c-a3de-e706b7e2c31e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current Month Flag' =
+			
+			
+			var max_date = CALCULATE (
+			    MAX('Metrics'[Reporting_Date] ),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] )
+			    )
+			)
+			
+			RETURN IF([Reporting_Date] = max_date,1,0)
+		formatString: 0
+		lineageTag: faf8ec93-e8d0-4970-8d7d-efff13385d31
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Description (Daily Metrics)' = 'Metrics'[Metric_Description] --this is used to connect to the 4 weekly UEC metric deep dive page, not the monthly one
+		lineageTag: c7bf51a6-f132-49ad-ab9e-1f8abc361983
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Percentage Metric as Rate per 1000' =
+			IF(
+			    CONTAINSSTRING('Metrics'[Metric_Description],"neonatal") = TRUE() ||
+			    CONTAINSSTRING('Metrics'[Metric_Description],"stillbirth") = TRUE()
+			    ,TRUE(),FALSE())
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a5055b0e-d848-4d46-8c4d-1a892e9a1277
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Decimal Places' =
+			
+			
+			Var current_value = ABS([Current Value]) --makes number into a positive int
+			
+			
+			RETURN
+			SWITCH(TRUE(),
+			[Metric Type] = "Count metric", "0 DP",
+			
+			[Metric Type] = "Percentage metric" && current_value >= 0.1, "1 DP",
+			[Metric Type] = "Percentage metric" && current_value < 0.1, "2 DP",
+			
+			[Metric Type] = "Rate metric" && current_value >= 1000, "0 DP",
+			[Metric Type] = "Rate metric" && current_value >= 100 && current_value < 1000, "1 DP",
+			[Metric Type] = "Rate metric" && current_value < 100, "2 DP",
+			
+			
+			[Metric Type] = "Inequalities metric" && current_value >= 100, "0 DP",
+			[Metric Type] = "Inequalities metric" && current_value >= 100 && current_value < 1000, "1 DP",
+			[Metric Type] = "Inequalities metric" && current_value < 100, "2 DP",
+			
+			[Metric Type] = "Measurement metric" && current_value >= 1000, "0 DP",
+			[Metric Type] = "Measurement metric" && current_value >= 100 && current_value < 1000, "1 DP",
+			[Metric Type] = "Measurement metric" && current_value < 100, "2 DP",
+			
+			"Error")
+		lineageTag: b726419e-d314-43ce-8f3f-52b84275784d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Type' = ```
+			
+			SWITCH(TRUE(),
+			CONTAINSSTRING('Metrics'[Metric_Description],"percentage") = TRUE(),"Percentage metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"inequalities") = TRUE(),"Inequalities metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"rate") = TRUE(),"Rate metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"time") = TRUE(),"Measurement metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"days") = TRUE(),"Measurement metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"Average") = TRUE(),"Measurement metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"spend") = TRUE(),"Measurement metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"survey") = TRUE(),"Measurement metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"score") = TRUE(),"Measurement metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"number") = TRUE(),"Count metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"RTT") = TRUE(),"Count metric",
+			CONTAINSSTRING('Metrics'[Metric_Description],"per") = TRUE(),"Rate metric",
+			[Metric_ID] = "25/26 MH&LDA-M-28", "Count metric",
+			"Error"
+			)
+			
+			
+			```
+		lineageTag: 6961bc9b-1c9f-4f75-bcff-ed02d232a95c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Number of data points per metric' =
+			CALCULATE (
+			    COUNT('Metrics'[Reporting_Date] ),
+			    FILTER (
+			        'Metrics',
+			        'Metrics'[Metric_ID] = EARLIER ( 'Metrics'[Metric_ID] ) && 'Metrics'[Monthly or Daily Data] = EARLIER('Metrics'[Monthly or Daily Data])
+			    )
+			)
+		formatString: 0
+		lineageTag: 4a1f066c-d42f-4473-9ce8-5ff0ddc49363
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Date Ranking' =
+			RANKX(
+			    FILTER(
+			        'Metrics',
+			        'Metrics'[Metric_ID]=EARLIER(Metrics[Metric_ID]) && [Monthly or Daily Data] = "Daily" && [Last 28 Days Flag] = TRUE()
+			    ),
+			    'Metrics'[Reporting_Date],,ASC
+			    )
+		formatString: 0
+		lineageTag: f3547f2e-3c20-49f5-b5dc-feb1d6f46a2b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Performance against target' = IF([Target] = BLANK(), [Value], [Value] - [Target])
+		lineageTag: acebe152-35d1-48a7-b920-665b46c1c443
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'SPC Baseline Period' = ```
+			"period 1"
+			
+			--below dax can be used to input specific spc periods for each metric and date period
+			
+			--SWITCH(TRUE(),
+			--[Reporting_Date] >= DATE(2024, 4, 1) && [Reporting_Date] < DATE(2025, 4, 1), "Period 2",
+			--[Reporting_Date] >= DATE(2025, 4, 1), "Period 3",
+			--"Period 1")
+			
+			```
+		displayFolder: SPC - Baseline
+		lineageTag: 74258c6d-406b-4a0c-9963-67484f63ccec
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Metrics = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from PowerBI_Reporting.Portfolio.tbl01_Metrics"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Numerator", type number}, {"Denominator", type number}, {"Value", type number}, {"Target", type number}, {"Reporting_Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

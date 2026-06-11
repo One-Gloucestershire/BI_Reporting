@@ -1,0 +1,48 @@
+table 'Age Reference'
+	lineageTag: 32d00342-9400-433b-9a63-80661ad56a1c
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 3e841820-831d-4ab8-9996-cab686971c61
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: 44e417a3-b45d-41f5-8e2b-c4cfccbafc7b
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 8c6df78c-16cc-499a-b103-d72c8f0b2d74
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column '55 and Over'
+		dataType: string
+		lineageTag: 084aa4e2-ce18-4e94-9546-5044362fa370
+		summarizeBy: none
+		sourceColumn: 55 and Over
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Age Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT DISTINCT [Age]#(lf)               ,[10YR_Age_Band] = CASE WHEN [10YR_Age_Band] = '0-9' THEN '00-09'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  ELSE [10YR_Age_Band] END#(lf)#(tab)#(tab)#(tab)   ,[5YR_Age_Band] = CASE WHEN [5YR_Age_Band] = '0-4' THEN '00-04'#(lf)#(tab)#(tab)#(tab)                          WHEN [5YR_Age_Band] = '5-9' THEN '05-09'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)  ELSE [5YR_Age_Band] END#(lf)#(tab)#(tab)#(tab)   ,[55 and Over] = CASE WHEN [age] >='55' then '55+'#(lf)#(tab)#(tab)#(tab)   else 'Under 55'#(lf)#(tab)#(tab)#(tab)   END#(lf) #(lf)FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf) #(lf)WHERE [Age] BETWEEN 0 AND 120"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

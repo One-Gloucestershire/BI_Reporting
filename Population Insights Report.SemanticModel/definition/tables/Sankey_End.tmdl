@@ -1,0 +1,152 @@
+table Sankey_End
+	lineageTag: bb79ade5-5854-469b-8695-95f72f0b3874
+
+	measure 'Sankey Period' = ```
+			
+			
+			VAR _START = MAX('Sankey_Start'[Sankey_Month])
+			VAR _END = MAX('Sankey_End'[Sankey_Month])
+			
+			VAR _PERIOD = DATEDIFF(_START, _END, MONTH) + 1
+			
+			RETURN 
+			
+			CONCATENATE(_PERIOD, " Month Period")
+			```
+		lineageTag: eda63df2-e7e8-4bf3-a3c3-e17f27cc24cd
+
+	measure 'Total Sankey Population - End' = ```
+			
+			
+			    CALCULATE(
+			    SUM('Sankey_End'[Counter]),
+			    USERELATIONSHIP('Ref_Sankey_Group_Mapping'[Sankey_PNG], 'Sankey_End'[Sankey_PNG]),
+			    USERELATIONSHIP('Ref_GP_Primary'[OrganisationCode], 'Sankey_End'[Practice_Code]),
+			    NOT 'Ref_Sankey_Group_Mapping'[Sankey_Health_Group] IN {"New Patient", "Patient Died", "Left Population"}
+			    )
+			```
+		formatString: #,0
+		lineageTag: 58d838d6-e883-4790-a60d-c913fdf0c3c6
+
+	measure 'Sankey Population Change' =
+			
+			
+			SWITCH(
+			    TRUE(),
+			    [Total Sankey Population - Start Table] = BLANK(),
+			    BLANK(),
+			    [Total Sankey Population - End] - [Total Sankey Population - Start Table]
+			)
+		lineageTag: d92758c0-d64a-4dad-87b5-ad4c09bba9b8
+
+		formatStringDefinition = "+,0;- ,0;0"
+
+	measure 'Sankey Population Change - %' = ```
+			
+			
+			IFERROR(
+			    ([Total Sankey Population - End] - [Total Sankey Population - Start Table]) / [Total Sankey Population - Start Table]
+			    , BLANK()
+			)
+			
+			```
+		lineageTag: 54459451-197b-4ac4-9bd7-5dce9f8ca69f
+
+		formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+	measure 'Total Sankey Population - End (From Start Group)' =
+			
+			
+			CALCULATE(
+			    SUM('Sankey_End'[Counter]),
+			
+			    -- Link people from start to end
+			    TREATAS(
+			        VALUES('Sankey_Start'[PseudoNHSNumber]),
+			        'Sankey_End'[PseudoNHSNumber]
+			    )
+			)
+		formatString: #,0
+		lineageTag: 603aa819-93e5-43d4-8c01-537abe7713c7
+
+	column Sankey_Month
+		dataType: dateTime
+		formatString: MMM-YYYY
+		lineageTag: d13263c2-7846-493f-901b-e194f8100084
+		summarizeBy: none
+		sourceColumn: Sankey_Month
+
+		variation Variation
+			isDefault
+			relationship: 3fa0eeb7-0786-46aa-99b3-d46b4fd996bc
+			defaultHierarchy: LocalDateTable_b4e6e95d-95e2-4422-8945-7e646c68205e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 25b4db48-f75d-49fd-a3d0-f736cdffe073
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 1fd5a970-e8a0-40bf-a65c-7479ae439d46
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sankey_PNG
+		dataType: string
+		lineageTag: 2d3a3919-160a-45f8-8075-0c1d3fda2727
+		summarizeBy: none
+		sourceColumn: Sankey_PNG
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sankey_Health_Group
+		dataType: string
+		lineageTag: c127f12f-b357-410c-bd31-edddc4372011
+		summarizeBy: none
+		sourceColumn: Sankey_Health_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 949984cf-9825-4cbe-bd6c-572dab59c6a9
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b8ae88b9-d6a0-447a-8764-7ff6ac0b2d56
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 7e3ad794-b863-48ee-8927-b23ec16bb3d7
+			defaultHierarchy: LocalDateTable_82d7b195-9048-4ab3-850f-d65d735e9259.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Sankey_End = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)#(lf)FROM [PowerBI_Reporting].[PHM].[tbl08_ACG_Sankey_Populations]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

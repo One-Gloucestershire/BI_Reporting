@@ -1,0 +1,58 @@
+table DAT_ASC_Service
+	lineageTag: 103050b4-b1e5-43e9-8721-ef15ad449703
+
+	measure '% Population with Long Term ASC Package' =
+			
+			
+			IF(
+			    ISBLANK(SUM('DAT_ASC_Service'[Counter]) / [Total Population]),
+			    0,
+			    SUM('DAT_ASC_Service'[Counter]) / [Total Population]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e9304bc4-d420-4962-9163-842096b9e6e3
+
+	measure '% Population with Long Term ASC ''1''' =
+			
+			
+			1 - [% Population with Long Term ASC Package]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 4bf764a4-2982-4853-b1ea-2f3d2760d45a
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 3039d9e3-ff5d-409f-a59a-24d209e0ce40
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Need_Group
+		dataType: string
+		lineageTag: 00bd58a2-4e22-4ee1-8818-84905b94ec9c
+		summarizeBy: none
+		sourceColumn: Patient_Need_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Group'
+		dataType: string
+		lineageTag: 4438d2d2-887a-4ae2-8fc2-4a2cd5a22475
+		summarizeBy: none
+		sourceColumn: Age Group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DAT_ASC_Service = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Health_and_Care", [Query="SELECT sum([Distinct]) as [Counter],#(lf)Patient_Need_Group,#(lf)[Age Group]#(lf)FROM #(lf)(#(lf)#(tab)#(tab)SELECT Patient_Need_Group,#(lf)#(tab)#(tab)row_number() over(partition by NHSNumber order by ServiceStartDate) as [Distinct],#(lf)#(tab)#(tab)case #(lf)#(tab)#(tab)#(tab)when cast([ACG].[Age] as int) between 0 and 17 then 'Paediatric (0-17)'#(lf)#(tab)#(tab)#(tab)when cast([ACG].[Age] as int) between 18 and 64 then 'Adult (18-64)'#(lf)#(tab)#(tab)#(tab)when cast([ACG].[Age] as int) >= 65 then 'Older Adult (65+)'#(lf)#(tab)#(tab)end as [Age Group]#(lf)#(tab)#(tab)FROM [Health_and_Care].[ASC].[vw_Service] [a]#(lf)#(tab)#(tab)LEFT JOIN [Health_and_Care].[ASC].[vw_Demographic] [demo] on [a].ClientUniqueID = [demo].ClientUniqueID#(lf)#(tab)#(tab)LEFT JOIN [Health_and_Care].[ACG].[vw_ACGResults] [ACG] on [demo].NHSNumber = [ACG].PseudoNHSNumber and [IsLatest] = 1#(lf)#(tab)#(tab)WHERE #(lf)#(tab)#(tab)isnull([a].ServiceEndDate,cast(getdate() as date)) >= [ACG].[Month] and --Service ends AFTER the ACG month#(lf)#(tab)#(tab)[a].ServiceStartDate <=  EOMONTH([ACG].[Month]) --Service starts BEFORE the ACG month ends#(lf)#(tab)#(tab)and [ACG].IsLatest = 1#(lf)#(tab)#(tab)--and ServiceType = 'Long-Term'#(lf)#(tab)#(tab)and IsServiceSelfFunded = 'No'#(lf)  ) [x]#(lf) WHERE [Distinct] = 1#(lf) GROUP BY Patient_Need_Group,#(lf)[Age Group]#(lf)#(lf)select distinct#(lf)IsServiceSelfFunded#(lf)FROM [Health_and_Care].[ASC].[vw_Service] [a]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

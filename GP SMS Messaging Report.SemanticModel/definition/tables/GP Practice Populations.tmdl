@@ -1,0 +1,66 @@
+table 'GP Practice Populations'
+	lineageTag: afc20364-eb68-4901-a1b3-1adf7394bd61
+
+	column practice_code
+		dataType: string
+		lineageTag: 453155c4-dd3d-4542-950f-d2b0961a3fb3
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: b5d09a4f-c869-4e2e-bb54-bd4e525d3165
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: c78041ec-8c0c-4ceb-b132-d4e617cece3a
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: d5611755-ef04-41cf-a83e-d7ab63acc808
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_date_of_month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: baf2d8ae-1535-480f-a67e-c7a00a5fdd95
+		summarizeBy: none
+		sourceColumn: first_date_of_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: double
+		lineageTag: 5ce53470-cf48-4285-ac71-c4d91060d87f
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'GP Practice Populations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="DECLARE @startdate AS Date = (SELECT MIN([Date]) FROM PowerBI_Reporting.primarycare.[tbl08_SMS])#(lf)DECLARE @enddate AS Date = (SELECT MAX([Date]) FROM PowerBI_Reporting.primarycare.[tbl08_SMS])#(lf)#(lf)--DROP TABLE #tempSMS#(lf)IF OBJECT_ID('tempdb.dbo.#tempSMS') IS NULL#(lf)#(tab)BEGIN#(lf)#(tab)#(tab)SELECT [Date], COUNT(DISTINCT CostCentre) AS GP_Count#(lf)#(tab)#(tab)INTO #tempSMS#(lf)#(tab)#(tab)FROM PowerBI_Reporting.primarycare.[tbl08_SMS] SMS#(lf)#(tab)#(tab)WHERE LEFT(CostCentre,1) IN ('L','Y') #(lf)#(tab)#(tab)GROUP BY [Date]#(lf)#(tab)END#(lf);#(lf)#(lf)SELECT practice_code, practice_name, primary_care_network, locality, first_date_of_month, SUM([population]) AS [Population]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations]#(lf)WHERE first_date_of_month >= @startdate#(lf)AND first_date_of_month <= @enddate#(lf)GROUP BY practice_code, practice_name, primary_care_network, locality, first_date_of_month#(lf)#(lf)UNION#(lf)#(lf)SELECT practice_code = CASE  #(lf)#(tab)#(tab)WHEN primary_care_network = 'Berkeley Vale'#(tab)#(tab)#(tab)THEN 'U02669'#(lf)#(tab)#(tab)WHEN primary_care_network = 'Cheltenham Central'#(tab)THEN 'U36833'#(lf)#(tab)#(tab)WHEN primary_care_network = 'Cheltenham St Paul''s'#(tab)THEN 'U22020'#(lf)#(tab)#(tab)WHEN primary_care_network = 'North Cotswolds'#(tab)#(tab)THEN 'U09847'#(lf)#(tab)#(tab)WHEN primary_care_network = 'Severn Health'#(tab)#(tab)#(tab)THEN 'U23710'#(lf)#(tab)#(tab)WHEN primary_care_network = 'Forest Green'#(tab)#(tab)#(tab)THEN 'U16196'#(lf)#(tab)#(tab)WHEN primary_care_network = 'West Forest of Dean'#(tab)THEN 'U29596' -- added by union below#(lf)#(tab)#(tab)END#(lf), practice_name = primary_care_network + ' PCN'#(lf), primary_care_network#(lf), locality#(lf), first_date_of_month#(lf), [Population] = SUM([population])#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations]#(lf)WHERE first_date_of_month >= @startdate#(lf)AND first_date_of_month <= @enddate#(lf)AND primary_care_network in ('Berkeley Vale', 'Cheltenham Central', 'Cheltenham St Paul''s', 'North Cotswolds', 'Severn Health', 'Forest Green', 'West Forest of Dean') -- others not coded yet so don't have U***** cost code#(lf)GROUP BY primary_care_network, locality, first_date_of_month#(lf)#(lf)UNION #(lf)#(lf)SELECT 'RTE' AS practice_code, 'RTE' AS practice_name, NULL AS primary_care_network, NULL AS locality, first_date_of_month, SUM([population]) AS [Population]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations]#(lf)WHERE first_date_of_month >= @startdate#(lf)AND first_date_of_month <= @enddate#(lf)GROUP BY first_date_of_month#(lf)#(lf)UNION#(lf)#(lf)SELECT '11M' AS practice_code, '11M' AS practice_name, NULL AS primary_care_network, NULL AS locality, first_date_of_month, SUM([population]) AS [Population]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations]#(lf)WHERE first_date_of_month >= @startdate#(lf)AND first_date_of_month <= @enddate#(lf)GROUP BY first_date_of_month#(lf)#(lf)UNION#(lf)#(lf)SELECT 'Mean GP value' AS practice_code, 'Mean GP value' AS practice_name, NULL AS primary_care_network, NULL AS locality, first_date_of_month, [Population] = SUM([population])/AVG(GP_Count)#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl01_GP_Practice_Populations] POP#(lf)LEFT JOIN #tempSMS SMS#(lf)#(tab)ON POP.first_date_of_month = SMS.[Date]#(lf)WHERE   first_date_of_month >= @startdate#(lf)#(tab)AND first_date_of_month <= @enddate#(lf)#(tab)AND practice_code IN (SELECT DISTINCT(CostCentre) FROM PowerBI_Reporting.primarycare.[tbl08_SMS])#(lf)#(tab)AND LEFT(practice_code,1) IN ('L','Y') #(lf)GROUP BY first_date_of_month#(lf)#(lf)ORDER BY primary_care_network, practice_name, first_date_of_month;#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

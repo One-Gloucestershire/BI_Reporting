@@ -1,0 +1,374 @@
+table IAPs
+	lineageTag: 892e756a-613d-4e66-a331-e07c9bb7f872
+
+	measure Monthly_IAP_Cost = ```
+			
+			VAR Monthly = calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))/12
+			
+			RETURN 
+			calculate(Monthly,
+			    FILTER(ALL('Date Table (First Day of Month)'),
+			                'Date Table (First Day of Month)'[FinancialYear] = "2025/26"))
+			```
+		lineageTag: 126ddfda-b264-43f1-b912-3e9c280bb603
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'YTD IAP' =
+			
+			(CALCULATE(SUM(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))/12) * (CALCULATE(min('Aggregate Data'[Latest_fin_month])))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 4a4044ad-e8dd-4d64-ba76-be97bdafd595
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure Monthly_IAP_Cost_AMP_Tolerance = ```
+			if
+			(calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))<1000000,
+			(calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))/12)*1.05,
+			if(and(
+			calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))>=1000000,calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))<5000000),
+			(calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))/12)*1.025,
+			(calculate(sum(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))/12)*1.015))
+			
+			```
+		lineageTag: 346228fd-cc5f-40bb-90e4-a90df7267702
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure YTD_IAP2 =
+			
+			VAR _TotalCost = CALCULATE(SUM(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]))
+			VAR _LatestMonth = CALCULATE(MIN('Aggregate Data'[Latest_fin_month]))
+			
+			VAR _TotalCalc = (_TotalCost / 12) * _LatestMonth
+			
+			VAR _IS_Level_Calc =
+			    VAR _TotalCost_IS = CALCULATE(
+			        SUM(IAPs[2025/26 Total Cost + MFF (Post-Adjustment)]),
+			        REMOVEFILTERS('Ref. Organisation Reference'[organisation_name]) // Remove provider filter to get full IS group
+			    )
+			    VAR _LatestMonth_IS = CALCULATE(
+			        MIN('Aggregate Data'[Latest_fin_month]),
+			        REMOVEFILTERS(IAPs[Provider Name])
+			    )
+			    RETURN
+			    (_TotalCost_IS / 12) * _LatestMonth_IS
+			
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISINSCOPE('Ref. Organisation Reference'[organisation_name]), (_TotalCost / 12) * _LatestMonth,  // Row Level
+			    ISINSCOPE('Ref. Organisation Reference'[Sector]), _IS_Level_Calc,                    // IS Subtotal
+			    _TotalCalc                                                    // Grand Total
+			)
+		lineageTag: 75670e1c-fd4e-46ea-b1cd-b8966b8a6f37
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure YTD_IAP_Total = sumx(IAPs,[YTD IAP])
+		lineageTag: 413d6093-7992-4cb1-b871-78ec72c646b7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Helper Column'
+		dataType: string
+		lineageTag: 6bfac486-d162-4a38-971e-4dfb250105cc
+		summarizeBy: none
+		sourceColumn: Helper Column
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Code'
+		dataType: string
+		lineageTag: 4c231d13-78af-447d-b04f-53babecf4ad7
+		summarizeBy: none
+		sourceColumn: Provider Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		lineageTag: 4cdbbcea-0884-4db7-842b-49a44f0ffe59
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PbR Flag'
+		dataType: string
+		lineageTag: 4121df4a-f3f7-48d0-85cb-bfd4929971d5
+		summarizeBy: none
+		sourceColumn: PbR Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column POD
+		dataType: string
+		lineageTag: 5cd78cca-e7a4-42dd-8d29-69a8eb159ca5
+		summarizeBy: none
+		sourceColumn: POD
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Treatment Function Code'
+		dataType: string
+		lineageTag: 9210774d-ae9b-44ba-b8c2-810a6c23caa4
+		summarizeBy: none
+		sourceColumn: Treatment Function Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Treatment Function Code Description'
+		dataType: string
+		lineageTag: 124d972f-1708-4990-9b55-081592d9a1c3
+		summarizeBy: none
+		sourceColumn: Treatment Function Code Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'HRG Code'
+		dataType: string
+		lineageTag: 2e4066e6-3090-4769-9d89-cf22c5402bd4
+		summarizeBy: none
+		sourceColumn: HRG Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'HRG Description'
+		dataType: string
+		lineageTag: f81455af-ea9d-4df4-9f9c-33dfec5a8ed1
+		summarizeBy: none
+		sourceColumn: HRG Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2022/23 IAP Activity'
+		dataType: double
+		lineageTag: 10db556e-b908-48b0-86e3-c92278c04d32
+		summarizeBy: sum
+		sourceColumn: 2022/23 IAP Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2022/23 IAP Total Cost + MFF'
+		dataType: double
+		lineageTag: 656fd320-c746-4fd2-812f-e963b3921b9e
+		summarizeBy: sum
+		sourceColumn: 2022/23 IAP Total Cost + MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2022/23 Actual Activity'
+		dataType: double
+		lineageTag: f6ce1a8b-44c0-46d6-9501-44f7e10ca831
+		summarizeBy: sum
+		sourceColumn: 2022/23 Actual Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2022/23 Actual Total Cost + MFF'
+		dataType: double
+		lineageTag: 7cb5eef1-5386-4c0b-955e-ca136a58f9a1
+		summarizeBy: sum
+		sourceColumn: 2022/23 Actual Total Cost + MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2023/24 IAP Activity'
+		dataType: string
+		lineageTag: 9ece02d4-ef6d-455d-b5c7-3d7752200a7d
+		summarizeBy: none
+		sourceColumn: 2023/24 IAP Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2023/24 IAP Total Cost + MFF'
+		dataType: string
+		lineageTag: 040cd71e-f462-4f8a-b5d7-1cea7d85c7c4
+		summarizeBy: none
+		sourceColumn: 2023/24 IAP Total Cost + MFF
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2024/25 IAP Activity'
+		dataType: string
+		lineageTag: 5859d045-00f7-4995-ac85-a608e866fd03
+		summarizeBy: none
+		sourceColumn: 2024/25 IAP Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column '2024/25 IAP Total Cost + MFF'
+		dataType: double
+		lineageTag: 4a0323de-05f7-4387-9503-d8d4bd383a83
+		summarizeBy: sum
+		sourceColumn: 2024/25 IAP Total Cost + MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2024/25 Actual Activity'
+		dataType: double
+		lineageTag: 979119cd-32e6-4984-9453-e8d333bb276b
+		summarizeBy: sum
+		sourceColumn: 2024/25 Actual Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2024/25 Actual Total Cost + MFF'
+		dataType: double
+		lineageTag: 32c6a6cf-daef-4361-9e3e-3bd73e407b16
+		summarizeBy: sum
+		sourceColumn: 2024/25 Actual Total Cost + MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2024/25 Actual Activity (FOT)'
+		dataType: double
+		lineageTag: 0231cf30-9c51-44ad-b169-597bb34be294
+		summarizeBy: sum
+		sourceColumn: 2024/25 Actual Activity (FOT)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2024/25 Actual Total Cost + MFF (FOT)'
+		dataType: double
+		lineageTag: 963fd1d8-abd0-4d01-9464-9be56fbe59ac
+		summarizeBy: sum
+		sourceColumn: 2024/25 Actual Total Cost + MFF (FOT)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Manual Adjustment'
+		dataType: double
+		lineageTag: c89f1c97-e935-4859-9811-5c469ee49691
+		summarizeBy: sum
+		sourceColumn: Manual Adjustment
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2025/26 Activity'
+		dataType: double
+		lineageTag: 0f3d27b0-ef7b-433f-bd4f-8d21f1aace6e
+		summarizeBy: sum
+		sourceColumn: 2025/26 Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2025/26 Tariff'
+		dataType: double
+		lineageTag: c703a15e-0d6e-49f6-ab0c-2136cc139ab8
+		summarizeBy: sum
+		sourceColumn: 2025/26 Tariff
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Local Price'
+		dataType: double
+		lineageTag: 6fad850a-8e94-4a76-885a-c1677fb7eb8d
+		summarizeBy: sum
+		sourceColumn: Local Price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2025/26 Total Cost + MFF (Pre-Adjustment)'
+		dataType: double
+		lineageTag: 62efcbfa-2b50-4059-bbfa-0e70a231e212
+		summarizeBy: sum
+		sourceColumn: 2025/26 Total Cost + MFF (Pre-Adjustment)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column '2025/26 Total Cost + MFF (Post-Adjustment)'
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: dc2036c7-445e-4d5b-bc2b-10d5a5c0c6e8
+		summarizeBy: sum
+		sourceColumn: 2025/26 Total Cost + MFF (Post-Adjustment)
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Helper Column2'
+		dataType: string
+		lineageTag: d956c016-646b-44ef-8c45-f7d8fc125337
+		summarizeBy: none
+		sourceColumn: Helper Column2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Code2'
+		dataType: string
+		lineageTag: 9e8ea192-e3b6-4ae1-97f5-88de716700a7
+		summarizeBy: none
+		sourceColumn: Provider Code2
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear = "2025/26"
+		lineageTag: 1c91d4f9-d704-483d-bce6-d5022e990da6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column YTD_IAP_Col =
+			
+			DIVIDE([2025/26 Total Cost + MFF (Post-Adjustment)], 12, BLANK())
+			    * CALCULATE(
+			        MIN('Aggregate Data'[Latest_fin_month]),
+			        FILTER(
+			            'Aggregate Data',
+			            'Aggregate Data'[Organisation_Code] = IAPs[Provider Code]
+			        )
+			    )
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: b8600fee-c702-4db0-9e7e-3fa81ce49af9
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition IAPs = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT CONCAT([Provider Code],[Helper Column]) as [Helper Column],#(lf)CASE #(lf)WHEN [a].[Provider Code] like '%acg%' THEN 'L0D9W' #(lf)WHEN [a].[Provider Code] like '%NPG%' THEN 'A0C5S'#(lf)WHEN [a].[Provider Code] like '%DFY%' THEN 'DFY01'#(lf)else [a].[Provider Code] end as [Provider Code],#(lf)*#(lf)FROM BIReports.dbo.IAPs_IS_2526 [a]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

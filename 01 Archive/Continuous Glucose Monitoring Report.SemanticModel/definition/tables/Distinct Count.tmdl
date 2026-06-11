@@ -1,0 +1,79 @@
+table 'Distinct Count'
+	lineageTag: affe7eb4-1aa1-4f15-acaa-356a0c0fbc25
+
+	measure '90D Total' =
+			
+			CALCULATE(
+				SUM('Distinct Count'[Counter]),
+				FILTER(
+					ALL('Distinct Count'[Date]),
+					'Distinct Count'[Date]>MAX('Distinct Count'[Date])-90 &&
+			        'Distinct Count'[Date]<=MAX('Distinct Count'[Date])))
+		formatString: 0
+		lineageTag: 21057399-b4b8-4c0c-aca2-36a4998ce22c
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "RunningTotal"
+				}
+
+		changedProperty = FormatString
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 62c5532a-6761-48a0-bdff-0436c4a26791
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 14d6e36e-5eb9-45e6-a781-977064c02902
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column PARTITION_KEY
+		dataType: int64
+		formatString: 0
+		lineageTag: 8ef6deaa-d914-4366-b375-adff4803e071
+		summarizeBy: sum
+		sourceColumn: PARTITION_KEY
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice
+		dataType: string
+		lineageTag: 6e83b6b0-fb95-40ea-ad82-4f3cc1871e68
+		summarizeBy: none
+		sourceColumn: Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: da35c4d5-65bd-47ba-8e38-cd47bcbd1d09
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'Distinct Count-fed2a4e9-f999-4479-813c-89cdf39d1134' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_reference", [Query="SELECT distinct 1 as Counter,#(lf)#(tab)   [A].[NHS_Number],#(lf)       [A].[PARTITION_KEY],#(lf)#(tab)   [C].[ReportingOrganisationName],#(lf)#(tab)   [A].[Processing_Period_Date]#(lf)#(tab)   --COUNT([A].[PROCESSING_PERIOD_DATE])#(lf)#(tab)  #(lf)#(tab)  #(lf)#(lf)--ROW_NUMBER() OVER (PARTITION BY [A].[NHS_Number], [A].[PARTITION_KEY] ORDER BY [A].[PARTITION_KEY] ASC) AS 'Highestresult'#(lf)  FROM [Data_Mart_Primary_Care_Meds].[Import].[Patient_Medication] as [A]#(lf)#(lf)#(tab)LEFT JOIN [BIReports].[MPI].[MPI_current] as [B]#(lf)#(tab)ON [A].[NHS_Number] = [B].[Derived_Pseudo_NHS]#(lf)#(tab)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] as [C]#(lf)#(tab) ON [A].[Cost_Centre_ODS_Code] = [C].[OrganisationCode]#(lf)#(lf)#(tab)LEFT JOIN [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] as [D]#(lf)#(tab)ON [A].[NHS_Number] = [D].[Derived_Pseudo_NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] as [E]#(lf)#(tab)ON [A].[Processing_Period_Date]=[E].[Date]#(lf)#(lf)#(lf)  WHERE [Paid_BNF_Code] like '2148%'#(lf)  AND [PARTITION_KEY] >= '201904'#(lf)  AND [C].[Commissioner] = '11M'#(lf)  AND ([DiabetesDerived] IS NOT NULL AND [Derived_Clean_Diabetes_Type] IS NOT NULL)#(lf) #(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Processing_Period_Date", type date}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Processing_Period_Date", "Date"}, {"ReportingOrganisationName", "Practice"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

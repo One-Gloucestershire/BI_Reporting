@@ -1,0 +1,64 @@
+table REF_GP_Practice_Ref
+	lineageTag: 7879d63c-633c-4954-b5e1-981798e76374
+
+	column Locality
+		dataType: string
+		lineageTag: 9903953b-2c41-4e07-b729-5afdbb091fb3
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 10ef657c-de3c-4ad1-80e1-695f154e524d
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: adcb2a4f-cfe6-44e8-b98e-62e39e72a6f7
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: e4ab5a16-3f99-4a8f-b6a8-46937f8bf002
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationName
+		dataType: string
+		lineageTag: 050ac275-476d-4a85-beb4-969e06940f9b
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportingOrganisationCode
+		dataType: string
+		lineageTag: ff011b06-a1bb-475e-b2d6-3e3d152894e8
+		summarizeBy: none
+		sourceColumn: ReportingOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_GP_Practice_Ref = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="#(lf)select #(lf)[P].OrganisationCode#(lf),[P].OrganisationName#(lf),[ReportingOrganisationCode] = [P].ReportingOrganisationCode#(lf)#(lf),[ReportingOrganisationName] =  [P].ReportingOrganisationName#(lf)#(lf),[Locality] = Case when [P].Reporting_Locality IN ('The Forest of Dean') then 'The Forest of Dean.'#(lf)ELSE [P].Reporting_Locality END #(lf)#(lf),[PrimaryCareNetwork] = Reporting_PrimaryCareNetwork #(lf)#(lf)from PowerBI_Reporting.dbo.GP_Practice_Ref [P]#(lf)left join CCG_Reference.Reference.vw_GPPractice [R] on [P].ReportingOrganisationCode = [R].OrganisationCode#(lf)#(lf)#(lf)where (p.OrganisationCode in (select distinct gpp.OrganisationCode  from CCG_Reference.Reference.vw_GPPracticePopulation as gpp)#(lf)or [R].Locality is not null)#(lf)#(lf)and [P].OrganisationCode <> 'Y00054' -- The Homeless Healthcare Team#(lf)#(lf)#(lf)order by ReportingOrganisationName#(lf)#(lf);#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

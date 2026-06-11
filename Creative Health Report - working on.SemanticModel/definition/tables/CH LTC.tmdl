@@ -1,0 +1,49 @@
+table 'CH LTC'
+	lineageTag: fd1417a5-7952-49bd-b7b0-34c6c039c965
+
+	measure 'CH LTC - Distinct Patients' =
+			
+			
+			DISTINCTCOUNT('CH LTC'[NHS_Number])
+		formatString: 0
+		lineageTag: 23b26c43-e560-48cd-957c-56bd356689e5
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 2c68e632-073f-4847-aac3-c42270a57e0f
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: 5f3bde71-ea85-4f7a-b275-d5c7ba436468
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: string
+		lineageTag: 9a6795e4-e527-4f5b-bd00-5298e4503f9f
+		summarizeBy: none
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'CH LTC' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from [PowerBI_Reporting].[community].[tbl01_CreativeHealthCohort]"]),
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"NHS_Number", "ASTHMA", "ATRIAL FIBRILLATION", "CANCER", "COPD", "CORONARY HEART DISEASE", "DEMENTIA", "DEPRESSION", "DIABETES", "HYPERTENSION", "LEARNING DISABILITY", "MENTAL HEALTH", "OBESITY", "STROKE", "SMOKER"}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Removed Other Columns", {"NHS_Number"}, "Attribute", "Value"),
+				    #"Filtered Rows" = Table.SelectRows(#"Unpivoted Other Columns", each ([Value] = "1"))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

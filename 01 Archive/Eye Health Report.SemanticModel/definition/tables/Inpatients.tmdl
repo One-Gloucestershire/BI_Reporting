@@ -1,0 +1,393 @@
+table Inpatients
+	lineageTag: 62f3e750-7bf1-4a03-a18b-3fa75a9aa2ea
+
+	measure 'KPI Inpt YTD Latest' = ```
+			
+			VAR _CurrentFY = 'Inpatients Date Table'[IPCurrentFY]
+			RETURN 
+			CALCULATE(
+			    SUM('Inpatients'[Counter]),
+			    'Inpatients Date Table'[ytd_flag] = 1,
+			    'Inpatients Date Table'[financial_year] = _CurrentFY ) +0
+			```
+		formatString: 0
+		lineageTag: 5885d72b-66c4-46a8-bb3b-972e6d9559ce
+
+	measure 'KPI Inpt YTD Previous' = ```
+			
+			VAR _PreviousFY = 'Inpatients Date Table'[IPPreviousFY]
+			RETURN 
+			CALCULATE(
+			    SUM('Inpatients'[Counter]),
+			    'Inpatients Date Table'[ytd_flag] = 1,
+			    'Inpatients Date Table'[financial_year] = _PreviousFY ) +0
+			```
+		formatString: 0
+		lineageTag: 8f98b137-298c-4af4-b3a2-bbda23bc0647
+
+	measure 'KPI Inpt LatestM' = CALCULATE(SUM(Inpatients[counter]), 'Inpatients Date Table'[latest_month_flag] = 1) +0
+		formatString: 0
+		lineageTag: 68398e4a-f2b7-4b64-a1be-9118370d8135
+
+	measure 'KPI Inpt PreviousM' = CALCULATE(SUM('Inpatients'[counter]), 'Inpatients Date Table'[previous_month_flag] = 1) +0
+		formatString: 0
+		lineageTag: 4949b27e-ad91-4012-b108-b27985ef3546
+
+	measure 'KPI Cost YTD Latest' =
+			
+			VAR _CurrentFY = 'Inpatients Date Table'[IPCurrentFY]
+			RETURN
+			CALCULATE(SUM(Inpatients[spell_commissioning_tariff_calculation_final_price]), 'Inpatients Date Table'[ytd_flag] = 1, 'Inpatients Date Table'[financial_year] = _CurrentFY) +0
+		lineageTag: 1b5a62ab-5012-4dbd-8419-e4cabefc09bb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Cost YTD Previous' =
+			
+			VAR _PreviousFY = 'Inpatients Date Table'[IPPreviousFY]
+			RETURN
+			CALCULATE(SUM(Inpatients[spell_commissioning_tariff_calculation_final_price]), 'Inpatients Date Table'[ytd_flag] = 1, 'Inpatients Date Table'[financial_year] = _PreviousFY) +0
+		lineageTag: 068b02a6-0217-47eb-9ffd-08706140537d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Cost LatestM' = CALCULATE(SUM('Inpatients'[spell_commissioning_tariff_calculation_final_price]), 'Inpatients Date Table'[latest_month_flag] = 1) +0
+		lineageTag: 7950e3cd-0dd7-4c37-a8d4-e78d40bacc9f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Cost PreviousM' = CALCULATE(SUM('Inpatients'[spell_commissioning_tariff_calculation_final_price]), 'Inpatients Date Table'[previous_month_flag] = 1) +0
+		lineageTag: 706dd348-b229-4b45-b320-d68ec8f3bd88
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Inpt Diff' = ([KPI Inpt LatestM] - [KPI Inpt PreviousM])
+		formatString: 0
+		lineageTag: 6a019ed7-97ba-470d-bb11-1ae8e6a47920
+
+	measure 'KPI Inpt YTD Diff' = [KPI Inpt YTD Latest] - [KPI Inpt YTD Previous]
+		formatString: 0
+		lineageTag: 434653cc-dfa7-4c9f-aa47-5fdf67d3f76a
+
+	measure 'KPI Cost Diff' = [KPI Cost LatestM] - [KPI Cost PreviousM]
+		lineageTag: 62a58bf2-155c-49f8-a4b4-e690e7596352
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Cost YTD Diff' = [KPI Cost YTD Latest] - [KPI Cost YTD Previous]
+		lineageTag: 446171ad-d5cf-4cdf-b85e-a42683ba3c1c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Inpt Previous12' = CALCULATE(SUM(Inpatients[counter]), 'Inpatients Date Table'[previous_12_months_flag] = 1) +0
+		formatString: 0
+		lineageTag: c63dde18-486a-48b0-baf9-cc1f5dc0a0af
+
+	measure 'KPI Inpt Latest12' = CALCULATE(SUM(Inpatients[counter]), 'Inpatients Date Table'[latest_12_months_flag] = 1) +0
+		formatString: 0
+		lineageTag: 5bec068a-ea20-4a90-9c21-3178a0757116
+
+	measure 'KPI Inpt SameM Previous' = CALCULATE(SUM(Inpatients[counter]), 'Inpatients Date Table'[same_month_last_year_flag] = 1) + 0
+		formatString: 0
+		lineageTag: 2300650a-e062-4778-97bb-a31612e9bb6e
+
+	measure 'KPI Cost SameM Previous' = CALCULATE(SUM('Inpatients'[spell_commissioning_tariff_calculation_final_price]), 'Inpatients Date Table'[same_month_last_year_flag] = 1) +0
+		lineageTag: 3b68eb8c-8936-48f0-b143-61fd8391837c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Cost Diff Same Month' = [KPI Cost LatestM] - [KPI Cost SameM Previous]
+		lineageTag: 912f6f0d-8671-4712-aeaf-4d7c9dd18e4d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Inpt SameM Diff' = ([KPI Inpt LatestM] - [KPI Inpt SameM Previous])
+		formatString: 0
+		lineageTag: 475bc9a3-dbd9-438f-9428-63c4a390057e
+
+	measure 'KPI Inpt 12 Diff' = [KPI Inpt Latest12] - [KPI Inpt Previous12]
+		formatString: 0
+		lineageTag: 238e9688-c067-4640-93e0-801ad605328d
+
+	measure GHFT_Inpatient_Cost = ```
+			
+			    CALCULATE(
+			        SUM('Inpatients'[spell_commissioning_tariff_calculation_final_price]), 
+			        'Inpatients'[Provider_Code] = "RTE",
+			        REMOVEFILTERS('Inpatients'[Provider_Name], 'Inpatients'[Provider]) ) + 0
+			```
+		lineageTag: 1c2a4bf3-433e-4712-8fd0-c80dd7447ecd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Other_Inpatient_Cost = ```
+			
+			    CALCULATE(SUM('Inpatients'[spell_commissioning_tariff_calculation_final_price]), 'Inpatients'[Provider_Code] <> "RTE" ) + 0
+			```
+		lineageTag: b974423f-b10f-475f-a63a-d960466f438f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Type
+		dataType: string
+		lineageTag: 7ca22c0b-2896-4a14-8e42-7f71bf5e7e59
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: 46e51a6b-d74f-450f-a2a5-1c4a7f1465b6
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: d6a8c3a7-b3d3-439a-8d72-97beb1ab0c15
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column DischargeMonth
+		dataType: string
+		lineageTag: 6f3d6441-6ea3-4595-b36b-ccd2cb6bb288
+		summarizeBy: none
+		sourceColumn: DischargeMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column AdmissionWeekday
+		dataType: string
+		lineageTag: de904eb6-1737-43a1-b660-0c16f794f2e5
+		summarizeBy: none
+		sourceColumn: AdmissionWeekday
+
+		annotation SummarizationSetBy = Automatic
+
+	column DischargeWeekday
+		dataType: string
+		lineageTag: 60810f8e-c32f-4ccf-8d19-fdbc73041c4e
+		summarizeBy: none
+		sourceColumn: DischargeWeekday
+
+		annotation SummarizationSetBy = Automatic
+
+	column AdmissionType
+		dataType: string
+		lineageTag: 61bc5bbd-11e0-4110-804f-6c367996efed
+		summarizeBy: none
+		sourceColumn: AdmissionType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 7fa8d92c-cf31-40c0-bd53-c1f2306163f7
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: daf06d8a-506e-4a91-87a8-e9978f43ba11
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice_Code
+		dataType: string
+		lineageTag: ef430cc9-4a64-4cb2-9bf6-ccd6ff943c1e
+		summarizeBy: none
+		sourceColumn: GP_Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice_Name
+		dataType: string
+		lineageTag: a018f39c-5345-4024-ab39-56f0fdc496f2
+		summarizeBy: none
+		sourceColumn: GP_Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column network_code
+		dataType: string
+		lineageTag: fce2483e-27e9-4be1-8ee8-760b9dd7a0c1
+		summarizeBy: none
+		sourceColumn: network_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 7bd348b7-d062-41ce-9307-71bd992836a5
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentFunctionCode
+		dataType: string
+		lineageTag: 74491973-c263-49d6-90ad-b94c21638fdb
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column TreatmentFunctionDescription
+		dataType: string
+		lineageTag: 0c5a3fdd-b1f2-45a7-8d13-a7a49468f8bd
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Specialty
+		dataType: string
+		lineageTag: 1a625c64-6180-4a9f-9f84-e76d15eec8f2
+		summarizeBy: none
+		sourceColumn: Specialty
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 9aa7e968-5795-4e8a-bbf0-bff61666b43c
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 93a6809f-29e1-42b2-b51c-b3d33b4df043
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_hospital_provider_spell_number
+		dataType: string
+		lineageTag: d8e34e1c-2ff8-4db6-b45c-e8adfb8c4bae
+		summarizeBy: none
+		sourceColumn: spell_hospital_provider_spell_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Code
+		dataType: string
+		lineageTag: f6b9f9ac-9bbb-4dbc-bf5b-fef48026ff84
+		summarizeBy: none
+		sourceColumn: Provider_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Name
+		dataType: string
+		lineageTag: 7a472e96-f9e5-42c7-b629-2358211663c0
+		summarizeBy: none
+		sourceColumn: Provider_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHFT_or_Other
+		dataType: string
+		lineageTag: aa5116d2-264f-45cd-baa7-a1ad47859b6b
+		summarizeBy: none
+		sourceColumn: GHFT_or_Other
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_commissioning_tariff_calculation_final_price
+		dataType: double
+		lineageTag: 290a5c79-cd25-45cb-b687-5e3561a6d05b
+		summarizeBy: sum
+		sourceColumn: spell_commissioning_tariff_calculation_final_price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column GHFT_Current_TotalPlusMFF
+		dataType: double
+		lineageTag: a29facd0-85a2-4e7b-944c-1a8a20341286
+		summarizeBy: sum
+		sourceColumn: GHFT_Current_TotalPlusMFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OtherProvider_Current_TotalPlusMFF
+		dataType: double
+		lineageTag: d68186d3-34ca-4502-8adb-715aa0d20f07
+		summarizeBy: sum
+		sourceColumn: OtherProvider_Current_TotalPlusMFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column spell_commissioning_grouping_core_hrg
+		dataType: string
+		lineageTag: e77247cf-28f9-4f13-bda8-a81300fac90b
+		summarizeBy: none
+		sourceColumn: spell_commissioning_grouping_core_hrg
+
+		annotation SummarizationSetBy = Automatic
+
+	column HRGCodeDescription
+		dataType: string
+		lineageTag: f7030079-852b-4652-a95a-8c2d58d32f48
+		summarizeBy: none
+		sourceColumn: HRGCodeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_discharge_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 50bdaeea-0aef-48ed-8d35-d259d9968d45
+		summarizeBy: none
+		sourceColumn: spell_discharge_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_admission_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 189584ea-1a15-400e-bc96-7140502ecd79
+		summarizeBy: none
+		sourceColumn: spell_admission_date
+
+		variation Variation
+			isDefault
+			relationship: 22a8650b-73b8-40d1-a5e2-7550bdbbce7f
+			defaultHierarchy: LocalDateTable_87e59e4f-4fb0-42c0-a10a-32090f71c29a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Inpatients = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Processing", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[EyeHealth].[tbl03_Inpatients]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"spell_admission_date", type date}}),
+				    #"Sorted Rows" = Table.Sort(#"Changed Type",{{"spell_admission_date", Order.Descending}})
+				in
+				    #"Sorted Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

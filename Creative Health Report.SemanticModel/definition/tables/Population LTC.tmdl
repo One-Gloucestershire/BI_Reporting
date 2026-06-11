@@ -1,0 +1,44 @@
+table 'Population LTC'
+	lineageTag: 9207f1fc-4f3c-47e7-8a1d-14b6c680c615
+
+	column Attribute
+		dataType: string
+		lineageTag: b21c9b40-9135-4286-8f24-e7d78b47d9bb
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 40fb31d8-8c67-4129-b4d3-70a92cc0b564
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: adcc2192-505d-4210-bc35-575069563058
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Population LTC' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="Select * from [PowerBI_Reporting].[community].[tbl01_CreativeHealthPopulationLTCRef]"]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"gender", "DerivedAge", "AgeBand5yr", "AgeBand10yr", "DerivedEthnicityGroup", "PracticeCode", "PracticeName"}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns",{"PseudoNHSNumber", "OBESITY", "SMOKER", "ASTHMA", "COPD", "DEMENTIA", "DEPRESSION", "DIABETES", "PalliativeCare", "ChronicKidneyDisease", "Epilepsy", "HeartFailure", "STROKE", "ATRIAL FIBRILLATION", "CANCER", "CORONARY HEART DISEASE", "HYPERTENSION", "LEARNING DISABILITY", "MENTAL HEALTH"}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Removed Other Columns", {"PseudoNHSNumber"}, "Attribute", "Value"),
+				    #"Filtered Rows" = Table.SelectRows(#"Unpivoted Other Columns", each ([Value] = 1))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

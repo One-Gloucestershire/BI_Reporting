@@ -1,0 +1,37 @@
+table 'Financial Year Order'
+	lineageTag: 8be7482d-aade-499a-af44-d5e35060a16c
+
+	column 'Financial Year'
+		dataType: string
+		lineageTag: dbbec75b-4f3b-483b-8adc-c64c4ab4c43b
+		summarizeBy: none
+		sourceColumn: Financial Year
+		sortByColumn: Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 6618e5b0-09ab-4464-85d0-4a210ff165bc
+		summarizeBy: none
+		sourceColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Financial Year Order-a76ecab6-823e-453d-9765-81bcf89d5008' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("NcexDQAgCEXBXX5tAjxsnMWw/xpiwXV3r/A4hmspVOsfN6LPPAz6OcfI/lbVAw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t, Column2 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Financial Year"}, {"Column2", "Order"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,51 @@
+table ICB_populations_childbearing_FYtoMonth
+	lineageTag: 09becea4-9df9-4632-aa97-b41469330999
+
+	column Month_Start
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3e1122df-d927-4fb1-80bd-16470d17f971
+		summarizeBy: none
+		sourceColumn: Month_Start
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: aa24b3e6-a15b-43ce-b583-3ed435119ea6
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 37324c4b-6cf0-420c-a00e-73fa9f91481d
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthYearName2
+		dataType: string
+		lineageTag: 8e571a9d-d5a6-45ac-ac1a-30466df35c97
+		summarizeBy: none
+		sourceColumn: MonthYearName2
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ICB_populations_childbearing_FYtoMonth = m
+		mode: import
+		source =
+				let
+				    Source = Table.NestedJoin(REF_Date, {"FinancialYear"}, ICB_populations_childbearing, {"FinancialYear"}, "ICB_populations_childbearing", JoinKind.FullOuter),
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"Month_Start", "MonthYearName2", "ICB_populations_childbearing"}),
+				    #"Expanded ICB_populations" = Table.ExpandTableColumn(#"Removed Other Columns", "ICB_populations_childbearing", {"ICB_Name", "Population"}, {"ICB_Name", "Population"})
+				in
+				    #"Expanded ICB_populations"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

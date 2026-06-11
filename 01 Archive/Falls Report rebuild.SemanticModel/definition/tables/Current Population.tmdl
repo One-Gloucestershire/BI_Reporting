@@ -1,0 +1,108 @@
+table 'Current Population'
+	lineageTag: 6022e03b-a811-4d9a-ac04-5dd210d5c467
+
+	column locality
+		dataType: string
+		lineageTag: d775361c-634d-4a54-b486-8d0e08b8cda8
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 977fe42d-c84f-4727-bd50-3a93d50fdd65
+		summarizeBy: none
+		sourceColumn: MH_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LD_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: bbc4c43e-eff2-4932-9e5e-371ea15aaf31
+		summarizeBy: none
+		sourceColumn: LD_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 954f87bc-877a-4a44-be6a-e8d846c2abd9
+		summarizeBy: none
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ethnic Origin Grouped'
+		dataType: string
+		lineageTag: 72691a41-ec13-4279-86f3-d21cecdc5161
+		summarizeBy: none
+		sourceColumn: Ethnic Origin Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 71d1f3b2-9823-4c2d-9d46-ef38a5905ac6
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 9f4b7f22-9a0f-46b0-bb2f-885bf1d68620
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: a1826087-a2ee-4fed-bf3d-f16f7fbc18ab
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 0e440f31-b80b-425f-ac05-d873f2dca9d7
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 999cdd68-9b34-4115-b372-7833a6ba3a53
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMDCountyDecile
+		dataType: int64
+		formatString: 0
+		lineageTag: 686c7830-d4e3-4cb7-90d7-a3161782ee46
+		summarizeBy: none
+		sourceColumn: IMDCountyDecile
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Current Population' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="#(lf)#(tab)  SELECT#(lf)#(tab)  locality = case when m.Locality like '%cotswold%' then 'Cotswolds' else Locality end#(lf)#(tab)  ,MH_flag = case when m.MentalIllness is null then 0 else m.MentalIllness end#(lf)#(tab)  ,LD_flag = case when m.LearningDisability  is null then 0 else m.LearningDisability end#(lf)#(tab)  ,Core20Flag = case when m.Core20Flag is null then 0 else m.Core20Flag end#(lf)#(tab)  ,[Ethnic Origin Grouped] = case#(tab)when DerivedEthnicityGroup is null then 'Unknown' #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when DerivedEthnicityGroup like 'Not known' then 'Unknown' #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)else DerivedEthnicityGroup #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end #(lf)#(tab)  ,[5YR_Age_Band] = case#(tab)when m.AgeBand5yr like '0-4' then '00-04'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)when m.AgeBand5yr like '5-9' then '05-09'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)else m.AgeBand5yr#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)end#(lf)#(tab)  ,m.PseudoNHSNumber#(lf)#(tab)  ,IMDCountyDecile  = case when m.IMDCountyDecile is null then null else m.IMDCountyDecile end#(lf)#(tab)  ,counter = 1#(lf),PracticeCode#(lf),PrimaryCareNetwork#(lf)#(lf)#(tab)  from ICB_Products.[Patient].[vw_Summary] m#(lf)#(lf)#(tab)  left join [ICB_Products].[Patient].[vw_IMD_and_Geography] b on b.PseudoNHSNumber = m.PseudoNHSNumber"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

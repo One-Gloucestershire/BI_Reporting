@@ -1,0 +1,147 @@
+table 'Prescribed CGM Users'
+	lineageTag: 3fa02716-5c32-4c2f-8ae5-fb3c61a8c6c5
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 4eb8fdeb-0fac-4e85-84f1-e72234bdc8c8
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PARTITION_KEY
+		dataType: int64
+		formatString: 0
+		lineageTag: 8a7717a3-92cc-4951-b106-fae7205fea2c
+		summarizeBy: sum
+		sourceColumn: PARTITION_KEY
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: 6c8997fc-2d14-4e81-b20f-86576ace2075
+		summarizeBy: none
+		sourceColumn: Age
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Item Cost (£)'
+		dataType: double
+		lineageTag: 4f9d6ac7-3f20-4269-9224-17e0cb34d7aa
+		summarizeBy: sum
+		sourceColumn: Total Item Cost (£)
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Item Count'
+		dataType: int64
+		formatString: 0
+		lineageTag: 842d0436-71ae-402c-b093-941875aa235e
+		summarizeBy: sum
+		sourceColumn: Item Count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Product
+		dataType: string
+		lineageTag: 84bdb5d3-b15e-4617-a2d5-896ef365acbb
+		summarizeBy: none
+		sourceColumn: Product
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiabetesDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: d5650bf8-c8e5-4ed0-8d45-fc23917dd8f2
+		summarizeBy: sum
+		sourceColumn: DiabetesDerived
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 99cbb327-c012-4b57-92ee-98ca46bbc750
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: f746cb16-4854-4d3a-bef2-e86799400fb2
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diabetes Type'
+		dataType: string
+		lineageTag: 7240b1e8-20a8-4e18-aa5a-2b91f572649e
+		summarizeBy: none
+		sourceColumn: Diabetes Type
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 2bc6e8f7-39f4-4403-8ffa-d8002e32019a
+		summarizeBy: none
+		sourceColumn: Month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 89caaf04-13d8-4cc8-a248-ae66d401516b
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'Prescribed CGM Users-63e68c97-0287-499b-9a1b-f4b75e1be7f2' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [A].[NHS_Number],#(lf)       [A].[PARTITION_KEY],#(lf)       [A].[Age_Bands] as [Age],#(lf)       [Item_Cost (pounds)] = [Item_Actual_Cost]/100,#(lf)       [A].[Item_Count],#(lf)       [A].[Paid_BNF_Name],#(lf)       [B].[DiabetesDerived],#(lf)#(tab)   [C].[ReportingOrganisationName],#(lf)#(tab)   [C].[OrganisationName],#(lf)#(tab)   [D].[Derived_Clean_Diabetes_Type],#(lf)#(tab)   [E].[MonthYearName]#(lf)#(lf)  FROM [Data_Mart_Primary_Care_Meds].[Import].[Patient_Medication] as [A]#(lf)#(lf)#(tab)LEFT JOIN [BIReports].[MPI].[MPI_current] as [B]#(lf)#(tab)ON [A].[NHS_Number] = [B].[Derived_Pseudo_NHS]#(lf)#(tab)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] as [C]#(lf)#(tab) ON [A].[Cost_Centre_ODS_Code] = [C].[OrganisationCode]#(lf)#(lf)#(tab)LEFT JOIN [Data_Mart_National_Diabetes_Audit].[NDA].[core_NDA] as [D]#(lf)#(tab)ON [A].[NHS_Number] = [D].[Derived_Pseudo_NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup] as [E]#(lf)#(tab)ON [A].[Processing_Period_Date]=[E].[Date]#(lf)#(lf)#(lf)  WHERE [Paid_BNF_Code] like '2148%'#(lf)  AND [PARTITION_KEY] >= '201904'#(lf)  AND [C].[Commissioner] = '11M'#(lf)  AND ([DiabetesDerived] IS NOT NULL AND [Derived_Clean_Diabetes_Type] IS NOT NULL)#(lf)#(lf)  --ORDER BY Derived_Clean_Diabetes_Type"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Item_Cost (pounds)", "Total Item Cost (£)"}, {"Paid_BNF_Name", "Product Name"}, {"ReportingOrganisationName", "Practice Name"}, {"MonthYearName", "Month"}, {"Item_Count", "Item Count"}, {"Derived_Clean_Diabetes_Type", "Diabetes Type"}}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Renamed Columns", "Month", "Month - Copy"),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Duplicated Column",{{"Month - Copy", type date}}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Changed Type",{{"Month - Copy", "Date"}, {"Product Name", "Product"}})
+				in
+				    #"Renamed Columns1"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+

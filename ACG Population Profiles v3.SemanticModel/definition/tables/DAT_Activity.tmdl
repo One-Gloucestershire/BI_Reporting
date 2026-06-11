@@ -1,0 +1,55 @@
+table DAT_Activity
+	lineageTag: d8b20ec9-1968-49f6-973c-2b8e1dd76c44
+
+	measure 'Activity per Person' = (calculate(sum('DAT_Activity'[Activity]))/[Total Population])
+		lineageTag: ef0edd09-2265-428e-b858-af593085eeeb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DerivedCost
+		dataType: double
+		lineageTag: 1315caff-576c-4fc7-9b89-6271a8d8c978
+		summarizeBy: sum
+		sourceColumn: DerivedCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Activity
+		dataType: int64
+		formatString: 0
+		lineageTag: 22002491-ceb3-4eee-b239-7b697a1028df
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column ACGPatientNeedsGroup
+		dataType: string
+		lineageTag: 2ba18f72-1a54-4c3d-8dbd-5dc2e34773d0
+		summarizeBy: none
+		sourceColumn: ACGPatientNeedsGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityType
+		dataType: string
+		lineageTag: 0c111457-dcc7-4739-afe3-8d977cedd001
+		summarizeBy: none
+		sourceColumn: ActivityType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DAT_Activity = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="SELECT sum(DerivedActivityCost) as [DerivedCost],#(lf)sum([Counter]) as [Activity],#(lf) b.ACGPatientNeedsGroup,#(lf) a.ActivityType#(lf)FROM ICB_Products.Patient.vw_Activity [a]#(lf)LEFT JOIN ICB_Products.Patient.vw_Summary [b] on [a].PseudoNHSNumber = [b].PseudoNHSNumber#(lf)group by #(lf) b.ACGPatientNeedsGroup,#(lf) a.ActivityType"])
+				in
+				    Source
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

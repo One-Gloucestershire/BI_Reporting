@@ -1,0 +1,69 @@
+table cost_projection
+	lineageTag: c356e1f5-c981-4362-aabc-ba92bea7b27d
+
+	measure ytd_projection = CALCULATE(sum(cost_projection[Projection (linear)]),cost_projection[YearMonth]<= max('CGM ePact Prescribing'[YearMonth]),cost_projection[Financial_year] = "2024/25")
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 35bdad51-b4c0-4655-b10e-9cb55c36adc6
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 74162e02-70bc-467e-ad69-593d4ab73adf
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: f4f1f2db-49d3-4008-97cf-5390311d234d
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: YearMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Projection (linear)'
+		dataType: decimal
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: 6b772323-2156-4c8c-880c-b6dc039166ae
+		summarizeBy: none
+		sourceColumn: Projection (linear)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Projection (cumulative linear)'
+		dataType: string
+		lineageTag: 73b1a36b-5ff6-436a-92c2-6b376e5223e9
+		summarizeBy: none
+		sourceColumn: Projection (cumulative linear)
+
+		annotation SummarizationSetBy = Automatic
+
+	column Financial_year
+		dataType: string
+		lineageTag: 589f3022-dcc7-4bc7-9ccc-06043f782ddd
+		summarizeBy: none
+		sourceColumn: Financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition cost_projection = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("fZZNTlxBDISvgmZtefrPbXsZKcoCKckiS8QC0CiJRABNmEg5T26Sk8WNIobpLlihafGV/fyq3O/iYlNSqaltaPPuYf/9Nv7+/ZNNyCyxyfpz/Pu2tM0l/UfH4cer3wismkl7Zk0I7HF4frjbIVJEqbfC0hGpT+QtrKmtkpTKLSPSxnMevh5+PiLWi1NLjQus6nH4ZffwuPtxvdvDOVHOQsWEMyqexxQ+3zzev4rXFBJd2FH9J81P97/eKN9MKbXOVhA/Dt/vbt7guxbyotx15Vsa9c+v7g5Xezj4TCZGlowFlG9pHH7YXe9f40u03qibc4Xl65PP9jffMBwviEQTF1h89reTeeYmZ/H7bD4YxLbIkT61+MRWdVIr7Bmyk8snWLrH1BvXDuHJ6BOs4iRhF8OVF69PuLdwu2i4HeLI7vPYKFen2oy1IA3g+EWhRuaiGmeFCsD0i4Rkj0Yyd9wE8P0iockpPMPJgIQA6y8K5kaeG0uFCsD9k0T430Z+Iv64iTkAC1/UqLtya5B/mYHRslfyVDg9P8PJwUC2sQif8WMIEFxj9Viszpwh/CIFiBYbr6Bz7pB+EQNEqwr12DulQPokB4j3CKHkWB0K+TkIcHaxtyuF17jCJqYkYIkal14NC1WDElMUsIZIppI7two1pixgDW0SN5lxc6DRpzBgCa8jT4mlQYkpDUijRKTHbRTfALiNl3HAArV0stK4I0P3NQ8aAY5y6QwdDGRb9IhPeZjg6nE/FeGE4TkPEy3xMFr1+AZO6TkPE60eV3lzdkyveZh4t3GvlNeqwzzMs6McC6HFzYabQHlYJGrc8bFXuBmUQHlYNMQqFffjTj3VQHlYNNRGpgruQ1EeFgmPj4QcVoRtKMzDpBF50Pi6q6+MQ9c8LAJVG/nwhZ4IXP4D", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [YearMonth = _t, Month = _t, #"Projection (linear)" = _t, #"Projection (cumulative linear)" = _t, Financial_year = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"YearMonth", Int64.Type}, {"Month", type text}, {"Projection (linear)", Currency.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

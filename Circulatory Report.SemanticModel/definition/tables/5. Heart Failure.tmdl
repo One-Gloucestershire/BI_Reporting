@@ -1,0 +1,1017 @@
+table '5. Heart Failure'
+	lineageTag: d9132df8-d52c-4c23-9912-3c73e19c3c05
+
+	measure TotalPerMonth = ```
+			
+			calculate(SUM('5. Heart Failure'[Counter]),ALLSELECTED('5. Heart Failure'),'5. Heart Failure'[SPC Flag]=1)
+			
+			```
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: df02ba08-72e2-4545-9528-931cf848dda0
+
+	measure UCL = [Mean]+(3*[StdDev])
+		displayFolder: SPC
+		lineageTag: b87d3290-ead3-4229-8287-b7601b933cc0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LCL = IF([Mean]-(3*[StdDev])<0,"",[Mean]-(3*[StdDev]))
+		displayFolder: SPC
+		lineageTag: 11f05d8c-fc85-4c0b-b6eb-fcf678f17164
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure NumberOfMonths = CALCULATE(DISTINCTCOUNT('5. Heart Failure'[YearMonth]),ALLSELECTED('5. Heart Failure'),'5. Heart Failure'[SPC Flag]=1)
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 81b56ad0-397f-4a83-8637-d74de59f3e99
+
+	measure Mean = [TotalPerMonth]/[NumberOfMonths]
+		displayFolder: SPC
+		lineageTag: 84b0547e-04c7-4be1-9cf9-efea167f4ca9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure MonthlyTotal =
+			SUMX (
+			    VALUES ( '5. Heart Failure'[yearmonth] ),
+			    CALCULATE ( SUM ( '5. Heart Failure'[Counter] ),
+			    '5. Heart Failure'[SPC Flag] = 1 )
+			)
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 6cf85d77-177d-4e49-99bd-f1f8a05e608f
+
+	measure SPLY =
+			CALCULATE(SUM(
+			    '5. Heart Failure'[Counter]),SAMEPERIODLASTYEAR('Date Table'[date]))
+		formatString: 0
+		isHidden
+		lineageTag: 711b699f-dd2e-41b2-8d8d-e172ed3809cd
+
+		changedProperty = IsHidden
+
+	measure StdDev = ```
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( '5. Heart Failure'[yearmonth]), [MonthlyTotal]), ALLEXCEPT('Date Table', 'Date Table'[year_month]))
+			 
+			RETURN IFERROR(STD_DEV, 0)
+			```
+		displayFolder: SPC
+		lineageTag: c5f494d9-cf1d-4b45-9561-e03198379672
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure GraphTitle =
+			SELECTEDVALUE('5. Heart Failure'[Cohort])&
+			if(isfiltered('5. Heart Failure'[Locality]),if(HASONEVALUE('5. Heart Failure'[Locality])," - "&SELECTEDVALUE('5. Heart Failure'[Locality])," - "&[List-Locality]))&
+			if(isfiltered('5. Heart Failure'[PCN]),if(HASONEVALUE('5. Heart Failure'[PCN])," - "&SELECTEDVALUE('5. Heart Failure'[PCN])," - "&[List-PCN]))&
+			if(isfiltered('5. Heart Failure'[GP Practice Name]),if(HASONEVALUE('5. Heart Failure'[GP Practice Name])," - "&SELECTEDVALUE('5. Heart Failure'[GP Practice Name])," - "&[List-GPName]))
+		displayFolder: Dynamic Selections
+		lineageTag: 5f466f7b-91a4-4091-baf3-26f6277bb317
+
+	measure List-Locality =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[Locality])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[Locality]),
+								'5. Heart Failure'[Locality],
+								ASC
+							),
+							'5. Heart Failure'[Locality],
+							", ",
+							'5. Heart Failure'[Locality],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[Locality]),
+						'5. Heart Failure'[Locality],
+						", ",
+						'5. Heart Failure'[Locality],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: 4d2e346c-3e13-4f46-8501-dea665755beb
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure List-GPName =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[GP Practice Name])
+			VAR __MAX_VALUES_TO_SHOW = 8
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[GP Practice Name]),
+								'5. Heart Failure'[GP Practice Name],
+								ASC
+							),
+							'5. Heart Failure'[GP Practice Name],
+							", ",
+							'5. Heart Failure'[GP Practice Name],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[GP Practice Name]),
+						'5. Heart Failure'[GP Practice Name],
+						", ",
+						'5. Heart Failure'[GP Practice Name],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: cee85c34-6f86-4a9d-9a55-a19f5616a976
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure List-PCN =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[PCN])
+			VAR __MAX_VALUES_TO_SHOW = 5
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[PCN]),
+								'5. Heart Failure'[PCN],
+								ASC
+							),
+							'5. Heart Failure'[PCN],
+							", ",
+							'5. Heart Failure'[PCN],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[PCN]),
+						'5. Heart Failure'[PCN],
+						", ",
+						'5. Heart Failure'[PCN],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: 8303ea35-ce28-4304-b46b-5b2b464ad605
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure SlicerColour = if(HASONEVALUE('5. Heart Failure'[Locality]),"red","blue")
+		displayFolder: Dynamic Selections
+		lineageTag: 3347c126-c241-45e9-9bfb-69a2236f2e98
+
+	measure SelectedLocality =
+			
+			if(iscrossfiltered('5. Heart Failure'[Locality]),if(HASONEVALUE('5. Heart Failure'[Locality]),SELECTEDVALUE('5. Heart Failure'[Locality]),[List-Locality]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 50cb80c3-c4f4-4acc-a99a-b36f3cf85257
+
+	measure SelectedPCN = if(iscrossfiltered('5. Heart Failure'[PCN]),if(HASONEVALUE('5. Heart Failure'[PCN]),SELECTEDVALUE('5. Heart Failure'[PCN]),[List-PCN]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 7281815c-c54c-4f7f-b71b-100db2975bad
+
+	measure SelectedGP = if(ISCROSSFILTERED('5. Heart Failure'[GP Practice Name]),if(HASONEVALUE('5. Heart Failure'[GP Practice Name]),SELECTEDVALUE('5. Heart Failure'[GP Practice Name]),[List-GPName]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 61393362-55be-4cbe-b220-e295637855a0
+
+	measure CounterSupressed =
+			IF(
+			    ISBLANK(SUM('5. Heart Failure'[Counter])),"",
+			    IF(
+			        SUM('5. Heart Failure'[Counter])<5,0,sum('5. Heart Failure'[Counter])))
+		formatString: #,0
+		displayFolder: Data Values
+		lineageTag: 8f0ce494-31ac-4e59-9465-73576e471c67
+
+	measure 'Dynamic YTD Calculation' = ```
+			
+			CALCULATE(
+			    SUM('5. Heart Failure'[Counter]), 
+			    DATESINPERIOD('5. Heart Failure'[LastDateOfMonth], max('5. Heart Failure'[LastDateOfMonth]), -SELECTEDVALUE('YTD Month Adjustment'[YTD Month Adjustment]), MONTH))
+			```
+		formatString: 0
+		lineageTag: 51d85f30-c8b9-4b9b-ab97-8e8d047e6dcb
+
+	measure 'Dynamic YTD Calculation Start Month' = ```
+			
+			SWITCH([MinMonthNumber],
+			1,"Apr",
+			2,"May",
+			3,"Jun",
+			4,"Jul",
+			5,"Aug",
+			6,"Sep",
+			7,"Oct",
+			8,"Nov",
+			9,"Dec",
+			10,"Jan",
+			11,"Feb",
+			12,"Mar")
+			
+			```
+		lineageTag: 6174584b-9eac-48a8-83fb-79400be574cf
+
+	measure MinMonthNumber =
+			calculate(max('5. Heart Failure'[Financial Month]),
+			'5. Heart Failure'[Financial Year] = max('5. Heart Failure'[Financial Year]))-
+			('YTD Month Adjustment'[YTD Month Adjustment Value]-1)
+		formatString: 0
+		lineageTag: a3c87806-59ca-4405-81f8-71e9c21a3e63
+
+	measure 'Dynamic YTD Calculation End Month' =
+			
+			SWITCH(max('5. Heart Failure'[Financial Month]),
+			1,"Apr",
+			2,"May",
+			3,"Jun",
+			4,"Jul",
+			5,"Aug",
+			6,"Sep",
+			7,"Oct",
+			8,"Nov",
+			9,"Dec",
+			10,"Jan",
+			11,"Feb",
+			12,"Mar")
+		lineageTag: 40c26fa5-b77d-43f6-8bdc-394df45d112b
+
+	measure List-Ethnicity =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[Ethnicity])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[Ethnicity]),
+								'5. Heart Failure'[Ethnicity],
+								ASC
+							),
+							'5. Heart Failure'[Ethnicity],
+							", ",
+							'5. Heart Failure'[Ethnicity],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[Ethnicity]),
+						'5. Heart Failure'[Ethnicity],
+						", ",
+						'5. Heart Failure'[Ethnicity],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: d673f730-c9ff-4e3f-9265-ba969875b043
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure List-AgeBand10yr =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[AgeBand10yr])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[AgeBand10yr]),
+								'5. Heart Failure'[AgeBand10yr],
+								ASC
+							),
+							'5. Heart Failure'[AgeBand10yr],
+							", ",
+							'5. Heart Failure'[AgeBand10yr],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[AgeBand10yr]),
+						'5. Heart Failure'[AgeBand10yr],
+						", ",
+						'5. Heart Failure'[AgeBand10yr],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: 8418df84-10f7-4925-8e1f-59adeb651e19
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure List-District =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[District])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[District]),
+								'5. Heart Failure'[District],
+								ASC
+							),
+							'5. Heart Failure'[District],
+							", ",
+							'5. Heart Failure'[District],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[District]),
+						'5. Heart Failure'[District],
+						", ",
+						'5. Heart Failure'[District],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: 68ef81c1-5237-4fe2-9ab6-700efb122d19
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure List-Gender =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[Gender])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[Gender]),
+								'5. Heart Failure'[Gender],
+								ASC
+							),
+							'5. Heart Failure'[Gender],
+							", ",
+							'5. Heart Failure'[Gender],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[Gender]),
+						'5. Heart Failure'[Gender],
+						", ",
+						'5. Heart Failure'[Gender],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: aaf3e691-3ab6-461b-927f-4ebe663bfaf3
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure List-Deprivation =
+			
+			VAR __DISTINCT_VALUES_COUNT = DISTINCTCOUNT('5. Heart Failure'[Gloucestershire IMD])
+			VAR __MAX_VALUES_TO_SHOW = 3
+			RETURN
+				IF(
+					__DISTINCT_VALUES_COUNT > __MAX_VALUES_TO_SHOW,
+					CONCATENATE(
+						CONCATENATEX(
+							TOPN(
+								__MAX_VALUES_TO_SHOW,
+								VALUES('5. Heart Failure'[Gloucestershire IMD]),
+								'5. Heart Failure'[Gloucestershire IMD],
+								ASC
+							),
+							'5. Heart Failure'[Gloucestershire IMD],
+							", ",
+							'5. Heart Failure'[Gloucestershire IMD],
+							ASC
+						),
+						", etc."
+					),
+					CONCATENATEX(
+						VALUES('5. Heart Failure'[Gloucestershire IMD]),
+						'5. Heart Failure'[Gloucestershire IMD],
+						", ",
+						'5. Heart Failure'[Gloucestershire IMD],
+						ASC
+					)
+				)
+		displayFolder: Dynamic Selections
+		lineageTag: 1e05e4b4-b6c2-4d91-8769-9c7e8778b824
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "ConcatenateValues"
+				}
+
+		changedProperty = FormatString
+
+	measure SelectedDeprivation = if(isCROSSfiltered('5. Heart Failure'[Gloucestershire IMD]),if(HASONEVALUE('5. Heart Failure'[Gloucestershire IMD]),SELECTEDVALUE('5. Heart Failure'[Gloucestershire IMD]),[List-Deprivation]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 2b82d41a-4771-4846-bfa0-bafc37b320c7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SelectedDistrict = if(isfiltered('5. Heart Failure'[District]),if(HASONEVALUE('5. Heart Failure'[District]),SELECTEDVALUE('5. Heart Failure'[District]),[List-District]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 57d10ae5-7f27-4666-b121-d17b88743a9a
+
+	measure SelectedEthnicity = if(isCROSSfiltered('5. Heart Failure'[Ethnicity]),if(HASONEVALUE('5. Heart Failure'[Ethnicity]),SELECTEDVALUE('5. Heart Failure'[Ethnicity]),[List-Ethnicity]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 79af5f4b-0855-4362-ba1f-798493c059ff
+
+	measure SelectedAge = ```
+			
+			If(AND(
+			    ISCROSSFILTERED('5. Heart Failure'[AgeBand10yr]), 
+			    DISTINCTCOUNT('5. Heart Failure'[AgeBand10yr]) < CALCULATE(DISTINCTCOUNT('5. Heart Failure'[AgeBand10yr]), ALL('5. Heart Failure'))),
+			if(HASONEVALUE('5. Heart Failure'[AgeBand10yr]),SELECTEDVALUE('5. Heart Failure'[AgeBand10yr]),[List-AgeBand10yr]),"All Selected")
+			```
+		displayFolder: Dynamic Selections
+		lineageTag: 497378cc-a664-43d1-96e4-97e2a5fa93cb
+
+	measure SelectedGender = if(isCROSSfiltered('5. Heart Failure'[Gender]),if(HASONEVALUE('5. Heart Failure'[Gender]),SELECTEDVALUE('5. Heart Failure'[Gender]),[List-Gender]),"None")
+		displayFolder: Dynamic Selections
+		lineageTag: 2efdc765-e80e-4d57-b4b5-cee26e4f4cc7
+
+	measure LatestData2 = ```
+			
+			 CALCULATE(sum('5. Heart Failure'[Counter]), '5. Heart Failure'[yearmonth] = MAX('5. Heart Failure'[yearmonth]))
+			```
+		formatString: 0
+		lineageTag: cdc1327b-a716-4885-8c4a-51a8bbf2db2e
+
+	measure LatestData3 = ```
+			
+			 CALCULATE(sum('5. Heart Failure'[Percentage]), '5. Heart Failure'[yearmonth] = MAX('5. Heart Failure'[yearmonth]))
+			```
+		lineageTag: 24e91b80-ad1a-420e-9089-40ab8f8d4e62
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dynamic YTD Calculation2' = ```
+			
+			CALCULATE(
+			    SUM('5. Heart Failure'[Counter]), 
+			    '5. Heart Failure'[Financial Month] >= max('5. Heart Failure'[Financial Month]), -SELECTEDVALUE('YTD Month Adjustment'[YTD Month Adjustment])||
+			    '5. Heart Failure'[Financial Month] <= max('5. Heart Failure'[Financial Month]))
+			```
+		formatString: 0
+		lineageTag: 1d78077a-acd0-471c-8b62-f032cc9ed3c4
+
+	column AgeBand10yr
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 7ee2aabd-8357-4b83-a62e-656ba633dc32
+		summarizeBy: none
+		sourceColumn: AgeBand10yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand5yr
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 65f02165-f1b5-4451-9a2e-396d8b505adc
+		summarizeBy: none
+		sourceColumn: AgeBand5yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LSOA code'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 015f853c-6da4-4efd-926e-326b25d2ad3a
+		summarizeBy: none
+		sourceColumn: LSOA code
+
+		annotation SummarizationSetBy = Automatic
+
+	column District
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 8fe3733d-40a7-46a9-b7b9-414bad7d1c46
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: #,0
+		displayFolder: Data Values
+		lineageTag: 009da120-7bf1-4f85-8256-d7d88e91d395
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: b567d53e-36fa-4620-80a4-4392a57f3faa
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cohort
+		dataType: string
+		displayFolder: A. Filters for all
+		lineageTag: 17c60590-5d25-4f04-8bdb-f5d4e71536ad
+		summarizeBy: none
+		sourceColumn: Cohort
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Disease Area'
+		dataType: string
+		displayFolder: A. Filters for all
+		lineageTag: bb3f6fce-503b-436f-86ae-2d248df76648
+		summarizeBy: none
+		sourceColumn: Disease Area
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS Number'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: b906d845-e607-4732-9b59-ff1b9dbab0d3
+		summarizeBy: none
+		sourceColumn: NHS Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Derived Age'
+		dataType: int64
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: 9d72b00b-ba97-45cf-b6f6-c7c6f9079717
+		summarizeBy: sum
+		sourceColumn: Derived Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: ded254c3-6dae-41d1-b270-9b5bac4a6809
+		summarizeBy: none
+		sourceColumn: Ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'eFI Frailty Score'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: f25f01d6-798a-417e-8079-3c648ac2fec9
+		summarizeBy: none
+		sourceColumn: eFI Frailty Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice Code'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: c44a35a1-6fbc-4dfd-8370-e3a59c64e7ef
+		summarizeBy: none
+		sourceColumn: GP Practice Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice Name'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 90ae0bab-61d5-4928-9ec2-85e08b8644cb
+		summarizeBy: none
+		sourceColumn: GP Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ward Code'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: cc059a27-f2ac-479f-9cc2-441261904ca8
+		summarizeBy: none
+		sourceColumn: Ward Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ward Name'
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 5c59bab8-0a8d-459d-b1fa-5e8ed60824a0
+		summarizeBy: none
+		sourceColumn: Ward Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Gloucestershire IMD'
+		dataType: int64
+		displayFolder: Demographics
+		lineageTag: 3acb3506-17d9-4ea6-8652-e03c5712b68d
+		summarizeBy: sum
+		sourceColumn: Gloucestershire IMD
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Locality
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: d104797d-b2ab-4afa-a58c-61f8478c4b08
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: e903a361-4163-46a3-9336-30a06541ce82
+		summarizeBy: none
+		sourceColumn: PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'First Diagnosis Date'
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Dates
+		lineageTag: 7195483c-0706-4de7-a4dc-9f10ef8b6fbe
+		summarizeBy: none
+		sourceColumn: First Diagnosis Date
+
+		variation Variation
+			isDefault
+			relationship: 2e87eb79-f021-4147-9968-b1353c11b11a
+			defaultHierarchy: LocalDateTable_92b01be3-96d0-4999-ae87-8ee95d0d9bba.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Death Date'
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Dates
+		lineageTag: d96ff5ed-5b4f-4de6-8b8e-afadcae79296
+		summarizeBy: none
+		sourceColumn: Death Date
+
+		variation Variation
+			isDefault
+			relationship: 81f04c9a-2677-4ebe-abac-b08e4966a3eb
+			defaultHierarchy: LocalDateTable_1a4223e9-df37-4eb5-9e59-86f0ec690ba7.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Year'
+		dataType: string
+		displayFolder: Dates
+		lineageTag: b3ded88a-c09e-4929-a9c2-7ad3e79858b0
+		summarizeBy: none
+		sourceColumn: Financial Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Month'
+		dataType: int64
+		formatString: 0
+		displayFolder: Dates
+		lineageTag: bd8c2af8-b653-401f-8746-0066a9dc5308
+		summarizeBy: sum
+		sourceColumn: Financial Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Name'
+		dataType: string
+		displayFolder: Dates
+		lineageTag: c55b3b35-f267-48c1-bbd1-b8ea84c9fffe
+		summarizeBy: none
+		sourceColumn: Month Name
+		sortByColumn: 'Financial Month'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YTD Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Dates
+		lineageTag: c67fe446-0504-4212-83d0-37c9927ec4d7
+		summarizeBy: sum
+		sourceColumn: YTD Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diagnosis Pre-Event Flag'
+		dataType: string
+		displayFolder: Flags
+		lineageTag: 44f83db4-8432-48c0-85a9-2a0d710b6fe9
+		summarizeBy: none
+		sourceColumn: Diagnosis Pre-Event Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ECG Date'
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Dates
+		lineageTag: 7bc4af97-4fc2-411a-b452-281d1ef6c259
+		summarizeBy: none
+		sourceColumn: ECG Date
+
+		variation Variation
+			isDefault
+			relationship: ab371e9d-3e5b-4779-8bcd-58c6c426909e
+			defaultHierarchy: LocalDateTable_06bad9d2-7498-444d-98d3-037e265f606a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column POD
+		dataType: string
+		displayFolder: Data Values
+		lineageTag: 92bf6008-9ebc-4548-a6fa-eb4cdeb838ba
+		summarizeBy: none
+		sourceColumn: POD
+
+		annotation SummarizationSetBy = Automatic
+
+	column POD2
+		dataType: string
+		displayFolder: Data Values
+		lineageTag: 3245709c-450a-4d9c-ae3d-693d1e74c2fc
+		summarizeBy: none
+		sourceColumn: POD2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Discharge Date'
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Dates
+		lineageTag: 0aa0c510-0055-40dc-8950-b95bec371e5e
+		summarizeBy: none
+		sourceColumn: Discharge Date
+
+		variation Variation
+			isDefault
+			relationship: 8e6bb9ab-c28d-40ab-996f-37b6e340defe
+			defaultHierarchy: LocalDateTable_f61c19e2-31f3-4634-ae30-b6277a6cf9c4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Latest Figure Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Flags
+		lineageTag: 61d063bd-68a3-4094-abb3-61bdcd0d8afb
+		summarizeBy: sum
+		sourceColumn: Latest Figure Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Latest Figure Flag -1 Yr'
+		dataType: int64
+		formatString: 0
+		displayFolder: Flags
+		lineageTag: 8bf409ae-7683-4df8-b994-e078248dda65
+		summarizeBy: sum
+		sourceColumn: Latest Figure Flag -1 Yr
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: spc
+		lineageTag: e4abff4a-d392-47f2-90f4-16689866227e
+		summarizeBy: sum
+		sourceColumn: SPC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoS
+		dataType: double
+		displayFolder: Data Values
+		lineageTag: bc606054-30ec-4159-a4ce-882a8f93cd52
+		summarizeBy: sum
+		sourceColumn: LoS
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column FinYearMonth
+		dataType: string
+		displayFolder: Dates
+		lineageTag: 905b5ce9-1e04-4c01-a8de-a69b663a5bd8
+		summarizeBy: none
+		sourceColumn: FinYearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: dd mmmm yyyy
+		displayFolder: Dates
+		lineageTag: 05a9783c-8dc2-4963-bd3e-076c2e55776f
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column yearmonth
+		dataType: int64
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: d3683685-c4b7-4339-8964-9e0b5bcc03e6
+		summarizeBy: sum
+		sourceColumn: yearmonth
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column WhatIsSelected = "Slicers Selected"
+		displayFolder: Dynamic Selections
+		lineageTag: 28ed851f-78fb-4ef0-8362-c2d05796716d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column LatestData = rankx(ALL('5. Heart Failure'),'5. Heart Failure'[yearmonth],,DESC,Skip)
+		formatString: 0
+		lineageTag: c1dc5aee-6efa-4408-8afa-ce385ea67421
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Percentage
+		dataType: double
+		formatString: 0.0
+		displayFolder: Data Values
+		lineageTag: 1792baba-6b55-4f6e-bbb3-66866fe0ab7e
+		summarizeBy: sum
+		sourceColumn: Percentage
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ReAdmission Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6651ad0d-ca85-43c3-8d1b-462446b1760e
+		summarizeBy: sum
+		sourceColumn: ReAdmission Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission Flag - 30 day'
+		dataType: string
+		lineageTag: 0ab1d515-8242-4256-9f12-afe699e89d87
+		summarizeBy: none
+		sourceColumn: Admission Flag - 30 day
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission Flag - 365 day'
+		dataType: string
+		lineageTag: 6de66753-7e4d-4d2a-815a-deda8ca24001
+		summarizeBy: none
+		sourceColumn: Admission Flag - 365 day
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstDateOfMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 955710cf-9a49-455c-b9ec-9d5172f9c029
+		summarizeBy: none
+		sourceColumn: FirstDateOfMonth
+
+		variation Variation
+			isDefault
+			relationship: 6f85d8ef-078b-4cae-a9ef-22710ebdc6a1
+			defaultHierarchy: LocalDateTable_47d771b5-0d33-4140-8b7c-00ab427a7c17.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastDateOfMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 57b98650-c1d9-426f-88a7-3765fdccae60
+		summarizeBy: none
+		sourceColumn: LastDateOfMonth
+
+		variation Variation
+			isDefault
+			relationship: e64bdc25-79d8-4bb6-a876-3b72f3ab7d63
+			defaultHierarchy: LocalDateTable_b1faf00b-a9f8-4176-8d7b-c247994bb132.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Locality Hierarchy'
+		displayFolder: Demographics
+		lineageTag: 5e9e6ef6-1768-4344-a83f-eac2a2dd7e9c
+
+		level Locality
+			lineageTag: d0c4bafa-14ac-4a54-9059-e8817c0fec10
+			column: Locality
+
+		level PCN
+			lineageTag: 8d7fba6a-a341-492b-a8a5-8a9d6c2fc6eb
+			column: PCN
+
+		level 'GP Practice Name'
+			lineageTag: 15a7b1ea-2c79-4651-a851-4ba98bf50581
+			column: 'GP Practice Name'
+
+	partition '5. Heart Failure' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select a.*, b.yearmonth#(lf)from [PowerBI_Processing].[dbo].[Heart_Failure] [A]#(lf)left join ccg_reference.reference.vw_DateLookup [b] on a.[date] = b.[date]"]),
+				    #"Added Custom" = Table.AddColumn(Source, "Custom", each [Financial Year]&[Month Name]),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Custom",{{"Custom", "FinYearMonth"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

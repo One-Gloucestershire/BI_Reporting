@@ -1,0 +1,107 @@
+table Dispensed_moving_range
+	lineageTag: 76dee0d9-3414-43ce-a555-916eeaff2e88
+
+	column financial_year
+		lineageTag: 9fa48690-9190-45b3-aef4-f01b9a37dbf8
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: REF_Date_Ref[financial_year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		lineageTag: c18937aa-e578-49f6-9c4f-13b3cc6bbd02
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: REF_Date_Ref[month_name]
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthIndex
+		formatString: 0
+		lineageTag: 14fdaf7a-7886-4a19-88d8-3884dbbf429f
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: REF_Date_Ref[YearMonthIndex]
+
+		annotation SummarizationSetBy = Automatic
+
+	column SPC_Flag
+		formatString: 0
+		lineageTag: 40e4c4a8-f11e-4564-a1cf-f95b47179a79
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: REF_Date_Ref[SPC_Flag]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Dispensed_Rate_per_1000_Population_Per_Month
+		lineageTag: e27d5cf6-0a91-4868-b67f-ae4b13c93ff3
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Dispensed_Rate_per_1000_Population_Per_Month]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Difference
+		lineageTag: a9f21535-2552-41f2-b5eb-86b59ab3d5c4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Difference]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Dispensed_moving_range = calculated
+		mode: import
+		source = ```
+				
+				VAR FilteredTable_ =
+				    FILTER(
+				        ALL(REF_Date_Ref),  
+				        REF_Date_Ref[YearMonthIndex] >= 1 && REF_Date_Ref[SPC_Flag] = 1
+				    )
+				
+				VAR SummaryTable =
+				    SUMMARIZE(
+				        FilteredTable_,
+				        REF_Date_Ref[financial_year],
+				        REF_Date_Ref[month_name],
+				        REF_Date_Ref[YearMonthIndex],
+				        REF_Date_Ref[SPC_Flag],
+				        "Dispensed_Rate_per_1000_Population_Per_Month", 
+				            CALCULATE(
+				                [Dispensed_Rate_per_1000_Population_Per_Month_OT],
+				                 REMOVEFILTERS(REF_Date_Ref)
+				            )
+				    )
+				VAR SummaryTableWithDifference =
+				    ADDCOLUMNS(
+				        SummaryTable,
+				        "Difference",
+				        VAR CurrentYearMonthIndex = [YearMonthIndex]
+				        VAR NextValue =
+				            
+				                MINX(
+				                    FILTER(
+				                        SummaryTable,
+				                        [YearMonthIndex] = CurrentYearMonthIndex + 1
+				                    ),
+				                    calculate([Dispensed_Rate_per_1000_Population_Per_Month_OT]))
+				                
+				              
+				        RETURN IF(
+				            ISBLANK(NextValue), 
+				            BLANK(), 
+				            ABS(calculate([Dispensed_Rate_per_1000_Population_Per_Month_OT]) - NextValue)
+				        )
+				    )
+				
+				RETURN SummaryTableWithDifference
+				```
+
+	annotation PBI_Id = 33dd6a5a426749cd8e39d507d82d86fa
+

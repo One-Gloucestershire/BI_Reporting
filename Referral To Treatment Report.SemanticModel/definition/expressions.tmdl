@@ -1,0 +1,23 @@
+expression 'Errors in Unpivoted RTT' =
+		let
+		Source = #"Unpivoted RTT",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Version", "Period", "Provider_Parent_Org_Code", "Provider_Parent_Name", "Provider_Org_Code", "Provider Name", "Commissioner_Parent_Org_Code", "Commissioner_Parent_Name", "Commissioner_Org_Code", "Commissioner_Org_Name", "RTT_Part_Type", "RTT_Part_Description", "Treatment Function Code", "Treatment Function Name", "> 104 Weeks", "> 52 Weeks", "0-18 Weeks", "> 18 Weeks", "0-35 Weeks", "> 35 Weeks", "> 65 Weeks", "> 78 Weeks", "%_of_<18", "%_>18", "%<35", "%>35", "%>65", "%>78", "%>104", "Patients_with_unknown_clock_start_date", "Total", "Filename", "% < 18 Weeks", "Number of Weeks Waiting", "Selected Month"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Version", "Period", "Provider_Parent_Org_Code", "Provider_Parent_Name", "Provider_Org_Code", "Provider Name", "Commissioner_Parent_Org_Code", "Commissioner_Parent_Name", "Commissioner_Org_Code", "Commissioner_Org_Name", "RTT_Part_Type", "RTT_Part_Description", "Treatment Function Code", "Treatment Function Name", "> 104 Weeks", "> 52 Weeks", "0-18 Weeks", "> 18 Weeks", "0-35 Weeks", "> 35 Weeks", "> 65 Weeks", "> 78 Weeks", "%_of_<18", "%_>18", "%<35", "%>35", "%>65", "%>78", "%>104", "Patients_with_unknown_clock_start_date", "Total", "Filename", "% < 18 Weeks", "Number of Weeks Waiting", "Selected Month"})
+		in
+		  #"Reordered Columns"
+	lineageTag: c5079698-1926-4411-afc3-9e8b183135ce
+	queryGroup: 'Query Errors - 14/05/2025 16:43:51'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

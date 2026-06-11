@@ -1,0 +1,86 @@
+table ICB_populations_childbearing
+	lineageTag: e3554a62-5cd9-4439-9e4f-c88857869f24
+
+	column MonthExtracted
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d19ce727-ec27-4e40-a332-757c4a036ad2
+		summarizeBy: none
+		sourceColumn: MonthExtracted
+
+		variation Variation
+			isDefault
+			relationship: aa24535e-d1f6-455b-b4f6-754767aee7ca
+			defaultHierarchy: LocalDateTable_1e225541-78a5-4fc2-8acd-45a2f055bfd4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: b0ae70db-7d09-4261-8839-e0f46ae6c0b5
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: aafebe6b-344d-4dd2-ab48-5a6fdc48edea
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Code
+		dataType: string
+		lineageTag: ebeb63e8-2e7c-4000-92df-5b9ffa52db1a
+		summarizeBy: none
+		sourceColumn: Region_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Name
+		dataType: string
+		lineageTag: 414957e1-ad3d-4dd5-bc05-2eb0489f3932
+		summarizeBy: none
+		sourceColumn: Region_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column SEX
+		dataType: string
+		lineageTag: e45eaabd-91b7-49c2-a055-b20cf59df09d
+		summarizeBy: none
+		sourceColumn: SEX
+
+		annotation SummarizationSetBy = Automatic
+
+	column AGE
+		dataType: string
+		lineageTag: 9bb5fc16-85b0-49bc-ab65-1d9a9201963f
+		summarizeBy: none
+		sourceColumn: AGE
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 37c693c8-7204-4c0b-8e44-ae976cc051b1
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ICB_populations_childbearing = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIReports", [Query="DECLARE @AGE1 INT = 15#(lf)DECLARE @AGE2 INT = 55#(lf)#(lf)SELECT #(lf)  MonthExtracted = t1.EXTRACT_DATE#(lf), t2.FinancialYear#(lf), ICB_Name = UPPER(REPLACE(REPLACE(t2.ICB_Name,'Integrated Care Board','ICB'),'Â','')) #(lf), Region_Code = UPPER(t2.Region_Code) #(lf), Region_Name = UPPER(t2.Region_Name)#(lf), t1.SEX#(lf), AGE = CONCAT(CAST(@AGE1 AS VARCHAR), '-', CAST(@AGE2 AS VARCHAR))#(lf), [Population] = SUM(t1.NUMBER_OF_PATIENTS)#(lf)FROM BIReports.dbo.ICB_populations t1#(lf)LEFT JOIN [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations] t2#(lf)#(tab)ON t1.SUB_ICB_LOCATION_CODE = t2.SUB_ICB_Code AND t1.EXTRACT_DATE = t2.Extract_Date#(lf)#(lf)WHERE SEX = 'FEMALE'#(lf)#(tab)AND LEFT(AGE,1) IN ('1','2','3','4','5')#(lf)#(tab)AND CAST(AGE AS INT) >= @AGE1#(lf)#(tab)AND CAST(AGE AS INT) <= @AGE2#(lf)GROUP BY t1.EXTRACT_DATE, t2.FinancialYear, t1.SUB_ICB_LOCATION_CODE, t2.ICB_Name, t2.Region_Code, t2.Region_Name, t1.SEX#(lf)#(lf)UNION #(lf)#(lf)SELECT #(lf)  MonthExtracted = t1.EXTRACT_DATE, t2.FinancialYear#(lf), ICB_Name = 'ENGLAND' #(lf), Region_Code = 'ENG' #(lf), Region_Name = 'ENGLAND'#(lf), t1.SEX#(lf), AGE = CONCAT(CAST(@AGE1 AS VARCHAR), '-', CAST(@AGE2 AS VARCHAR))#(lf), [Population] = SUM(t1.NUMBER_OF_PATIENTS)#(lf)FROM BIReports.dbo.ICB_populations t1#(lf)LEFT JOIN [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations] t2#(lf)#(tab)ON t1.SUB_ICB_LOCATION_CODE = t2.SUB_ICB_Code AND t1.EXTRACT_DATE = t2.Extract_Date#(lf)#(lf)WHERE SEX = 'FEMALE'#(lf)#(tab)AND LEFT(AGE,1) IN ('1','2','3','4','5')#(lf)#(tab)AND CAST(AGE AS INT) >= @AGE1#(lf)#(tab)AND CAST(AGE AS INT) <= @AGE2#(lf)GROUP BY t1.EXTRACT_DATE, t2.FinancialYear, t1.SEX#(lf)#(lf)UNION #(lf)#(lf)SELECT #(lf)  MonthExtracted = t1.EXTRACT_DATE, t2.FinancialYear#(lf), ICB_Name = UPPER(Region_Name) #(lf), Region_Code = UPPER(Region_Code)#(lf), Region_Name = UPPER(Region_Name) #(lf), t1.SEX#(lf), AGE = CONCAT(CAST(@AGE1 AS VARCHAR), '-', CAST(@AGE2 AS VARCHAR))#(lf), [Population] = SUM(t1.NUMBER_OF_PATIENTS)#(lf)FROM BIReports.dbo.ICB_populations t1#(lf)LEFT JOIN [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations] t2#(lf)#(tab)ON t1.SUB_ICB_LOCATION_CODE = t2.SUB_ICB_Code AND t1.EXTRACT_DATE = t2.Extract_Date#(lf)#(lf)WHERE SEX = 'FEMALE'#(lf)#(tab)AND LEFT(AGE,1) IN ('1','2','3','4','5')#(lf)#(tab)AND CAST(AGE AS INT) >= @AGE1#(lf)#(tab)AND CAST(AGE AS INT) <= @AGE2#(lf)#(tab)AND UPPER(Region_Code) = 'Y58'#(lf)GROUP BY t1.EXTRACT_DATE, t2.FinancialYear, UPPER(Region_Code), Region_Name, t1.SEX#(lf);"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

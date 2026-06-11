@@ -1,0 +1,174 @@
+table PF_Consultation_Source_ICB
+	lineageTag: 6c4e1c6a-9c11-4e1a-a0db-77c7c79562f4
+
+	measure 'GP referrals per 100k population' =
+			
+			DIVIDE(
+				SUM('PF_Consultation_Source_ICB'[GP Practice])*100000,
+				SUM('ICB_populations_FYtoMonth'[Population])
+			)
+		lineageTag: 5b72ff41-9691-4065-98b8-0fcefbe3cfb7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Self referrals per 100k population' =
+			
+			DIVIDE(
+				SUM('PF_Consultation_Source_ICB'[Self referral])*100000,
+				SUM('ICB_populations_FYtoMonth'[Population])
+			)
+		lineageTag: 14aad2ca-e67c-4c5f-a70f-3f2eb5cfe37e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Region Code'
+		dataType: string
+		lineageTag: 45ec0762-9623-4632-8e16-7cfd1fd8a2ce
+		summarizeBy: none
+		sourceColumn: Region Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Region Name'
+		dataType: string
+		lineageTag: d53e5522-6d44-4a7a-92ed-e9f65600fb9e
+		summarizeBy: none
+		sourceColumn: Region Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB Code'
+		dataType: string
+		lineageTag: 05067dc5-d856-4a71-9214-ced3c50206c6
+		summarizeBy: none
+		sourceColumn: ICB Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICB Name'
+		dataType: string
+		lineageTag: c3c1f95a-f204-4376-ac37-4f31938ea84e
+		summarizeBy: none
+		sourceColumn: ICB Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Consultation_Month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 85386b09-a438-4ffc-8fd1-9557536281b6
+		summarizeBy: none
+		sourceColumn: Consultation_Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Pathway
+		dataType: string
+		lineageTag: 8ab6a97f-f163-4192-a7b0-01df7496c8fd
+		summarizeBy: none
+		sourceColumn: Pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ambulance Service'
+		dataType: int64
+		formatString: 0
+		lineageTag: 3e0c1362-6371-49f6-8e39-9c76b730176b
+		summarizeBy: sum
+		sourceColumn: Ambulance Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Emergency Department'
+		dataType: int64
+		formatString: 0
+		lineageTag: 633c1005-d2b3-4c49-9f5c-9ec8bec72135
+		summarizeBy: sum
+		sourceColumn: Emergency Department
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'GP Practice'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8bca7068-8554-4f56-a67c-00f26c1f1ef0
+		summarizeBy: sum
+		sourceColumn: GP Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS 111'
+		dataType: int64
+		formatString: 0
+		lineageTag: bd0beb3c-4716-41c5-9c41-a8b53bff0035
+		summarizeBy: sum
+		sourceColumn: NHS 111
+
+		annotation SummarizationSetBy = Automatic
+
+	column Other
+		dataType: int64
+		formatString: 0
+		lineageTag: 92a66ee9-a643-40af-a0fe-7f20a216c172
+		summarizeBy: sum
+		sourceColumn: Other
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Self referral'
+		dataType: int64
+		formatString: 0
+		lineageTag: f8e9e90e-7350-4098-b78b-d254af5f748f
+		summarizeBy: sum
+		sourceColumn: Self referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column Signposted
+		dataType: int64
+		formatString: 0
+		lineageTag: c5f89205-56c7-4bb2-92ee-ae71441bec19
+		summarizeBy: sum
+		sourceColumn: Signposted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Urgent Treatment Centre'
+		dataType: int64
+		formatString: 0
+		lineageTag: 774f364e-f10e-457f-8c34-44086e49ec22
+		summarizeBy: sum
+		sourceColumn: Urgent Treatment Centre
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Walk in Centre'
+		dataType: int64
+		formatString: 0
+		lineageTag: 789866a5-f51f-472d-b90d-0bce8368d874
+		summarizeBy: sum
+		sourceColumn: Walk in Centre
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: 0
+		lineageTag: b88b838e-2c6a-4d35-962b-d437a34db147
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PF_Consultation_Source_ICB = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIReports", [Query="-- Pulls data from one table only. UNIONs use group bys to add England and SW average rows. #(lf)-- ICB level data#(lf)SELECT #(lf)  [Region Code]#(lf), [Region Name]#(lf), [ICB Code]#(lf), [ICB Name]#(lf), [Consultation_Month]#(lf), [Pathway]#(lf), [Ambulance Service]#(lf), [Emergency Department]#(lf), [GP Practice]#(lf), [NHS 111]#(lf), [Other]#(lf), [Self referral]#(lf), [Signposted]#(lf), [Urgent Treatment Centre]#(lf), [Walk in Centre]#(lf), [Total]#(lf)FROM [BIReports].dbo.PharmFirst_Consultation_Source_ICB#(lf)#(lf)UNION -- England average#(lf)#(lf)SELECT #(lf)  'ENG' AS [Region Code]#(lf), 'ENGLAND' AS [Region Name]#(lf), 'ENG' AS [ICB Code]#(lf), 'ENGLAND' AS [ICB Name]#(lf), [Consultation_Month]#(lf), [Pathway]#(lf), SUM([Ambulance Service]) AS [Ambulance Service]#(lf), SUM([Emergency Department]) AS [Emergency Department]#(lf), SUM([GP Practice]) AS [GP Practice]#(lf), SUM([NHS 111]) AS [NHS 111]#(lf), SUM([Other]) AS [Other]#(lf), SUM([Self referral]) AS [Self referral]#(lf), SUM([Signposted]) AS [Signposted]#(lf), SUM([Urgent Treatment Centre]) AS [Urgent Treatment Centre]#(lf), SUM([Walk in Centre]) AS [Walk in Centre]#(lf), SUM([Total]) AS [Total]#(lf)FROM [BIReports].dbo.PharmFirst_Consultation_Source_ICB#(lf)GROUP BY [Consultation_Month], [Pathway]#(lf)#(lf)UNION -- South West region average#(lf)#(lf)SELECT #(lf)  [Region Code]#(lf), [Region Name]#(lf), [Region Code] AS [ICB Code]#(lf), [Region Name] AS [ICB Name]#(lf), [Consultation_Month]#(lf), [Pathway]#(lf), SUM([Ambulance Service]) AS [Ambulance Service]#(lf), SUM([Emergency Department]) AS [Emergency Department]#(lf), SUM([GP Practice]) AS [GP Practice]#(lf), SUM([NHS 111]) AS [NHS 111]#(lf), SUM([Other]) AS [Other]#(lf), SUM([Self referral]) AS [Self referral]#(lf), SUM([Signposted]) AS [Signposted]#(lf), SUM([Urgent Treatment Centre]) AS [Urgent Treatment Centre]#(lf), SUM([Walk in Centre]) AS [Walk in Centre]#(lf), SUM([Total]) AS [Total]#(lf)FROM [BIReports].dbo.PharmFirst_Consultation_Source_ICB#(lf)WHERE [Region Code] = 'Y58'#(lf)GROUP BY [Region Code], [Region Name], Consultation_Month, [Pathway];"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

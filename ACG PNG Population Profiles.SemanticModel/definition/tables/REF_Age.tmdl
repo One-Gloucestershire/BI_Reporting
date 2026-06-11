@@ -1,0 +1,30 @@
+table REF_Age
+	lineageTag: e037fb48-b55d-45bd-8624-3608ee4d3e8b
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 01a5d763-511d-46d9-a2e6-2fb138b18eab
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_Grouping
+		dataType: string
+		lineageTag: c10c1c36-251c-4e83-a535-b29d0d0e7f73
+		summarizeBy: none
+		sourceColumn: Age_Grouping
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Age = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Age]#(lf)      ,[Age_Grouping] = CASE WHEN [Age] BETWEEN 0 AND 17 THEN 'Paediatric (0-17)'#(lf)                             WHEN [Age] BETWEEN 18 AND 64 THEN 'Adult (18-64)'#(lf)#(tab)#(tab)         WHEN [Age] >= 65 THEN 'Older Adult (65+)'#(lf)                             ELSE NULL END#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)#(lf)WHERE [Age] BETWEEN 0 AND 130"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

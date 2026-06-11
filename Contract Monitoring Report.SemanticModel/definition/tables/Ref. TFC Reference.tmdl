@@ -1,0 +1,48 @@
+table 'Ref. TFC Reference'
+	lineageTag: be248cca-96d3-4649-be1a-a057a3e8d131
+
+	column TreatmentFunctionDescription
+		dataType: string
+		lineageTag: bf91286a-d00b-4ec0-ad8d-5eb0fc580a8b
+		summarizeBy: none
+		sourceColumn: TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column TFC
+		dataType: string
+		lineageTag: ebcf18e8-7335-436e-a597-620dc5f01e0a
+		summarizeBy: none
+		sourceColumn: TFC
+
+		annotation SummarizationSetBy = Automatic
+
+	column Distinct
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a9be1d1-003b-45b2-8228-7b737c73e46c
+		summarizeBy: sum
+		sourceColumn: Distinct
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dental Flag'
+		dataType: string
+		lineageTag: d3b67594-b7d9-43d1-a816-12c4a3be2109
+		summarizeBy: none
+		sourceColumn: Dental Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ref. TFC Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="select *#(lf)from (#(lf)#(tab)#(tab)select #(lf)#(tab)#(tab)#(tab)row_number()over(partition by [TFC] order by TreatmentFunctionDescription DESC) as [Distinct], #(lf)#(tab)#(tab)#(tab)[TFC],#(lf)#(tab)#(tab)#(tab)TreatmentFunctionDescription,#(lf)#(tab)#(tab)#(tab)[Dental Flag]#(lf)#(tab)#(tab)from (#(lf)#(tab)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)#(tab)LEFT(TreatmentFunctionDescription,3) AS [TFC],#(lf)#(tab)#(tab)#(tab)TreatmentFunctionDescription,#(lf)#(tab)#(tab)#(tab)CASE#(lf)#(tab)#(tab)#(tab)#(tab)WHEN LEFT(TreatmentFunctionDescription,3) in ('140','141','142','143','144','145','217','450','451') then 'Dental' else 'Other' #(lf)#(tab)#(tab)#(tab)#(tab)end as [Dental Flag]#(lf)#(tab)#(tab)#(tab)from [BIReports].dbo.[OOC_IPR_Summary_Table_PL_2425]#(lf)#(tab)#(tab)#(tab)where TreatmentFunctionDescription is not null#(lf)#(tab)#(tab)#(tab)UNION #(lf)#(tab)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)#(tab)LEFT([Treatment Function Code Description],3) AS [TFC],#(lf)#(tab)#(tab)#(tab)[Treatment Function Code Description],#(lf)#(tab)#(tab)#(tab)CASE#(lf)#(tab)#(tab)#(tab)#(tab)WHEN LEFT([Treatment Function Code Description],3) in ('140','141','142','143','144','145','217','450','451') then 'Dental' else 'Other' #(lf)#(tab)#(tab)#(tab)#(tab)end as [Dental Flag]#(lf)#(tab)#(tab)#(tab)FROM BIReports.dbo.IAPs_IS_2526 #(lf)#(tab)#(tab)#(tab)where [Treatment Function Code Description] is not null#(lf)#(tab)#(tab)#(tab)UNION#(lf)#(tab)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)#(tab)LEFT(TreatmentFunctionDescription COLLATE Latin1_General_CI_AS,3) AS [TFC],#(lf)#(tab)#(tab)#(tab)TreatmentFunctionDescription  COLLATE Latin1_General_CI_AS,#(lf)#(tab)#(tab)#(tab)CASE#(lf)#(tab)#(tab)#(tab)#(tab)WHEN LEFT(TreatmentFunctionDescription COLLATE Latin1_General_CI_AS,3) in ('140','141','142','143','144','145','217','450','451') then 'Dental' else 'Other' #(lf)#(tab)#(tab)#(tab)#(tab)end as [Dental Flag]#(lf)#(tab)#(tab)#(tab)from [PowerBI_Reporting].[ContractMonitoring].[tbl02_PLCM_Patient_Level_2526]#(lf)#(tab)#(tab)#(tab)where TreatmentFunctionDescription  COLLATE Latin1_General_CI_AS is not null#(lf)#(tab)#(tab) ) AS [a]#(lf)#(tab)#(tab)) as [b]#(lf)where [b].[Distinct] = 1"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

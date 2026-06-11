@@ -1,0 +1,40 @@
+table REF_ED_Department_Type
+	lineageTag: db7f8c42-e55c-44c9-a426-484e668f932f
+
+	column Department_type_code
+		dataType: string
+		lineageTag: 46cb3686-474d-49d0-b043-29fc37cdfb3e
+		summarizeBy: none
+		sourceColumn: Department_type_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Department_type_description
+		dataType: string
+		lineageTag: 02053122-0769-49da-8452-292b1a2f4c4b
+		summarizeBy: none
+		sourceColumn: Department_type_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Department_type_group
+		dataType: string
+		lineageTag: bd7cfccb-a652-410a-80a3-b6224f2fb641
+		summarizeBy: none
+		sourceColumn: Department_type_group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_ED_Department_Type = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "DSCRO_NATIONAL_LOOKUPS", [Query="SELECT [Department_type_code] = RIGHT(Main_Code_Text,1) #(lf)#(lf),[Department_type_description] = Main_Description#(lf),[Department_type_group] = #(lf)case when Main_Code_Text in ('01','02') then 'A&E Department'#(lf)when Main_Code_Text in ('03') then 'Minor Injury Unit'#(lf)when Main_Code_Text in ('04') then 'NHS Walk In Centre'#(lf)when Main_Code_Text in ('05') then Main_Description END #(lf)  FROM [DSCRO_NATIONAL_LOOKUPS].[Data_Dictionary].[Emergency_Care_Department_Type_SCD]#(lf)  where Is_Latest = 1#(lf)#(lf)  order by RIGHT(Main_Code_Text,1)  asc"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

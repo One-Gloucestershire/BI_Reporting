@@ -1,0 +1,137 @@
+table 'Case Activity'
+	lineageTag: de43a2e7-e7a9-4101-b152-2e3ba03b01be
+
+	measure METRIC_Answered_Cases = CALCULATE(COUNTROWS('Case Activity'), 'Case Activity'[Connected_Calls] <> 0)  +0
+		formatString: 0
+		lineageTag: 7155b8bf-9f01-4af8-826b-90a28aa2982b
+
+	measure METRIC_Missed_Cases = ```
+			CALCULATE(COUNTROWS('Case Activity'), 'Case Activity'[Connected_Calls] = 0) +0 
+			```
+		formatString: 0
+		lineageTag: cf50e0e4-9468-47da-9f33-e0cd88364c50
+
+	measure METRIC_%Answered_Cases = ```
+			
+			    DIVIDE( 
+			        CALCULATE(COUNTROWS('Case Activity'), 'Case Activity'[Connected_Calls] <> 0), 
+			        COUNTROWS('Case Activity')) +0
+			```
+		lineageTag: d72a08d1-166b-4160-9c5f-b62a35b7ee6e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure METRIC_Avg_Call_per_Case = ```
+			
+			    DIVIDE(
+			        SUM('Case Activity'[Total_Calls]), 
+			        COUNTROWS('Case Activity') , 0) 
+			```
+		lineageTag: 7c78204a-50da-4ce9-94e3-80e941695b16
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure METRIC_1st_Calls_Answered = ```
+			
+			    CALCULATE(COUNTROWS('Case Activity'), 'Case Activity'[Missed_Calls] = 0) +0
+			```
+		formatString: 0
+		lineageTag: 65c7d7e3-81e0-436f-8f9e-f16f0c43c935
+
+	column NHSNumber
+		dataType: string
+		lineageTag: 9c7b9b27-9175-482b-8730-f24843bfc418
+		summarizeBy: none
+		sourceColumn: NHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Case_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 00705e76-bf57-461d-976b-b2a2c7783db4
+		summarizeBy: none
+		sourceColumn: Case_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_Calls
+		dataType: int64
+		formatString: 0
+		lineageTag: b21ca315-96d0-4e55-9f1b-1c80a0d28d92
+		summarizeBy: sum
+		sourceColumn: Total_Calls
+
+		annotation SummarizationSetBy = Automatic
+
+	column Connected_Calls
+		dataType: int64
+		formatString: 0
+		lineageTag: 4439af74-7aab-474c-9fc0-e9576f26290b
+		summarizeBy: sum
+		sourceColumn: Connected_Calls
+
+		annotation SummarizationSetBy = Automatic
+
+	column Missed_Calls
+		dataType: int64
+		formatString: 0
+		lineageTag: 55920605-8b82-4a65-ac17-159a5598790e
+		summarizeBy: sum
+		sourceColumn: Missed_Calls
+
+		annotation SummarizationSetBy = Automatic
+
+	column Service
+		dataType: string
+		lineageTag: d6e460d5-7abc-4a4d-b425-38f4997bc013
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCodeofCaller
+		dataType: string
+		lineageTag: 6b70d425-4a54-4f7a-aac9-aa570ca21e2c
+		summarizeBy: none
+		sourceColumn: OrganisationCodeofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column OragnisationGroupofCaller
+		dataType: string
+		lineageTag: 632f6846-83fb-4803-b9ed-4172706b9b3b
+		summarizeBy: none
+		sourceColumn: OragnisationGroupofCaller
+
+		annotation SummarizationSetBy = Automatic
+
+	column Case_Counter = 1
+		formatString: 0
+		lineageTag: 20c94535-32d9-4c19-9561-ff2cc623627b
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Call_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 09382e75-11b0-4bc0-a0e2-cf0603b07793
+		summarizeBy: sum
+		sourceColumn: Call_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Case Activity' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[SecondaryCare].[tbl03_Cinapis_Case_Activity]"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([NHSNumber] <> ""))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,64 @@
+table 'Disposition Group (PPG) Dynamic Table'
+	isHidden
+	lineageTag: cb58bcac-1ca0-45aa-b059-096e886ed622
+
+	measure 'Measure Value' =
+			SWITCH(
+										MIN('Disposition Group (PPG) Dynamic Table'[Measure ID]) ,
+										--------------------------------------
+										1,[% of Calls Closed],
+										2,[% of Category 1/2 ambulance],
+										3,[% of Category 3/4 Ambulance],
+										4,[% of COVID-19],
+										5,[% of Dental],
+										6,[% of ED],
+			                            7,[% of Home Management],
+			                            8,[% of Other Service Referral],
+			                            9,[% of Pharmacy/Prescription],
+			                            10,[% of Primary Care Contact],
+			                            11,[% of Primary Care Speak to],
+			                            12,[% of Speak to CA]
+			
+										)
+		formatString: 0.0%;-0.0%;0.0%
+		isHidden
+		lineageTag: a55d6aa7-df58-486e-a087-0138e4902270
+
+		changedProperty = IsHidden
+
+	column 'Measure ID'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d030f14a-5c01-49b5-809b-009f3bba6dc6
+		summarizeBy: count
+		sourceColumn: Measure ID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Measure Name'
+		dataType: string
+		isHidden
+		lineageTag: e7fedca0-ebfa-41d5-b91c-774574b40453
+		summarizeBy: none
+		sourceColumn: Measure Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Disposition Group (PPG) Dynamic Table-823f6d70-e289-4eef-82df-3659360be9e5' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("bdBNi8IwEAbgvzIEvLnUqOvHUdKF9SCKLnspPYxxbItJI2N2wX9vSU0F9Tjv+5BkkmVCir7ogTuCQmNAGXehg8j7mRg+Ck+F4yvIZAgLu/8zWGsKZvRiRsn4yYw7s/5dph9yHtLPmKZUezQhm8TsKw3zNM7fzhKssMaCbMNDOYvl2pfEsCP+rzTBlo7EfD9wHs2mRLaor8mG6aK5OvvK1YHIQWe4sthsoJAJlGtepdubpHxLdmfCE/y41nS/1cbegVqIPL8B", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Measure ID" = _t, #"Measure Name" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Measure ID", Int64.Type}, {"Measure Name", type text}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+

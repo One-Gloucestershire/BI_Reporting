@@ -1,0 +1,60 @@
+table 'Loading Error'
+	lineageTag: 1e155ef7-9128-436e-862f-c3b2b2367c6e
+
+	measure 'Error Flag' = IF(CALCULATE(SUM('Loading Error'[Loaded Files]))>CALCULATE(SUM('Loading Error'[Max Month])),"Error - Duplicate Files","")
+		lineageTag: d2e75d4b-8c54-4ca6-838c-e2c9ca0e9720
+
+	column 'Loaded Files'
+		dataType: int64
+		formatString: 0
+		lineageTag: a4c0435b-7546-4d63-93f0-93199da71279
+		summarizeBy: sum
+		sourceColumn: Loaded Files
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data Type'
+		dataType: string
+		lineageTag: e16caaeb-dc17-4ed3-a4d1-bf886f881ce8
+		summarizeBy: none
+		sourceColumn: Data Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisation_name
+		dataType: string
+		lineageTag: 4f0cf5d7-1476-4af9-a42f-9be28d1a0436
+		summarizeBy: none
+		sourceColumn: organisation_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: 21e723cb-ce00-4dae-b508-5561e5b08826
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Max Month'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0504cd78-7495-48bd-b37c-94ca84a5070d
+		summarizeBy: sum
+		sourceColumn: Max Month
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Loading Error' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT#(lf)SUM([Counter]) as [Loaded Files],#(lf)max([financial_month_orig]) as [Max Month],#(lf)[Data Type],#(lf)organisation_name,#(lf)[Type]#(lf)FROM (#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[filename],organisation_name, 'Non-Drug/Dev activity' as [Data Type], 1 as counter, financial_month_orig,[Sector Flag 2], processeddate#(lf)#(tab)#(tab),'Provider Month' as [Type]#(lf)#(lf)#(tab)#(tab)from PowerBI_Reporting.ContractMonitoring.tbl02_PLCM_Summary_Table_2526#(lf)#(tab)#(tab)where POINT_OF_DELIVERY_CODE not in ('DRUG','DEVICE','NAOTHER','OTHER','BLOCK','ADJUSTMENT')#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[filename],organisation_name, 'Drug activity', 1 as counter,financial_month_orig,[Sector Flag 2], processeddate#(lf)#(tab)#(tab),'Provider Month' as [Type]#(lf)#(tab)#(tab)from PowerBI_Reporting.ContractMonitoring.tbl02_PLCM_Summary_Table_2526#(lf)#(tab)#(tab)where POINT_OF_DELIVERY_CODE  in ('DRUG')#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[filename],organisation_name, 'Device activity', 1 as counter,financial_month_orig,[Sector Flag 2], processeddate#(lf)#(tab)#(tab),'Provider Month' as [Type]#(lf)#(tab)#(tab)from PowerBI_Reporting.ContractMonitoring.tbl02_PLCM_Summary_Table_2526#(lf)#(tab)#(tab)where POINT_OF_DELIVERY_CODE in ('DEVICE')#(lf)#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[filename],organisation_name, 'Non-Drug/Dev activity', 1 as counter, financial_month,[Sector Flag 2], processeddate#(lf)#(tab)#(tab),'DMS Month' as [Type]#(lf)#(tab)#(tab)from PowerBI_Reporting.ContractMonitoring.tbl02_PLCM_Summary_Table_2526#(lf)#(tab)#(tab)where POINT_OF_DELIVERY_CODE not in ('DRUG','DEVICE','NAOTHER','OTHER','BLOCK','ADJUSTMENT')#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[filename],organisation_name, 'Drug activity', 1 as counter,financial_month,[Sector Flag 2], processeddate#(lf)#(tab)#(tab),'DMS Month' as [Type]#(lf)#(tab)#(tab)from PowerBI_Reporting.ContractMonitoring.tbl02_PLCM_Summary_Table_2526#(lf)#(tab)#(tab)where POINT_OF_DELIVERY_CODE  in ('DRUG')#(lf)#(tab)#(tab)UNION#(lf)#(tab)#(tab)select distinct#(lf)#(tab)#(tab)[filename],organisation_name, 'Device activity', 1 as counter,financial_month,[Sector Flag 2], processeddate#(lf)#(tab)#(tab),'DMS Month' as [Type]#(lf)#(tab)#(tab)from PowerBI_Reporting.ContractMonitoring.tbl02_PLCM_Summary_Table_2526#(lf)#(tab)#(tab)where POINT_OF_DELIVERY_CODE in ('DEVICE')#(lf)#(tab)#(tab)) [a]#(lf)GROUP BY [Data Type],#(lf)organisation_name,#(lf)[Type]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

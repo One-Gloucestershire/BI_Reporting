@@ -1,0 +1,126 @@
+table REF_GP_Practice_Populations
+	lineageTag: 44323b33-1b9c-42ff-a061-71dec5c445ab
+
+	measure Latest_in_dataset_gp_practice_populations = ```
+			
+			
+			VAR Latest_GP_Population_date = 
+			    CALCULATE(
+			        MAX(REF_GP_Practice_Populations[CensusDate_as_date]),
+			        NOT(ISBLANK(REF_GP_Practice_Ref[Locality]))
+			    )
+			
+			RETURN
+			
+			
+			calculate(sum(REF_GP_Practice_Populations[Total Population]),REF_GP_Practice_Populations[CensusDate_as_date] = Latest_GP_Population_date)
+			```
+		formatString: 0
+		lineageTag: ef4dcd01-a92e-4f48-a97f-f9ba9b44d1d8
+
+	measure Test_Latest_Date_in_Dataset = max(REF_Date_Ref[date])
+		formatString: General Date
+		lineageTag: 7450ac3c-5591-4577-b523-14b22b651f64
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 01fbb344-4f93-4ece-8dba-d452e8995530
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 5655c440-a0e7-4fd0-a871-89363992a16c
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Primary Care Network'
+		dataType: string
+		lineageTag: edd8064c-9e6f-4e03-9571-9c891d641256
+		summarizeBy: none
+		sourceColumn: Primary Care Network
+
+		annotation SummarizationSetBy = Automatic
+
+	column Census_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a04c8e85-464f-47bc-b734-a9cb2087b47e
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		variation Variation
+			isDefault
+			relationship: 70858a85-6cfa-4415-a177-bd1746346b46
+			defaultHierarchy: LocalDateTable_9e8f733e-3975-4324-abce-ed1f9b00c41c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column CensusDate_as_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b2439060-8f33-4d9b-91f2-0c8259f0b7bd
+		summarizeBy: none
+		sourceColumn: CensusDate_as_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Population'
+		dataType: int64
+		formatString: 0
+		lineageTag: f3363ed7-21c6-4918-a3c4-c64a44cc882a
+		summarizeBy: sum
+		sourceColumn: Total Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: d626bf48-1196-4491-8683-c03c6c6e7e75
+		summarizeBy: sum
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 1c128ffc-03db-4601-a27c-3efc75819d71
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Name
+		dataType: string
+		lineageTag: 76eaf599-460c-4e65-8291-89048a121d76
+		summarizeBy: none
+		sourceColumn: Practice_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Registered_CCG
+		dataType: string
+		lineageTag: 8c2fc5f4-41cb-47c0-801d-9e979c864b28
+		summarizeBy: none
+		sourceColumn: Derived_Registered_CCG
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_GP_Practice_Populations = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="----------------------------------#(lf)-------- POPULATION TABLE --------#(lf)----------------------------------#(lf)#(lf)SELECT #(lf)[NHS_Number] = [P].Derived_NHS_Number,#(lf)[Practice_Code] = [P].PrimaryCareProvider,#(lf)[Practice_Name] = [gp].ReportingOrganisationName,#(lf)[Locality] = [gp].Reporting_Locality ,#(lf)[Primary Care Network] = [gp].Reporting_PrimaryCareNetwork,#(lf)[Census_Date] = [P].Census_Date,#(lf)[CensusDate_as_date] = [P].Census_Date,#(lf)[Age] = [p].Age_at_census,#(lf)[Derived_Registered_CCG] = [P].Derived_Registered_CCG,#(lf)[Total Population] = 1#(lf)#(lf)#(lf)FROM PowerBI_Reporting.AgeingWell.tbl02_Proactive_Whiteboard_Registered_Population_Over_Time [P]#(lf)left join PowerBI_Reporting.dbo.GP_Practice_Ref as [gp] on [gp].OrganisationCode = [P].PrimaryCareProvider#(lf)#(lf)WHERE #(lf) ISNULL([P].[PrimaryCareProvider],'') <> 'Y00054' -- removes homeless healthcare #(lf) and #(lf) Derived_Registered_CCG like '11M%'#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

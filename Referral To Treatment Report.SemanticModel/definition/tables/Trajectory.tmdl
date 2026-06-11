@@ -1,0 +1,55 @@
+table Trajectory
+	lineageTag: 63258ed9-de53-499f-8f8e-6952ca3a7289
+
+	measure 'Above or Below Trajectory' =
+			
+			VAR Val1 =
+			    CALCULATE(
+			        SUM(RTT[% < 18 Weeks]),
+			        TREATAS(VALUES('Date Reference'[date]), 'RTT'[Period])
+			    )
+			VAR Val2 =
+			    CALCULATE(
+			        SUM(Trajectory[Trajectory]),
+			        TREATAS(VALUES('Date Reference'[date]), Trajectory[Date])
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Val1 < Val2, UNICHAR(8593),  -- ▲ up
+			    Val1 > Val2, UNICHAR(8595),  -- ▼ down
+			    UNICHAR(9640)                -- ◐ equal
+			)
+		lineageTag: dc6c3d57-ba07-4f17-98f9-3d0389a17d1a
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: e009f38c-4bb6-441a-9d3a-e8986bd959c0
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Trajectory
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c8848bd1-80f2-4e05-8246-d12010cf8b7c
+		summarizeBy: sum
+		sourceColumn: Trajectory
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Trajectory = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("Vc5BCsAgDETRu2QtdZKaaM5SvP81Ci3GuH18hnkeAle0KhClQrjMu9Esv+v2zuzhlhy+vR+9ho/DJdyzL2VkRawzZ28tXLKPvf71thzhklzSmzu7DprzBQ==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Date = _t, Trajectory = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Date", type date}, {"Trajectory", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

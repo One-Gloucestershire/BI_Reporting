@@ -1,0 +1,44 @@
+expression 'Errors in SQL' =
+		let
+		Source = #"1. Programme Level Metrics",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Programme Measure Group", "Indicator Group", "Indicator Code", "Indicator Name", "Indicator Description", "Target", "Target Patients", "Financial Year", "Year", "Financial Month", "Month Name", "Time Period", "Time Period Date", "Year Month", "Area Name", "Numerator", "Denominator", "Value", "Order Indicator", "Order Time", "Target Patients Flag"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Programme Measure Group", "Indicator Group", "Indicator Code", "Indicator Name", "Indicator Description", "Target", "Target Patients", "Financial Year", "Year", "Financial Month", "Month Name", "Time Period", "Time Period Date", "Year Month", "Area Name", "Numerator", "Denominator", "Value", "Order Indicator", "Order Time", "Target Patients Flag"})
+		in
+		  #"Reordered Columns"
+	lineageTag: 71eac00f-41f2-4473-8561-5a11c0dc37ca
+	queryGroup: 'Query Errors - 14/07/2023 09:57:23'
+
+	annotation PBI_ResultType = Table
+
+expression 'Errors in Programme Level' =
+		let
+		Source = #"1. Programme Level Metrics",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Programme Measure Group", "Indicator Group", "Indicator Code", "Indicator Name", "Indicator Description", "Area Name", "Data Source", "Target", "Target Patients", "Good Is", "Financial Year", "Year", "Financial Month", "Month Name", "Time Period", "Time Period Date", "Year Month", "Quarter Name", "Quarter Number", "Numerator", "Denominator", "Value", "Meta Data", "Order Indicator", "Order Time", "Target Patients Flag", "Target Flagging", "Target %", "Value - %"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Programme Measure Group", "Indicator Group", "Indicator Code", "Indicator Name", "Indicator Description", "Area Name", "Data Source", "Target", "Target Patients", "Good Is", "Financial Year", "Year", "Financial Month", "Month Name", "Time Period", "Time Period Date", "Year Month", "Quarter Name", "Quarter Number", "Numerator", "Denominator", "Value", "Meta Data", "Order Indicator", "Order Time", "Target Patients Flag", "Target Flagging", "Target %", "Value - %"})
+		in
+		  #"Reordered Columns"
+	lineageTag: 0683a0ab-8fe1-40a8-a180-6e1f31875e49
+	queryGroup: 'Query Errors - 28/04/2026 11:35:36'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

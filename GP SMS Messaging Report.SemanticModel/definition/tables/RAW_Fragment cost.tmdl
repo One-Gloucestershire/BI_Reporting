@@ -1,0 +1,52 @@
+table 'RAW_Fragment cost'
+	isHidden
+	lineageTag: a7b92ecd-d202-4475-ac86-ee9c1e7cbd6d
+
+	column Date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 7ad03112-2d9e-46a4-af25-7e99d2b3e1a4
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: 0f98976a-8fcd-454c-8ef0-777d43186304
+			defaultHierarchy: LocalDateTable_ce47f92a-84f2-4dd9-9c5b-a4f1a2dd49bf.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Fragment cost'
+		dataType: decimal
+		isHidden
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: 006de70d-7609-46dc-812b-b30c6253321d
+		summarizeBy: sum
+		sourceColumn: Fragment cost
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition 'RAW_Fragment cost' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45W8krMUzAyMDJR0lE6tNhAz8DQ3FIpVidayTexEkXcyMhAKTYWAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Date = _t, #"Fragment cost" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Date", type date}, {"Fragment cost", Currency.Type}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,40 @@
+table RAW_Fragments&Characters
+	isHidden
+	lineageTag: 12104321-a659-457b-a2f1-6352214c6862
+
+	column Fragments
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: fb9647e1-efad-4f65-b86b-5cc3f54a417e
+		summarizeBy: sum
+		sourceColumn: Fragments
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Characters
+		dataType: string
+		isHidden
+		lineageTag: c2b95a07-478b-4b48-9310-6161b834fe58
+		summarizeBy: none
+		sourceColumn: Characters
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition RAW_Fragments&Characters = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("HcfBDQAhCATAXvYtCSu45moh9N/GqfObKhADNMrRozDvRAvXe5yHb8v1ved5yk2c6P4B", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Fragments = _t, Characters = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Fragments", Int64.Type}, {"Characters", type text}})
+				in
+				    #"Changed Type"
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+

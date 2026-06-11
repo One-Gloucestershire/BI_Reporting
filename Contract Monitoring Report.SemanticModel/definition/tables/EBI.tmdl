@@ -1,0 +1,98 @@
+table EBI
+	lineageTag: 98180494-64a7-403a-ae6e-fa42f9376a1f
+
+	measure 'Title - Activity' = "Activity over time by" & SELECTEDVALUE('EBI Parameter 1'[Parameter])
+		lineageTag: 496dfe78-929b-4bf6-895a-38e2d3476ac1
+
+	column counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: aa68e4e4-b2fc-4064-ad31-3dd3e8dab7dc
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Organisation Name'
+		dataType: string
+		lineageTag: 9a1210e3-d0c9-47f2-9c0b-9361961e3da7
+		summarizeBy: none
+		sourceColumn: Organisation Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column procedure_group_condition
+		dataType: string
+		lineageTag: 5215afc2-74b9-4aef-bade-5abab2bbb74b
+		summarizeBy: none
+		sourceColumn: procedure_group_condition
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cost
+		dataType: int64
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 867a0b62-3d13-4a1a-9c5b-84a615ac5d88
+		summarizeBy: sum
+		sourceColumn: Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Type
+		dataType: string
+		lineageTag: 0bdf8d33-89fa-44ec-a03e-7727dbe986c4
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column DayMonthYear
+		dataType: string
+		lineageTag: 06e33ee8-8ece-438c-b102-6486dd471bc3
+		summarizeBy: none
+		sourceColumn: DayMonthYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 37c1c0a4-1716-475a-80c7-ed414ede62af
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: FinancialMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: e808d87d-228e-4a0d-b9ae-d8e074f1cae4
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialMonth
+		dataType: string
+		lineageTag: 17817ba5-04e8-4451-862d-96fea003b40a
+		summarizeBy: none
+		sourceColumn: FinancialMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EBI = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="SELECT * FROM [PowerBI_Reporting].[ContractMonitoring].[tbl05_EBIActivity]#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Cost", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

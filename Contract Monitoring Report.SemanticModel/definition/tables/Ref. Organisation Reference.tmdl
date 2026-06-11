@@ -1,0 +1,39 @@
+table 'Ref. Organisation Reference'
+	lineageTag: 7ba25108-03e4-4d9a-a688-ec5799df21cd
+
+	column organisation_code
+		dataType: string
+		lineageTag: 81bbe37a-42bb-4e8c-a0ee-4c9ef79493ce
+		summarizeBy: none
+		sourceColumn: organisation_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisation_name
+		dataType: string
+		lineageTag: 8c9ae289-667f-4dc3-9b47-86d9377edc60
+		summarizeBy: none
+		sourceColumn: organisation_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sector
+		dataType: string
+		lineageTag: 35814a2d-2bda-4aa3-af5c-889b669f9e2d
+		summarizeBy: none
+		sourceColumn: Sector
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ref. Organisation Reference' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="select distinct#(lf)ISNULL([Site Code],[Organisation Code]) as organisation_code,#(lf)[Organisation Name] as organisation_name,#(lf)CASE#(lf)WHEN [Organisation Code] like 'RTE%' then 'GHFT'#(lf)WHEN [Organisation Code] like 'R%' then 'OOC NHS'#(lf)ELSE 'IS' end as [Sector]#(lf)from [BIReports].[dbo].[Contracting_ContractedProviders_2526]#(lf)--order by [Organisation Code]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

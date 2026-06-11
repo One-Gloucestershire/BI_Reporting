@@ -1,0 +1,70 @@
+table ICB_populations
+	lineageTag: 363b6688-3de9-4a00-8d77-f0f4ff0a91d8
+
+	column MonthExtracted
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4d61f25d-aab7-476c-a492-703143a0b003
+		summarizeBy: none
+		sourceColumn: MonthExtracted
+
+		variation Variation
+			isDefault
+			relationship: 0f081da8-9a7d-4951-b89d-3008fe754d6a
+			defaultHierarchy: LocalDateTable_df72ee9a-49b9-479d-8e48-c01a2c3388ef.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 07d25855-9a98-41d6-8d2c-f442b525b839
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICB_Name
+		dataType: string
+		lineageTag: 0579531f-e7f0-4b39-9e00-470f7d983607
+		summarizeBy: none
+		sourceColumn: ICB_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Code
+		dataType: string
+		lineageTag: a6401143-d193-4460-adac-b2cc4f13d4d5
+		summarizeBy: none
+		sourceColumn: Region_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Name
+		dataType: string
+		lineageTag: 85dbce74-2b1c-4e8d-bc01-b76a76253a80
+		summarizeBy: none
+		sourceColumn: Region_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 901bcebd-8b38-48e6-8cd3-13dbff5bf48e
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ICB_populations = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Reporting", [Query="-- Pulls data from one table only. UNIONs use group bys to add England and SW average rows. #(lf)-- ICB level data#(lf)SELECT Extract_Date AS MonthExtracted, FinancialYear, #(lf)UPPER(REPLACE(REPLACE(ICB_Name,'Integrated Care Board','ICB'),'Â','')) AS ICB_Name, #(lf)UPPER(Region_Code) AS Region_Code, UPPER(Region_Name) AS Region_Name, #(lf)SUM([Population]) AS [Population]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations]#(lf)WHERE Extract_Date >= '2023-04-01'#(lf)AND MONTH(Extract_Date) = 4#(lf)GROUP BY ICB_Name, Extract_Date, FinancialYear, UPPER(Region_Code), Region_Name#(lf)#(lf)UNION -- England average#(lf)#(lf)SELECT Extract_Date AS MonthExtracted, FinancialYear, #(lf)'ENGLAND' AS ICB_Name, 'ENG' AS Region_Code, 'ENGLAND' AS Region_Name, #(lf)SUM([Population]) AS [Population]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations]#(lf)WHERE Extract_Date >= '2023-04-01'#(lf)AND MONTH(Extract_Date) = 4#(lf)GROUP BY Extract_Date, FinancialYear#(lf)#(lf)UNION -- South West region average#(lf)#(lf)SELECT Extract_Date AS MonthExtracted, FinancialYear, #(lf)UPPER(Region_Name) AS ICB_Name, UPPER(Region_Code) AS Region_Code, UPPER(Region_Name) AS Region_Name, #(lf)SUM([Population]) AS [Population]#(lf)FROM [PowerBI_Reporting].[primarycare].[tbl09_National_ICB_Populations]#(lf)WHERE Extract_Date >= '2023-04-01'#(lf)AND MONTH(Extract_Date) = 4#(lf)AND UPPER(Region_Code) = 'Y58'#(lf)GROUP BY Extract_Date, FinancialYear, UPPER(Region_Code), Region_Name#(lf);"])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

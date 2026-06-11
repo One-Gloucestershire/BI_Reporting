@@ -1,0 +1,1067 @@
+table PLS_Summary
+	lineageTag: 6a5ef35a-c6f2-4dc5-9824-6d9fbcc4eeb2
+
+	measure 'Primary Selection - PNG % Breakdown' = ```
+			
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+			/ 
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_PNG')
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5d6fc20d-2486-4420-af37-d939f755afdf
+
+	measure 'Secondary Selection - PNG % Breakdown' = ```
+			
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+			/ 
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_PNG')
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d8e35497-9490-45fd-bbfa-539e960c9d07
+
+	measure 'Combined - PNG % Breakdown' = ```
+			
+			
+			VAR _DIFFERENCE = 
+			
+			SWITCH(
+			    TRUE(),
+			    [Primary Selection - PNG % Breakdown] > [Secondary Selection - PNG % Breakdown], [Secondary Selection - PNG % Breakdown] - [Primary Selection - PNG % Breakdown]
+			    ,[Primary Selection - PNG % Breakdown] < [Secondary Selection - PNG % Breakdown], [Secondary Selection - PNG % Breakdown] - [Primary Selection - PNG % Breakdown]
+			    ,[Primary Selection - PNG % Breakdown] = [Secondary Selection - PNG % Breakdown], 0
+			)
+			
+			RETURN
+			
+			[Primary Selection - PNG % Breakdown] + (_DIFFERENCE/2)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 36d3128c-0902-4ae4-8635-531782e3b525
+
+	measure 'Variance - PNG % Breakdown' =
+			
+			
+			[Secondary Selection - PNG % Breakdown] - [Primary Selection - PNG % Breakdown]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8721a477-c783-43d7-9bec-6478b70656ee
+
+	measure 'Primary Selection - % High Risk of Long LoS' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_extended_hosp],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c12223b1-dea1-41e1-864a-dd25c47ac823
+
+	measure 'Secondary Selection - % High Risk of Long LoS' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_extended_hosp],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 321ef5db-164f-4796-99a1-1a8fc28e82e8
+
+	measure 'Primary Selection - % High Risk of Hospital Admission' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_ip_hosp],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 8c8b3b73-7508-402e-8205-c7745a8ddda3
+
+	measure 'Secondary Selection - % High Risk of Hospital Admission' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_ip_hosp],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 4dd1f3b1-53bf-4599-95eb-6f913ff16a7a
+
+	measure 'Primary Selection - Median Age' =
+			
+			
+			CALCULATE(
+			    MEDIAN('PLS_Summary'[DerivedAge])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+		formatString: 0
+		lineageTag: 6d34b6f7-1da0-45e6-b2a5-04ff9829d5ec
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Secondary Selection - Median Age' =
+			
+			
+			CALCULATE(
+			    MEDIAN('PLS_Summary'[DerivedAge])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+		formatString: 0
+		lineageTag: 03810dd1-e511-4f44-a3e7-b7b6f4052cd5
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Primary Selection - % High Risk of Unplanned Readmission' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_unplanned_30_day_readmission],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6f618603-e842-44ab-9750-62b64da561c3
+
+	measure 'Secondary Selection - % High Risk of Unplanned Readmission' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_unplanned_30_day_readmission],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 98569c6d-bf50-46e9-8059-17163c6fb7bf
+
+	measure 'Primary Selection - % High Risk of High Service User' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_persistent_high_user],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Secondary'),
+			    ALL('PLS_Geography_Secondary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 84aa129e-f56e-4db0-b4ec-3d797737a22b
+
+	measure 'Secondary Selection - % High Risk of High Service User' =
+			
+			
+			VAR _TotalPop =
+			
+			    CALCULATE(
+			        SUM('PLS_Summary'[Counter]),
+			        ALL('PLS_Summary')
+			    )
+			    /* Total people in ICB Population */
+			
+			VAR _Top10Cutoff =
+			
+			    ROUNDUP(_TotalPop * 0.10, 0)
+			    /* Number of people in 10% */
+			
+			VAR Top10_Table =
+			
+			    TOPN(
+			        _Top10Cutoff,
+			        ALL('PLS_Summary'),
+			        'PLS_Summary'[probability_persistent_high_user],
+			        DESC
+			    )
+			    /* Top 10% of people in the ICB ranked by probability */
+			
+			RETURN
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary'),
+			    KEEPFILTERS(Top10_Table)
+			)
+			/* Numerator is total individuals who appear in the ICB top 10 % */
+			
+			/
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_GP_Primary'),
+			    ALL('PLS_Geography_Primary')
+			)
+			/* Denominator is total selection population */
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 19841755-c94b-46b8-9b3e-5630193ca341
+
+	measure 'Primary Selection - Average Chronic Conditions' =
+			
+			
+			CALCULATE(
+			    AVERAGE('PLS_Summary'[chronic_condition_count])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+		lineageTag: 8f93c43f-1ff8-46c8-a457-8b09c8c6c665
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Secondary Selection - Average Chronic Conditions' =
+			
+			
+			CALCULATE(
+			    AVERAGE('PLS_Summary'[chronic_condition_count])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+		lineageTag: 6d3fe4d5-98f2-4493-b551-79dc58d79293
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Primary Selection - Average Active Ingredients' =
+			
+			
+			CALCULATE(
+			    AVERAGE('PLS_Summary'[active_ingredient_count])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+		formatString: 0.0
+		lineageTag: 339e96a9-318e-4a3a-a89c-20c44462b96c
+
+	measure 'Secondary Selection - Average Active Ingredients' =
+			
+			
+			CALCULATE(
+			    AVERAGE('PLS_Summary'[active_ingredient_count])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+		formatString: 0.0
+		lineageTag: 40ddb3cd-fa03-4bce-84b1-604f3ed038c4
+
+	measure 'Risk of Hospital Admission - Average' =
+			
+			
+			AVERAGE('PLS_Summary'[probability_ip_hosp])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 91ba08c6-bea1-4141-b3b4-466716354c25
+
+	measure 'Risk of Long LoS - Average' =
+			
+			
+			AVERAGE('PLS_Summary'[probability_extended_hosp])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 02668cb7-850e-4cfa-bfdb-c5d6a046e17e
+
+	measure 'Risk of 30 Day Readmission - Average' =
+			
+			
+			AVERAGE('PLS_Summary'[probability_unplanned_30_day_readmission])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5ad4518d-faea-4307-bc6f-24d11626dc73
+
+	measure '% HIU' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,'PLS_Summary'[HIUFlag] = 1
+			)
+			
+			/
+			
+			SUM('PLS_Summary'[Counter])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5af14190-b694-44ba-a537-008b1159a05a
+
+	measure '% Core 20' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,'PLS_Summary'[Core20Flag] = 1
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    (_NUMERATOR / _DENOMINATOR) = BLANK(), 0,
+			    (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2db3753b-825a-4a83-bc16-5d0951b8774c
+
+	measure '% 65+' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,'Ref_Age'[Age] >= 65
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    (_NUMERATOR / _DENOMINATOR) = BLANK(), 0,
+			    (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 88f325b5-d520-46f7-b7ab-55d2fa7e5f4e
+
+	measure '% Under 18' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,'Ref_Age'[Age] < 18
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    (_NUMERATOR / _DENOMINATOR) = BLANK(), 0,
+			    (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 27d670d5-717d-48fc-9728-80157374664f
+
+	measure '% Chronic Condition Count Splits' = ```
+			
+			
+			VAR _NUMERATOR = SUM('PLS_Summary'[Counter])
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('PLS_Summary'[Chronic_Condition_Group])
+			)
+			
+			RETURN
+			
+			(_NUMERATOR / _DENOMINATOR)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: d5bebf97-8738-4281-b521-1e63a77f8664
+
+	measure 'Primary Selection - Average ACG Chronic Conditions' =
+			
+			
+			CALCULATE(
+			    AVERAGE('PLS_Summary'[chronic_condition_count])
+			    ,ALL('Ref_GP_Secondary')
+			)
+		lineageTag: 5d1e01ef-df6a-4121-959e-5ad3d957d9ae
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Processed Date - Date Taken' = ```
+			
+			
+			VAR _PLS_SUMMARY_DATE = 
+			
+			FORMAT(
+			    MAX('PLS_Summary'[ProcessedDate]),
+			    "MMM-YYYY"
+			)
+			
+			RETURN
+			
+			CONCATENATE("Data taken: ", _PLS_SUMMARY_DATE)
+			```
+		lineageTag: 6340a726-7524-4355-a595-65413f28bf7b
+
+	measure 'Population Sum' = SUM('PLS_Summary'[Counter])
+		formatString: #,0
+		lineageTag: 8d6e47d9-dc7a-4530-8a1b-3e25da99e7b7
+
+	measure 'Population & Proportion' =
+			
+			
+			VAR _POP = FORMAT([Population Sum], "#,##0")
+			
+			VAR _BREAKDOWN = FORMAT([Primary Selection - PNG % Breakdown], "0.0%")
+			
+			RETURN
+			
+			_POP & " - (" & _BREAKDOWN & ")"
+		lineageTag: 5fb16884-856d-4a09-ad21-022c05d15d0a
+
+	measure 'Set to One' = 1
+		formatString: 0
+		lineageTag: 9eb7d2ad-4fd6-4c83-a9f2-41bd04245543
+
+	measure 'Variance Colours' =
+			
+			
+			SWITCH(
+			    TRUE(),
+			    [Variance - PNG % Breakdown] < 0, "#527F7A",
+			    [Variance - PNG % Breakdown] >= 0, "#E8A17F"
+			)
+		lineageTag: aef171dd-f50c-42bb-860c-7ebd8ca41c9b
+
+	measure 'Data up To' =
+			
+			
+			FORMAT(
+			    MAX('PLS_Summary'[ProcessedDate]),
+			    "MMMM-YYYY"
+			)
+		lineageTag: af1daead-b1f2-4792-81f7-cabea5341296
+
+	measure 'Primary Selection - Population' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+		formatString: #,0
+		lineageTag: ba4ce336-c9bb-4e68-8985-a5b2576a0974
+
+	measure 'Secondary Selection - Population' =
+			
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+		formatString: #,0
+		lineageTag: d6077d72-58e5-43a7-99f3-a3c4ed295cd2
+
+	measure 'Primary Selection - % of Population' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Secondary')
+			    ,ALL('PLS_Geography_Secondary')
+			    ,ALL('Ref_Age')
+			)
+			
+			RETURN
+			
+			_NUMERATOR / _DENOMINATOR
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: f537494b-4853-434d-84ba-2cf8d2502df3
+
+	measure 'Secondary Selection - % of Population' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,ALL('Ref_GP_Primary')
+			    ,ALL('PLS_Geography_Primary')
+			    ,ALL('Ref_Age')
+			)
+			
+			RETURN
+			
+			_NUMERATOR / _DENOMINATOR
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 84320380-6bc1-48c7-9a3e-ee9f2a2ed27a
+
+	measure 'Population Period' = ```
+			
+			
+			VAR _ACTIVITY_MIN =  
+			
+			FORMAT(
+			    MIN('PLS_Summary'[ProcessedDate]),
+			    "MMM-YYYY"
+			)
+			
+			
+			RETURN
+			
+			"Population Period: " & _ACTIVITY_MIN
+			```
+		lineageTag: 8a78c011-ec2a-4cc7-b64f-ce741478661e
+
+	measure '% Rural' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,'PLS_Geography_Primary'[RuralurbanFlag] = "Rural"
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    (_NUMERATOR / _DENOMINATOR) = BLANK(), 0,
+			    (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 713a47b5-e0ef-4de5-b3a6-f507f1d9ee3d
+
+	measure '% Urban' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter])
+			    ,'PLS_Geography_Primary'[RuralurbanFlag] = "Urban"
+			)
+			
+			VAR _DENOMINATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    (_NUMERATOR / _DENOMINATOR) = BLANK(), 0,
+			    (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 4d7b6dcb-8a7c-4078-8689-d33f45e9656a
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 64fac885-71f8-4b46-bb4d-dda1698188ea
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 17bd9303-a4df-4923-90fe-01daecaf968a
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedAge
+		dataType: int64
+		formatString: 0
+		lineageTag: 518d0386-350b-4fec-bf50-ad0030ffa9d6
+		summarizeBy: none
+		sourceColumn: DerivedAge
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: b653e582-d133-40a0-8ac1-55e1e36284d6
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column HIUFlag
+		dataType: int64
+		formatString: 0
+		lineageTag: bc9ae221-7e81-47cb-a405-bb04702073c3
+		summarizeBy: sum
+		sourceColumn: HIUFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column eFI_Frailty_Category
+		dataType: string
+		lineageTag: 88dd4925-0cd3-4ea8-a722-150b64f24ef4
+		summarizeBy: none
+		sourceColumn: eFI_Frailty_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column ACGPatientNeedsGroup
+		dataType: string
+		lineageTag: 91010d04-8ecb-48d9-ad4e-0df4fc0bb9fa
+		summarizeBy: none
+		sourceColumn: ACGPatientNeedsGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProcessedDate
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: a7dd16a8-3919-4d7a-9e34-f3f68e747692
+		summarizeBy: none
+		sourceColumn: ProcessedDate
+
+		variation Variation
+			isDefault
+			relationship: 5e2068b8-bf72-4564-8cf7-43c20de96250
+			defaultHierarchy: LocalDateTable_f7fead37-5f6c-4137-8009-398c7bb88cb6.'Date Hierarchy'
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: 197e8664-90f7-436c-9b1b-4cf3ce97d8e8
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column probability_unexpected_pharmacy_cost
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a72774e7-3220-49cf-8daf-7e616ee583c7
+		summarizeBy: sum
+		sourceColumn: probability_unexpected_pharmacy_cost
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column probability_persistent_high_user
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 14944101-0124-4afe-9bef-b971b507ac5e
+		summarizeBy: sum
+		sourceColumn: probability_persistent_high_user
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column probability_ip_hosp
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 7e35f57c-1b27-4763-814e-687c1b9d2540
+		summarizeBy: sum
+		sourceColumn: probability_ip_hosp
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column probability_injury_hosp
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c99b0a70-0dc5-4b0d-952f-afb7d38a2fce
+		summarizeBy: sum
+		sourceColumn: probability_injury_hosp
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column probability_extended_hosp
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9b578107-913b-4002-b0e8-e8fbb025d5da
+		summarizeBy: sum
+		sourceColumn: probability_extended_hosp
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column probability_unplanned_30_day_readmission
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 85751fb7-b60e-4bef-bf39-6345d9e5c92c
+		summarizeBy: sum
+		sourceColumn: probability_unplanned_30_day_readmission
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCCountDerived
+		dataType: int64
+		formatString: 0
+		lineageTag: e8389bde-67c3-4626-91ff-cc6848fc18b5
+		summarizeBy: sum
+		sourceColumn: LTCCountDerived
+
+		annotation SummarizationSetBy = Automatic
+
+	column chronic_condition_count
+		dataType: int64
+		formatString: 0
+		lineageTag: cd41529f-730a-4372-98f6-26548316ec96
+		summarizeBy: sum
+		sourceColumn: chronic_condition_count
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column active_ingredient_count
+		dataType: int64
+		formatString: 0
+		lineageTag: ea6bc6f3-a147-4992-a175-740aa4c33d5b
+		summarizeBy: sum
+		sourceColumn: active_ingredient_count
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 9f427958-25fb-4703-a2c0-3b078619d1f1
+		summarizeBy: sum
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Chronic_Condition_Group
+		dataType: string
+		lineageTag: d4d4c17a-9127-4693-9490-18dd3ea5a951
+		summarizeBy: none
+		sourceColumn: Chronic_Condition_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PLS_Summary = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="SELECT DISTINCT [PLS].[PseudoNHSNumber]#(lf)               ,[Counter] = 1#(lf)               ,[Gender] = CASE WHEN [PLS].[Gender] = 'M' THEN 'Male'#(lf)#(tab)                      WHEN [PLS].[Gender] = 'F' THEN 'Female'#(lf)#(tab)#(tab)#(tab)  ELSE 'Unknown' END#(lf)               ,[PLS].[DerivedAge]#(lf)#(tab)     ,[PLS].[PracticeCode]#(lf)#(tab)     ,[PLS].[HIUFlag]#(lf)#(tab)     ,[IMD].[Core20Flag]#(lf)#(tab)     ,[PLS].[LTCCountDerived]#(lf)#(tab)     ,[eFI_Frailty_Category] = CASE WHEN [PLS].[eFICategoryDerived] IS NULL THEN 'Not Recorded'#(lf)#(tab)                                    ELSE [PLS].[eFICategoryDerived] END#(lf)#(tab)     ,[PLS].[ACGPatientNeedsGroup]#(lf)#(tab)     ,[ACG].[chronic_condition_count]#(lf)#(tab)     ,[Chronic_Condition_Group] = CASE WHEN [ACG].[chronic_condition_count] = 0 THEN '0'#(lf)#(tab)                                       WHEN [ACG].[chronic_condition_count] = 1 THEN '1'#(lf)#(tab)#(tab)#(tab)#(tab)         WHEN [ACG].[chronic_condition_count] BETWEEN 2 AND 3 THEN '2-3'#(lf)#(tab)#(tab)#(tab)#(tab)         WHEN [ACG].[chronic_condition_count] BETWEEN 4 AND 5 THEN '4-5'#(lf)#(tab)#(tab)#(tab)#(tab)         ELSE '6+' END#(lf)#(tab)     ,[ACG].[active_ingredient_count]#(lf)#(tab)     ,[ACG].[probability_unexpected_pharmacy_cost]#(lf)#(tab)     ,[ACG].[probability_persistent_high_user]#(lf)#(tab)     --,[ACG].[probability_icu_hosp]#(lf)#(tab)     ,[ACG].[probability_ip_hosp]#(lf)#(tab)     ,[ACG].[probability_injury_hosp]#(lf)#(tab)     ,[ACG].[probability_extended_hosp]#(lf)#(tab)     ,[ACG].[probability_unplanned_30_day_readmission]#(lf)#(tab)     ,[ProcessedDate] = CAST([PLS].[ProcessedDate] AS DATE)#(lf)#(lf)FROM [ICB_Products].[Patient].[vw_Summary] AS [PLS]#(lf)#(lf)LEFT JOIN (#(lf)           SELECT [PseudoNHSNumber]#(lf)#(tab)       ,[chronic_condition_count]#(lf)#(tab)       ,[active_ingredient_count]#(lf)                 ,[probability_unexpected_pharmacy_cost]#(lf)                 ,[probability_persistent_high_user]#(lf)#(tab)       --,[probability_icu_hosp]#(lf)                 ,[probability_ip_hosp]#(lf)                 ,[probability_injury_hosp]#(lf)                 ,[probability_extended_hosp]#(lf)                 ,[probability_unplanned_30_day_readmission]#(lf)           FROM [CCG_Current].[ACG].[vw_ACGResults]#(lf)#(tab) WHERE [IsLatest] = 1#(lf)          ) AS [ACG]#(lf)ON [ACG].[PseudoNHSNumber] = [PLS].[PseudoNHSNumber]#(lf)#(lf)LEFT JOIN (#(lf)           SELECT DISTINCT [PseudoNHSNumber]#(lf)#(tab)                ,[Core20Flag]#(lf)#(tab) FROM [ICB_Products].[Patient].[vw_IMD_and_Geography]#(lf)          ) AS [IMD]#(lf)ON [IMD].[PseudoNHSNumber] = [PLS].[PseudoNHSNumber]#(lf)#(lf)WHERE [PLS].[ICBofRegistration] = '11M'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

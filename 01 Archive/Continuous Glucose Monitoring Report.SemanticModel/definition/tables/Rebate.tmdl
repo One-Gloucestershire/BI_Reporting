@@ -1,0 +1,44 @@
+table Rebate
+	lineageTag: e3003877-913e-4de0-9175-a44207a995f3
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 6e4e98e0-9838-4d5f-886c-d2b76e661a08
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: ee8b78b9-d094-495c-974b-a920f185827f
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConfirmedRebate
+		dataType: decimal
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: 1711704a-7e79-4bb1-98c9-635dd93739fe
+		summarizeBy: none
+		sourceColumn: ConfirmedRebate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition Rebate = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("fZHBCoIwHMbfxfOQ7e907hhEh6A6dBQPKqMCU1ku8Hl6k56sbQU55ryN7/vt2+BXFBFgAMwjFJ3FMIp7LaQ+v18JIgxiBlGJvgzBOj81Yx8miM6P/XNtBHS+FU0YSbBZ2VedquRkCYZynMYZ/xNmZCdquYIkOj9UsrkGeqrzzSBvre0JRjmnMZ0BqR2YQnVmPqk6EeqZ7dvf/Qwxwpw+N++ri3qMIcJX4kOeEwCECTiIJ2WB8ax4DPW0AEMpcAfxvCwwrpgZUH4A", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [YearMonth = _t, MonthName = _t, ConfirmedRebate = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"YearMonth", Int64.Type}, {"MonthName", type text}, {"ConfirmedRebate", Currency.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
