@@ -1,0 +1,326 @@
+table 'GP Consultations'
+	lineageTag: 2484b4a5-c34e-4837-9aa3-711f86e0a686
+
+	measure 'Compared to SW ICS(GP)' =
+			
+			IF(
+			    CALCULATE(SUM('GP Consultations'[Online GP Appointments Rate per 100000 of the Population]),'GP Consultations'[NHS Area Code] = "QR1") >
+			  CALCULATE (
+			    AVERAGE ('GP Consultations'[Other South West ICS])
+			    )
+			    ,"Better Than"
+			    ,"Worse Than"
+			)
+		lineageTag: 9a81e37b-e2f4-454d-a9af-23bb3cfc6f1d
+
+	measure 'Compared to All ICS(GP)' =
+			
+			IF(
+			    CALCULATE(SUM('GP Consultations'[Online GP Appointments Rate per 100000 of the Population]),'GP Consultations'[NHS Area Code] = "QR1") >
+			  CALCULATE (
+			    AVERAGE ('GP Consultations'[Online GP Appointments Rate per 100000 of the Population])
+			    )
+			    ,"Better Than"
+			    ,"Worse Than"
+			)
+		lineageTag: 5904151f-5c47-48c3-bdba-07b17a126440
+
+	measure E10000013_DOTSIZE = CALCULATE(COUNT('GP Consultations'[ONS Code]), 'GP Consultations'[ONS Code] = "E10000013") +10
+		formatString: 0
+		lineageTag: 361c04e2-2439-4b53-9c27-ba11fc0f41cb
+
+	measure 'QUARTILE (GP)' = ```
+			
+			VAR Vals =
+			    SUM ( 'GP Consultations'[Online GP Appointments Rate per 100000 of the Population] )
+			VAR Vals_Glo =
+			    CALCULATE(AVERAGE('GP Consultations'[Online GP Appointments Rate per 100000 of the Population]), 'GP Consultations'[NHS Area Code] = "QR1") 
+			VAR Indicator =
+			    GROUPBY (
+			        ALL ( 'GP Consultations' ),
+			        'GP Consultations'[ONS Code],
+			        "Val", SUMX ( CURRENTGROUP (), [Online GP Appointments Rate per 100000 of the Population] )
+			    )
+			VAR Percentile50 =
+			    MEDIAN ( 'GP Consultations'[Online GP Appointments Rate per 100000 of the Population] )
+			VAR Percentile75 =
+			    PERCENTILEX.INC('GP Consultations', 'GP Consultations'[Online GP Appointments Rate per 100000 of the Population], 0.75)
+			VAR Percentile25 =
+			    PERCENTILEX.INC('GP Consultations', 'GP Consultations'[Online GP Appointments Rate per 100000 of the Population], 0.25)
+			RETURN
+			    IF (
+			        Vals_Glo >= Percentile75,
+			        "Q4",
+			        IF ( Vals_Glo >= Percentile50, "Q3", IF ( Vals_Glo >= Percentile25, "Q2", "Q1" ) )
+			    )
+			```
+		lineageTag: dbd59e05-d501-484e-8185-2bbf880bf301
+
+	measure 'BG All (GP)' = IF('GP Consultations'[Compared to All ICS(GP)] = "Better Than", 1.0, 0)
+		lineageTag: a8357458-095c-4c4f-a54e-c0322d15c022
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'BG SW (GP)' = IF('GP Consultations'[Compared to SW ICS(GP)] = "Better Than", 1.0, 0)
+		lineageTag: 327bed3d-cc58-488c-b7f7-7e74510073d3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Quartile Colour (GP)' =
+			SWITCH(TRUE(),
+			                      [Quartile (GP)] = "Q1","#25E508",
+			                  [Quartile (GP)] = "Q2", "#ddff00",
+			                 [Quartile (GP)] = "Q3",       "#ffc400",
+			                                "#ff0000"          )
+		lineageTag: 5033b90f-11b4-49f5-b4f6-22bde200c37b
+
+	column Type
+		dataType: string
+		lineageTag: ceb966a0-a18d-4937-a7cc-03f03a6e9171
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS Area Code'
+		dataType: string
+		lineageTag: 8ca2aa5f-dd6d-4797-95fc-b64972700fbf
+		summarizeBy: none
+		sourceColumn: NHS Area Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ONS Code'
+		dataType: string
+		lineageTag: ce0c6348-a736-4e6e-970b-f1a0b169812b
+		summarizeBy: none
+		sourceColumn: ONS Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		lineageTag: 7fc5c030-ca35-4f3a-abc6-e88661df7650
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Open Active Practices'
+		dataType: int64
+		formatString: 0
+		lineageTag: e1405e9c-b003-4f1b-9552-791486139c6a
+		summarizeBy: sum
+		sourceColumn: Open Active Practices
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Included Practices'
+		dataType: int64
+		formatString: 0
+		lineageTag: 03c298d7-9a6b-4d57-866c-25ffec119f80
+		summarizeBy: sum
+		sourceColumn: Included Practices
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: 0
+		lineageTag: bc92f619-ab93-4ca2-af3e-4513831f700a
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column _
+		dataType: string
+		lineageTag: 1104aabd-2cf7-48b0-a501-76da2d331b35
+		summarizeBy: none
+		sourceColumn: _
+
+		annotation SummarizationSetBy = Automatic
+
+	column Face-to-Face
+		dataType: int64
+		formatString: 0
+		lineageTag: e1fa127e-ff28-439f-a42f-0f3d905debc3
+		summarizeBy: sum
+		sourceColumn: Face-to-Face
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Home Visit'
+		dataType: int64
+		formatString: 0
+		lineageTag: bf566458-f79a-4df3-94f3-33f7a8defade
+		summarizeBy: sum
+		sourceColumn: Home Visit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Telephone
+		dataType: int64
+		formatString: 0
+		lineageTag: 21beefd0-dda6-4701-84a8-b79cba5f01ff
+		summarizeBy: sum
+		sourceColumn: Telephone
+
+		annotation SummarizationSetBy = Automatic
+
+	column Video/Online
+		dataType: int64
+		formatString: 0
+		lineageTag: 6b30e838-c1d7-4986-a02e-27c74ed9f6ee
+		summarizeBy: sum
+		sourceColumn: Video/Online
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unknown
+		dataType: int64
+		formatString: 0
+		lineageTag: ff401a19-c095-4760-8386-fce493f1721f
+		summarizeBy: sum
+		sourceColumn: Unknown
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Piv (2).Total'
+		dataType: int64
+		formatString: 0
+		lineageTag: 988bdbe3-2156-435d-ae2f-8c96c6eadedf
+		summarizeBy: sum
+		sourceColumn: Piv (2).Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Online GP Appointments Rate per 100000 of the Population'
+		dataType: int64
+		formatString: 0
+		lineageTag: ac8532fd-67fa-49c6-8958-408761abd184
+		summarizeBy: sum
+		sourceColumn: Online GP Appointments Rate per 100000 of the Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SW ICS.NHS AREA CODE'
+		dataType: string
+		lineageTag: 21b6692a-555c-49a3-83d6-73cb97db283b
+		summarizeBy: none
+		sourceColumn: SW ICS.NHS AREA CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Other South West ICS'
+		dataType: int64
+		formatString: 0
+		lineageTag: e6e28456-c446-4f3e-849e-2d05e9630cc2
+		summarizeBy: sum
+		sourceColumn: Other South West ICS
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Gloucestershire Flag'
+		dataType: string
+		lineageTag: b8a6c03a-6507-412d-a60b-221f26a2739e
+		summarizeBy: none
+		sourceColumn: Gloucestershire Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICS Hierarchy'
+		dataType: string
+		lineageTag: 935cb804-890c-4a78-8e5f-0fdbff9bd1ee
+		summarizeBy: none
+		sourceColumn: ICS Hierarchy
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column14
+		dataType: string
+		lineageTag: 31d8afcc-ba9e-44ca-8ceb-489f2df7e7b1
+		summarizeBy: none
+		sourceColumn: Column14
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column15
+		dataType: string
+		lineageTag: 64c0fadf-b7f1-4fb7-8ec0-6cce1c26b700
+		summarizeBy: none
+		sourceColumn: Column15
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column16
+		dataType: string
+		lineageTag: 8af29c1c-aa6a-44ea-b0bd-c2c086c56a4e
+		summarizeBy: none
+		sourceColumn: Column16
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column17
+		dataType: string
+		lineageTag: e4f63e53-750a-4a97-bc80-a7af857d7b6d
+		summarizeBy: none
+		sourceColumn: Column17
+
+		annotation SummarizationSetBy = Automatic
+
+	column Index
+		dataType: string
+		lineageTag: 11df04cc-0e1d-45f9-9df7-5035b7f6dca2
+		summarizeBy: none
+		sourceColumn: Index
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Period Beginning' =
+			
+			var JoinCol = 'GP Consultations'[NHS Area Code]
+			var NewCol = CALCULATE(MAX('GP Consultations - Date'[Date]))
+			return NewCol
+		lineageTag: ffcfff92-6d89-4cb8-a401-7a2f2f7c0364
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Peropd Beginning'
+		dataType: string
+		lineageTag: 1a05f291-c5c9-4f15-9d5e-a2a82718c546
+		summarizeBy: none
+		sourceColumn: Peropd Beginning
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Consultations-f692eb33-ba5d-4869-8c07-68b92586636f' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\WebScraping\latestAppointmentsInGeneralPractice.xlsx"), null, true),
+				    #"Table 3c_Sheet" = Source{[Item="Table 3c",Kind="Sheet"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(#"Table 3c_Sheet",{{"Column1", type any}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type any}, {"Column6", type any}, {"Column7", type any}, {"Column8", type text}, {"Column9", type any}, {"Column10", type any}, {"Column11", type any}, {"Column12", type any}, {"Column13", type any}}),
+				    #"Removed Top Rows" = Table.Skip(#"Changed Type",10),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Top Rows", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Type", type any}, {"NHS Area Code", type text}, {"ONS Code", type text}, {"Name", type text}, {"Open Active Practices", Int64.Type}, {"Included Practices", Int64.Type}, {"Total", Int64.Type}, {"_", type text}, {"Face-to-Face", Int64.Type}, {"Home Visit", Int64.Type}, {"Telephone", Int64.Type}, {"Video/Online", Int64.Type}, {"Unknown", Int64.Type}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type1", {"NHS Area Code"}, #"Piv (2)", {"ORG_CODE"}, "Piv (2)", JoinKind.LeftOuter),
+				    #"Expanded Piv (2)" = Table.ExpandTableColumn(#"Merged Queries", "Piv (2)", {"Total"}, {"Piv (2).Total"}),
+				    #"Added Custom" = Table.AddColumn(#"Expanded Piv (2)", "Online GP Appointments Rate per 100000 of the Population", each [#"Video/Online"]/[#"Piv (2).Total"] * 100000),
+				    #"Merged Queries1" = Table.NestedJoin(#"Added Custom", {"NHS Area Code"}, #"SW ICS", {"NHS AREA CODE"}, "SW ICS", JoinKind.FullOuter),
+				    #"Expanded SW ICS" = Table.ExpandTableColumn(#"Merged Queries1", "SW ICS", {"NHS AREA CODE"}, {"SW ICS.NHS AREA CODE"}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Expanded SW ICS", "Other South West ICS", each if [SW ICS.NHS AREA CODE] <> null then [Online GP Appointments Rate per 100000 of the Population] else null),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Added Conditional Column",{{"Online GP Appointments Rate per 100000 of the Population", Int64.Type}, {"Other South West ICS", Int64.Type}}),
+				    #"Added Conditional Column1" = Table.AddColumn(#"Changed Type2", "Gloucestershire Flag", each if [ONS Code] = "E54000043" then 1 else if [ONS Code] = "E54000039" then 1 else if [ONS Code] = "E38000062" then 1 else if [ONS Code] = "E38000222" then 1 else null),
+				    #"Added Conditional Column2" = Table.AddColumn(#"Added Conditional Column1", "ICS Hierarchy", each if [Gloucestershire Flag] = 1 then "Gloucester ICS" else if [SW ICS.NHS AREA CODE] <> null then "SW ICS" else "Other ICS"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Conditional Column2",{{"Column18", "Index"}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns",null,1,Replacer.ReplaceValue,{"Index"}),
+				    #"Merged Queries2" = Table.NestedJoin(#"Replaced Value", {"Index"}, #"GP Consultations - Date", {"Index"}, "GP Consultations - Date", JoinKind.FullOuter),
+				    #"Expanded GP Consultations - Date" = Table.ExpandTableColumn(#"Merged Queries2", "GP Consultations - Date", {"Date"}, {"Date"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Expanded GP Consultations - Date",{{"Date", "Peropd Beginning"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_ResultType = Exception
+

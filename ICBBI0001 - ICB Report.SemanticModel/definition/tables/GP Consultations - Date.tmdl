@@ -1,0 +1,38 @@
+table 'GP Consultations - Date'
+	lineageTag: 68ccc8d1-e2b4-4c5e-88c2-2c55b74e891f
+
+	column Date
+		dataType: string
+		lineageTag: 7940e08a-7e7e-41e1-93cf-34099f4a41b0
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Index
+		dataType: int64
+		formatString: 0
+		lineageTag: c01be0f5-c4ef-4f01-ac6a-a4da19557806
+		summarizeBy: sum
+		sourceColumn: Index
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'GP Consultations - Date-0cc352fa-e636-4ad3-980d-431e6798d48a' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\WebScraping\latestAppointmentsInGeneralPractice.xlsx"), null, true),
+				    #"Table 3c_Sheet" = Source{[Item="Table 3c",Kind="Sheet"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(#"Table 3c_Sheet",{{"Column1", type any}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type any}, {"Column6", type any}, {"Column7", type any}, {"Column8", type text}, {"Column9", type any}, {"Column10", type any}, {"Column11", type any}, {"Column12", type any}, {"Column13", type any}}),
+				    #"Removed Top Rows" = Table.Skip(#"Changed Type",7),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Top Rows",{{"Column1", "Date"}}),
+				    #"Extracted Text After Delimiter" = Table.TransformColumns(#"Renamed Columns", {{"Date", each Text.AfterDelimiter(_, ",", {0, RelativePosition.FromEnd}), type text}}),
+				    #"Kept First Rows" = Table.FirstN(#"Extracted Text After Delimiter",1),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Kept First Rows",{"Date"}),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Other Columns", "Index", 1, 1, Int64.Type)
+				in
+				    #"Added Index"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,51 @@
+table 'Population Reference'
+	lineageTag: 9ad2ba6e-c6f8-4dd7-ab71-870786f83aaa
+
+	column lsoa11cd
+		dataType: string
+		lineageTag: e8328054-c427-4700-83ea-797083822474
+		summarizeBy: none
+		sourceColumn: lsoa11cd
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetworkName
+		dataType: string
+		lineageTag: 258330f3-d9a2-47d5-894e-83b642fe2b5a
+		summarizeBy: none
+		sourceColumn: NetworkName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population_rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 6e40c7cf-be2b-4a4a-a9c0-d118f712015c
+		summarizeBy: sum
+		sourceColumn: Population_rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 0c623a7b-0bdf-4794-abaf-257898a4457f
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Population Reference-8bb50850-abdf-4ca3-8f59-deff180d42ce' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Projects\Power BI\Map Shape Files\LSOA to PCN Mapping.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"LSOA code", type text}, {"NetworkName", type text}, {"Population_rank", Int64.Type}, {"Population", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"LSOA code", "lsoa11cd"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

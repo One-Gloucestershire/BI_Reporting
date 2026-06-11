@@ -1,0 +1,83 @@
+table 'Metric Polarity -manual update'
+	lineageTag: 1e49ab81-2fe5-471f-988d-932b8c4c4783
+
+	column ID
+		dataType: string
+		lineageTag: 5f70e47b-2416-4b0c-b241-37b8f8738c67
+		summarizeBy: none
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Description'
+		dataType: string
+		lineageTag: 8b5fa8eb-150f-4bd9-a696-d73b3940482f
+		summarizeBy: none
+		sourceColumn: Metric Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Good Is'
+		dataType: string
+		lineageTag: 2956cbf6-0e6f-4c15-b69d-c3d548a78a63
+		summarizeBy: none
+		sourceColumn: Good Is
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rate/Value
+		dataType: string
+		lineageTag: 34f651d1-8e10-42c7-97d0-87959fc65838
+		summarizeBy: none
+		sourceColumn: Rate/Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Target Value'
+		dataType: double
+		lineageTag: a10ed3b5-9d86-4a98-ac28-68249364a6ac
+		summarizeBy: sum
+		sourceColumn: Target Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Target Label'
+		dataType: string
+		lineageTag: 1fd7e4a3-77ea-45db-9b74-68603a4f458e
+		summarizeBy: none
+		sourceColumn: Target Label
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Local target'
+		dataType: string
+		lineageTag: 36471b11-6394-4a73-9eb0-3a2afc914c0a
+		summarizeBy: none
+		sourceColumn: Local target
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Local Target Label'
+		dataType: string
+		lineageTag: 0a851d6a-ce37-4229-b2c9-6fb0baed6b50
+		summarizeBy: none
+		sourceColumn: Local Target Label
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Metric Polarity -manual update-53dd2126-36b2-4eff-94a6-e285bb164b01' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\Metrics Polarity.xlsx"), null, true),
+				    Table2_Table = Source{[Item="Table2",Kind="Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(Table2_Table,{{"ID", type text}, {"Metric Description", type text}, {"Good Is", type any}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([ID] <> null and [ID] <> "  ")),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Filtered Rows",{{"Target Value", type number}, {"Target Label", type text}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Exception
+

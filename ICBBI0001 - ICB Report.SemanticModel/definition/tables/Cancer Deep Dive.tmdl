@@ -1,0 +1,184 @@
+table 'Cancer Deep Dive'
+	lineageTag: d1264c58-6239-4713-aa59-bb731ec88724
+
+	measure 'Performance %' = (SUM('Cancer Deep Dive'[Total])-SUM('Cancer Deep Dive'[Breaches]))/SUM('Cancer Deep Dive'[Total])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 7309a620-7d17-4beb-80a9-b833acef2160
+
+	measure 'Average Target' = AVERAGE('Cancer Deep Dive'[Target %])
+		lineageTag: b6370e61-519f-44c4-a82a-45050da71720
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Target Checker' = IF('Cancer Deep Dive'[Performance %] >= 'Cancer Deep Dive'[Average Target], "#63BE7B","#F8696B")
+		lineageTag: 6ccaf000-2486-4d8f-a1ed-3ef37b20fecd
+
+	column Type
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(16)
+		lineageTag: a2f949d5-346e-47aa-856a-2482644a4daf
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Code'
+		dataType: string
+		sourceProviderType: varchar(16)
+		lineageTag: 4cdf1518-c56c-4fde-b4b1-9894e4061388
+		summarizeBy: none
+		sourceColumn: Provider Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Group'
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(46)
+		lineageTag: f1fd28cf-fa74-4df0-9f09-bc515d1cd168
+		summarizeBy: none
+		sourceColumn: Provider Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tumour Type'
+		dataType: string
+		sourceProviderType: varchar(255)
+		lineageTag: e333c42d-b94c-4a76-8e06-78d63980be96
+		summarizeBy: none
+		sourceColumn: Tumour Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tumour Group'
+		dataType: string
+		sourceProviderType: varchar(255)
+		lineageTag: c8ae2ac6-10b2-4b47-8d6f-1831680a4caf
+		summarizeBy: none
+		sourceColumn: Tumour Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: a2b3664a-3a63-42d4-94ec-72f498d3bd5f
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column Breaches
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 6ef57428-48b2-4521-8829-63d4c98672ad
+		summarizeBy: sum
+		sourceColumn: Breaches
+
+		annotation SummarizationSetBy = Automatic
+
+	column Performance
+		dataType: double
+		sourceProviderType: decimal(16, 8)
+		lineageTag: 4db61863-adb5-4f82-8bf3-be64b935f994
+		summarizeBy: sum
+		sourceColumn: Performance
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Report Number'
+		dataType: string
+		sourceProviderType: varchar(16)
+		lineageTag: 0600b8b6-87c2-4cbf-ad45-048c86cd01b6
+		summarizeBy: none
+		sourceColumn: Report Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Report Name'
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(39)
+		lineageTag: d4b34914-49ed-4a03-8563-78c44433bfe8
+		summarizeBy: none
+		sourceColumn: Report Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Year'
+		dataType: string
+		sourceProviderType: varchar(20)
+		lineageTag: a2a57443-3394-4df0-a6ac-0c6eb43d38d5
+		summarizeBy: none
+		sourceColumn: Financial Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		sourceProviderType: varchar(3)
+		lineageTag: 4f61d8fa-c827-47be-8d3c-c12ae1182bd7
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Financial Month'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Month'
+		dataType: int64
+		formatString: 0
+		lineageTag: c52007c7-31d4-4d4e-a443-a0b7b46dffe7
+		summarizeBy: sum
+		sourceColumn: Financial Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Target
+		dataType: int64
+		lineageTag: 26e51964-5a07-4d92-87d6-4f00a66f5f8e
+		summarizeBy: sum
+		sourceColumn: Target
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Target %'
+		dataType: double
+		formatString: 0%;-0%;0%
+		lineageTag: 874f7ac7-8c33-4a4e-8696-3325de8c505b
+		summarizeBy: none
+		sourceColumn: Target %
+
+		annotation SummarizationSetBy = User
+
+	column 'Target Flagging'
+		dataType: string
+		lineageTag: 2b91be67-6a17-46c3-83ef-34e8ccf58c40
+		summarizeBy: none
+		sourceColumn: Target Flagging
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Cancer Deep Dive-462eb7c1-ce2a-47b5-974b-2f3311799d09' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Data_Mart_Performance", [Query="#(lf)---------------------------------------------------------------------------#(lf)---------- CANCER WAIT TIMES PERFORMANCE METRICS TOTAL OVERVIEW ----------- #(lf)---------------------------------------------------------------------------#(lf)#(lf)------------------------------#(lf)--- TWO WEEK WAIT STANDARD ---#(lf)------------------------------#(lf)#(lf)SELECT [Type] = '2WW'#(lf)      ,[Provider_Code] [Provider Code]#(lf)#(tab)  ,CASE WHEN [Provider_Code] = 'RTE' THEN 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            ELSE 'Other Provider' END AS [Provider Group]#(lf)      ,[Tumour_Type] [Tumour Type]#(lf)#(tab)  ,CASE WHEN [Tumour_Type] = 'acute leukaemia' THEN 'Acute Leukaemia'#(lf)#(tab)        WHEN [Tumour_Type] LIKE '%brain%' THEN 'Brain / Central Nervous System'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%breast%' THEN 'Breast'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%children%' THEN 'Childrens Cancer'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%gynaecological%' THEN 'Gynaecological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Suspected haematological malignancies excluding acute leukaemia%' THEN 'Haematological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Head and Neck%' THEN 'Head and Neck'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lower gastrointestinal%' THEN 'Lower Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lung%' THEN 'Lung'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%other%' THEN 'Other'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%sarcoma%' THEN 'Sarcoma'#(tab)   #(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%skin%' THEN 'Skin'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%suspected testicular%' THEN 'Testicular'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%upper gastrointestinal%' THEN 'Upper Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Suspected urological cancers (excluding testicular)%' THEN 'Urological'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Tumour Group]#(lf)#(tab)#(tab)#(lf)      ,[Total_Referrals_Seen_During_The_Period] [Total]#(lf)#(tab)  ,[Breaches] = ([Seen_15_To_16_Days]+[Seen_17_To_21_Days]+[Seen_22_To_28_Days]+[Seen_After_28_Days])#(lf)      ,[%_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [Report Number]#(lf)#(tab)  ,CASE WHEN [Report_Number] = '6.3' THEN '6.3 - Two Week Wait'#(lf)#(tab)        WHEN [Report_Number] = '6.4' THEN '6.4 - Breast Symptom Two Week Wait'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Report Name]#(lf)#(tab)  ,[B].[FinancialYear] [Financial Year]#(lf)      ,LEFT([Report_Month],3) as [Month]#(lf)#(tab)    ,[B].[FinancialMonth] [Financial Month]#(lf)      --,[Organisation_Type] [Organisation Type]#(lf)      --,[Organisation_Code] [Organisation Code]#(lf)  INTO #TEMP#(lf)  FROM [Data_Mart_Performance].[dbo].[Cancer_2_Week_Aggregate_Data] [A]#(lf)  LEFT JOIN  [CCG_Reference].[Reference].[vw_DateLookup] [B] on [A].[Report_Date] = [B].[Date]#(lf)  WHERE [Report_Date] > '20190331'#(lf)  AND [Extract_Type] = 'Monthly'#(lf)#(lf)  UNION ALL#(lf)#(lf)------------------------------------#(lf)--- 31 DAY TUMOUR GROUP STANDARD ---#(lf)------------------------------------#(lf)#(lf)SELECT [Type] = '31 Day Tumour'#(lf)      ,[Provider_Code] [Provider Code]#(lf)#(tab)  ,CASE WHEN [Provider_Code] = 'RTE' THEN 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            ELSE 'Other Provider' END AS [Provider Group]#(lf)      ,[Tumour_Type] [Tumour Type]#(lf)#(tab)  ,CASE WHEN [Tumour_Type] LIKE '%acute leukaemia%' THEN 'Acute Leukaemia'#(lf)#(tab)        WHEN [Tumour_Type] LIKE '%brain%' THEN 'Brain / Central Nervous System'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%breast%' THEN 'Breast'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%children%' THEN 'Childrens Cancer'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%gynaecological%' THEN 'Gynaecological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Haematological%' THEN 'Haematological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Head and Neck%' THEN 'Head and Neck'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lower gastrointestinal%' THEN 'Lower Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lung%' THEN 'Lung'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%other%' THEN 'Other'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%sarcoma%' THEN 'Sarcoma'#(tab)   #(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%skin%' THEN 'Skin'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Testicular%' THEN 'Testicular'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%upper gastrointestinal%' THEN 'Upper Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Urological%' THEN 'Urological'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Tumour Group]#(lf)#(tab)  ,[Total_Treated] [Total]#(lf)#(tab)  ,[Treated_After_31_Days] [Breaches]#(lf)      ,[%_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [Report Number]#(lf)#(tab)  ,CASE WHEN [Report_Number] = '7.4' THEN '7.4 - 31 Day First Treatment'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Report Name]#(lf)#(tab)  ,[B].[FinancialYear] [Financial Year]#(lf)      ,LEFT([Report_Month],3) as [Month]#(lf)#(tab)    ,[B].[FinancialMonth] [Financial Month]#(lf)      --,[Organisation_Type] [Organisation Type]#(lf)      --,[Organisation_Code] [Organisation Code]#(lf)      --,[Patients_Treated_Following_Urgent_Referral_Suspected_Cancer]#(lf)      --,[Patients_Treated_Following_Urgent_Referral_Breast_Symptoms]#(lf)      --,[Patients_Treated_Following_Urgent_Referral_NHS_Screening]#(lf)      --,[Patients_Treated_Following_Urgent_Referral_Another_Source_Or_Urgency]      #(lf) #(lf)  FROM [Data_Mart_Performance].[dbo].[Cancer_31_Day_Aggregate_Data] [A]#(lf)  LEFT JOIN  [CCG_Reference].[Reference].[vw_DateLookup] [B] ON [A].[Report_Date] = [B].[Date]#(lf)  WHERE [Report_Date] > '20190331'#(lf)  AND [Extract_Type] = 'Monthly'#(lf)#(lf)  UNION ALL#(lf)#(lf)---------------------------------------#(lf)--- 31 DAY TREATMENT GROUP STANDARD ---#(lf)---------------------------------------#(lf)#(lf)  SELECT [Type] = '31 Day Treatment'#(lf)      ,[Provider_Code] [Provider Code]#(lf)#(tab)  ,CASE WHEN [Provider_Code] = 'RTE' THEN 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            ELSE 'Other Provider' END AS [Provider Group]#(lf)      ,[Treatment_Group] [Tumour Type]#(lf)#(tab)  ,[Treatment_Group] [Tumour Group]#(lf)#(tab)  ,[Total_Treated] [Total]#(lf)#(tab)  ,[Treated_After_31_Days] [Breaches]#(lf)      ,[%_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [Report Number]#(lf)#(tab)  ,CASE WHEN [Report_Number] = '7.11' THEN '7.11 - 31 Day Subsequent Treatment'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Report Name]#(lf)#(tab)  ,[B].[FinancialYear] [Financial Year]#(lf)      ,LEFT([Report_Month],3) as [Month]#(lf)#(tab)    ,[B].[FinancialMonth] [Financial Month]#(lf)#(lf)  FROM [Data_Mart_Performance].[dbo].[Cancer_31_Day_Treatment_Aggregate_Data] [A]#(lf)  LEFT JOIN  [CCG_Reference].[Reference].[vw_DateLookup] [B] ON [A].[Report_Date] = [B].[Date]#(lf)  WHERE [Report_Date] > '20190331'#(lf)  AND [Extract_Type] = 'Monthly'#(lf)#(lf)  UNION ALL#(lf)#(lf)-----------------------#(lf)--- 62 DAY STANDARD ---#(lf)-----------------------#(lf)#(lf)SELECT [Type] = '62 Day'#(lf)      ,[First_Seen_Provider] [Provider Code]#(lf)#(tab)  ,CASE WHEN [First_Seen_Provider] = 'RTE' THEN 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            ELSE 'Other Provider' END AS [Provider Group]#(lf)#(tab)     --  ,[First_Treatment_Provider]#(lf)      ,[Tumour_Type] [Tumour Type]#(lf)      #(tab)  ,CASE WHEN [Tumour_Type] = 'acute leukaemia' THEN 'Acute Leukaemia'#(lf)#(tab)        WHEN [Tumour_Type] LIKE '%brain%' THEN 'Brain / Central Nervous System'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%breast%' THEN 'Breast'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%children%' THEN 'Childrens Cancer'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%gynaecological%' THEN 'Gynaecological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Haematological (Excluding Acute Leukaemia)%' THEN 'Haematological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Head and Neck%' THEN 'Head and Neck'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lower gastrointestinal%' THEN 'Lower Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lung%' THEN 'Lung'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%other%' THEN 'Other'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%sarcoma%' THEN 'Sarcoma'#(tab)   #(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%skin%' THEN 'Skin'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE 'Testicular' THEN 'Testicular'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%upper gastrointestinal%' THEN 'Upper Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Urological (Excluding Testicular)%' THEN 'Urological'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Tumour Group]#(lf)      ,[Actual_Total_Treated] [Total]#(lf)#(tab)  ,[Total_Over_Target_Accountable_Provider_62_Day_Wait] [Breaches] #(lf)      ,[%_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [Report Number]#(lf)#(tab)  ,CASE WHEN [Report_Number] = '8.4' THEN '8.4 - 62 Day Wait'#(lf)#(tab)        WHEN [Report_Number] = '9.4' THEN '9.4 - 62 Day Screening '#(lf)#(tab)        WHEN [Report_Number] = '8.8' THEN '8.8 31 Day Rare Cancer '#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Report Name]#(lf)#(tab)  ,[B].[FinancialYear] [Financial Year]#(lf)      ,LEFT([Report_Month],3) as [Month]#(lf)#(tab)    ,[B].[FinancialMonth] [Financial Month]#(lf)      --,[Organisation_Type] [Organisation Type]#(lf)      --,[Organisation_Code] [Organisation Code]#(lf)  #(lf)  FROM [Data_Mart_Performance].[dbo].[Cancer_62_Day_Aggregate_Data] [A]#(lf)  LEFT JOIN  [CCG_Reference].[Reference].[vw_DateLookup] [B] ON [A].[Report_Date] = [B].[Date]#(lf)  WHERE [Report_Date] > '20190331'#(lf)  AND [Extract_Type] = 'Monthly'#(lf) #(lf) UNION ALL#(lf)#(lf)-------------------------------#(lf)--- 62 DAY UPGRADE STANDARD ---#(lf)-------------------------------#(lf)#(lf)SELECT [Type] = '62 Day Upgrade'#(lf)      ,[Consultant_Upgrade_Provider]  [Provider Code]#(lf)#(tab)  ,CASE WHEN [Consultant_Upgrade_Provider] = 'RTE' THEN 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            ELSE 'Other Provider' END AS [Provider Group]#(lf)    --  ,[First_Treatment_Provider]#(lf)      ,[Tumour_Type] [Tumour Type]#(lf)  #(tab)  ,CASE WHEN [Tumour_Type] = 'acute leukaemia' THEN 'Acute Leukaemia'#(lf)#(tab)        WHEN [Tumour_Type] LIKE '%brain%' THEN 'Brain / Central Nervous System'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%breast%' THEN 'Breast'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%children%' THEN 'Childrens Cancer'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%gynaecological%' THEN 'Gynaecological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Haematological (Excluding Acute Leukaemia)%' THEN 'Haematological'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Head and Neck%' THEN 'Head and Neck'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lower gastrointestinal%' THEN 'Lower Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%lung%' THEN 'Lung'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%other%' THEN 'Other'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%sarcoma%' THEN 'Sarcoma'#(tab)   #(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%skin%' THEN 'Skin'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE 'Testicular' THEN 'Testicular'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%upper gastrointestinal%' THEN 'Upper Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Tumour_Type] LIKE '%Urological (Excluding Testicular)%' THEN 'Urological'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Tumour Group]#(lf)      ,[Actual_Total_Treated] [Total]#(lf)#(tab)  ,[Total_Over_Target_Accountable_Provider_62_Day_Wait] [Breaches] #(lf)      ,[%_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [Report Number]#(lf)#(tab)  ,CASE WHEN [Report_Number] = '10.4' THEN '10.4 62 Day Upgrade'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Report Name]#(lf)#(tab)  ,[B].[FinancialYear] [Financial Year]#(lf)      ,LEFT([Report_Month],3) as [Month]#(lf)#(tab)    ,[B].[FinancialMonth] [Financial Month]#(lf)      --,[Organisation_Type] [Organisation Type]#(lf)      --,[Organisation_Code] [Organisation Code] #(lf) #(lf)  FROM [Data_Mart_Performance].[dbo].[Cancer_62_Day_Upgrade_Aggregate_Data] [A]#(lf)  LEFT JOIN  [CCG_Reference].[Reference].[vw_DateLookup] [B] ON [A].[Report_Date] = [B].[Date]#(lf)  WHERE [Report_Date] > '20190331'#(lf)  AND [Extract_Type] = 'Monthly'#(lf)#(lf) UNION ALL#(lf)#(lf)-----------------------#(lf)--- 28 DAY STANDARD ---#(lf)-----------------------#(lf)#(lf)  SELECT [Type] = '28 Day'#(lf)      ,[First_Seen_Provider] [Provider Code]#(lf)#(tab)  ,CASE WHEN [First_Seen_Provider] = 'RTE' THEN 'Gloucestershire Hospitals NHS Foundation Trust'#(lf)            ELSE 'Other Provider' END AS [Provider Group]#(lf)      ,[Urgent_Suspected_Cancer_Type] [Tumour Type]#(lf)#(tab)  ,CASE WHEN [Urgent_Suspected_Cancer_Type] = 'acute leukaemia' THEN 'Acute Leukaemia'#(lf)#(tab)        WHEN [Urgent_Suspected_Cancer_Type] LIKE '%brain%' THEN 'Brain / Central Nervous System'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%breast%' THEN 'Breast'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%children%' THEN 'Childrens Cancer'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%gynaecological%' THEN 'Gynaecological'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%Suspected haematological malignancies excluding acute leukaemia%' THEN 'Haematological'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%Head and Neck%' THEN 'Head and Neck'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%lower gastrointestinal%' THEN 'Lower Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%lung%' THEN 'Lung'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%other%' THEN 'Other'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%sarcoma%' THEN 'Sarcoma'#(tab)   #(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%skin%' THEN 'Skin'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%suspected testicular%' THEN 'Testicular'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%upper gastrointestinal%' THEN 'Upper Gastrointestinal'#(lf)#(tab)#(tab)#(tab)WHEN [Urgent_Suspected_Cancer_Type] LIKE '%Suspected urological cancers (excluding testicular)%' THEN 'Urological'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Tumour Group]#(lf)      ,[No_Of_Patients] [Total]#(lf)#(tab)  ,[Breaches] = ([Days_29_To_38]+[Days_39_To_62]+[Days_63_And_More])#(lf)      ,[Percentage_Meeting_Standard] [Performance]#(lf)      ,[Report_Number] [Report Number]#(lf)#(tab)  ,CASE WHEN [Report_Number] = '18.1' THEN '18.1 28 Day Two Week Wait Referral'#(lf)#(tab)        WHEN [Report_Number] = '18.2' THEN '18.2 28 Day Breast Symptomatic Referral'#(lf)#(tab)        WHEN [Report_Number] = '18.3' THEN '18.3 28 Day Screening Service Referral'#(lf)#(tab)#(tab)#(tab)ELSE 'ERROR' END AS [Report Name]#(lf)#(tab)  ,[B].[FinancialYear] [Financial Year]#(lf)      ,LEFT([Report_Month],3) as [Month]#(lf)#(tab)    ,[B].[FinancialMonth] [Financial Month]#(lf)      --,[Organisation_Type] [Organisation Type]#(lf)      --,[Organisation_Code] [Organisation Code] #(lf)   #(lf)  FROM [Data_Mart_Performance].[dbo].[Cancer_28_Day_Aggregate_Data] [A]#(lf)  LEFT JOIN  [CCG_Reference].[Reference].[vw_DateLookup] [B] ON [A].[Report_Date] = [B].[Date]#(lf)  WHERE [Report_Date] > '20190331'#(lf)  AND [Extract_Type] = 'Monthly'#(lf)#(lf)  SELECT *,#(lf)         CASE WHEN [Report Name] = '6.3 - Two Week Wait' THEN 93#(lf)#(tab)#(tab)      WHEN [Report Name] = '6.4 - Breast Symptom Two Week Wait' THEN 93 #(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '7.4 - 31 Day First Treatment' THEN 96#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '7.11 - 31 Day Subsequent Treatment' THEN 98#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '8.4 - 62 Day Wait' THEN 85#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '9.4 - 62 Day Screening' THEN 90#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '10.4 62 Day Upgrade' THEN 85#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '18.1 28 Day Two Week Wait Referral' THEN 75#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '18.2 28 Day Breast Symptomatic Referral' THEN 75#(lf)#(tab)#(tab)#(tab)  WHEN [Report Name] = '18.3 28 Day Screening Service Referral' THEN 75#(lf)#(tab)#(tab)#(tab)  ELSE NULL END AS [Target]#(lf)  FROM #TEMP#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Financial Month", Int64.Type}}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Changed Type", "Target", "Target - Copy"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Duplicated Column",{{"Target - Copy", "Target %"}}),
+				    #"Divided Column" = Table.TransformColumns(#"Renamed Columns", {{"Target %", each _ / 100, type number}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Divided Column",{{"Target %", Percentage.Type}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type1", "Target Flagging", each if [Performance] >= [Target] then 1 else if [Performance] < [Target] then 0 else null),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Added Custom",{{"Target Flagging", type text}})
+				in
+				    #"Changed Type2"
+
+	annotation PBI_ResultType = Exception
+

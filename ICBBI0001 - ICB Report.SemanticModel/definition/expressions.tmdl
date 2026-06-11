@@ -1,0 +1,132 @@
+expression TimeSeries =
+		let
+		    Source = Csv.Document(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\Dataset_Explorer_Table_Full_Data_data.csv"),[Delimiter=","]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Duplicated Column" = Table.DuplicateColumn(#"Promoted Headers", "Org Name Full", "Org Name Full - Copy"),
+		    #"Renamed Columns" = Table.RenameColumns(#"Duplicated Column",{{"Org Name Full - Copy", "ORG CODE"}}),
+		    #"Extracted Text Between Delimiters" = Table.TransformColumns(#"Renamed Columns", {{"ORG CODE", each Text.BetweenDelimiters(_, "(", ")"), type text}})
+		in
+		    #"Extracted Text Between Delimiters"
+	lineageTag: 2150001c-290b-4a83-88ac-2c3289fdd81e
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+
+expression 'Errors in Population data' =
+		let
+		Source = #"Population data",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"PUBLICATION", "EXTRACT_DATE", "ORG_TYPE", "ORG_CODE", "ORG_ NAME", "Natioanl grouping", "ONS_CODE", "SEX", "AGE", "NUMBER_OF_PATIENTS", "Name"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "PUBLICATION", "EXTRACT_DATE", "ORG_TYPE", "ORG_CODE", "ORG_ NAME", "Natioanl grouping", "ONS_CODE", "SEX", "AGE", "NUMBER_OF_PATIENTS", "Name"})
+		in
+		  #"Reordered Columns"
+	lineageTag: 2adc646f-b902-4235-bc79-6f633f88c9df
+	queryGroup: 'Query Errors - 26/07/2022 13:47:35'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Errors in Merge - Main SQL _ Population' =
+		let
+		Source = #"Merge - Main SQL _ Population",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Period_Rank", "Region Name Full", "Sub_Category", "Display_Value_P1", "NHS_OF_Metric_Name_Full", "Origin_OrgType", "Period Date", "Value_Benchmarking", "Denominator", "Numerator", "Value", "Org_Name", "Indicator", "Aggregation Source", "Period_beginning", "Category", "ICS_Name_Full", "Code", "ORG CODE", "Piv (2).ORG_CODE", "Piv (2).ORG_ NAME", "Piv (2).Total", "All ICS", "Gloucester ICS - Unadjusted", "Other South West ICS - Unadjusted", "Gloucester ICS - Adjusted for provider", "Other South West ICS - Adjusted for Provider", "Other South West ICS Flag", "ICS", "ICS Name Full", "Ambulance Response Times", "South West ONS code Flag", "Good Is", "Rate/Value", "Target Value", "Local target", "Quartile Switch", "SW ORGs.ORG CODE", "SW Flag", "Ambulance Response Times (Local Data)", "SWASFT Target"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Period_Rank", "Region Name Full", "Sub_Category", "Display_Value_P1", "NHS_OF_Metric_Name_Full", "Origin_OrgType", "Period Date", "Value_Benchmarking", "Denominator", "Numerator", "Value", "Org_Name", "Indicator", "Aggregation Source", "Period_beginning", "Category", "ICS_Name_Full", "Code", "ORG CODE", "Piv (2).ORG_CODE", "Piv (2).ORG_ NAME", "Piv (2).Total", "All ICS", "Gloucester ICS - Unadjusted", "Other South West ICS - Unadjusted", "Gloucester ICS - Adjusted for provider", "Other South West ICS - Adjusted for Provider", "Other South West ICS Flag", "ICS", "ICS Name Full", "Ambulance Response Times", "South West ONS code Flag", "Good Is", "Rate/Value", "Target Value", "Local target", "Quartile Switch", "SW ORGs.ORG CODE", "SW Flag", "Ambulance Response Times (Local Data)", "SWASFT Target"})
+		in
+		  #"Reordered Columns"
+	lineageTag: ba385d7c-20df-4b9f-ada3-e62c6bf94a46
+	queryGroup: 'Query Errors - 26/07/2022 13:47:35'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Errors in TimeSeries - Merged' =
+		let
+		Source = #"TimeSeries - Merged",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Period_Rank", "Region_Name_Full", "Sub_Category", "Display_Value_P1", "NHS_OF_Metric_Name_Full", "Origin_OrgType", "Period_Date", "Value_Benchmarking", "Denominator", "Numerator", "Value", "Org_Name", "Indicator", "Aggregation_Source", "Period_beginning", "Category", "ICS_Name_Full", "Code", "ORG CODE", "Piv (2).ORG_CODE", "Piv (2).ORG_ NAME", "Piv (2).Total", "All ICS", "Gloucester ICS - Unadjusted", "Other South West ICS - Unadjusted", "Gloucester ICS - Adjusted for provider", "Other South West ICS - Adjusted for Provider", "ICS", "ICS Hierarchy", "Gloucester ICS Value", "Target Value", "Target Label", "Good Is", "Rate/Value", "High/Low Rate/Value Control"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Period_Rank", "Region_Name_Full", "Sub_Category", "Display_Value_P1", "NHS_OF_Metric_Name_Full", "Origin_OrgType", "Period_Date", "Value_Benchmarking", "Denominator", "Numerator", "Value", "Org_Name", "Indicator", "Aggregation_Source", "Period_beginning", "Category", "ICS_Name_Full", "Code", "ORG CODE", "Piv (2).ORG_CODE", "Piv (2).ORG_ NAME", "Piv (2).Total", "All ICS", "Gloucester ICS - Unadjusted", "Other South West ICS - Unadjusted", "Gloucester ICS - Adjusted for provider", "Other South West ICS - Adjusted for Provider", "ICS", "ICS Hierarchy", "Gloucester ICS Value", "Target Value", "Target Label", "Good Is", "Rate/Value", "High/Low Rate/Value Control"})
+		in
+		  #"Reordered Columns"
+	lineageTag: ec50c543-49f0-4433-9ccd-82a091fd0bd3
+	queryGroup: 'Query Errors - 26/07/2022 13:47:35'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Errors in Metric Polarity -manual update' =
+		let
+		Source = #"Metric Polarity -manual update",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"ID", "Metric Description", "Target Value", "Target Label", "Local target", "Local Target Label", "Good Is", "Rate/Value"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "ID", "Metric Description", "Target Value", "Target Label", "Local target", "Local Target Label", "Good Is", "Rate/Value"})
+		in
+		  #"Reordered Columns"
+	lineageTag: 803affce-df6c-4e04-b754-4906086df358
+	queryGroup: 'Query Errors - 26/07/2022 13:47:35'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Errors in Cancer Deep Dive' =
+		let
+		Source = #"Cancer Deep Dive",
+		  #"Detected Type Mismatches" = let
+		    tableWithOnlyPrimitiveTypes = Table.SelectColumns(Source, Table.ColumnsOfType(Source, {type nullable number, type nullable text, type nullable logical, type nullable date, type nullable datetime, type nullable datetimezone, type nullable time, type nullable duration})),
+		    recordTypeFields = Type.RecordFields(Type.TableRow(Value.Type(tableWithOnlyPrimitiveTypes))),
+		    fieldNames = Record.FieldNames(recordTypeFields),
+		    fieldTypes = List.Transform(Record.ToList(recordTypeFields), each [Type]),
+		    pairs = List.Transform(List.Positions(fieldNames), (i) => {fieldNames{i}, (v) => if v = null or Value.Is(v, fieldTypes{i}) then v else error [Message = "The type of the value does not match the type of the column.", Detail = v], fieldTypes{i}})
+		in
+		    Table.TransformColumns(Source, pairs),
+		  #"Added Index" = Table.AddIndexColumn(#"Detected Type Mismatches", "Row Number" ,1),
+		  #"Kept Errors" = Table.SelectRowsWithErrors(#"Added Index", {"Type", "Provider Code", "Provider Group", "Tumour Type", "Tumour Group", "Total", "Breaches", "Performance", "Report Number", "Report Name", "Financial Year", "Month", "Financial Month", "Target", "Target %", "Target Flagging"}),
+		  #"Reordered Columns" = Table.ReorderColumns(#"Kept Errors", {"Row Number", "Type", "Provider Code", "Provider Group", "Tumour Type", "Tumour Group", "Total", "Breaches", "Performance", "Report Number", "Report Name", "Financial Year", "Month", "Financial Month", "Target", "Target %", "Target Flagging"}),
+		    #"Filtered Rows" = Table.SelectRows(#"Reordered Columns", each true),
+		    #"Replaced Value" = Table.ReplaceValue(#"Filtered Rows","Error"," ",Replacer.ReplaceValue,{"Target Flagging"})
+		in
+		  #"Replaced Value"
+	lineageTag: b8e1c450-2b20-46c7-bd3a-c95245d66b54
+	queryGroup: 'Query Errors - 04/11/2022 11:28:55'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

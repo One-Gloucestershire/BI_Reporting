@@ -1,0 +1,25 @@
+table 'Org Code Bridge'
+	lineageTag: 36d88856-f39a-4a27-bfec-4b04a7367c21
+
+	column 'ORG CODE'
+		dataType: string
+		lineageTag: eb3cbe18-f1e3-42ad-8db9-644bc60ade06
+		summarizeBy: none
+		sourceColumn: ORG CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Org Code Bridge-5f43d1a6-6e2e-48cd-bd12-78cd22d2e1de' = m
+		mode: import
+		source =
+				let
+				    Source = Table.NestedJoin(#"TimeSeries - Merged", {"ORG CODE"}, #"Population data", {"ORG_CODE"}, "Population data", JoinKind.FullOuter),
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"ORG CODE"}),
+				    #"Uppercased Text" = Table.TransformColumns(#"Removed Other Columns",{{"ORG CODE", Text.Upper, type text}}),
+				    #"Removed Duplicates" = Table.Distinct(#"Uppercased Text"),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Duplicates", each ([ORG CODE] <> null and [ORG CODE] <> ""))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+

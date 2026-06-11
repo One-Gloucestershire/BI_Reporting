@@ -1,0 +1,106 @@
+table 'LTC Query'
+	lineageTag: ac2faaad-d509-410d-996a-c351ec202f8b
+
+	measure 'Rate Per 1000' = (sum('LTC Query'[MetricValue])/sum('LTC Query'[Population]))*1000
+		lineageTag: 44c7e025-4d1d-4b2a-8301-f274e1d69e17
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'LSOA Code'
+		dataType: string
+		lineageTag: 3be8a597-e3d3-469a-be2d-12573ffef9e2
+		summarizeBy: none
+		sourceColumn: LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: d7345e60-57ce-4496-9508-981823c9880a
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric
+		dataType: string
+		lineageTag: d9ae56c8-7cd1-4be5-b5aa-55f7f4aa7e5d
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricValue
+		dataType: double
+		formatString: 0
+		lineageTag: a94eeaac-8063-439d-9476-6104343c127a
+		summarizeBy: sum
+		sourceColumn: MetricValue
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column 'Current District Ward name'
+		dataType: string
+		lineageTag: 8819ca8f-f976-44bd-9e3e-8ec2d234aae8
+		summarizeBy: none
+		sourceColumn: Current District Ward name
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricValueAdjustments = if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 1),10,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 2),9,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 3),8,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 4),7,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 5),6,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 6),5,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 7),4,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 8),3,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 9),2,if(AND(left('LTC Query'[Metric],11) = "Deprivation",'LTC Query'[MetricValue] = 10),1,'LTC Query'[MetricValue]))))))))))
+		lineageTag: f4209b54-0914-4e14-8e61-49cd779bec92
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metric_Type
+		dataType: string
+		lineageTag: f378cccc-950c-4600-b18a-cd8fdf5a18c5
+		summarizeBy: none
+		sourceColumn: Metric_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		lineageTag: 51d71b80-88a6-4e30-8af1-0a946fedfbec
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBandGroup
+		dataType: string
+		lineageTag: 9a3ee9a6-1188-4ca7-80a4-9a1550f357b4
+		summarizeBy: none
+		sourceColumn: AgeBandGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column Percentile
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c6862ae-87cc-4dcc-a4fb-c18098298b70
+		summarizeBy: sum
+		sourceColumn: Percentile
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'LTC Query-7bc97410-a3fe-48f7-80a6-c03fabc4f232' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="SELECT #(lf)[LSOA11CD] = [LSOA code],#(lf)[AgeBand] = CASE WHEN [MPI].[AgeBand5yr] = '5-9' THEN '05-09'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [MPI].[AgeBand5yr] = '0-4' THEN '00-04' ELSE [MPI].[AgeBand5yr] END,#(lf)[AgeBandGroup] = [MPI].[AgeBand],#(lf)[Population] = COUNT([Derived_Pseudo_NHS]),#(lf)[ObesityDerived] = SUM([ObesityDerived]),#(lf)[SmokerDerived] = SUM([SmokerDerived]),#(lf)[AsthmaDerived] = SUM([AsthmaDerived]),#(lf)[COPDDerived] = SUM([COPDDerived]),#(lf)[DementiaDerived] = SUM([DementiaDerived]),#(lf)[DepressionDerived] = SUM([DepressionDerived]),#(lf)[DiabetesDerived] = SUM([DiabetesDerived]),#(lf)[PalliativeCareDerived] = SUM([PalliativeCareDerived]),#(lf)[ChronicKidneyDiseaseDerived] = SUM([ChronicKidneyDiseaseDerived]),#(lf)[EpilepsyDerived] = SUM([EpilepsyDerived]),#(lf)[HeartFailureDerived] = SUM([HeartFailureDerived]),#(lf)[StrokeDerived] = SUM([StrokeDerived]),#(lf)[AtrialFibrillationDerived] = SUM([AtrialFibrillationDerived]),#(lf)[CancerDerived] = SUM([CancerDerived]),#(lf)[CoronaryHeartDiseaseDerived] = SUM([CoronaryHeartDiseaseDerived]),#(lf)[HypertensionDerived] = SUM([HypertensionDerived]),#(lf)[HypothyroidismDerived] = SUM([HypothyroidismDerived]),#(lf)[LearningDisabilityDerived] = SUM([LearningDisabilityDerived]),#(lf)[MentalIllnessDerived] = SUM([MentalIllnessDerived]),#(lf)[DeprivationTotal] = AVG([IMDcountyDecile]),#(lf)[DeprivationIncome] = AVG([IMDincome_countydecile]),#(lf)[DeprivationEmployment] = AVG([IMDemployment_countydecile]),#(lf)[DeprivationEducation] = AVG([IMDeducationskillsandtraining_countydecile]),#(lf)[DeprivationHealth] = AVG([IMDhealthdeprivationanddisability_countydecile]),#(lf)[DeprivationCrime] = AVG([IMDcrime_countydecile]),#(lf)[DeprivationBarriersToHousing] = AVG([IMDbarrierstohousingandservices_countydecile]),#(lf)[DeprivationLivingEnvironment] = AVG([IMDlivingenvironment_countydecile]),#(lf)[DeprivationIDAOPI] = AVG([IMDidaopi_countydecile]),#(lf)[DeprivationIDACI] = AVG([IMDidaci_countydecile])#(lf)#(lf)INTO #TEMP#(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)GROUP BY [LSOA code], CASE WHEN [MPI].[AgeBand5yr] = '5-9' THEN '05-09'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [MPI].[AgeBand5yr] = '0-4' THEN '00-04' ELSE [MPI].[AgeBand5yr] END,#(lf)[MPI].[AgeBand]#(lf)#(lf)#(lf)#(lf)SELECT [SUB].* ,#(lf)[Percentile] = NTILE(10) OVER( PARTITION BY [Metric] ORDER BY [MetricValue]),#(lf)[WARD].[Current District Ward name]#(lf)FROM (#(lf)#(lf)/*===============================================================================================================#(lf)OBESITY#(lf)===============================================================================================================*/#(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Obesity',#(lf)[MetricValue] = [ObesityDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)SMOKING#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Smoking',#(lf)[MetricValue] = [SmokerDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)ASTHMA#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Asthma',#(lf)[MetricValue] = [AsthmaDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)COPD#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'COPD',#(lf)[MetricValue] = [COPDDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Dementia#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Dementia',#(lf)[MetricValue] = [DementiaDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Depression#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Depression',#(lf)[MetricValue] = [DepressionDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Diabetes#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Diabetes',#(lf)[MetricValue] = [DiabetesDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Palliative Care#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Palliative Care',#(lf)[MetricValue] = [PalliativeCareDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)CKD#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Chronic Kidney Disease',#(lf)[MetricValue] = [ChronicKidneyDiseaseDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Epilepsy#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Epilepsy',#(lf)[MetricValue] = [EpilepsyDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Heart Failure#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Heart Failure',#(lf)[MetricValue] = [HeartFailureDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Stroke#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Stroke',#(lf)[MetricValue] = [StrokeDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Atrial Fibrilation#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Atrial Fibrilation',#(lf)[MetricValue] = [AtrialFibrillationDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Cancer#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Cancer',#(lf)[MetricValue] = [CancerDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Coronary Heart Disease#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Coronary Heart Disease',#(lf)[MetricValue] = [CoronaryHeartDiseaseDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Hypertension#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Hypertension',#(lf)[MetricValue] = [HypertensionDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Hypothyroidism#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Hypothyroidism',#(lf)[MetricValue] = [HypothyroidismDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)LD#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Learning Disability',#(lf)[MetricValue] = [LearningDisabilityDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)MH#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Mental Illness',#(lf)[MetricValue] = [MentalIllnessDerived],#(lf)[Metric_Type] = 'LTC'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation Total#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation Total',#(lf)[MetricValue] = [DeprivationTotal],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Income#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Income',#(lf)[MetricValue] = [DeprivationIncome],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Employment#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Employment',#(lf)[MetricValue] = [DeprivationEmployment],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Education#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Education',#(lf)[MetricValue] = [DeprivationEducation],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Health#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Health',#(lf)[MetricValue] = [DeprivationHealth],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Crime#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Crime',#(lf)[MetricValue] = [DeprivationCrime],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Barriers to Housing and Services#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Barriers to Housing and Services',#(lf)[MetricValue] = [DeprivationBarriersToHousing],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Living Environment#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Living Environment',#(lf)[MetricValue] = [DeprivationLivingEnvironment],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Income Deprivation Affecting Older People Index#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Income Deprivation Affecting Older People Index',#(lf)[MetricValue] = [DeprivationIDAOPI],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Income Deprivation Affecting Children Index#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[AgeBand],[AgeBandGroup],[Population],#(lf)[Metric] = 'Deprivation - Income Deprivation Affecting Children Index',#(lf)[MetricValue] = [DeprivationIDACI],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP) as [sub]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT #(lf)[LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name],#(lf)[Rank] = ROW_NUMBER() OVER( PARTITION BY [LSOA code] ORDER BY COUNT(*)) #(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)AND [Current District Ward name] IS NOT NULL#(lf)GROUP BY [LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name]) AS [WARD]#(lf)ON [WARD].[LSOA code] = [SUB].[LSOA11CD]#(lf)AND [WARD].[Rank] = '1'#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"LSOA11CD", "LSOA Code"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,120 @@
+table 'Population data'
+	lineageTag: 118a13de-a11e-4602-9300-23f392dfe7b3
+
+	column PUBLICATION
+		dataType: string
+		lineageTag: 430f6cca-eee3-4e2e-b59e-e0b22e5ffb74
+		summarizeBy: none
+		sourceColumn: PUBLICATION
+
+		annotation SummarizationSetBy = Automatic
+
+	column EXTRACT_DATE
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 60c48efb-4337-4f46-a59f-ed9a5f12517c
+		summarizeBy: none
+		sourceColumn: EXTRACT_DATE
+
+		variation Variation
+			isDefault
+			relationship: 5aa99906-2821-4967-8505-7f51fe97d020
+			defaultHierarchy: LocalDateTable_f6caf22f-7a26-4eae-8d9d-b0ad1a8f8f3e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ORG_TYPE
+		dataType: string
+		lineageTag: b2c24423-c37c-4650-8c02-4039a612ce53
+		summarizeBy: none
+		sourceColumn: ORG_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column ORG_CODE
+		dataType: string
+		lineageTag: 29c34dc4-22dc-4d5e-8d43-0db09e91916c
+		summarizeBy: none
+		sourceColumn: ORG_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ORG_ NAME'
+		dataType: string
+		lineageTag: df7e3fe9-106e-47fd-abd4-ffd5ed513c31
+		summarizeBy: none
+		sourceColumn: ORG_ NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Natioanl grouping'
+		dataType: string
+		lineageTag: 72f14b39-aaab-4e44-b61f-f014e1820661
+		summarizeBy: none
+		sourceColumn: Natioanl grouping
+
+		annotation SummarizationSetBy = Automatic
+
+	column ONS_CODE
+		dataType: string
+		lineageTag: d6305aaa-b931-4024-9823-840d008dfd89
+		summarizeBy: none
+		sourceColumn: ONS_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column SEX
+		dataType: string
+		lineageTag: d3b0fe02-2d47-4a31-8b52-a7095b3c662c
+		summarizeBy: none
+		sourceColumn: SEX
+
+		annotation SummarizationSetBy = Automatic
+
+	column AGE
+		dataType: string
+		lineageTag: 1289cd5c-914e-44ab-adbf-81ab3bc0baf9
+		summarizeBy: none
+		sourceColumn: AGE
+
+		annotation SummarizationSetBy = Automatic
+
+	column NUMBER_OF_PATIENTS
+		dataType: int64
+		formatString: 0
+		lineageTag: 1cc6bdcb-8b8d-469c-93a9-c6d3605b933d
+		summarizeBy: sum
+		sourceColumn: NUMBER_OF_PATIENTS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		lineageTag: bf37a5a6-b022-4f0d-93d1-61b3af19d969
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Population data-f8da41a9-1ccd-49dc-8e02-0f7d43a861cc' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\population data.xlsx"), null, true),
+				    #"Population data_Sheet" = Source{[Item="Population data",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Population data_Sheet", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"PUBLICATION", type text}, {"EXTRACT_DATE", type date}, {"ORG_TYPE", type text}, {"ORG_CODE", type text}, {"ORG_ NAME", type any}, {"Natioanl grouping", type any}, {"ONS_CODE", type text}, {"SEX", type text}, {"AGE", type text}, {"NUMBER_OF_PATIENTS", Int64.Type}}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Changed Type", "ORG_ NAME", "ORG_ NAME - Copy"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Duplicated Column",{{"ORG_ NAME - Copy", "Name"}}),
+				    #"Replaced Value2" = Table.ReplaceValue(#"Renamed Columns","#N/A","N/A",Replacer.ReplaceText,{"ORG_ NAME"}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Replaced Value2","NHS ","",Replacer.ReplaceText,{"Name"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","CCG","",Replacer.ReplaceText,{"Name"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Replaced Value1", each ([ORG_TYPE] = "CCG")),
+				    #"Replaced Errors1" = Table.ReplaceErrorValues(#"Filtered Rows", {{"Name", "N/A"}})
+				in
+				    #"Replaced Errors1"
+
+	annotation PBI_ResultType = Exception
+

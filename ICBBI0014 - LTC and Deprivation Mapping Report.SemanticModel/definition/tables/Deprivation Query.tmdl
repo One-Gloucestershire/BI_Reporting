@@ -1,0 +1,66 @@
+table 'Deprivation Query'
+	lineageTag: 46d6704c-2562-49d6-8b39-a6bdd76d82ff
+
+	column LSOA11CD
+		dataType: string
+		lineageTag: d75dc385-eea7-4a86-828d-b078eb23733b
+		summarizeBy: none
+		sourceColumn: LSOA11CD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 98dc6dc1-75a8-4e96-8a28-72e4f0c5b7f9
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric
+		dataType: string
+		lineageTag: f9dfcf1b-4531-4c13-8be2-8a9d12138867
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricValue
+		dataType: double
+		lineageTag: cad00a6c-cec5-45ac-8652-38f23d414ef7
+		summarizeBy: sum
+		sourceColumn: MetricValue
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metric_Type
+		dataType: string
+		lineageTag: 80091d3b-0fb0-4396-a653-11a3339d09c8
+		summarizeBy: none
+		sourceColumn: Metric_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward name'
+		dataType: string
+		lineageTag: a68df608-2012-48c4-bcce-ca4061e68c5b
+		summarizeBy: none
+		sourceColumn: Current District Ward name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Deprivation Query-3650daf5-6e98-49c1-bd4d-2745f1230fde' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="SELECT #(lf)[LSOA11CD] = [LSOA code],#(lf)[Population] = COUNT([Derived_Pseudo_NHS]),#(lf)[ObesityDerived] = SUM([ObesityDerived]),#(lf)[SmokerDerived] = SUM([SmokerDerived]),#(lf)[AsthmaDerived] = SUM([AsthmaDerived]),#(lf)[COPDDerived] = SUM([COPDDerived]),#(lf)[DementiaDerived] = SUM([DementiaDerived]),#(lf)[DepressionDerived] = SUM([DepressionDerived]),#(lf)[DiabetesDerived] = SUM([DiabetesDerived]),#(lf)[PalliativeCareDerived] = SUM([PalliativeCareDerived]),#(lf)[ChronicKidneyDiseaseDerived] = SUM([ChronicKidneyDiseaseDerived]),#(lf)[EpilepsyDerived] = SUM([EpilepsyDerived]),#(lf)[HeartFailureDerived] = SUM([HeartFailureDerived]),#(lf)[StrokeDerived] = SUM([StrokeDerived]),#(lf)[AtrialFibrillationDerived] = SUM([AtrialFibrillationDerived]),#(lf)[CancerDerived] = SUM([CancerDerived]),#(lf)[CoronaryHeartDiseaseDerived] = SUM([CoronaryHeartDiseaseDerived]),#(lf)[HypertensionDerived] = SUM([HypertensionDerived]),#(lf)[HypothyroidismDerived] = SUM([HypothyroidismDerived]),#(lf)[LearningDisabilityDerived] = SUM([LearningDisabilityDerived]),#(lf)[MentalIllnessDerived] = SUM([MentalIllnessDerived]),#(lf)[DeprivationTotal] = AVG([IMDcountyDecile]),#(lf)[DeprivationIncome] = AVG([IMDincome_countydecile]),#(lf)[DeprivationEmployment] = AVG([IMDemployment_countydecile]),#(lf)[DeprivationEducation] = AVG([IMDeducationskillsandtraining_countydecile]),#(lf)[DeprivationHealth] = AVG([IMDhealthdeprivationanddisability_countydecile]),#(lf)[DeprivationCrime] = AVG([IMDcrime_countydecile]),#(lf)[DeprivationBarriersToHousing] = AVG([IMDbarrierstohousingandservices_countydecile]),#(lf)[DeprivationLivingEnvironment] = AVG([IMDlivingenvironment_countydecile]),#(lf)[DeprivationIDAOPI] = AVG([IMDidaopi_countydecile]),#(lf)[DeprivationIDACI] = AVG([IMDidaci_countydecile])#(lf)#(lf)INTO #TEMP#(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)GROUP BY [LSOA code]#(lf)#(lf)#(lf)#(lf)SELECT [SUB].* ,#(lf)[WARD].[Current District Ward name]#(lf)FROM (#(lf)/*===============================================================================================================#(lf)Deprivation Total#(lf)===============================================================================================================*/#(lf)#(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation Total',#(lf)[MetricValue] = [DeprivationTotal],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Income#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Income',#(lf)[MetricValue] = [DeprivationIncome],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Employment#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Employment',#(lf)[MetricValue] = [DeprivationEmployment],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Education#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Education',#(lf)[MetricValue] = [DeprivationEducation],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Health#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Health',#(lf)[MetricValue] = [DeprivationHealth],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Crime#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Crime',#(lf)[MetricValue] = [DeprivationCrime],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Barriers to Housing and Services#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Barriers to Housing and Services',#(lf)[MetricValue] = [DeprivationBarriersToHousing],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Living Environment#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Living Environment',#(lf)[MetricValue] = [DeprivationLivingEnvironment],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Income Deprivation Affecting Older People Index#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Income Deprivation Affecting Older People Index',#(lf)[MetricValue] = [DeprivationIDAOPI],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP#(lf)/*===============================================================================================================#(lf)Deprivation - Income Deprivation Affecting Children Index#(lf)===============================================================================================================*/#(lf)UNION #(lf)SELECT DISTINCT #(lf)[LSOA11CD],[Population],#(lf)[Metric] = 'Deprivation - Income Deprivation Affecting Children Index',#(lf)[MetricValue] = [DeprivationIDACI],#(lf)[Metric_Type] = 'Deprivation'#(lf)FROM #TEMP) as [sub]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT #(lf)[LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name],#(lf)[Rank] = ROW_NUMBER() OVER( PARTITION BY [LSOA code] ORDER BY COUNT(*)) #(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)AND [Current District Ward name] IS NOT NULL#(lf)GROUP BY [LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name]) AS [WARD]#(lf)ON [WARD].[LSOA code] = [SUB].[LSOA11CD]#(lf)AND [WARD].[Rank] = '1'#(lf)#(lf)Where [Metric_Type] = 'Deprivation'#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

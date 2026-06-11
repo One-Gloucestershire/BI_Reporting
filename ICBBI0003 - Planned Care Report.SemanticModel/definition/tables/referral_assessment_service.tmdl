@@ -1,0 +1,956 @@
+table referral_assessment_service
+	lineageTag: 01c4209f-4c22-4042-b8c6-efa4e394b009
+
+	measure triage_requests = CALCULATE(SUM('referral_assessment_service'[counter]))
+		formatString: 0
+		lineageTag: 965d5547-516a-49d1-a9b2-df35233e1d33
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure returned_to_referrer = CALCULATE(COUNT('referral_assessment_service'[UBRN]),FILTER('referral_assessment_service','referral_assessment_service'[Triage_Outcome]="Return To Referrer With Advice"))
+		formatString: 0
+		lineageTag: f0514f3b-ac0e-4472-b101-9c1e46e9ce97
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure returned_to_referrer_% = DIVIDE('referral_assessment_service'[returned_to_referrer],[triage_requests])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8f8351b4-e0f0-4336-a5c6-47fde21b7639
+
+		annotation Format = <Format Format="Percentage" Accuracy="2" />
+
+	measure outcome_% = SUM('referral_assessment_service'[counter])/[triage_requests]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a32f73f4-46a9-4f38-b633-51d36412869b
+
+		annotation Format = <Format Format="Percentage" Accuracy="2" />
+
+	measure 'RAS Activity' = (SUM('referral_assessment_service'[counter]))
+		formatString: 0
+		lineageTag: ebebf8f7-da77-4dd2-bcb8-0ab3e8933a11
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 'RAS Activity PM' = CALCULATE([RAS Activity],DATEADD('date_table'[Date],-1,MONTH))
+		formatString: 0
+		lineageTag: d35b7f28-4e48-45a3-b7a5-42ad73ae9f1d
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 'RAS Variance %' = DIVIDE([RAS Activity],[RAS Activity PM],BLANK()) - 1
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e696771d-d9ea-4580-b3a4-d53abda63457
+
+		annotation Format = <Format Format="Percentage" Accuracy="2" />
+
+	measure 'RAS Activity YTD' = CALCULATE([RAS Activity],SAMEPERIODLASTYEAR('date_table'[Date]))
+		formatString: 0
+		lineageTag: 83383d31-e259-4654-8bf8-bfbc82255e17
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 'RAS YTD Variance %' = DIVIDE([RAS Activity],[RAS Activity YTD],BLANK()) - 1
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f8d0e433-7b84-4eef-85eb-2a6c7ecb538a
+
+		annotation Format = <Format Format="Percentage" Accuracy="2" />
+
+	measure 2021_22_total_onward_referrals = CALCULATE(COUNT('referral_assessment_service'[ubrn]),'referral_assessment_service','referral_assessment_service'[triage_outcome] in {"Accept and Refer/Book Later","Refer/Book Now"},referral_assessment_service,referral_assessment_service[booked_service_group] <> BLANK(),'date','date'[financial_year] in {"2021/22"})
+		formatString: 0
+		lineageTag: 785155a5-150f-43a7-91e6-0e0554969c5d
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 2022_23_total_onward_referrals = CALCULATE(COUNT('referral_assessment_service'[ubrn]),'referral_assessment_service','referral_assessment_service'[triage_outcome] in {"Accept and Refer/Book Later","Refer/Book Now"},referral_assessment_service,referral_assessment_service[booked_service_group] <> BLANK(),'date','date'[financial_year] in {"2022/23"})
+		formatString: 0
+		lineageTag: 93eed453-edc9-40fc-b760-83500df482b3
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 2019_20_total_onward_referrals = CALCULATE(COUNT('referral_assessment_service'[ubrn]),'referral_assessment_service','referral_assessment_service'[triage_outcome] in {"Accept and Refer/Book Later","Refer/Book Now"},referral_assessment_service,referral_assessment_service[booked_service_group] <> BLANK(),'date','date'[financial_year] in {"2019/20"})
+		formatString: 0
+		lineageTag: 17b8f6ac-6568-460a-9a05-6bdf91facf11
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 2020_21_total_onward_referrals = CALCULATE(COUNT('referral_assessment_service'[ubrn]),'referral_assessment_service','referral_assessment_service'[triage_outcome] in {"Accept and Refer/Book Later","Refer/Book Now"},referral_assessment_service,referral_assessment_service[booked_service_group] <> BLANK(),'date','date'[financial_year] in {"2020/21"})
+		formatString: 0
+		lineageTag: 563c5d08-9352-417f-b40d-ae46c13c6d12
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	measure 'Count of ubrn total for booked_service_group' =
+			
+			CALCULATE(
+				COUNTA('referral_assessment_service'[ubrn]),
+				ALLSELECTED('referral_assessment_service'[booked_service_group])
+			)
+		formatString: 0
+		lineageTag: 096b1ad1-c5a8-4b90-8032-ab9ec2b852dd
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "TotalForSelectedCategory"
+				}
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+	column ubrn
+		dataType: string
+		lineageTag: 82efceea-8fbe-49b0-872d-cc8a4899ef34
+		summarizeBy: none
+		sourceColumn: ubrn
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = ubrn
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column practice_code
+		dataType: string
+		lineageTag: a96fdfce-d056-416c-a8d9-cd810a7b2749
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = practice_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column practice_name
+		dataType: string
+		lineageTag: 609a0d64-d082-413e-8d47-8ce364f0e7b6
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = practice_name
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 3ef44e05-7dfc-4a82-8c40-d3210c24e89c
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = primary_care_network
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column locality
+		dataType: string
+		lineageTag: 18221af8-2dcd-4dc7-a612-b2cb1bb52987
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = locality
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column patient_partial_postcode
+		dataType: string
+		lineageTag: d9da0121-396d-4f13-9782-0b5defad1d26
+		summarizeBy: none
+		sourceColumn: patient_partial_postcode
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = patient_partial_postcode
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column provider_code
+		dataType: string
+		lineageTag: 56f305d6-3766-4e18-b10f-2ef2858f5734
+		summarizeBy: none
+		sourceColumn: provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = provider_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column provider_name
+		dataType: string
+		lineageTag: 26ad27cd-6284-41be-9ce5-1a18e4a4145b
+		summarizeBy: none
+		sourceColumn: provider_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = provider_name
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column provider_group
+		dataType: string
+		lineageTag: 6fce5f05-2780-428d-8143-e7c0b80447b8
+		summarizeBy: none
+		sourceColumn: provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = provider_group
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column location_code
+		dataType: string
+		lineageTag: 9a98889b-387e-4e45-b79c-f68f50ff4db8
+		summarizeBy: none
+		sourceColumn: location_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = location_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column location_name
+		dataType: string
+		lineageTag: d8fc3606-d964-4aea-aa8b-6ab07f11e3c1
+		summarizeBy: none
+		sourceColumn: location_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = location_name
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_date_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fdc32ce2-d6f1-4eb1-90bb-8b2595b4fdd5
+		summarizeBy: none
+		sourceColumn: triage_date_time
+
+		variation Variation
+			isDefault
+			relationship: 030cd49a-30b2-42be-bf5b-1d742b4d5610
+			defaultHierarchy: LocalDateTable_9bf32175-8138-4b52-b7ed-a54f99fc9553.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="GeneralDateTimeLong" FormatString="G" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####not a type
+
+		annotation PBI_NameAtRefresh = triage_date_time
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 930bbdd9-0ab8-4ae6-af39-0e55c45a2203
+		summarizeBy: none
+		sourceColumn: triage_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="GeneralDateTimeLong" FormatString="G" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####not a type
+
+		annotation PBI_NameAtRefresh = triage_date
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_time
+		dataType: dateTime
+		formatString: hh:nn:ss
+		lineageTag: 258d74f2-4833-4b9d-b269-ef68ed7295f6
+		summarizeBy: none
+		sourceColumn: triage_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="LongTime" FormatString="HH:mm:ss" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####Time
+
+		annotation PBI_NameAtRefresh = triage_time
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column month_name
+		dataType: string
+		lineageTag: aaa986ae-6fe6-4596-88a6-0dd6627d6f24
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = month_name
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 95851ca7-a22f-4095-bceb-9ab19db63b54
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = financial_month
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column financial_year
+		dataType: string
+		lineageTag: c0b083ec-1655-4939-8d45-0403b8082f1a
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = financial_year
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 080aa383-1c1f-446e-bc3a-4706450a7246
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = year_month
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_action_code
+		dataType: int64
+		formatString: 0
+		lineageTag: 2c29bb86-3a72-4fad-936c-5b34f6014816
+		summarizeBy: sum
+		sourceColumn: triage_action_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = triage_action_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_action_description
+		dataType: string
+		lineageTag: 8b945164-f3ac-4867-a78e-1622a3e4672d
+		summarizeBy: none
+		sourceColumn: triage_action_description
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_action_description
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_service_ID
+		dataType: string
+		lineageTag: 87360466-f7f2-4235-849f-1a7c5c16aa94
+		summarizeBy: none
+		sourceColumn: triage_service_ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_service_ID
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_service_name
+		dataType: string
+		lineageTag: f7db40ee-7978-4569-b7b9-23b21961f868
+		summarizeBy: none
+		sourceColumn: triage_service_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_service_name
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_service_group
+		dataType: string
+		lineageTag: 9754db02-931e-4609-82c4-bd2428c1cc9a
+		summarizeBy: none
+		sourceColumn: triage_service_group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_service_group
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_main_specialty_code
+		dataType: string
+		lineageTag: 50b6ae22-429a-47c7-93b4-64e05be5e42c
+		summarizeBy: none
+		sourceColumn: triage_main_specialty_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_main_specialty_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_main_specialty_description
+		dataType: string
+		lineageTag: c97f4750-8728-4f7a-a566-b35779e229f8
+		summarizeBy: none
+		sourceColumn: triage_main_specialty_description
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_main_specialty_description
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_treatment_function_code
+		dataType: string
+		lineageTag: 093822e5-00cb-4578-92ef-5926a285015e
+		summarizeBy: none
+		sourceColumn: triage_treatment_function_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_treatment_function_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_treatment_function_description
+		dataType: string
+		lineageTag: 6b85244c-f94a-4501-958f-417758d7bf8a
+		summarizeBy: none
+		sourceColumn: triage_treatment_function_description
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_treatment_function_description
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column clinic_type
+		dataType: string
+		lineageTag: 369d6931-381c-4c93-85e4-e7aff5a2690d
+		summarizeBy: none
+		sourceColumn: clinic_type
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = clinic_type
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column priority_code
+		dataType: string
+		lineageTag: 8b6bf67b-ba58-404a-86ba-d2413b786373
+		summarizeBy: none
+		sourceColumn: priority_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = priority_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column priority_description
+		dataType: string
+		lineageTag: e57d9eb8-fb69-49fb-8380-7a4f7f08b4c3
+		summarizeBy: none
+		sourceColumn: priority_description
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = priority_description
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column triage_outcome
+		dataType: string
+		lineageTag: 69168000-45af-4850-af3e-00fdbd823856
+		summarizeBy: none
+		sourceColumn: triage_outcome
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = triage_outcome
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column outcome_date_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0a2c237f-2158-4d28-a0c4-01b79852329c
+		summarizeBy: none
+		sourceColumn: outcome_date_time
+
+		variation Variation
+			isDefault
+			relationship: f2af5733-1320-4d6e-9387-019891820d26
+			defaultHierarchy: LocalDateTable_ecc2ef01-4369-4a30-a4e5-3502a02e3321.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="GeneralDateTimeLong" FormatString="G" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####not a type
+
+		annotation PBI_NameAtRefresh = outcome_date_time
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column rejection_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 050a85a3-5e32-496b-a640-323c6ce94224
+		summarizeBy: sum
+		sourceColumn: rejection_flag
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = rejection_flag
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column booked_service_id
+		dataType: string
+		lineageTag: 26960434-f488-4674-8a0a-22887ce49cd6
+		summarizeBy: none
+		sourceColumn: booked_service_id
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = booked_service_id
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column booked_service_name
+		dataType: string
+		lineageTag: 61d3cad3-00fb-48c7-865a-01ad9e234861
+		summarizeBy: none
+		sourceColumn: booked_service_name
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = booked_service_name
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column booked_service_group
+		dataType: string
+		lineageTag: 90786e6a-1b58-44f1-a821-8cad96f1d1df
+		summarizeBy: none
+		sourceColumn: booked_service_group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = booked_service_group
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column booked_main_specialty_code
+		dataType: string
+		lineageTag: 709553d4-ff00-4123-9f8c-5f7af319f632
+		summarizeBy: none
+		sourceColumn: booked_main_specialty_code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = booked_main_specialty_code
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column booked_main_specialty_description
+		dataType: string
+		lineageTag: 7ce25380-f161-49c3-9966-739afeeb2044
+		summarizeBy: none
+		sourceColumn: booked_main_specialty_description
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = booked_main_specialty_description
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column booked_date_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 331cc43f-804a-4e2a-a6ec-92e9b4ea185a
+		summarizeBy: none
+		sourceColumn: booked_date_time
+
+		variation Variation
+			isDefault
+			relationship: 8ae3d4d8-2332-466e-a091-352b6d0940fc
+			defaultHierarchy: LocalDateTable_6e4dd0b3-3277-4fca-a47a-7b4ad6569d65.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="GeneralDateTimeLong" FormatString="G" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####not a type
+
+		annotation PBI_NameAtRefresh = booked_date_time
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column cancelled_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 733031d5-d7f1-4bbc-92d0-b2beb75a6558
+		summarizeBy: sum
+		sourceColumn: cancelled_flag
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = cancelled_flag
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column cancelled_no_triage_outcome_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d1aeb5f-f219-41c4-b918-abf58821e540
+		summarizeBy: sum
+		sourceColumn: cancelled_no_triage_outcome_flag
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = cancelled_no_triage_outcome_flag
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column cancelled_description
+		dataType: string
+		lineageTag: 276c3b85-5a9c-4a22-bfeb-6eace508e9f2
+		summarizeBy: none
+		sourceColumn: cancelled_description
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = cancelled_description
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column cancelled_date_time
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cb966b92-e60f-4661-8b3f-b51c923adc5c
+		summarizeBy: none
+		sourceColumn: cancelled_date_time
+
+		variation Variation
+			isDefault
+			relationship: 63b16297-e7f2-4b86-b5df-385f29370251
+			defaultHierarchy: LocalDateTable_53019f00-dd5c-4f4d-9b45-11eb3f2e134f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="GeneralDateTimeLong" FormatString="G" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####not a type
+
+		annotation PBI_NameAtRefresh = cancelled_date_time
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column cancelled_group
+		dataType: string
+		lineageTag: 881943c9-86d7-42ca-a0a3-bd561bc766e7
+		summarizeBy: none
+		sourceColumn: cancelled_group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = cancelled_group
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column pathway_outcome
+		dataType: string
+		lineageTag: 97767e54-9725-4581-9523-a334636c6fa8
+		summarizeBy: none
+		sourceColumn: pathway_outcome
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="Text" />
+
+		annotation DataTypeAtRefresh = String#####not a type
+
+		annotation PBI_NameAtRefresh = pathway_outcome
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 0176fc2b-24e3-418a-9e28-b5174a040fa9
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = counter
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column paediatric_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: c0fae707-f9fb-47dd-8a2a-019ee42c993a
+		summarizeBy: sum
+		sourceColumn: paediatric_flag
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = paediatric_flag
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column consultant_led_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 7a792399-bba4-49a0-80e3-05d0d9a3d57b
+		summarizeBy: sum
+		sourceColumn: consultant_led_flag
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = consultant_led_flag
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column appointment_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: a0ad0ed8-f0b1-4b9c-813c-2b21b3b437b9
+		summarizeBy: none
+		sourceColumn: appointment_date
+
+		variation Variation
+			isDefault
+			relationship: 87558fdc-9d4f-4216-a848-e7c0aaa9c111
+			defaultHierarchy: LocalDateTable_00cd34cf-b75b-4768-b732-a0e38797e845.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="DateTimeGeneralPattern"><DateTimes><DateTime LCID="2057" Group="GeneralDateTimeLong" FormatString="G" /></DateTimes></Format>
+
+		annotation DataTypeAtRefresh = DateTime#####not a type
+
+		annotation PBI_NameAtRefresh = appointment_date
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	column indicative_wait_time
+		dataType: int64
+		formatString: 0
+		lineageTag: 03567f5d-663b-45ee-9888-210d8385b0b2
+		summarizeBy: sum
+		sourceColumn: indicative_wait_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation Format = <Format Format="NumberWhole" Accuracy="0" />
+
+		annotation DataTypeAtRefresh = Int64#####not a type
+
+		annotation PBI_NameAtRefresh = indicative_wait_time
+
+		annotation PBI_WasHiddenAtRefresh = False
+
+	partition referral_assessment_service-da421a35-dcab-46bd-8543-f527b658867c = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Sandbox", [Query="SELECT * FROM [CCG_Sandbox].[dbo].[Referral_Assessment_Service_Total]"])
+				in
+				    Source
+
+	annotation PBI_DescriptionAtRefresh
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

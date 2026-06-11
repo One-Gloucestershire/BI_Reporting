@@ -1,0 +1,33 @@
+table Tooltips
+	lineageTag: 8d714ad1-988e-4171-85a2-7459faba8635
+
+	column 'Tooltip Name'
+		dataType: string
+		lineageTag: bf6370fd-e756-4f90-a041-daaaa285f641
+		summarizeBy: none
+		sourceColumn: Tooltip Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Desc
+		dataType: string
+		lineageTag: 2de34b1e-6547-4df9-95a8-2ace2a8d8820
+		summarizeBy: none
+		sourceColumn: Desc
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Tooltips-c6c13168-b268-4f57-9419-f3821281c2bb = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\Tooltips.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(Sheet1_Sheet,{{"Column1", type text}, {"Column2", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Tooltip Name", type text}, {"Desc", type text}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+

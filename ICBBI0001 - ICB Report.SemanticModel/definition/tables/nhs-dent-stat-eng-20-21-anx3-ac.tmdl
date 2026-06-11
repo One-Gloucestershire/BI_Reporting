@@ -1,0 +1,157 @@
+table nhs-dent-stat-eng-20-21-anx3-ac
+	lineageTag: baf75561-cf18-4359-b514-34fe398b4e5b
+
+	column ACTIVITY_END_DATE
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: 2f4d1006-3597-4063-bad5-6362e965f1f3
+		summarizeBy: none
+		sourceColumn: ACTIVITY_END_DATE
+
+		variation Variation
+			isDefault
+			relationship: fc31faee-3e3f-48d3-ba69-e25c7eee8d71
+			defaultHierarchy: LocalDateTable_bb65da13-4ac6-4f1f-bec4-71a01b1b3ba2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column PRACTICE_CODE
+		dataType: string
+		lineageTag: f5ee417b-af8d-4262-91f8-c524a2680370
+		summarizeBy: none
+		sourceColumn: PRACTICE_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column PRAC_POSTCODE
+		dataType: string
+		lineageTag: c569eb36-a46d-430e-b707-61dd68a48a43
+		summarizeBy: none
+		sourceColumn: PRAC_POSTCODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column CCG_CODE
+		dataType: string
+		lineageTag: b4e7b6d5-6e95-456c-93e8-f682865ac888
+		summarizeBy: none
+		sourceColumn: CCG_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column CCG_ONS_CODE
+		dataType: string
+		lineageTag: 5758eee9-66a2-4f1c-89af-5c91f8f20b1e
+		summarizeBy: none
+		sourceColumn: CCG_ONS_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column CCG_NAME
+		dataType: string
+		lineageTag: c7203d11-a808-410f-9236-15610bbe2383
+		summarizeBy: none
+		sourceColumn: CCG_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column LA_CODE
+		dataType: string
+		lineageTag: 92aa1763-bedc-4f21-a5d5-dea5ce426dac
+		summarizeBy: none
+		sourceColumn: LA_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column LA_NAME
+		dataType: string
+		lineageTag: bf7f0d75-4c7e-4b27-b5b5-0804391ee21f
+		summarizeBy: none
+		sourceColumn: LA_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column REGION_CODE
+		dataType: string
+		lineageTag: 7d48fc40-e27b-46cd-98d8-9ab81e82c745
+		summarizeBy: none
+		sourceColumn: REGION_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column REGION_ONS_CODE
+		dataType: string
+		lineageTag: a8b0c918-e31d-4883-bb30-4186f64b3839
+		summarizeBy: none
+		sourceColumn: REGION_ONS_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column REGION_NAME
+		dataType: string
+		lineageTag: 30f31dfd-5efa-47cf-83c9-1e2ee5dfc872
+		summarizeBy: none
+		sourceColumn: REGION_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column COT
+		dataType: int64
+		formatString: 0
+		lineageTag: 9f4e9823-bcdf-4154-af66-0be4d38fdb13
+		summarizeBy: sum
+		sourceColumn: COT
+
+		annotation SummarizationSetBy = Automatic
+
+	column UDA
+		dataType: double
+		lineageTag: 320259a2-f2e5-4167-8ed1-d2afbe4f80eb
+		summarizeBy: sum
+		sourceColumn: UDA
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Piv (2).Total'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2479e6a4-11a6-43b8-b8e8-79252a224801
+		summarizeBy: sum
+		sourceColumn: Piv (2).Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Latest Activity Flag'
+		dataType: string
+		lineageTag: 7d620990-1b17-4d26-afec-48118f376cc9
+		summarizeBy: none
+		sourceColumn: Latest Activity Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition nhs-dent-stat-eng-20-21-anx3-ac-93c7a756-8a18-49a0-947f-bb6f821a2d31 = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\Dental Data.xlsx"), null, true),
+				    #"nhs-dent-stat-eng-20-21-anx3-ac_Sheet" = Source{[Item="nhs-dent-stat-eng-20-21-anx3-ac",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(#"nhs-dent-stat-eng-20-21-anx3-ac_Sheet", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"ACTIVITY_END_DATE", type date}, {"PRACTICE_CODE", type text}, {"PRAC_POSTCODE", type text}, {"CCG_CODE", type text}, {"CCG_ONS_CODE", type text}, {"CCG_NAME", type text}, {"LA_CODE", type text}, {"LA_NAME", type text}, {"REGION_CODE", type text}, {"REGION_ONS_CODE", type text}, {"REGION_NAME", type text}, {"PATIENT_TYPE", type text}, {"DENTAL_TREATMENT_BAND", type text}, {"COT", Int64.Type}, {"UDA", type number}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"PATIENT_TYPE", "DENTAL_TREATMENT_BAND"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Columns"),
+				    #"Merged Queries" = Table.NestedJoin(#"Removed Duplicates", {"CCG_CODE"}, #"Piv (2)", {"ORG_CODE"}, "Piv (2)", JoinKind.LeftOuter),
+				    #"Expanded Piv (2)" = Table.ExpandTableColumn(#"Merged Queries", "Piv (2)", {"Total"}, {"Piv (2).Total"}),
+				    #"Added Custom" = Table.AddColumn(#"Expanded Piv (2)", "Latest Activity Flag", each if [ACTIVITY_END_DATE] = List.Max(#"Removed Duplicates"[ACTIVITY_END_DATE]) then 1
+				else 0),
+				    #"Filtered Rows" = Table.SelectRows(#"Added Custom", each ([Latest Activity Flag] = 1))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Exception
+

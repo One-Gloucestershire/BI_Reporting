@@ -1,0 +1,43 @@
+table 'Piv (2)'
+	lineageTag: c5cf7ca4-57eb-4721-9b66-3e9ea0b292ad
+
+	column ORG_CODE
+		dataType: string
+		lineageTag: ee8549e7-03ea-43d2-bda1-328452d7d9e3
+		summarizeBy: none
+		sourceColumn: ORG_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ORG_ NAME'
+		dataType: string
+		lineageTag: 63c3da38-9715-4dfc-8a71-a17b7f322af2
+		summarizeBy: none
+		sourceColumn: ORG_ NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total
+		dataType: int64
+		formatString: 0
+		lineageTag: 9736394b-9a8e-46c0-9855-de61bb9ed73a
+		summarizeBy: sum
+		sourceColumn: Total
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Piv (2)-19ee27af-fe33-4018-82ee-ec448b133f0e' = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\PERF\SOF Metrics\TAdams Working Folder\Data\population data.xlsx"), null, true),
+				    #"Piv (2)_Sheet" = Source{[Item="Piv (2)",Kind="Sheet"]}[Data],
+				    #"Removed Top Rows" = Table.Skip(#"Piv (2)_Sheet",4),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Top Rows", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"ORG_CODE", type text}, {"ORG_ NAME", type text}, {"Total", Int64.Type}}),
+				    #"Uppercased Text" = Table.TransformColumns(#"Changed Type",{{"ORG_CODE", Text.Upper, type text}})
+				in
+				    #"Uppercased Text"
+
+	annotation PBI_ResultType = Exception
+

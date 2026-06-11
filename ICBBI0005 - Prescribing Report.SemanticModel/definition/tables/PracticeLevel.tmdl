@@ -1,0 +1,99 @@
+table PracticeLevel
+	lineageTag: a4f628ae-9e7a-487a-977b-2e84a6aac241
+
+	column BNFChemicalSubstanceCode
+		dataType: string
+		sourceProviderType: varchar(30)
+		lineageTag: 17bc33d0-5a20-4e05-99ae-a1ba817cd06d
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstanceCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstance
+		dataType: string
+		sourceProviderType: varchar(100)
+		lineageTag: 14372a2e-2794-4fc5-ae1a-81157cd8995b
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		sourceProviderType: varchar(6)
+		lineageTag: 103c31ce-490a-4767-9437-7f61deabc1c6
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeName
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 2a89ec90-5806-49bb-8c90-f6a3a3df76d9
+		summarizeBy: none
+		sourceColumn: PracticeName
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearlyCost
+		dataType: double
+		sourceProviderType: decimal(18, 0)
+		lineageTag: 52959f16-74fb-47a0-9ae6-aa891ccd39bd
+		summarizeBy: sum
+		sourceColumn: YearlyCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Population
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: c2d1631b-b7c6-49ac-b724-df51547c1bd4
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rate
+		dataType: double
+		sourceProviderType: decimal(18, 0)
+		lineageTag: ee21a088-4236-438e-a68f-3afd1fc4832a
+		summarizeBy: sum
+		sourceColumn: Rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Quartile
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 16440740-89b2-4416-a712-aa348aa628c8
+		summarizeBy: sum
+		sourceColumn: Quartile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column = if(PracticeLevel[Rate]>Quartiles[Quartile3],1,0)
+		lineageTag: 98d8f7bd-a67c-49ed-9d84-8d591784f1c5
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PracticeLevel-9006376d-25c5-442c-811a-75b6d733c4aa = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "POWERBI_Reporting", [Query="Select * from [PowerBI_Reporting].[Prescribing].[tbl_prescribing_practice]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

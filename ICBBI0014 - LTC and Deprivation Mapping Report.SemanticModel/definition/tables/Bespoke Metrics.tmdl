@@ -1,0 +1,87 @@
+table 'Bespoke Metrics'
+	lineageTag: af790194-eee2-4693-b2d2-79968fb24966
+
+	measure 'Rate Per 1000 (B)' = (sum('Bespoke Metrics'[MetricValue])/sum('Bespoke Metrics'[Population]))*1000
+		lineageTag: b91cb402-8572-4766-baa0-a5867b6dc5a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'LSOA Code'
+		dataType: string
+		lineageTag: a4a2b2f0-3dea-48bb-801c-30c43913b6f3
+		summarizeBy: none
+		sourceColumn: LSOA Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 110e6374-c0f8-4316-a429-c16706c45e81
+		summarizeBy: sum
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric
+		dataType: string
+		lineageTag: a5f8b409-887f-445e-926c-4087914b6b8b
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricValue
+		dataType: int64
+		formatString: 0
+		lineageTag: 779a789e-8af6-4710-bfa9-e0455d46bf5d
+		summarizeBy: sum
+		sourceColumn: MetricValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric_Type
+		dataType: string
+		lineageTag: 91e9d3ce-9a01-421f-8720-1da1fc5ebbbe
+		summarizeBy: none
+		sourceColumn: Metric_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Current District Ward name'
+		dataType: string
+		lineageTag: 90f2f9c8-6809-4f7b-9148-c08bdaa877e6
+		summarizeBy: none
+		sourceColumn: Current District Ward name
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBand
+		dataType: string
+		lineageTag: 3eb011e3-79c6-4007-9711-d19f1fb20b96
+		summarizeBy: none
+		sourceColumn: AgeBand
+
+		annotation SummarizationSetBy = Automatic
+
+	column AgeBandGroup
+		dataType: string
+		lineageTag: 639263c6-e9f8-4770-bdfc-347087baba3d
+		summarizeBy: none
+		sourceColumn: AgeBandGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Bespoke Metrics-c4cdec16-d060-4fc7-9ebb-cd8792d48ffe' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "BIREPORTS", [Query="#(lf)IF OBJECT_ID('tempdb..#TEMP') IS NOT NULL DROP TABLE #TEMP;  #(lf)#(lf)SELECT #(lf)[LSOA11CD] = [LSOA code],#(lf)[AgeBand] = CASE WHEN [MPI].[AgeBand5yr] = '5-9' THEN '05-09'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [MPI].[AgeBand5yr] = '0-4' THEN '00-04' ELSE [MPI].[AgeBand5yr] END,#(lf)[AgeBandGroup] = [MPI].[AgeBand],#(lf)[Population] = COUNT([MPI].[Derived_Pseudo_NHS]),#(lf)[AnxietyDepression] = SUM(CASE WHEN [AD].[PseudoNHSNo] IS NOT NULL THEN 1 ELSE 0 END),#(lf)[Parkinsons] = SUM(CASE WHEN [P].[PseudoNHSNo] IS NOT NULL THEN 1 ELSE 0 END),#(lf)[Frailty] = SUM(CASE WHEN [MPI].[eFI_Catgory_derived] IN ('Moderate Frailty','Severe Frailty') THEN 1 ELSE 0 END),#(lf)[EatingDisorders] = SUM(CASE WHEN [EaD].[Derived_Pseudo_NHS] IS NOT NULL THEN 1 ELSE 0 END),#(lf)[111_CALLS] = SUM([111].[111_CALLS])#(lf)INTO #TEMP#(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)#(lf)-- NON QOF Depression & Anxiety#(lf)LEFT JOIN (#(lf)SELECT DISTINCT [PseudoNHSNo]#(lf)FROM [CCG_Current].[PrimaryCare].[vw_Events] AS [E]#(lf)WHERE (EventCode COLLATE Latin1_General_Bin IN ('XM0CR','2257','62T1.','XaImU','Eu41z','Eu41.','Eu410','Eu40z','Eu40.','E2924','Ua1qp',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'X761k','X761Z','X761T','Xa0XN','Xa0XQ','Ua1qn','Xa0XO','Ua1qg','X761N','Xa7kB','E200.','X00Sc','E200z',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'E2000','Xa3Yt','X761S','X00T7','XaA5Z','Xa3Ys','XE1aD','E2004','XM0cP','XE0rb','E2002','XE0ra','2258',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)'XE1Y7','Xa7k9','Xa19B','XE1YA','XE1YB','E2005','XaL0q','XM00G','E2920','X00SW')#(lf)#(lf)OR SnomedCode IN ('272022009','162722001','58703003','394924000','197480006','197480006','371631005','386810004','386810004','47372000',#(lf)'225644006','247825008','89225005','247808006','277824001','277827008','225642005','277825000','225635005','247805009','300895004','197480006',#(lf)'231506008','198288003','198288003','286710008','79015004','231528008','304711006','286709003','64165008','191708009','273402009','48694002',#(lf)'21897009','424196004','162723006','371631005','300894000','279622009','386810004','386810004','191709001','126943008','11806006','25501002','79015004'))#(lf)#(lf)AND EventDate BETWEEN '01-APR-2019' AND '31-MAR-2022') AS [AD]#(lf)ON [AD].[PseudoNHSNo] = [MPI].[Derived_Pseudo_NHS]#(lf)#(lf)--PARKINSONS#(lf)LEFT JOIN (SELECT DISTINCT [PseudoNHSNo]#(lf)FROM [CCG_Current].[PrimaryCare].[vw_LongTermConditions] A#(lf)WHERE [LTCDescription] LIKE '%Parkinson%') AS [P]#(lf)ON [P].[PseudoNHSNo] = [MPI].[Derived_Pseudo_NHS]#(lf)#(lf)--111#(lf)LEFT JOIN (SELECT DISTINCT [PseudoNHSNumber],[111_CALLS]= COUNT(*)#(lf)FROM [CCG_Current].[CareUK].[vw_111] #(lf)WHERE DateOfCase BETWEEN '01-AUG-2021' AND '31-JUL-2022'#(lf)GROUP BY [PseudoNHSNumber]) AS [111]#(lf)ON [111].[PseudoNHSNumber] = [MPI].[Derived_Pseudo_NHS]#(lf)#(lf)-- EATING DISORDERS#(lf)LEFT JOIN (SELECT DISTINCT [Derived_Pseudo_NHS]#(lf)FROM [CCG_Current].[GHCMentalHealth].[vw_Events] a#(lf)#(lf)LEFT OUTER JOIN CCG_Reference.Reference.vw_datelookup b #(lf)on a.event_date = b.[date]#(lf)#(lf)LEFT OUTER JOIN [CCG_Reference].[Reference].[vw_GPPractice] [C] #(lf)ON [A].[practice_code] = [C].[organisationcode]#(lf)#(lf)#(lf)WHERE [purchaser_id] in ('11M','5QH')#(lf)AND [A].[Event_type] IN ('Caseload')#(lf)and [A].[event_date] BETWEEN '01-APR-2021' AND '30-APR-2022'#(lf)AND [age] <19#(lf)AND [specialty_code_desc] = 'Eating Disorders - Adults') [EaD]#(lf)ON [EaD].[Derived_Pseudo_NHS] = [MPI].[Derived_Pseudo_NHS]#(lf)#(lf)#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)GROUP BY [LSOA code],CASE WHEN [MPI].[AgeBand5yr] = '5-9' THEN '05-09'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [MPI].[AgeBand5yr] = '0-4' THEN '00-04' ELSE [MPI].[AgeBand5yr] END,#(lf)[MPI].[AgeBand]#(lf)#(lf)#(lf)#(lf)#(lf)SELECT [SUB].* ,#(lf)[WARD].[Current District Ward name]#(lf)FROM (#(lf)/*===============================================================================================================#(lf)METRIC LINES#(lf)===============================================================================================================*/#(lf)#(lf)SELECT DISTINCT #(lf)[LSOA11CD],#(lf)[Population],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Metric] = 'Non-QOF Depression and Anxiety',#(lf)[MetricValue] = [AnxietyDepression],#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #TEMP#(lf)#(lf)UNION#(lf)#(lf)SELECT DISTINCT #(lf)[LSOA11CD],#(lf)[Population],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Metric] = 'Parkinsons',#(lf)[MetricValue] = [Parkinsons],#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #TEMP#(lf)#(lf)UNION #(lf)#(lf)SELECT DISTINCT #(lf)[LSOA11CD],#(lf)[Population],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Metric] = 'Moderate & Severe Frailty',#(lf)[MetricValue] = [Frailty],#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #TEMP#(lf)#(lf)UNION #(lf)#(lf)SELECT DISTINCT #(lf)[LSOA11CD],#(lf)[Population],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Metric] = 'Under 19 Eating Disorders Caseload (APR-21 - APR-22',#(lf)[MetricValue] = [EatingDisorders],#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #TEMP#(lf)#(lf)UNION #(lf)#(lf)SELECT DISTINCT #(lf)[LSOA11CD],#(lf)[Population],#(lf)[AgeBand],#(lf)[AgeBandGroup],#(lf)[Metric] = '111 Calls AUG-21 - JUL-22',#(lf)[MetricValue] = [111_CALLS],#(lf)[Metric_Type] = 'Bespoke Metrics'#(lf)FROM #TEMP#(lf)#(lf)#(lf)) as [sub]#(lf)#(lf)LEFT JOIN (SELECT DISTINCT #(lf)[LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name],#(lf)[Rank] = ROW_NUMBER() OVER( PARTITION BY [LSOA code] ORDER BY COUNT(*)) #(lf)FROM [BIReports].[MPI].[MPI_current] [MPI]#(lf)WHERE [CCG_Of_Residence] = '11m'#(lf)AND [LSOA code] IS NOT NULL #(lf)AND [Current District Ward name] IS NOT NULL#(lf)GROUP BY [LSOA code],#(lf)[Current District Ward code],#(lf)[Current District Ward name]) AS [WARD]#(lf)ON [WARD].[LSOA code] = [SUB].[LSOA11CD]#(lf)AND [WARD].[Rank] = '1'#(lf)#(lf)Where [Metric_Type] = 'Bespoke Metrics'#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"LSOA11CD", "LSOA Code"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

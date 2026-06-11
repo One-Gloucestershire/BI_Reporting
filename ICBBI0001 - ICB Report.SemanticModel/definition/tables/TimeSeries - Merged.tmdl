@@ -1,0 +1,496 @@
+table 'TimeSeries - Merged'
+	lineageTag: 294ed5c8-6426-4da1-97e2-02074afdfc1b
+
+	measure 'Value Change' = ```
+			
+			VAR Current_VAL = 
+			    CALCULATE ( AVERAGE('TimeSeries - Merged'[Value] ), 'TimeSeries - Merged'[Period_Rank] = 1 && ('TimeSeries - Merged'[ORG CODE] = "QR1" || 'TimeSeries - Merged'[ORG CODE] = "11M") )
+			
+			VAR Previous_VAL = 
+			    CALCULATE ( AVERAGE('TimeSeries - Merged'[Value] ), 'TimeSeries - Merged'[Period_Rank] = 2 && ('TimeSeries - Merged'[ORG CODE] = "QR1" || 'TimeSeries - Merged'[ORG CODE] = "11M") )
+			
+			RETURN
+			    CALCULATE(Current_VAL-Previous_VAL)
+			```
+		lineageTag: 27ff7b24-b1d9-4611-af70-acb9f9ec6c46
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rate Change' = ```
+			
+			VAR Current_Rate = 
+			AVERAGEX(
+				KEEPFILTERS(VALUES('TimeSeries - Merged'[Period_beginning])),
+				CALCULATE(SUM('TimeSeries - Merged'[Gloucester ICS - Adjusted for provider]), 'TimeSeries - Merged'[Period_Rank]=1 && ('TimeSeries - Merged'[ORG CODE] = "QR1" || 'TimeSeries - Merged'[ORG CODE] = "11M" ||'TimeSeries - Merged'[ORG CODE] = "RTE"))
+			)
+			
+			VAR Previous_Rate = 
+			AVERAGEX(
+				KEEPFILTERS(VALUES('TimeSeries - Merged'[Period_beginning])),
+				CALCULATE(SUM('TimeSeries - Merged'[Gloucester ICS - Adjusted for provider]), 'TimeSeries - Merged'[Period_Rank]=2 && ('TimeSeries - Merged'[ORG CODE] = "QR1" || 'TimeSeries - Merged'[ORG CODE] = "11M" ||'TimeSeries - Merged'[ORG CODE] = "RTE"))
+			)
+			
+			RETURN
+			    CALCULATE(Current_Rate-Previous_Rate)
+			```
+		lineageTag: e3009935-500f-45fd-9a07-dbeb81a7d067
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average of Gloucester ICS Rate' = ```
+			
+				CALCULATE(AVERAGEX(VALUES('TimeSeries - Merged'[Period_Rank]), 'TimeSeries - Merged'[Sum of All ICS average per Period_beginning]))
+			
+			```
+		lineageTag: fddf50b7-c83e-4ce4-a394-360936e51933
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sum of All ICS average per Period_beginning' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('TimeSeries - Merged'[Period_beginning])),
+				CALCULATE(AVERAGE('TimeSeries - Merged'[All ICS]))
+			)
+		lineageTag: 716c8ee6-dc91-4484-b8c8-dda1c2556c3f
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "AveragePerCategory"
+				}
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Directional Arrow' = ```
+			
+			VAR RateChange = [Rate Change]
+			VAR ValueChange = [Value Change]
+			
+			RETURN
+			IF(AVERAGE('TimeSeries - Merged'[High/Low Rate/Value Control]) = 3,
+			SWITCH (TRUE(),RateChange > 0.0, UNICHAR(9650), RateChange = 0, UNICHAR(9654), RateChange < 0, UNICHAR(9660)), 
+			IF(AVERAGE('TimeSeries - Merged'[High/Low Rate/Value Control]) = 4,
+			SWITCH (TRUE(),RateChange > 0.0, UNICHAR(9660),RateChange = 0, UNICHAR(9654),RateChange < 0, UNICHAR(9650)),
+			IF(AVERAGE('TimeSeries - Merged'[High/Low Rate/Value Control]) = 1,
+			SWITCH (TRUE(),ValueChange > 0.0, UNICHAR(9650),ValueChange = 0, UNICHAR(9654),ValueChange < 0, UNICHAR(9660)), 
+			IF(AVERAGE('TimeSeries - Merged'[High/Low Rate/Value Control]) = 2,
+			SWITCH (TRUE(),ValueChange > 0.0, UNICHAR(9660),ValueChange = 0, UNICHAR(9654),ValueChange < 0, UNICHAR(9650))))))
+			```
+		lineageTag: d4530a44-0542-4d25-bfb7-31ddc71f8f2b
+
+	measure 'Value/Rate Change' = IF(AVERAGE('TimeSeries - Merged'[High/Low Rate/Value Control]) < 3, [Value Change], [Rate Change])
+		lineageTag: 41b1c9d4-161b-4efb-b614-3d107798fe0b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Indicator
+		dataType: string
+		lineageTag: 77e51874-9146-42a5-8a55-fff454472037
+		summarizeBy: none
+		sourceColumn: Indicator
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 411d0161-53a8-4ed8-a06a-188d681ce3e3
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Origin_OrgType
+		dataType: int64
+		formatString: 0
+		lineageTag: eb60d232-512a-4052-9d4d-865107d8bc3e
+		summarizeBy: sum
+		sourceColumn: Origin_OrgType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Denominator
+		dataType: double
+		lineageTag: 3b4806f3-fba6-4238-9375-53ce0096196a
+		summarizeBy: sum
+		sourceColumn: Denominator
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Numerator
+		dataType: double
+		lineageTag: 75eaa096-61ef-4e06-8f9c-29e46040bd21
+		summarizeBy: sum
+		sourceColumn: Numerator
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Value
+		dataType: double
+		lineageTag: 1762a2ff-692e-4e7f-a582-cfb8cebc2ddc
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'ORG CODE'
+		dataType: string
+		lineageTag: de3ac28b-5dd1-47a5-a55f-8c7ec15ac8fc
+		summarizeBy: none
+		sourceColumn: ORG CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Piv (2).ORG_CODE'
+		dataType: string
+		lineageTag: d6999125-2826-4ed9-a9b1-2c47e4ac2c3d
+		summarizeBy: none
+		sourceColumn: Piv (2).ORG_CODE
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Piv (2).ORG_ NAME'
+		dataType: string
+		lineageTag: 98e07caf-857f-4e0a-9c55-74723fdf45ef
+		summarizeBy: none
+		sourceColumn: Piv (2).ORG_ NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Piv (2).Total'
+		dataType: int64
+		formatString: 0
+		lineageTag: 49bb87f4-f0d1-4fea-ab60-9e8089d2f9aa
+		summarizeBy: sum
+		sourceColumn: Piv (2).Total
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'All ICS'
+		dataType: double
+		lineageTag: 89731260-b2a7-4bc7-a688-8545a9e87a2f
+		summarizeBy: sum
+		sourceColumn: All ICS
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Gloucester ICS - Unadjusted'
+		dataType: double
+		lineageTag: 04758e18-f198-4fcc-b67d-e94ee9143a75
+		summarizeBy: sum
+		sourceColumn: Gloucester ICS - Unadjusted
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Other South West ICS - Unadjusted'
+		dataType: double
+		lineageTag: 0d8a793b-295e-4276-96cf-c56a0292a955
+		summarizeBy: sum
+		sourceColumn: Other South West ICS - Unadjusted
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Gloucester ICS - Adjusted for provider'
+		dataType: double
+		lineageTag: 71f69f49-de74-41f9-99f1-400c4e1a1b5a
+		summarizeBy: sum
+		sourceColumn: Gloucester ICS - Adjusted for provider
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Other South West ICS - Adjusted for Provider'
+		dataType: double
+		lineageTag: 4a26851c-8922-4bbe-a346-59cd36a2e0e0
+		summarizeBy: sum
+		sourceColumn: Other South West ICS - Adjusted for Provider
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ICS
+		dataType: string
+		lineageTag: 65ddc1c0-6157-4235-b124-ea70b39a88a4
+		summarizeBy: none
+		sourceColumn: ICS
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'ICS Hierarchy'
+		dataType: string
+		lineageTag: 8bf8e91e-a3d4-4d57-b175-76c0de67fa9e
+		summarizeBy: none
+		sourceColumn: ICS Hierarchy
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value_Benchmarking
+		dataType: double
+		lineageTag: 16ed2b56-5912-4fce-a03f-dd3003693d22
+		summarizeBy: sum
+		sourceColumn: Value_Benchmarking
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Period_Rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 8b135519-36ff-4f74-8c31-e49652e7962a
+		summarizeBy: sum
+		sourceColumn: Period_Rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region_Name_Full
+		dataType: string
+		lineageTag: c52e6cb6-8c9a-4f7e-beb6-0cc812207693
+		summarizeBy: none
+		sourceColumn: Region_Name_Full
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sub_Category
+		dataType: string
+		lineageTag: 7c315c3c-8b0d-4ce9-b551-598517f8bbae
+		summarizeBy: none
+		sourceColumn: Sub_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Display_Value_P1
+		dataType: double
+		lineageTag: 384cfa77-3357-4231-9cc0-b1dd1e87e007
+		summarizeBy: sum
+		sourceColumn: Display_Value_P1
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NHS_OF_Metric_Name_Full
+		dataType: string
+		lineageTag: 90244e35-e65a-4c56-9e51-73c164e6fd0e
+		summarizeBy: none
+		sourceColumn: NHS_OF_Metric_Name_Full
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3f976016-4de9-44ba-8aff-c7683020a59e
+		summarizeBy: none
+		sourceColumn: Period_Date
+
+		variation Variation
+			isDefault
+			relationship: 02d319c6-5e2b-41de-aec4-17e7ab5d76f3
+			defaultHierarchy: LocalDateTable_f6304c20-a263-44ad-a448-ed42dad38371.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Org_Name
+		dataType: string
+		lineageTag: 704a54f0-908a-43a2-a864-25ef77b2f8e8
+		summarizeBy: none
+		sourceColumn: Org_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Aggregation_Source
+		dataType: string
+		lineageTag: 85afac84-2588-42ca-ab23-797160b75e5d
+		summarizeBy: none
+		sourceColumn: Aggregation_Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period_beginning
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: 7f433c58-8bb6-4855-b587-9e55bab91504
+		summarizeBy: none
+		sourceColumn: Period_beginning
+
+		variation Variation
+			isDefault
+			relationship: 91e2273d-2a53-413b-9cb0-730fd137f58c
+			defaultHierarchy: LocalDateTable_7440207b-6488-4287-8c28-c911ac358b63.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column ICS_Name_Full
+		dataType: string
+		lineageTag: ee382210-11a0-4253-ab0a-783f1cbc1149
+		summarizeBy: none
+		sourceColumn: ICS_Name_Full
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Gloucester ICS Value'
+		dataType: double
+		lineageTag: df92758d-b101-451e-9ce9-2fff980efdcb
+		summarizeBy: sum
+		sourceColumn: Gloucester ICS Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Target Value'
+		dataType: double
+		lineageTag: 9091dda1-a4f3-4308-b9fe-ce4eaeee8467
+		summarizeBy: sum
+		sourceColumn: Target Value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Target Label'
+		dataType: string
+		lineageTag: e4f82825-fa39-47ea-bd1c-6c5b75e8a9bc
+		summarizeBy: none
+		sourceColumn: Target Label
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Good Is'
+		dataType: string
+		lineageTag: 54fe36f9-282f-4ba9-851e-06fd9188c513
+		summarizeBy: none
+		sourceColumn: Good Is
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rate/Value
+		dataType: string
+		lineageTag: 9e0c2f6c-29b5-4351-9731-84b1df24c5fa
+		summarizeBy: none
+		sourceColumn: Rate/Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'High/Low Rate/Value Control'
+		dataType: int64
+		formatString: 0
+		lineageTag: c22e3c27-119c-4b74-8e10-b62b4aa4e06e
+		summarizeBy: sum
+		sourceColumn: High/Low Rate/Value Control
+
+		annotation SummarizationSetBy = Automatic
+
+	column Code
+		dataType: string
+		lineageTag: b31c829c-4bed-4271-8c6c-2b471f6f62c9
+		summarizeBy: none
+		sourceColumn: Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Value - %'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 475c3468-9682-4986-9537-fc46fe458b18
+		summarizeBy: sum
+		sourceColumn: Value - %
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Target Value - %'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a24f3796-c350-4b54-8f2e-ac57b1eb0717
+		summarizeBy: sum
+		sourceColumn: Target Value - %
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'National Flagging'
+		dataType: string
+		lineageTag: 5ba9b038-beef-41ac-a6c1-516fd1284828
+		summarizeBy: none
+		sourceColumn: National Flagging
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'TimeSeries - Merged-266c4af6-2b96-433a-ac57-3f4f2630a7bb' = m
+		mode: import
+		source =
+				let
+				    Source = Table.NestedJoin(SQL_SOF_data_all, {"ORG CODE"}, #"Piv (2)", {"ORG_CODE"}, "Piv (2)", JoinKind.LeftOuter),
+				    #"Expanded Piv (2)" = Table.ExpandTableColumn(Source, "Piv (2)", {"ORG_CODE", "ORG_ NAME", "Total"}, {"Piv (2).ORG_CODE", "Piv (2).ORG_ NAME", "Piv (2).Total"}),
+				    #"Changed Type5" = Table.TransformColumnTypes(#"Expanded Piv (2)",{{"Value", type number}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type5", "Rate per 100000 of the Population", each ([Value]/[#"Piv (2).Total"]) * 100000),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added Custom",{{"Rate per 100000 of the Population", Percentage.Type}}),
+				    #"Added Conditional Column" = Table.AddColumn(#"Changed Type", "Gloucester ICS", each if [ORG CODE] = "11M" then [Rate per 100000 of the Population] else if [ORG CODE] = "QR1" then [Rate per 100000 of the Population] else 0),
+				    #"Added Conditional Column1" = Table.AddColumn(#"Added Conditional Column", "Other South West ICS", each if Text.Contains([Region_Name_Full], "SOUTH WEST") then [Rate per 100000 of the Population] else 0),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Conditional Column1",{{"Gloucester ICS", Percentage.Type}, {"Other South West ICS", Percentage.Type}}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Changed Type1",{{"Gloucester ICS", type number}, {"Other South West ICS", type number}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type2",{{"Gloucester ICS", "Gloucester ICS - Doubled"}, {"Other South West ICS", "Other South West ICS - Doubled"}}),
+				    #"Added Custom1" = Table.AddColumn(#"Renamed Columns", "Gloucester ICS", each [#"Gloucester ICS - Doubled"]/2),
+				    #"Added Custom2" = Table.AddColumn(#"Added Custom1", "Other South West ICS", each [#"Other South West ICS - Doubled"]/2),
+				    #"Changed Type3" = Table.TransformColumnTypes(#"Added Custom2",{{"Other South West ICS", type number}, {"Gloucester ICS", type number}}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Changed Type3",{{"Rate per 100000 of the Population", "All ICS"}}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Renamed Columns1",{{"Gloucester ICS - Doubled", "Gloucester ICS - Unadjusted"}, {"Other South West ICS - Doubled", "Other South West ICS - Unadjusted"}, {"Gloucester ICS", "Gloucester ICS - Adjusted for provider"}, {"Other South West ICS", "Other South West ICS - Adjusted for Provider"}}),
+				    #"Added Conditional Column2" = Table.AddColumn(#"Renamed Columns2", "ICS", each if Text.Contains([ORG CODE], "11M") then "Gloucester ICS" else if Text.Contains([ORG CODE], "QR1") then "Gloucester ICS" else if Text.Contains([ORG CODE], "RTE") then "Gloucester ICS" else if Text.Contains([Region_Name_Full], "Y58") then "SW ICS" else "ALL ICS"),
+				    #"Added Conditional Column3" = Table.AddColumn(#"Added Conditional Column2", "ICS Hierarchy", each if [ORG CODE] = "11M" then "Gloucester ICS" else if [ORG CODE] = "QR1" then "Gloucester ICS" else if [ORG CODE] = "RTE" then "Gloucester ICS" else if Text.Contains([Region_Name_Full], "SOUTH WEST") then "South West ICS" else "Other ICS"),
+				    #"Changed Type4" = Table.TransformColumnTypes(#"Added Conditional Column3",{{"Value", type number}, {"Period_beginning", type date}}),
+				    #"Added Conditional Column4" = Table.AddColumn(#"Changed Type4", "Gloucester ICS Value", each if [ICS Hierarchy] = "Gloucester ICS" then [Value] else null),
+				    #"Changed Type6" = Table.TransformColumnTypes(#"Added Conditional Column4",{{"Gloucester ICS Value", type number}}),
+				    #"Changed Type7" = Table.TransformColumnTypes(#"Changed Type6",{{"All ICS", type number}}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Changed Type7",null,0,Replacer.ReplaceValue,{"All ICS"}),
+				    #"Merged Queries" = Table.NestedJoin(#"Replaced Value1", {"Code"}, #"Metric Polarity -manual update", {"ID"}, "Metric Polarity -manual update", JoinKind.LeftOuter),
+				    #"Expanded Metric Polarity -manual update" = Table.ExpandTableColumn(#"Merged Queries", "Metric Polarity -manual update", {"Target Value", "Target Label", "Good Is", "Rate/Value"}, {"Target Value", "Target Label", "Good Is", "Rate/Value"}),
+				    #"Added Custom3" = Table.AddColumn(#"Expanded Metric Polarity -manual update", "High/Low Rate/Value Control", each if [Good Is] = "High" and [#"Rate/Value"] = "Value" then 1
+				else if [Good Is] = "Low" and [#"Rate/Value"] = "Value" then 2
+				else if [Good Is] = "High" and [#"Rate/Value"] = "Rate" then 3
+				else if [Good Is] = "Low" and [#"Rate/Value"] = "Rate" then 4
+				else 0),
+				    #"Changed Type8" = Table.TransformColumnTypes(#"Added Custom3",{{"High/Low Rate/Value Control", Int64.Type}}),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Changed Type8", "Value", "Value - Copy"),
+				    #"Renamed Columns3" = Table.RenameColumns(#"Duplicated Column",{{"Value - Copy", "Value - %"}}),
+				    #"Duplicated Column1" = Table.DuplicateColumn(#"Renamed Columns3", "Target Value", "Target Value - Copy"),
+				    #"Renamed Columns4" = Table.RenameColumns(#"Duplicated Column1",{{"Target Value - Copy", "Target Value - %"}}),
+				    #"Added Custom4" = Table.AddColumn(#"Renamed Columns4", "Custom", each if [Good Is]="Low" and [Value]<[Target Value]
+				then 1
+				else if [Good Is]="Low" and [Value]>[Target Value]
+				then 0
+				else if[Good Is]="High" and [Value]>[Target Value]
+				then 1
+				else if[Good Is]="High" and [Value]<[Target Value]
+				then 0
+				else null),
+				    #"Renamed Columns5" = Table.RenameColumns(#"Added Custom4",{{"Custom", "National Flagging"}}),
+				    #"Divided Column" = Table.TransformColumns(#"Renamed Columns5", {{"Target Value - %", each _ / 100, type number}})
+				in
+				    #"Divided Column"
+
+	annotation PBI_ResultType = Exception
+
