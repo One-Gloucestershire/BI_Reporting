@@ -1,0 +1,123 @@
+table 'ePact Prescribing'
+	lineageTag: 91cfa9a3-8a52-4a40-80ce-464b81c03fd4
+
+	column YearMonth
+		dataType: int64
+		lineageTag: ee6f616b-59db-4fa2-9002-03f138adca14
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column HSPracticeCode
+		dataType: string
+		lineageTag: 67e6abca-7f85-4132-8732-8963b5245c35
+		summarizeBy: none
+		sourceColumn: HSPracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column HSPractice
+		dataType: string
+		lineageTag: 2ffbd0da-579d-49ab-bd94-5cf72e82fecd
+		summarizeBy: none
+		sourceColumn: HSPractice
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFPresentationCode
+		dataType: string
+		lineageTag: f1e9925b-dc9a-4601-b898-96f121ae4471
+		summarizeBy: none
+		sourceColumn: BNFPresentationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'BNF Product Name'
+		dataType: string
+		lineageTag: 1a2bb7d7-ac38-4fa8-91a0-d5003e1e824c
+		summarizeBy: none
+		sourceColumn: BNF Product Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Items
+		dataType: int64
+		formatString: 0
+		lineageTag: f940f5ad-7635-4600-bb26-0591b3ba5e66
+		summarizeBy: sum
+		sourceColumn: Items
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		lineageTag: 1a548383-d86f-4915-bb94-944c09df88bf
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 6165f349-43c0-427d-ad25-8500bf0f280c
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 8c45b5f6-57c6-45a8-9671-9912c94decf7
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cost (£)'
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: f0a21999-fadd-4b95-b87c-a7137d51d274
+		summarizeBy: sum
+		sourceColumn: Cost (£)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column Age
+		dataType: string
+		lineageTag: a410ab4b-e7a8-44fc-baa2-bcabafe7e8dc
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 67ff7cc8-d76f-436f-b9d4-3a25d8ca7f45
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ePact Prescribing' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="SELECT [YearMonth]#(lf)      ,[Month]#(lf)      ,[HSPracticeCode]#(lf)      ,[HSPractice]#(lf)      ,[BNFPresentationCode]#(lf)      ,[BNFPresentation]#(lf)      ,[Items] #(lf)      ,[ActualCost]#(lf)      ,[Quantity]#(lf)      ,[fiveyearsageband]#(lf)#(tab)  ,[B].[OrganisationName]#(lf)#(tab)  ,[B].[ReportingOrganisationName]#(lf)#(tab)  ,[B].[PrimaryCareNetwork]#(lf)#(tab)  #(lf)#(lf)FROM [CCG_Current].[ePACT2].[vw_Extract] as [A]#(lf)#(lf)#(tab)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] as [B]#(lf)#(tab)#(tab)ON [A].[HSPracticeCode] = [B].[OrganisationCode]#(lf)#(lf)WHERE [BNFPresentationCode] like '2148%'#(lf)  AND [YearMonth] >= '201804'#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"ActualCost", "Cost (£)"}, {"BNFPresentation", "BNF Product Name"}, {"fiveyearsageband", "Age"}, {"ReportingOrganisationName", "Practice Name"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns",{"Month"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

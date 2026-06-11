@@ -1,0 +1,70 @@
+table New_FeNO
+	lineageTag: c87df5ba-250a-45c1-91a5-3cc5518d881e
+
+	column pseudo_nhs_no
+		dataType: string
+		lineageTag: fe9ff6d2-582a-4973-b97f-3bda795da311
+		summarizeBy: none
+		sourceColumn: pseudo_nhs_no
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 1ef91b55-502c-45d8-b36b-ed9af3105fff
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_description
+		dataType: string
+		lineageTag: 76ffc7ae-d24e-4f86-a228-6c3df33786b7
+		summarizeBy: none
+		sourceColumn: practice_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column event_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 62711eb0-824b-4082-9461-7bc641eb0db0
+		summarizeBy: none
+		sourceColumn: event_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column event_code_description
+		dataType: string
+		lineageTag: 1598b646-6f9b-4e4c-801c-76a9c8bb0c69
+		summarizeBy: none
+		sourceColumn: event_code_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_test
+		dataType: int64
+		formatString: 0
+		lineageTag: d805f9ef-7ebb-4e9d-93af-24e91ca6e186
+		summarizeBy: sum
+		sourceColumn: first_test
+
+		annotation SummarizationSetBy = Automatic
+
+	partition New_FeNO-46bb02c1-74ba-43a9-8f3a-8bc388e28e8a = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "PowerBI_Processing", [Query="EXEC [dbo].[Resp_Primary_Care_FeNo] #(lf);#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[dbo].[Resp_Primary_Care_FeNo]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"first_test", Int64.Type}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each [first_test] = 1),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Filtered Rows",{{"event_date", type date}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
