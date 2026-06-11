@@ -1,0 +1,30 @@
+table 'Current Populations'
+	lineageTag: c992add6-2969-4642-9782-8568d0eb13f2
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 06ef2a13-1c5a-40a4-a809-cd3750f8ebc7
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'current district ward code 2021'
+		dataType: string
+		lineageTag: 72bfe1d3-7655-47cd-8e6c-3674e552c1f9
+		summarizeBy: none
+		sourceColumn: current district ward code 2021
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Current Populations' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "bireports", [Query="select [current district ward code 2021], sum(1) as 'Counter'#(lf)from bireports.mpi.mpi_current [a]#(lf)WHERE [current district ward code 2021] IS NOT NULL AND A.ccg_of_registration = '11m'#(lf)group by [current district ward code 2021]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

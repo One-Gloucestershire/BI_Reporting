@@ -1,0 +1,68 @@
+table 'Month table (2)'
+	lineageTag: dbf59102-3e98-443d-aa27-e40fc3716e0d
+
+	column 'Month Name'
+		dataType: string
+		lineageTag: 3bd029d6-5a35-44ab-9c7a-0610f69dc03d
+		summarizeBy: none
+		sourceColumn: Month Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Month'
+		dataType: double
+		lineageTag: c6818280-01e7-4a60-be96-c052fe97e33e
+		summarizeBy: sum
+		sourceColumn: Financial Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column quarter
+		dataType: string
+		lineageTag: 47a96d8a-7645-48fd-b522-c2e2c8b6cc02
+		summarizeBy: none
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 593cb526-6951-464e-be78-ded7eb5b7370
+		summarizeBy: sum
+		sourceColumn: Current_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 09b26cc0-53e5-4cba-ae7f-a59d104dd302
+		summarizeBy: sum
+		sourceColumn: Current_financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YTD Flag'
+		dataType: string
+		lineageTag: 6306a4b8-000b-4830-863a-0073ba22341d
+		summarizeBy: none
+		sourceColumn: YTD Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Month table (2)-31519406-b7cc-4504-9b21-19becf9d9724' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)#(lf)   #(lf) SET NOCOUNT ON#(lf)IF OBJECT_ID ('TEMPDB..#ytd') IS NOT NULL DROP TABLE #ytd#(lf)#(lf)#(lf)Select distinct#(lf) [YTD Flag] = #(lf)case when #(lf)dat.FinancialMonth#(lf)<#(lf)(select#(lf)MAX(cast(dat.FinancialMonth as int))#(lf)from  [CCG_Current].SEM.vw_OPAppointment  OP #(lf)left join ccg_reference.reference.vw_DateLookup dat on cast(OP.AppointmentDate as date) = dat.date#(lf)where dat.FinancialYear = (#(lf)select max(dat.financialyear) from  [CCG_Current].SEM.vw_OPAppointment  OP #(lf)left join ccg_reference.reference.vw_DateLookup dat on cast(OP.AppointmentDate as date) = dat.date#(lf))#(lf))#(lf)then 1#(lf)else 0 end#(lf),FinancialMonth#(lf)into #ytd#(lf)FROM CCG_CURRENT.SEM.vw_OPAppointment OP left join#(lf)ccg_reference.reference.vw_DateLookup dat on cast(OP.AppointmentDate as date) = dat.Date#(lf)#(lf) #(lf)#(lf)#(lf) Select #(lf)#(lf) [Month Name]#(lf) ,[Financial Month]#(lf) ,quarter#(lf) ,[Current_month] = datepart(month,getdate())#(lf)#(lf) ,[Current_financial_month] = case#(tab)when datepart(month,getdate()) like 1 then 10#(lf)#(tab)#(tab)when datepart(month,getdate()) like 2 then 11#(lf)#(tab)#(tab)when datepart(month,getdate()) like 3 then 12#(lf)#(tab)#(tab)when datepart(month,getdate()) like 4 then 1#(lf)#(tab)#(tab)when datepart(month,getdate()) like 5 then 2#(lf)#(tab)#(tab)when datepart(month,getdate()) like 6 then 3#(lf)#(tab)#(tab)when datepart(month,getdate()) like 7 then 4#(lf)#(tab)#(tab)when datepart(month,getdate()) like 8 then 5#(lf)#(tab)#(tab)when datepart(month,getdate()) like 9 then 6#(lf)#(tab)#(tab)when datepart(month,getdate()) like 10 then 7#(lf)#(tab)#(tab)when datepart(month,getdate()) like 11 then 8#(lf)#(tab)#(tab)when datepart(month,getdate()) like 12 then 9#(lf)#(tab)#(tab)END#(lf)#(lf),[YTD Flag]#(lf)#(lf)#(lf)#(lf)#(lf) from [PowerBI_Reporting].[dbo].[Ops_date_tbl]#(lf)#(lf) left join #ytd on #ytd.FinancialMonth = [PowerBI_Reporting].[dbo].[Ops_date_tbl].[Financial Month]#(lf)#(lf) order by [Financial Month]#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"YTD Flag", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

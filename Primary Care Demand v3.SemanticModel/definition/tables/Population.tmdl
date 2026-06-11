@@ -1,0 +1,151 @@
+table Population
+	lineageTag: 90d53e14-6f13-468d-a54b-4bd51c02fdf6
+
+	measure 'Yearly Population' = CALCULATE ( SUM ( Population[population] ), 'Date Table'[month_name] IN {"Apr"} )
+		lineageTag: 07491e5c-45c4-4403-8865-c2b160b59737
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Previous Month' =
+			
+			
+			CALCULATE ( SUM('Population'[population]), PREVIOUSMONTH('Date Table'[date]))
+		lineageTag: 58ffd1b2-8ba9-4da6-a41f-9cd87d3e133d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Current Month' = SUM('Population'[population])
+		formatString: #,0
+		lineageTag: 2f555280-51b6-4018-9d00-5f1d45a8f7b1
+
+	measure 'Annual % Change' = IF(((1 - ([Previous Year]/[Current Month])) = 1), BLANK(), (1 - ([Previous Year]/[Current Month])))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 90aafe27-93c4-44ef-8ba1-c0e1b07848c3
+
+	measure 'Previous Year' =
+			
+			
+			CALCULATE ( SUM('Population'[population]), DATEADD('Date Table'[date], -12, MONTH))
+		formatString: #,0
+		lineageTag: 564b7aa0-af98-4d77-8de9-bfc281ad9b6a
+
+	column practice_code
+		dataType: string
+		lineageTag: 095ab9c0-2c8c-4f51-9b98-57722e2207a1
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 2e2fb5c0-3bbe-4623-aa86-44ee888edd49
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: 4618b7f7-7e0a-4373-8bca-655336a3ff9a
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: efb2bc98-d474-4d6b-b231-d4742fa7a45d
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: ba3a0f2a-456e-4110-9adf-9b9369a45896
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column sex
+		dataType: string
+		lineageTag: dd3fd818-49b5-4a76-a506-727c507facdb
+		summarizeBy: none
+		sourceColumn: sex
+
+		annotation SummarizationSetBy = Automatic
+
+	column population
+		dataType: double
+		lineageTag: e1a0e006-daf0-40af-a3df-ffd4f26508ff
+		summarizeBy: sum
+		sourceColumn: population
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column census_date
+		dataType: string
+		lineageTag: f90ceabf-84d2-486b-86f2-7f034ba8073b
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: string
+		lineageTag: 1915850c-283c-4f14-a6eb-ad0dd9e0a977
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_date_of_month
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e606df20-fa61-4d26-ad40-84d5187c7c39
+		summarizeBy: none
+		sourceColumn: last_date_of_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 620a173f-785b-452a-9dd8-6306fd500ab8
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Legend_Helper
+		dataType: string
+		lineageTag: c9842ec4-ef14-40a8-9efa-f7d1d7e55ba5
+		summarizeBy: none
+		sourceColumn: Legend_Helper
+
+		annotation SummarizationSetBy = Automatic
+
+	column 3_year_age_band
+		dataType: string
+		lineageTag: a3084146-4710-4d0a-a9d1-3f9aef7d9599
+		summarizeBy: none
+		sourceColumn: 3_year_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Population = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="  SELECT DISTINCT [practice_code]#(lf)               ,[practice_name] = CASE WHEN [practice_name] LIKE 'Cam and Uley Family Practice' THEN 'Cam & Uley Family Practice'#(lf)#(tab)#(tab)#(tab)                           WHEN [practice_name] LIKE 'Newent Doctors Practice' THEN 'Holts Health Centre'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [practice_name] LIKE 'Painswick Surgery' THEN 'Hoyland House'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [practice_name] LIKE 'Prestbury Park' THEN 'Prestbury Park Medical'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [practice_name] LIKE 'Royal Crescent' THEN 'Royal Crescent Surgery'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [practice_name] LIKE 'Gloucester City Health Centre' THEN 'Severnside Medical Practice'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [practice_name] LIKE 'Stroud Valleys Medical Practice' THEN 'Five Valleys Medical Practice'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   WHEN [practice_name] LIKE 'Locking Hill Surgery' THEN 'Five Valleys Medical Practice'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)   ELSE [practice_name] END#(lf)#(tab)#(tab)#(tab)   ,[primary_care_network]#(lf)#(tab)#(tab)#(tab)   ,[locality]#(lf)#(tab)#(tab)#(tab)   ,[age_band]#(lf)               ,[3_year_age_band]#(lf)#(tab)#(tab)#(tab)   ,[sex]#(lf)#(tab)#(tab)#(tab)   ,[population]#(lf)#(tab)#(tab)#(tab)   ,[census_date]#(lf)#(tab)#(tab)#(tab)   ,[year_month]#(lf)#(tab)#(tab)#(tab)   ,[last_date_of_month]#(lf)#(tab)#(tab)#(tab)   ,[financial_year]#(lf)                           ,[Legend_Helper] = 'Gloucestershire'#(lf)#(lf)FROM [PowerBI_Reporting].[dbo].[GP_Practice_Populations]#(lf)#(lf)where [last_date_of_month] BETWEEN '20190401' AND EOMONTH(DATEADD(MONTH, -1, GETDATE()))"]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each true)
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

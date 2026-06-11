@@ -1,0 +1,84 @@
+table 'ePact Prescribing'
+	lineageTag: 9f609345-b63f-4252-8dfe-f2fc5db34e5c
+
+	column YearMonth
+		dataType: string
+		lineageTag: 0cf2e881-b606-4773-9b7d-3a44c9d91152
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFSection
+		dataType: string
+		lineageTag: 264600c3-645f-4cae-9a8d-45954e09b727
+		summarizeBy: none
+		sourceColumn: BNFSection
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFParagraph
+		dataType: string
+		lineageTag: 4dadbebb-1710-46ba-acd4-91e691912098
+		summarizeBy: none
+		sourceColumn: BNFParagraph
+
+		annotation SummarizationSetBy = Automatic
+
+	column BNFChemicalSubstance
+		dataType: string
+		lineageTag: bb1a43dd-fa8d-4951-aa3c-f8ada87a28e0
+		summarizeBy: none
+		sourceColumn: BNFChemicalSubstance
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 6b5e6610-ad5f-4a59-ae11-c67b5bbdc778
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Items
+		dataType: int64
+		formatString: #,0
+		lineageTag: f809cd37-46a7-460b-8b92-3036a9192259
+		summarizeBy: sum
+		sourceColumn: Items
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cost
+		dataType: double
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: 67746494-15da-4927-abf4-87321af7e4b5
+		summarizeBy: sum
+		sourceColumn: Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column HSPracticeCode
+		dataType: string
+		lineageTag: ff351457-c797-468a-a9d4-fba147345701
+		summarizeBy: none
+		sourceColumn: HSPracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'ePact Prescribing' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT [YearMonth]#(lf)#(tab)  ,[BNFSection]#(lf)#(tab)  ,[BNFParagraph]#(lf)#(tab)  ,[BNFChemicalSubstance]#(lf)      ,[Quantity] = SUM([Quantity])#(lf)#(tab)  ,[Items] = SUM([Items])#(lf)#(tab)  ,[ActualCost] = SUM([ActualCost])#(lf)      --,[FiveYearsAgeBand]#(lf)#(tab)  ,[HSPracticeCode]#(lf) #(lf)  FROM [CCG_Current].[ePACT2].[vw_Extract]#(lf)#(lf)  Where BNFSectionCode in ('601' --Drugs used in diabetes#(lf)  ,'2148') --Blood glucose monitors#(lf)  and YearMonth >=201804#(lf)#(lf)  GROUP BY [YearMonth]#(lf)#(tab)#(tab)  ,[BNFSection]#(lf)#(tab)#(tab)  ,[BNFParagraph]#(lf)#(tab)#(tab)  ,[BNFChemicalSubstance]#(lf)#(tab)#(tab)  --,[FiveYearsAgeBand]#(lf)#(tab)#(tab)  ,[HSPracticeCode]#(lf)#(lf)  Order by YearMonth#(lf)"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"YearMonth", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"ActualCost", "Cost"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

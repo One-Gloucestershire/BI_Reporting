@@ -1,0 +1,116 @@
+table 'ERF Activity'
+	lineageTag: ce76a91f-b878-4e88-8590-563f7f861eae
+
+	measure 'Recovery 19/20' = ```
+			
+			
+			    (CALCULATE(
+				SUM('ERF Activity'[Activity]),
+				'ERF Activity'[Time frame] IN { "Actual flex 2023/24"})
+			    
+			    /
+			CALCULATE(
+				SUM('ERF Activity'[Activity]),
+				'ERF Activity'[Time frame] IN { "Actual 2019/20" }))
+			  
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9649b744-8041-4789-8a70-b38c9d4f17c1
+
+	measure 'ERF Activity Metric Selected' = IF ( ISFILTERED ( 'ERF Activity'[Metric]) , CONCATENATEX(ALLSELECTED('ERF Activity'[Metric]), 'ERF Activity'[Metric], ", ") , "No specific metric selected" )
+		lineageTag: be6f7410-71f7-4652-9b6d-ad582960eb9c
+
+	measure 'ERF Activity Provider Selected' = IF ( ISFILTERED ( 'ERF Activity'[Provider]) , CONCATENATEX(ALLSELECTED('ERF Activity'[Provider]), 'ERF Activity'[Provider], ", ") , "No specific provider selected" )
+		lineageTag: af4b43b4-2201-46ee-8262-f9e2d7eba149
+
+	measure 'ERF Activity Time Frame Selected' = IF ( ISFILTERED ( 'ERF Activity'[Time frame]) , CONCATENATEX(ALLSELECTED('ERF Activity'[Time frame]), 'ERF Activity'[Time frame], ", ") , "No specific time frame selected" )
+		lineageTag: 5faa750a-c849-45ae-9b1a-92d6f283e97d
+
+	measure 'ERF 1 Recovery of 19/20' = if('ERF Activity'[Recovery 19/20] <>BLANK(), 'ERF Activity'[Recovery 19/20], "")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1bbeafdd-cf1f-4281-859a-ed02e681f29a
+
+	measure 'ERF Activity Variance 23/24' = ```
+			IFERROR((CALCULATE(sum('ERF Activity'[Activity]), 'ERF Activity'[Time frame] IN {"Plan"})
+			- 
+			CALCULATE(sum('ERF Activity'[Activity]), 'ERF Activity'[Time frame] IN {"Actual flex 2023/24"}))
+			/ 
+			CALCULATE(sum('ERF Activity'[Activity]), 'ERF Activity'[Time frame] IN {"Plan"}),"")
+			```
+		lineageTag: 939afae2-4b74-4756-9718-e97658f79cc4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ERF Activity 1 Variance 23/24' = if('ERF Activity'[ERF Activity Variance 23/24]<>1.0000, 'ERF Activity'[ERF Activity Variance 23/24], "")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fa1feb2d-4804-4a74-812c-c0e77b473a79
+
+	measure 'Activity for % Target' =
+			
+			CALCULATE(
+				SUM('ERF Activity'[Activity]),
+				'ERF Activity'[Time frame] IN { "% Target" }
+			)
+		lineageTag: fbd4cbbe-7823-4ea2-993f-c648b90393ac
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ERF Activity % for Target' = FORMAT('ERF Activity'[Activity for % Target],"Percent")
+		lineageTag: 47d5f670-1c35-4c4c-adb2-c5e31e058fd3
+
+	column Metric
+		dataType: string
+		lineageTag: fe24a70b-2421-42e1-ab85-fc7d3180bf44
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: af8ae0fe-7c73-442b-b8af-f1460f5858ee
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month name'
+		dataType: string
+		lineageTag: 09821d44-6ffe-4f8a-8020-b42c39156b99
+		summarizeBy: none
+		sourceColumn: Month name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time frame'
+		dataType: string
+		lineageTag: 413ee503-0107-4a8c-9019-91aa333d1fee
+		summarizeBy: none
+		sourceColumn: Time frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: double
+		formatString: #,0
+		lineageTag: 95933844-a418-44d7-900f-a254077974c8
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition 'ERF Activity-e47c47cf-9100-4486-a65e-46a1d788ffa2' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="SELECT [Metric]#(lf)      ,[Provider]#(lf)      ,[Month name]#(lf)      ,[Type]#(lf)      ,[Activity]#(lf)  FROM [PowerBI_Reporting].[dbo].[ERF activity v2]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Type", "Time frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

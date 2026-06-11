@@ -1,0 +1,61 @@
+table cost_projection
+	lineageTag: c356e1f5-c981-4362-aabc-ba92bea7b27d
+
+	measure ytd_projection = CALCULATE(sum(cost_projection[Projection (linear)]),cost_projection[YearMonth]<= max('ePact Prescribing'[YearMonth]))
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 35bdad51-b4c0-4655-b10e-9cb55c36adc6
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: 74162e02-70bc-467e-ad69-593d4ab73adf
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: f4f1f2db-49d3-4008-97cf-5390311d234d
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: YearMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Projection (linear)'
+		dataType: decimal
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: 6b772323-2156-4c8c-880c-b6dc039166ae
+		summarizeBy: none
+		sourceColumn: Projection (linear)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column 'Projection (cumulative linear)'
+		dataType: string
+		lineageTag: 73b1a36b-5ff6-436a-92c2-6b376e5223e9
+		summarizeBy: none
+		sourceColumn: Projection (cumulative linear)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition cost_projection = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("fZLBSgMxEIbfZc/DMJlkMpOjIB4K6sFj6WG7BBVqW9ZdwefxTXwys0VJkbSnEP7/yzcJWa87JvYUOuhujuPrrqzfX84EzAhN/m838AssyX3/2ap7daDRoVKtx5Ks5n1u9UUUYmCUWPt66u+a52vwIOwxuNq3Zf75eX6fWkTiBIEC8pkhleQpH6f8ts1j89bgnACboKsiRyV7HKbDRchTAaNgqq7CQ/dw+LiiCqZAIaJxpbhkt3m4QkVlSKwY9Y8KtLhW/X7ux+bjOTAxMDIUrtCiusvb8RLFZbgA0RL6M5U//YFxeGkj5ZFBlJCLaPMD", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [YearMonth = _t, Month = _t, #"Projection (linear)" = _t, #"Projection (cumulative linear)" = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"YearMonth", Int64.Type}, {"Month", type text}, {"Projection (linear)", Currency.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

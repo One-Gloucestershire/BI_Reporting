@@ -1,0 +1,40 @@
+table '3. Admissions QOF'
+	lineageTag: 8be4c763-d3c3-4326-be70-a64e68c9b794
+
+	column UniqueCDSidentifier
+		dataType: string
+		lineageTag: 8b07282f-f20a-451d-ab6d-830f1a01e5d8
+		summarizeBy: none
+		sourceColumn: UniqueCDSidentifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: 6b96e537-b0cf-4100-bc9e-b5fde43a7b83
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 9638998b-f462-4e33-87b1-af3205ab7191
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '3. Admissions QOF' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select *#(lf)from [PowerBI_Reporting].[dbo].[Inpatients_UEC]#(lf)"]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"counter", "nhs_number", "start_date", "admission_hour", "admission_day", "discharge_ready_date", "NCTR_Time", "discharge_date", "LoS_Bands", "LoS_Bands_Order", "treatment_function_code", "treatment_function_description", "hrg_code", "ICD10_description", "ICD10_chapter", "ICD10_subchapter", "patient_classification_code", "hrg_description", "hrg_sub_chapter_description", "total_bed_days", "patient_classification", "admission_method_group_grouped", "discharge_destination_group_grouped", "assessment_flag", "readmission_flag", "sdec_flag", "short_stay_0-1_day_flag", "short_stay_72hr_flag", "long_stay_28day+_flag", "NCTR_flag", "Community_Hospital_Flag", "YTD_Flag", "provider_group", "provider_name", "provider_code", "site_code", "site_name", "commissioner_group", "commissioner_code", "age", "gender", "locality", "primary_care_network", "practice_code", "practice_name", "post_code", "lsoa", "deprivation", "glos_deprivation", "5yr_age_band", "10yr_age_band", "working_age_band", "ethnic_origin", "ethnic_origin_group", "efi_category", "financial_year", "month_name", "financial_month", "year_month", "SPC Flag", "GHT_admitting_ward_code", "GHT_admitting_ward", "GHT_discharging_ward_code", "GHT_discharging_ward", "GHT_all_ward_codes", "GHT_all_wards", "total_tariff_plus_mff", "tariff_used"}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Removed Columns", {"UniqueCDSidentifier"}, "Attribute", "Value")
+				in
+				    #"Unpivoted Other Columns"
+
+	annotation PBI_ResultType = Table
+

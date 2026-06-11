@@ -1,0 +1,131 @@
+table '1. Ambulance. Handover Delays'
+	lineageTag: e95f0793-f343-4c86-a8e0-99f524b2895d
+
+	measure TotalMinutes = sum('1. Ambulance. Handover Delays'[Handover delays - minutes])
+		lineageTag: 815d42a8-5263-438a-9062-705c78b7913d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Handover Linear Regression' = ```
+			
+			 
+			VAR Temp_Table =
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Table'[FinancialYear], 'Date Table'[FinancialMonth],
+			                         'Date Table'[monthname], 'Date Table'[month_number] ),
+			            "Value_x", 'Date Table'[month_number],
+			            "Value_y", 'Handover Delays'[TotalMinutes]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			 
+			VAR LINESTX_Table =
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope =
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept =
+			    MAXX ( LINESTX_Table, [Intercept] )
+			 
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Table'[month_number] ),
+			        Intercept + Slope * 'Date Table'[month_number]
+			    )
+			```
+		lineageTag: 6da51e33-c4cd-4900-9526-60a148b3b0d2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Handover delays - minutes'
+		dataType: double
+		lineageTag: bab05d7a-aeef-4d9d-8446-741662c63bb0
+		summarizeBy: sum
+		sourceColumn: Handover delays - minutes
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column FirstDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2fe81174-31a5-4532-862c-96aa04b2384b
+		summarizeBy: none
+		sourceColumn: FirstDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Handover Delay Group'
+		dataType: string
+		lineageTag: 20af500e-0ef1-4783-8042-4fd269ede693
+		summarizeBy: none
+		sourceColumn: Handover Delay Group
+		sortByColumn: 'Handover Delay Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Handover Delay Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a914afb-7928-4522-b07e-bb59b6b9dff8
+		summarizeBy: sum
+		sourceColumn: Handover Delay Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Receiving_Location_Name
+		dataType: string
+		lineageTag: 2157d5ad-ad14-4a0f-a585-47f35ac88a49
+		summarizeBy: none
+		sourceColumn: Receiving_Location_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Receiving_Ward_Name
+		dataType: string
+		lineageTag: 27f65ca4-2487-4451-b4c1-1b8139928e62
+		summarizeBy: none
+		sourceColumn: Receiving_Ward_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Grouped Recieveing Place'
+		dataType: string
+		lineageTag: 845fe964-d4cb-4c15-84aa-80b739d04e37
+		summarizeBy: none
+		sourceColumn: Grouped Recieveing Place
+
+		annotation SummarizationSetBy = Automatic
+
+	column Late_Handover_Reason
+		dataType: string
+		lineageTag: 81178b3a-10b7-4ead-b0b4-87bb3a37cf61
+		summarizeBy: none
+		sourceColumn: Late_Handover_Reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 4ce1b339-8132-42e0-86ba-d080e8fab7a0
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1. Ambulance. Handover Delays' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from [PowerBI_Reporting].[USC].[SWASFT_Handover_Delays]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

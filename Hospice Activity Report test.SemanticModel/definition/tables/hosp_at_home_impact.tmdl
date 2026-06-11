@@ -1,0 +1,61 @@
+table hosp_at_home_impact
+	lineageTag: 0ba09195-7932-437c-9826-62b48542bf46
+
+	measure distinct_patients_hosp = DISTINCTCOUNT(hosp_at_home_impact[NHS_Number])
+		formatString: 0
+		lineageTag: 0c34a5c1-d401-4219-a762-ccf9b6531e56
+
+	column Activity_Type
+		dataType: string
+		lineageTag: 7862eee7-7c38-4a9a-a095-c908f1b11073
+		summarizeBy: none
+		sourceColumn: Activity_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Count
+		dataType: int64
+		formatString: 0
+		lineageTag: 1c00d601-10ef-41b7-aa6c-6760f69b4577
+		summarizeBy: sum
+		sourceColumn: Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 18a70646-13ad-460e-bc9f-76e5ea5c56c2
+		summarizeBy: sum
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: ec73ed7e-038b-46ed-8d01-bdea1cdc24cb
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 01aa0e72-18b7-4ae3-a882-25a91be59072
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	partition hosp_at_home_impact-6a59ea6b-fc1d-4eba-96e3-4f15c692c593 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="set nocount on set ansi_nulls on #(lf)set dateformat dmy#(lf)#(lf)DECLARE @report_month DATE, @referral_end DATE, @referral_start DATE#(lf)SET @referral_end = dateadd(month,-7,getdate()) -- report_month minus 6 months#(lf)SET @referral_start = '20210401'#(lf)#(lf)-------------------#(lf)---ED Admission---#(lf)-------------------#(lf)SELECT #(lf)#(tab) [Activity_Type] = 'ED Admission' #(lf)#(tab),[Count] = 1#(lf)#(tab),[Month] = datediff(MONTH,[H].[Referral_Date],[arrival_date]) #(lf)#(tab),[E].[NHS_Number]#(lf)#(tab),[H].[Provider]#(lf)#(lf)FROM [CCG_Current].[GHFT].[vw_EDAttendance] [a]#(lf)#(lf)#(tab)LEFT JOIN [PowerBI_Reporting].[dbo].[ECDS_ED_Attendances] [E] ON [E].[CDS_Unique_Identifier] = [a].[cds_unique_identifier]#(lf)#(lf)#(tab)INNER JOIN [CCG_Current].[Hospices].[vw_HospiceAtHome_Monthly] [H]#(lf)#(tab)ON [E].[NHS_Number] = [H].[NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths][M]#(lf)#(tab)ON [H].[NHS_Number] = [M].[Derived_NHS_Number]#(lf)#(lf)WHERE #(lf)#(lf)#(tab)[E].[admitted_flag] like 'Admitted'  #(lf)#(tab)AND datediff(MONTH,[H].[Referral_Date],[arrival_date]) between -12 and 12#(lf)#(tab)AND [H].[Referral_Date] between @referral_start and @referral_end#(lf)#(tab)AND ([M].[DateOfDeath] is null or [M].[DateOfDeath] > DATEADD(MONTH,6,[H].[Referral_Date]))#(lf)#(tab)AND ([H].[NHS_Number] is not null and [H].[NHS_Number] <> ' ')#(lf)#(lf)GROUP BY #(lf)#(tab) [E].[NHS_Number] #(lf)#(tab),datediff(MONTH,[H].[Referral_Date],[arrival_date])#(lf)#(tab),[H].[Provider]#(lf)#(lf)UNION ALL#(lf)-------------------#(lf)---ED Attendance---#(lf)-------------------#(lf)SELECT #(lf)#(tab) [Activity_Type] = 'ED Attendance'           #(lf)#(tab),[Count] = 1#(lf)#(tab),[Month] = datediff(MONTH,[H].[Referral_Date],[arrival_date]) #(lf)#(tab),[E].[NHS_Number]#(lf)#(tab),[H].[Provider]#(lf)#(lf)FROM [CCG_Current].[GHFT].[vw_EDAttendance] [a]#(lf)#(lf)#(tab)LEFT JOIN [PowerBI_Reporting].[dbo].[ECDS_ED_Attendances] [E] ON [E].[CDS_Unique_Identifier] = [a].[cds_unique_identifier]#(lf)#(lf)#(tab)INNER JOIN [CCG_Current].[Hospices].[vw_HospiceAtHome_Monthly] [H]#(lf)#(tab)ON [E].[NHS_Number] = [H].[NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths][M]#(lf)#(tab)ON [H].[NHS_Number] = [M].[Derived_NHS_Number]#(lf)#(lf)WHERE #(lf)#(tab)[E].[admitted_flag] like 'Dischaged (not admitted)'#(lf)#(tab)and datediff(MONTH,[H].[Referral_Date],[arrival_date]) between -12 and 12#(lf)#(tab)AND [H].[Referral_Date] between @referral_start and @referral_end#(lf)#(tab)AND ([M].[DateOfDeath] is null or [M].[DateOfDeath] > DATEADD(MONTH,6,[H].[Referral_Date]))#(lf)#(tab)AND ([H].[NHS_Number] is not null and [H].[NHS_Number] <> ' ')#(lf)#(lf)GROUP BY #(lf)#(tab) [E].[nhs_number]#(lf)#(tab),datediff(MONTH,[H].[Referral_Date],[arrival_date])#(lf)#(tab),[H].[Provider]#(lf)#(lf)UNION ALL#(lf)-------------------#(lf)---GP Contact---#(lf)-------------------#(lf)SELECT #(lf)#(tab) [Activity_Type] = 'GP Contact'          #(lf)#(tab),[Count] = 1#(lf)#(tab),[Month] = datediff(MONTH,[H].[Referral_Date],[AppointmentDate]) #(lf)#(tab),[PseudoNHSNo]#(lf)#(tab),[H].[Provider]#(lf)#(lf)FROM [CCG_Current].[PrimaryCare].[vw_Appointments] [A]#(lf)#(lf)#(tab)INNER JOIN [CCG_Current].[Hospices].[vw_HospiceAtHome_Monthly] [H]#(lf)#(tab)ON [a].[PseudoNHSNo] = [H].[NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths][M]#(lf)#(tab)ON [H].[NHS_Number] = [M].[Derived_NHS_Number]#(lf)#(lf)WHERE#(lf)#(tab)[AppointmentStatus] in ('Left','Telephone - Complete','Visited')#(lf)#(tab)and datediff(MONTH,[H].[Referral_Date],AppointmentDate) between -12 and 12#(lf)#(tab)AND [H].[Referral_Date] between @referral_start and @referral_end#(lf)#(tab)AND ([M].[DateOfDeath] is null or [M].[DateOfDeath] > DATEADD(MONTH,6,[H].[Referral_Date]))#(lf)#(tab)AND ([NHS_Number] is not null and [NHS_Number] <> ' ')#(lf)#(lf)GROUP BY #(lf)#(tab) [PseudoNHSNo]#(lf)#(tab),datediff(MONTH,[H].[Referral_Date],[AppointmentDate])#(lf)#(tab),[H].[Provider]#(lf)#(lf)UNION ALL#(lf)#(lf)---------------------#(lf)-----MIU---#(lf)---------------------#(lf)#(lf)SELECT #(lf)#(tab) [Activity_Type] = 'MIIU'        #(lf)#(tab),[Count] = 1#(lf)#(tab),[Month] = datediff(MONTH,[H].[Referral_Date],[arrival_date]) #(lf)#(tab),[E].[nhs_number]#(lf)#(tab),[H].[Provider]#(lf)#(lf)FROM [PowerBI_Reporting].[dbo].[ECDS_ED_Attendances] [E]#(lf)#(lf)#(tab)INNER JOIN [CCG_Current].[Hospices].[vw_HospiceAtHome_Monthly] [H]#(lf)#(tab)ON [E].[NHS_Number] = [H].[NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths][M]#(lf)#(tab)ON [H].[NHS_Number] = [M].[Derived_NHS_Number]#(lf)#(lf)WHERE #(lf)#(tab)datediff(MONTH,[H].[Referral_Date] ,[arrival_date]) between -12 and 12#(lf)#(tab)AND [E].[department_type] like 'Minor Injury Unit'#(lf)#(tab)AND [H].[Referral_Date] between @referral_start and @referral_end#(lf)#(tab)AND ([M].[DateOfDeath] is null or [M].[DateOfDeath] > DATEADD(MONTH,6,[H].[Referral_Date]))#(lf)#(tab)AND ([H].[NHS_Number] is not null and [H].[NHS_Number] <> ' ')#(lf)#(lf)GROUP BY #(lf)#(tab) [E].[NHS_Number]#(lf)#(tab),datediff(MONTH,[H].[Referral_Date],[arrival_date])#(lf)#(tab),[H].[Provider]#(lf)#(lf)UNION ALL#(lf)#(lf)-------------------#(lf)---Rapid Response---#(lf)-------------------#(lf)SELECT #(lf) #(tab) [Activity_Type] = 'Rapid Response'     #(lf)#(tab),[Count] = 1 #(lf)#(tab),[Month] = datediff(MONTH,[H].[Referral_Date],[Eventdate]) #(lf)#(tab),[A].[NHSNumber]#(lf)#(tab),[H].[Provider]#(lf)#(lf)FROM [CCG_Current].[GCS].[vw_All_EventData] [A]#(lf)#(lf)#(tab)INNER JOIN [CCG_Current].[Hospices].[vw_HospiceAtHome_Monthly] [H]#(lf)#(tab)ON [a].[NHSNumber] = [H].[NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths][M]#(lf)#(tab)ON [H].[NHS_Number] = [M].[Derived_NHS_Number]#(lf)#(lf)WHERE #(lf)#(tab)datediff(MONTH,[H].[Referral_Date],[EventDate]) between -12 and 12#(lf)#(tab)and [ServiceCode] = 'RPDR'#(lf)#(tab)and [ServiceOffered] not like '%ncov%'#(lf)#(tab)AND [H].[Referral_Date] between @referral_start and @referral_end#(lf)#(tab)AND ([M].[DateOfDeath] is null or [M].[DateOfDeath] > DATEADD(MONTH,6,[H].[Referral_Date]))#(lf)#(tab)AND ([NHS_Number] is not null and [NHS_Number] <> ' ')#(lf)#(lf)GROUP BY #(lf)#(tab) [A].[NHSNumber]#(lf)#(tab),datediff(MONTH,[H].[Referral_Date],[EventDate])#(lf)#(tab),[H].[Provider]#(lf)#(lf)#(tab)UNION ALL#(lf)#(lf)-------------------#(lf)---Emergency Admission---#(lf)-------------------#(lf)SELECT #(lf)#(tab) [Activity_Type] = 'Emergency Admission' #(lf)#(tab),[Count] = 1#(lf)#(tab),[Month] = datediff(MONTH,[H].[Referral_Date],[StartDate_HospitalProviderSpell]) #(lf)#(tab),[Derived_Pseudo_NHS]#(lf)#(tab),[H].[Provider]#(lf)#(lf)FROM [CCG_Current].[SEM].[vw_HOSPITALPROVIDERSPELL] [a]#(lf)#(lf)#(tab)INNER JOIN [CCG_Current].[Hospices].[vw_HospiceAtHome_Monthly] [H]#(lf)#(tab)ON [a].[Derived_Pseudo_NHS] = [H].[NHS_Number]#(lf)#(lf)#(tab)LEFT JOIN [CCG_Reference].[Population].[vw_PDS_Deaths][M]#(lf)#(tab)ON [H].[NHS_Number] = [M].[Derived_NHS_Number]#(lf)#(lf)WHERE #(lf)#(tab)[AdmissionMethod_HospitalProviderSpell] like '2%'#(lf)#(tab)AND datediff(MONTH,[H].[Referral_Date],[StartDate_HospitalProviderSpell]) between -12 and 12#(lf)#(tab)AND [H].[Referral_Date] between @referral_start and @referral_end#(lf)#(tab)AND ([M].[DateOfDeath] is null or [M].[DateOfDeath] > DATEADD(MONTH,6,[H].[Referral_Date]))#(lf)#(tab)AND OrganisationCode_Codeofcommissioner like '11m%'#(lf)#(tab)AND StartDate_HospitalProviderSpell is not null#(lf)#(tab)AND ([NHS_Number] is not null and [NHS_Number] <> ' ')#(lf)#(lf)GROUP BY #(lf)#(tab) [Derived_Pseudo_NHS] #(lf)#(tab),datediff(MONTH,[H].[Referral_Date],[StartDate_HospitalProviderSpell])#(lf)#(tab),[H].[Provider]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

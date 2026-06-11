@@ -1,0 +1,936 @@
+table '3. Admissions'
+	lineageTag: ee584f6b-fe9a-44a9-8e0e-1d2da5e366ba
+
+	measure NumberOfMonths_Adm = CALCULATE(DISTINCTCOUNT('3. Admissions'[year_month]),ALLSELECTED('3. Admissions'),'3. Admissions'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: 99656aca-0d8b-45c2-a9df-9a480a29713f
+
+	measure MonthlyTotal_Adm =
+			SUMX (
+			    VALUES ( '3. Admissions'[year_month] ),
+			    CALCULATE ( SUM ( '3. Admissions'[Counter] ),
+			    '3. Admissions'[SPC Flag] = 1 )
+			)
+		displayFolder: SPC
+		lineageTag: 4da4d0c5-ccf1-4c54-8779-ffcedd0bef24
+
+	measure TotalPerMonth_Adm =
+			
+			calculate(SUM('3. Admissions'[Counter]),ALLSELECTED('3. Admissions'),'3. Admissions'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: f8d4ad75-2958-4bf2-a9fb-d956719982c9
+
+	measure Mean_Adm =
+			
+			[TotalPerMonth_Adm]/[NumberOfMonths_Adm]
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: a5de5c67-5d73-4aeb-abc2-4e20fd511e76
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure StdDev_Adm = ```
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( '3. Admissions'[year_month]), [MonthlyTotal_Adm]), ALLEXCEPT('Date Table', 'Date Table'[year_month]))
+			 
+			RETURN IFERROR(STD_DEV, 0)
+			```
+		displayFolder: SPC
+		lineageTag: 18bf9ff4-5f97-4231-b67a-cb8688d41fe4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure UCL_Adm = [Mean_Adm]+(3*[StdDev_Adm])
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: ca6704b4-eb24-4b35-aaa6-4c9b77ff5a52
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure LCL_Adm = [Mean_Adm]-(3*[StdDev_Adm])
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 8a097fe3-5001-488c-a584-973c77df8990
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure Admissions_CounterSupressed =
+			IF(
+			    ISBLANK(SUM('3. Admissions'[Counter])),"",
+			    IF(
+			        SUM('3. Admissions'[Counter])<5,0,sum('3. Admissions'[Counter])))
+		formatString: #,0
+		lineageTag: b19fb3ec-0823-4055-971b-68d7f6a8b32c
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column nhs_number
+		dataType: string
+		displayFolder: z. Codes (not needed)
+		lineageTag: a77824fb-8d47-4f23-8a03-74add859fed0
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column start_date
+		dataType: dateTime
+		formatString: dd mmmm yyyy
+		displayFolder: z. Codes (not needed)
+		lineageTag: eca99cd2-d124-4727-ba87-562b6bcb7d60
+		summarizeBy: none
+		sourceColumn: start_date
+
+		variation Variation
+			isDefault
+			relationship: dd2419ad-4087-4109-acde-e42754cf1cc2
+			defaultHierarchy: LocalDateTable_5383259f-3c98-4e24-b12a-0a02457e956b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column discharge_ready_date
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Admission Characteristics
+		lineageTag: f93a192e-3ccc-49c5-b105-a035b84822d9
+		summarizeBy: none
+		sourceColumn: discharge_ready_date
+
+		variation Variation
+			isDefault
+			relationship: 9c3ef664-97fa-4928-afaa-d4398e3d0986
+			defaultHierarchy: LocalDateTable_7efaca07-1ddf-40e0-9a00-22017432ef26.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_date
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Admission Characteristics
+		lineageTag: 4b67071d-a0c0-4fb7-b2fa-e8ec2810d95d
+		summarizeBy: none
+		sourceColumn: discharge_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column age
+		dataType: int64
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: 2c2f09fb-5373-4824-a76e-e2a30b6d1ced
+		summarizeBy: sum
+		sourceColumn: age
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 57c869fa-e027-4e78-94fb-2dc8ef5e0f89
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_code
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: 96b675d4-ec62-4a9a-95ab-8c21f1e69826
+		summarizeBy: none
+		sourceColumn: provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_code
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: d1bb8a5d-2da2-4670-b120-6082d0290052
+		summarizeBy: none
+		sourceColumn: site_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column treatment_function_code
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 9fb16c9e-89b4-4048-801b-9316b42704c3
+		summarizeBy: none
+		sourceColumn: treatment_function_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_code
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: dabf19eb-3c57-41e9-9427-10c88b6a3056
+		summarizeBy: none
+		sourceColumn: hrg_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_classification_code
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: cf4ac20b-3633-4beb-950a-32ec04e84cc4
+		summarizeBy: sum
+		sourceColumn: patient_classification_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column readmission_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: a1d413e6-cf65-4427-b72c-81060fea622d
+		summarizeBy: sum
+		sourceColumn: readmission_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: #,0
+		displayFolder: Data Values
+		lineageTag: 53a4d5e9-6b0f-4d10-95fe-96fc43d8a8c9
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		displayFolder: z. Codes (not needed)
+		lineageTag: 972c4d1b-019b-4594-bb44-b48d80cb7d88
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		displayFolder: z. Codes (not needed)
+		lineageTag: e651bd5e-2240-4ae1-bac0-05ad4c679068
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 2a660dcc-c7c8-40a2-a904-3f1c8a8cbdcb
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 1dbdf24a-819f-4c55-894f-da7f7f645203
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 35cbfb91-9561-4a9a-800e-14810417b8c3
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 434eb079-98be-42c1-be72-e1eb800a2c9d
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: e4f4a67a-6e86-42fc-adbb-0128302f3fe2
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column post_code
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 51ce92ce-b9fd-42fe-abde-8bdcfdc72284
+		summarizeBy: none
+		sourceColumn: post_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 3ae0eced-b945-47e6-b949-efe073f6b863
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprivation
+		dataType: double
+		displayFolder: Demographics
+		lineageTag: d32e404f-2dbd-4f46-85ca-ded72c39afa1
+		summarizeBy: sum
+		sourceColumn: deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 5yr_age_band
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 1a103183-a475-476c-a7a5-ba7312cc945a
+		summarizeBy: none
+		sourceColumn: 5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10yr_age_band
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: db51d506-7d6b-435b-9fd0-c3c4e13757fc
+		summarizeBy: none
+		sourceColumn: 10yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 80013690-8781-4b2a-8b30-b1277ae48651
+		summarizeBy: none
+		sourceColumn: ethnic_origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_group
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 3378b3f1-9afd-471e-8097-624d93b49eb3
+		summarizeBy: none
+		sourceColumn: ethnic_origin_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 4dfd0c6d-4fe7-44d2-bbfd-ba940430766f
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_name
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: c397b268-bb5d-4097-866c-0e6fc202a380
+		summarizeBy: none
+		sourceColumn: provider_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_group
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: 054b3d4a-de69-443a-9f7b-15268ae35c8f
+		summarizeBy: none
+		sourceColumn: provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_name
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: fe9ce1db-25eb-45d6-8bbd-391a9922dcfe
+		summarizeBy: none
+		sourceColumn: site_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column treatment_function_description
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 6c449820-ec15-45e8-b503-d2ca976c768c
+		summarizeBy: none
+		sourceColumn: treatment_function_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_description
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 6e5218d9-5f2a-4bdc-a8a7-7a6f9715a52a
+		summarizeBy: none
+		sourceColumn: hrg_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_sub_chapter_description
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 17128228-26c0-44e1-bbbe-a7c5c87d5bde
+		summarizeBy: none
+		sourceColumn: hrg_sub_chapter_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_bed_days
+		dataType: int64
+		formatString: 0.0
+		displayFolder: Admission Characteristics
+		lineageTag: 8163fbcf-53d4-4d87-aa68-ed2133436434
+		summarizeBy: sum
+		sourceColumn: total_bed_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_classification
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 76daf793-d0c6-45ec-9d5c-788d1f9de406
+		summarizeBy: none
+		sourceColumn: patient_classification
+
+		annotation SummarizationSetBy = Automatic
+
+	column short_stay_0-1_day_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: a44ccb79-9b7b-4e8d-ac6e-b0da228fa72c
+		summarizeBy: sum
+		sourceColumn: short_stay_0-1_day_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column short_stay_72hr_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: bfd618c4-70ca-4cb2-b211-c678f62fa36a
+		summarizeBy: sum
+		sourceColumn: short_stay_72hr_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column long_stay_28day+_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: 1a381801-f273-4911-8ffe-6608b9ed8a37
+		summarizeBy: sum
+		sourceColumn: long_stay_28day+_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column NCTR_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: 9e7c3d99-8ef1-4168-86e2-8098729d7cd3
+		summarizeBy: sum
+		sourceColumn: NCTR_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column NCTR_Time
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: 95a2dcb5-cb24-452e-9b19-4b0c831f6e22
+		summarizeBy: sum
+		sourceColumn: NCTR_Time
+
+		annotation SummarizationSetBy = Automatic
+
+	column Community_Hospital_Flag
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: ce0fc3b5-1901-4830-a96a-11b0fd82ae76
+		summarizeBy: none
+		sourceColumn: Community_Hospital_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_method_group_grouped
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 1e96bce4-bbd2-419c-b1f4-2dfd2a4777a1
+		summarizeBy: none
+		sourceColumn: admission_method_group_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column working_age_band
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 559e56d7-4149-41f9-b0dc-2debe203a5fb
+		summarizeBy: none
+		sourceColumn: working_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoS_Bands
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 3bdd08dc-c8d6-49bb-83ef-7275336fbfa1
+		summarizeBy: none
+		sourceColumn: LoS_Bands
+		sortByColumn: LoS_Bands_Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column commissioner_code
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: 022e0636-e1f9-475e-9dd0-c6c5c607ae63
+		summarizeBy: none
+		sourceColumn: commissioner_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column assessment_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: c0b7a9cb-7ceb-4e95-b1b5-2998c4e49bab
+		summarizeBy: sum
+		sourceColumn: assessment_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column YTD_Flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Data Values
+		lineageTag: 3718299c-1e07-4e24-813d-7e09912a65a2
+		summarizeBy: sum
+		sourceColumn: YTD_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_hour
+		dataType: int64
+		formatString: 0
+		displayFolder: Admission Characteristics
+		lineageTag: 64d3b4a6-1385-4506-8f10-3a261337ddd7
+		summarizeBy: sum
+		sourceColumn: admission_hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_day
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 9a358307-e75d-4762-b775-89c6509ece8d
+		summarizeBy: none
+		sourceColumn: admission_day
+
+		annotation SummarizationSetBy = Automatic
+
+	column commissioner_group
+		dataType: string
+		displayFolder: Provider & Commissioner
+		lineageTag: 44450358-331c-4720-ab1a-fdf4cbacbb63
+		summarizeBy: none
+		sourceColumn: commissioner_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 4375ad7b-dfdf-458b-bea0-252cad7d8c33
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column glos_deprivation
+		dataType: int64
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: 86e82206-395c-40b9-b94f-0da6e234b47d
+		summarizeBy: sum
+		sourceColumn: glos_deprivation
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10_description
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: d498fcf0-8159-4671-b3ea-76339ce809c4
+		summarizeBy: none
+		sourceColumn: ICD10_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10_chapter
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: fd1b1fe9-4884-47ca-bb9c-44fb2a1f24a2
+		summarizeBy: none
+		sourceColumn: ICD10_chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10_subchapter
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 96c40810-b709-405e-8bb5-6dccd2a35eca
+		summarizeBy: none
+		sourceColumn: ICD10_subchapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_group_grouped
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: d101f914-da54-40fb-bcab-8b26946b4f64
+		summarizeBy: none
+		sourceColumn: discharge_destination_group_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqueCDSidentifier
+		dataType: string
+		displayFolder: z. Codes (not needed)
+		lineageTag: 0e964798-bc33-4704-9a1b-580308c4f792
+		summarizeBy: none
+		sourceColumn: UniqueCDSidentifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHT_admitting_ward_code
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 9dfab287-4e4b-440c-ab5c-a5347e6afa06
+		summarizeBy: none
+		sourceColumn: GHT_admitting_ward_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHT_admitting_ward
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 9d3503eb-0ff2-42aa-aa1d-d78251095c0c
+		summarizeBy: none
+		sourceColumn: GHT_admitting_ward
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHT_discharging_ward_code
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 9afc3f5c-33c3-4771-bdb5-d197320b4d63
+		summarizeBy: none
+		sourceColumn: GHT_discharging_ward_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHT_discharging_ward
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: ce0aa025-7d43-4da4-9ca1-17d5a8c95b6b
+		summarizeBy: none
+		sourceColumn: GHT_discharging_ward
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHT_all_ward_codes
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 28f033ed-188d-487e-9616-07ab6ce5c96b
+		summarizeBy: none
+		sourceColumn: GHT_all_ward_codes
+
+		annotation SummarizationSetBy = Automatic
+
+	column GHT_all_wards
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: e283050a-4abc-475f-9cc0-c9b5a6d40dcf
+		summarizeBy: none
+		sourceColumn: GHT_all_wards
+
+		annotation SummarizationSetBy = Automatic
+
+	column sdec_flag
+		dataType: string
+		displayFolder: Admission Characteristics
+		lineageTag: 4b3c8d88-582d-459c-bcc4-b7ed9f84d4ec
+		summarizeBy: none
+		sourceColumn: sdec_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 6245fc88-bedc-47e4-ad29-7acd700340b0
+		summarizeBy: sum
+		sourceColumn: SPC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column atrialfib_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: e75d9a69-ad5d-4704-9881-8db27ef7a076
+		summarizeBy: sum
+		sourceColumn: atrialfib_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column asthma_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: b48f8b00-175d-45ff-b90f-420db7532c8a
+		summarizeBy: sum
+		sourceColumn: asthma_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancer_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 0ab246e8-00c2-488b-96fc-afe3006fc056
+		summarizeBy: sum
+		sourceColumn: cancer_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column coronaryheart_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 3f391edd-a376-493c-b3bd-144847f60462
+		summarizeBy: sum
+		sourceColumn: coronaryheart_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column chronickidney_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 3a6bff1d-120f-431a-a316-8e929120fad5
+		summarizeBy: sum
+		sourceColumn: chronickidney_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column copd_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 2f5b5e22-f339-45f0-b12c-686807147142
+		summarizeBy: sum
+		sourceColumn: copd_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 0cd3c4f3-ea4a-4f81-ab43-51a55a2b42e8
+		summarizeBy: sum
+		sourceColumn: dementia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column depression_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 5798c46e-5c2a-4abf-b8a9-d3b1c46e33f1
+		summarizeBy: sum
+		sourceColumn: depression_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column diabetes_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 45f16247-2be9-4b60-ac9a-fa2fe0f82416
+		summarizeBy: sum
+		sourceColumn: diabetes_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column epilepsy_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: d3a5c28e-a494-475d-b751-70dccb110ef7
+		summarizeBy: sum
+		sourceColumn: epilepsy_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column heartfailure_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 5231bb4c-052a-40b0-93f2-a99b3e96ba7f
+		summarizeBy: sum
+		sourceColumn: heartfailure_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column hypertension_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 8366c6c1-0b08-4715-bee8-2d63d7a05892
+		summarizeBy: sum
+		sourceColumn: hypertension_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column learningdisability_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: c233d3ad-450a-4f45-a2b6-3ebb293953ff
+		summarizeBy: sum
+		sourceColumn: learningdisability_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column mentalhealth_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: e52e96d9-596e-4249-9020-3751e75693e7
+		summarizeBy: sum
+		sourceColumn: mentalhealth_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column obesity_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 3240d2a7-6203-4207-aa8a-e1b954367821
+		summarizeBy: sum
+		sourceColumn: obesity_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column peripheralarterialdisease_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 3b6deed1-3afe-445f-a8ca-a96b7fc782cf
+		summarizeBy: sum
+		sourceColumn: peripheralarterialdisease_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliativecare_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: a7fea0e8-ab56-481a-8cd3-ba34a426185a
+		summarizeBy: sum
+		sourceColumn: palliativecare_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column stroke_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: a7c7d988-be27-4789-81d4-8cf977e795e3
+		summarizeBy: sum
+		sourceColumn: stroke_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column tia_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 58fd152c-feb5-436e-a961-d64c1e4e28f4
+		summarizeBy: sum
+		sourceColumn: tia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoS_Bands_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: f7b434bb-7bab-454e-94e8-871094b112ae
+		summarizeBy: sum
+		sourceColumn: LoS_Bands_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_tariff_plus_mff
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: e658195b-3d98-4968-b910-ba617f1d47b8
+		summarizeBy: sum
+		sourceColumn: total_tariff_plus_mff
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	column tariff_used
+		dataType: string
+		lineageTag: cacb9a06-5ed3-4a63-9205-da511437cc8a
+		summarizeBy: none
+		sourceColumn: tariff_used
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_Related_Admission
+		dataType: int64
+		formatString: 0
+		lineageTag: 4643a934-989f-46f4-9395-fd2612c8be29
+		summarizeBy: sum
+		sourceColumn: MH_Related_Admission
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '3. Admissions-ce2a77fa-0c97-4a3f-b2de-645bab76e6d2' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select *#(lf)from [PowerBI_Reporting].[dbo].[Inpatients_UEC]#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

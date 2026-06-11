@@ -1,0 +1,125 @@
+table 'ERF Costings'
+	lineageTag: 0313838b-2438-4457-bee9-b1b0089be2dc
+
+	measure 'ERF Costing Recovery of 19/20' = ```
+			
+			
+			    (CALCULATE(
+				SUM('ERF Costings'[Cost]),
+				'ERF Costings'[Time frame] IN { "Actual flex 2023/24"})
+			    
+			    /
+			CALCULATE(
+				SUM('ERF Costings'[Cost]),
+				'ERF Costings'[Time frame] IN { "Actual 2019/20" }))
+			  
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c2447845-4ded-4975-81f1-d83d861a1c6b
+
+	measure 'ERF Cost Metric Selected' = IF ( ISFILTERED ( 'ERF Costings'[Metric]) , CONCATENATEX(ALLSELECTED('ERF Costings'[Metric]), 'ERF Costings'[Metric], ", ") , "No specific metric selected" )
+		lineageTag: 7fc930ac-06ee-4343-87ca-e19a6fdb3bfe
+
+	measure 'ERF Cost Provider Selected' = IF ( ISFILTERED ( 'ERF Costings'[Provider]) , CONCATENATEX(ALLSELECTED('ERF Costings'[Provider]), 'ERF Costings'[Provider], ", ") , "No specific provider selected" )
+		lineageTag: 64692037-a7fb-4685-a29c-fa286c25290f
+
+	measure 'ERF Cost Time Frmae Selected' = IF ( ISFILTERED ( 'ERF Costings'[Time frame]) , CONCATENATEX(ALLSELECTED('ERF Costings'[Time frame]), 'ERF Costings'[Time frame], ", ") , "No specific time frame selected" )
+		lineageTag: 429d5162-5d68-43ff-9ec0-60334444bbe2
+
+	measure 'ERF Cost 1 Recovery 19/20' = if('ERF Costings'[ERF Costing Recovery of 19/20] <>BLANK(), 'ERF Costings'[ERF Costing Recovery of 19/20], "")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e55c704f-ba85-47e7-b854-d3c733ddbe14
+
+	measure 'Cost for % Target' =
+			
+			CALCULATE(
+				SUM('ERF Costings'[Cost]),
+				'ERF Costings'[Time frame] IN { "% Target" }
+			)
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 18f80215-f5bc-4f0c-9d5d-8154685e54da
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure '% for Target' = FORMAT('ERF Costings'[Cost for % Target],"Percent")
+		lineageTag: 0a4577d3-4074-40a1-847b-570419f07871
+
+	measure 'ERF Cost Variance 23/24' = ```
+			IFERROR((CALCULATE(sum('ERF Costings'[Cost]), 'ERF Costings'[Time frame] IN {"Plan"})
+			- 
+			CALCULATE(sum('ERF Costings'[Cost]), 'ERF Costings'[Time frame] IN {"Actual flex 2023/24"}))
+			/ 
+			CALCULATE(sum('ERF Costings'[Cost]), 'ERF Costings'[Time frame] IN {"Plan"}),"")
+			```
+		lineageTag: 3d35f4e7-6c89-4f61-bfcd-e03bd380a9a9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ERF Cost 1 Variance 23/24' = if('ERF Costings'[ERF Cost Variance 23/24] <>1.0000, 'ERF Costings'[ERF Cost Variance 23/24], "")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5ddc3bdb-3ef7-4413-8ad6-20d59ffb259d
+
+	column Metric
+		dataType: string
+		lineageTag: c0b8db68-3c6a-4dee-b22a-18b53f62ee3d
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: 0b59096d-97ae-4d42-852d-d627343215fe
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month name'
+		dataType: string
+		lineageTag: 0b276a2a-fb34-4b6f-8492-b081629607e9
+		summarizeBy: none
+		sourceColumn: Month name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time frame'
+		dataType: string
+		lineageTag: d2b04166-4a3e-42ff-989c-4b1a3bfce21c
+		summarizeBy: none
+		sourceColumn: Time frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cost
+		dataType: double
+		formatString: "£"#,0;-"£"#,0;"£"#,0
+		lineageTag: 95ad9277-6f7c-4662-acde-80e0390fa4d3
+		summarizeBy: sum
+		sourceColumn: Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition 'ERF Costings-ea8cddf7-9f51-4818-b3af-ea7b27ed8790' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT  [Metric]#(lf)      ,[Provider]#(lf)      ,[Month name]#(lf)      ,[Type]#(lf)      ,[Cost]#(lf)     #(lf)  FROM [PowerBI_Reporting].[dbo].[ERF Cost v2]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Type", "Time frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

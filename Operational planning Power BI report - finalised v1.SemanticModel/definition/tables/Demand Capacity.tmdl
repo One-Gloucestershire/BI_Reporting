@@ -1,0 +1,138 @@
+table 'Demand Capacity'
+	lineageTag: 9043fa17-5cf2-4776-9ee8-4f34d2fb3a4e
+
+	measure 'Demand Capacity Financial Year Selected' = IF ( ISFILTERED ( 'Demand Capacity'[Financial Year]) , CONCATENATEX(ALLSELECTED('Demand Capacity'[Financial Year]), 'Demand Capacity'[Financial Year], ", ") , "No specific financial year selected" )
+		lineageTag: ff57dbf3-abbe-43bd-a7bb-311d1c10e5b3
+
+	measure 'Demand Capacity Area Selected' =
+			IF (
+			  HASONEVALUE ('Demand Capacity'[Area]),
+			  SELECTEDVALUE ('Demand Capacity'[Area]),
+			  "No area selected"
+			)
+		lineageTag: 93e71799-79ce-4997-bf2a-ad0b4065a68f
+
+	measure 'Demand Capacity Metric Selected' = IF ( ISFILTERED ( 'Demand Capacity'[Activity]) , CONCATENATEX(ALLSELECTED('Demand Capacity'[Activity]), 'Demand Capacity'[Activity], ", ") , "No specific activity selected" )
+		lineageTag: 40f1af79-27f2-4fd7-9a75-13850404e554
+
+	measure 'Demand Capacity Time Frame Selected' = IF ( ISFILTERED ( 'Demand Capacity'[Time Frame]) , CONCATENATEX(ALLSELECTED('Demand Capacity'[Time Frame]), 'Demand Capacity'[Time Frame], ", ") , "No specific time frame selected" )
+		lineageTag: 5794caa8-6162-4c47-aed3-b8106cecf4f3
+
+	measure 'Net Change' = ```
+			
+			    [Average for 2023/24]
+			    -
+			    [Average for 2022/23]
+			
+			```
+		formatString: 0.0
+		lineageTag: 4cf038a0-5488-4eb6-b494-b86ac169c1c9
+
+	measure 'Average for 2022/23' =
+			
+			CALCULATE(
+				AVERAGE('Demand Capacity'[Activity]),
+				'Demand Capacity'[Financial Year] IN { "2022/23" }
+			)
+		lineageTag: c53fd804-daba-407f-a32d-275cd9ae68d1
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "FilteredMeasure"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average for 2023/24' =
+			
+			CALCULATE(
+				AVERAGE('Demand Capacity'[Activity]),
+				'Demand Capacity'[Financial Year] IN { "2023/24" }
+			)
+		lineageTag: 5c2551ca-cce3-44ca-955f-e7920fea9c95
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Change (base calc)' = IFERROR('Demand Capacity'[Average for 2023/24]/'Demand Capacity'[Average for 2022/23]-1,BLANK())
+		lineageTag: ee2dfd2a-2df8-4f0c-8761-985f46bd801d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '& Change' = if('Demand Capacity'[% Change (base calc)] <> BLANK(), 'Demand Capacity'[% Change (base calc)], "")
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: e54fd100-8136-4061-82c9-25f1d6678d17
+
+	measure 'Average Activity' =
+			
+			CALCULATE(
+				AVERAGE('Demand Capacity'[Activity])
+			)
+		lineageTag: 0f285299-05d9-4e05-867b-ad19665ab889
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Area
+		dataType: string
+		lineageTag: 081bebd4-abb8-4ca7-87fe-4115b8a68db5
+		summarizeBy: none
+		sourceColumn: Area
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metric
+		dataType: string
+		lineageTag: 2df0e225-363f-49ab-a4b6-cba6db766d16
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time Frame'
+		dataType: string
+		lineageTag: e90401eb-23dc-47b9-a78e-5d91c3fa8db1
+		summarizeBy: none
+		sourceColumn: Time Frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Financial Year'
+		dataType: string
+		lineageTag: 576ad2f6-889d-475f-bd25-880347061c45
+		summarizeBy: none
+		sourceColumn: Financial Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: fd57092c-a179-48b0-90ee-a7883f93053f
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: double
+		formatString: 0
+		lineageTag: 9bd9c3aa-c7d2-4c5d-944e-762ff564fd53
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition 'Demand Capacity-c68863f0-022b-4b85-bc9c-d6553e55ca8f' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="SELECT *#(lf)  FROM [PowerBI_Reporting].[dbo].[Demand_capacity]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Type", "Time Frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

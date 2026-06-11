@@ -1,0 +1,113 @@
+table 'Provider Measure KPIs'
+	lineageTag: d54e4089-0b2a-41f0-9b7f-eea4b20bca6e
+
+	measure 'Provider Variance (Plan)' = ```
+			
+			
+			    (CALCULATE(
+				SUM('Provider Measure KPIs'[Activity]),
+				'Provider Measure KPIs'[Time frame] IN { "Actual 2023/24" })
+			   
+			    -
+			    calculate(
+			   SUM('Provider Measure KPIs'[Activity]),
+				'Provider Measure KPIs'[Time frame] IN { "Plan" }))
+			    /
+			CALCULATE(
+				SUM('Provider Measure KPIs'[Activity]),
+				'Provider Measure KPIs'[Time frame] IN { "Plan" })
+			```
+		formatString: 0.00
+		lineageTag: 032ff1a0-4c1d-488c-a646-b47c955846e2
+
+	measure 'Provider Measure Metric Selected' = IF ( ISFILTERED ( 'Provider Measure KPIs'[Metric] ) , CONCATENATEX(ALLSELECTED('Provider Measure KPIs'[Metric]), 'Provider Measure KPIs'[Metric], ", ") , "No specific metric selected" )
+		lineageTag: bf3f1d39-c9bc-43a5-8ecd-74bf1fbb2fc1
+
+	measure 'Provider Measure Provider Selected' =
+			IF (
+			  HASONEVALUE ('Provider Measure KPIs'[Provider]),
+			  SELECTEDVALUE ('Provider Measure KPIs'[Provider]),
+			  "No provider selected"
+			)
+		lineageTag: 255286c7-c9d7-48e4-bf0b-f9d404cc25a0
+
+	measure 'Provider Measure Type Selected' = IF ( ISFILTERED ( 'Provider Measure KPIs'[Time frame] ) , CONCATENATEX(ALLSELECTED('Provider Measure KPIs'[Time frame]), 'Provider Measure KPIs'[Time frame], ", ") , "No specific time frame selected" )
+		lineageTag: 24219dbb-48c6-4b61-ab9e-89a5bf114367
+
+	measure 'Provider Variance 1 (Plan)' = if('Provider Measure KPIs'[Provider Variance (Plan)] <>-1.00, 'Provider Measure KPIs'[Provider Variance (Plan)], "")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 03821329-cbcd-40c8-bd77-a026ca97390f
+
+	measure 'Provider Measure Assurance Selected' =
+			IF (
+			  HASONEVALUE ('Provider Measure KPIs'[Assurance]),
+			  SELECTEDVALUE ('Provider Measure KPIs'[Assurance]),
+			  "No assurance selected"
+			)
+		lineageTag: cbb17cdb-dc04-4724-9fb6-fc94f9329dc4
+
+	column 'Month name'
+		dataType: string
+		lineageTag: d7388720-49d3-48b0-a97d-b27278eae15e
+		summarizeBy: none
+		sourceColumn: Month name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time frame'
+		dataType: string
+		lineageTag: 07e70664-9f40-46cd-a250-6f1a49b4ad3a
+		summarizeBy: none
+		sourceColumn: Time frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: double
+		formatString: #,0
+		lineageTag: 82208a0f-801d-4e2f-b46f-5c4f95f66caa
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	column metric
+		dataType: string
+		lineageTag: b0b7e221-d493-424d-90b0-83697a6f53b5
+		summarizeBy: none
+		sourceColumn: metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider
+		dataType: string
+		lineageTag: 2ad6cdc1-f814-45a6-8c4d-a5eaf2c92d5a
+		summarizeBy: none
+		sourceColumn: provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Assurance
+		dataType: string
+		lineageTag: 4dd9541f-4462-4fbf-a7e0-c9d9807498dd
+		summarizeBy: none
+		sourceColumn: Assurance
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Provider Measure KPIs-8ac469e7-5e5e-4fde-9066-9e185526958c' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="SELECT #(lf)#(lf)metric,#(lf)provider,#(lf)Assurance,#(lf)[Month name],#(lf)Type,#(lf)Activity#(lf)  FROM [PowerBI_Reporting].[dbo].[Provider measures KPIs warehouse version v2]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Activity", type number}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Type", "Time frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

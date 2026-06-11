@@ -1,0 +1,71 @@
+table MPI
+	lineageTag: f229ec0a-6a60-4037-9c1c-7e3f87eb43a8
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: 44587771-d0e3-4101-b7af-13b6cafe8fd7
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Age
+		dataType: int64
+		formatString: 0
+		lineageTag: a78d6924-9ecd-48a1-ae59-ec98da12fd64
+		summarizeBy: sum
+		sourceColumn: Derived_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Group'
+		dataType: string
+		lineageTag: 43c6f058-3de5-47a9-a576-bb35a0454d7a
+		summarizeBy: none
+		sourceColumn: Age Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: 2b821946-f5ea-4f90-a9eb-befe3b2c67ba
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracNameCurrent
+		dataType: string
+		lineageTag: 1abfd011-8048-405b-832c-455af3aa39f9
+		summarizeBy: none
+		sourceColumn: PracNameCurrent
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 9193971b-9d73-488e-bb89-e9bb11e0b866
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PCN
+		dataType: string
+		lineageTag: 7a5fc3a4-da3a-4b42-aefb-f11316e5cbf0
+		summarizeBy: none
+		sourceColumn: PCN
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MPI = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "BIReports", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT [Derived_Pseudo_NHS]#(lf)      ,[Derived_Age]#(lf)      ,case when [Derived_Age] between '0' and '17' then '<18'#(lf)#(tab)#(tab)#(tab)when [Derived_Age] >= '18' then '18+'#(lf)#(tab)#(tab)#(tab)END AS [Adults/Paediatrics]#(lf)      ,[PracticeCode]#(lf)      ,[PracNameCurrent]#(lf)      ,[LocalityName]#(lf)      ,[NetworkName]#(lf)#(lf)#(lf)FROM [BIReports].[MPI].[MPI_current]#(lf)WHERE [CCG_Of_Registration] LIKE '11M%'"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"LocalityName", "Locality"}, {"NetworkName", "PCN"}, {"Adults/Paediatrics", "Age Group"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

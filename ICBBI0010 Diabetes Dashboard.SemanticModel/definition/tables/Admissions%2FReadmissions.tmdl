@@ -1,0 +1,391 @@
+table Admissions/Readmissions
+	lineageTag: dbd6f946-4a7d-4ac7-a405-fd5128b5e06f
+
+	measure 'Spell LOS Days rolling average' =
+			
+			IF(
+				ISFILTERED('Date Reference'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				VAR __LAST_DATE = ENDOFMONTH('Date Reference'[Date].[Date])
+				VAR __DATE_PERIOD =
+					DATESBETWEEN(
+						'Date Reference'[Date].[Date],
+						STARTOFMONTH(DATEADD(__LAST_DATE, -1, MONTH)),
+						ENDOFMONTH(DATEADD(__LAST_DATE, 1, MONTH))
+					)
+				RETURN
+					AVERAGEX(
+						CALCULATETABLE(
+							SUMMARIZE(
+								VALUES('Date Reference'),
+								'Date Reference'[Date].[Year],
+								'Date Reference'[Date].[QuarterNo],
+								'Date Reference'[Date].[Quarter],
+								'Date Reference'[Date].[MonthNo],
+								'Date Reference'[Date].[Month]
+							),
+							__DATE_PERIOD
+						),
+						CALCULATE(
+							SUM('Admissions/Readmissions'[Spell LOS Days]),
+							ALL('Date Reference'[Date].[Day])
+						)
+					)
+			)
+		formatString: 0
+		lineageTag: a897c693-436f-4ef9-a929-306cb8a10d6d
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "RollingAverage"
+				}
+
+		changedProperty = FormatString
+
+	column Provider
+		dataType: string
+		lineageTag: 6f63b414-8cbf-4f41-9875-da9ec492029d
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider Name'
+		dataType: string
+		lineageTag: 65c969ba-3ea2-4792-aed6-fd0a630971c6
+		summarizeBy: none
+		sourceColumn: Provider Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Adm method'
+		dataType: string
+		lineageTag: 95343726-8699-4c9a-af6c-e9797af26bf1
+		summarizeBy: none
+		sourceColumn: Adm method
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Inpatient or Daycase'
+		dataType: string
+		lineageTag: 2c8579ef-8286-4bb7-bd68-6f946eef5835
+		summarizeBy: none
+		sourceColumn: Inpatient or Daycase
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Hospital Provider Spell Number'
+		dataType: string
+		lineageTag: aae87f39-fe50-4a2d-94c7-79dce13de84f
+		summarizeBy: none
+		sourceColumn: Hospital Provider Spell Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'NHS Number'
+		dataType: string
+		lineageTag: 5d728a9e-c978-476c-a434-db36e696f9f5
+		summarizeBy: none
+		sourceColumn: NHS Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Admission Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6eeeab9a-c977-422f-bbe8-7c76d234480f
+		summarizeBy: none
+		sourceColumn: Admission Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Discharge Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b75f05b9-5e81-417d-85c1-569ae15c21d2
+		summarizeBy: none
+		sourceColumn: Discharge Date
+
+		variation Variation
+			isDefault
+			relationship: b6f5314d-1cbf-4578-ae8c-786195086a2f
+			defaultHierarchy: LocalDateTable_6a8bbbc6-00f0-44d7-be01-89c0f091109c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Year'
+		dataType: string
+		lineageTag: 46a00885-c505-4984-b5b3-8889f8074655
+		summarizeBy: none
+		sourceColumn: Month Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Date'
+		dataType: string
+		lineageTag: 450f486c-bd1e-4a3a-86c8-ab3d06f6281e
+		summarizeBy: none
+		sourceColumn: Month Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: string
+		lineageTag: 206f17d9-8697-4798-8d0f-f6d7104aee52
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Spell LOS Days'
+		dataType: int64
+		formatString: 0
+		lineageTag: 418435f9-35db-48c0-81e5-17dbebc4253f
+		summarizeBy: sum
+		sourceColumn: Spell LOS Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Spell LOS Hours'
+		dataType: int64
+		formatString: 0
+		lineageTag: 125b7674-76ed-46bf-8ddb-46573f6dee70
+		summarizeBy: sum
+		sourceColumn: Spell LOS Hours
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: 13622fc6-fbe7-4e91-b7d9-bf4a72e3ea56
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Adult/Child
+		dataType: string
+		lineageTag: f9abf766-5b2e-4960-bca5-19550122d82f
+		summarizeBy: none
+		sourceColumn: Adult/Child
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Income MFF'
+		dataType: double
+		lineageTag: 0bd6ee24-3eda-418c-83b9-c844ce045c44
+		summarizeBy: sum
+		sourceColumn: Total Income MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Diagnosis Position'
+		dataType: string
+		lineageTag: f19b77d5-9639-4c1d-bf05-8fbca94a4983
+		summarizeBy: none
+		sourceColumn: Diagnosis Position
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Diabetes Type'
+		dataType: string
+		lineageTag: c6e03864-028f-4264-9501-42f83aa956d2
+		summarizeBy: none
+		sourceColumn: Diabetes Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Primary Diagnosis'
+		dataType: string
+		lineageTag: c48d312b-b6de-40cd-a56e-fd956acab259
+		summarizeBy: none
+		sourceColumn: Primary Diagnosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Secondary Diagnosis'
+		dataType: string
+		lineageTag: a3f3a6b0-b123-41d3-b61e-444dae8c55bd
+		summarizeBy: none
+		sourceColumn: Secondary Diagnosis
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiagnosisPrimary_ICD
+		dataType: string
+		lineageTag: fae384fc-b25f-49e7-ad9c-ff40652ef14c
+		summarizeBy: none
+		sourceColumn: DiagnosisPrimary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis1stSecondary_ICD
+		dataType: string
+		lineageTag: d6729301-2a1f-429f-a8a3-b9f448c52dbf
+		summarizeBy: none
+		sourceColumn: Diagnosis1stSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis2ndSecondary_ICD
+		dataType: string
+		lineageTag: 870ce20e-661e-4998-aecb-4ca8f44a78bc
+		summarizeBy: none
+		sourceColumn: Diagnosis2ndSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis3rdSecondary_ICD
+		dataType: string
+		lineageTag: e3853aa2-9a60-487e-b72a-b85e1d3e71bb
+		summarizeBy: none
+		sourceColumn: Diagnosis3rdSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis4thSecondary_ICD
+		dataType: string
+		lineageTag: d1ffb253-5313-49fa-bd9c-2ab3d4544aab
+		summarizeBy: none
+		sourceColumn: Diagnosis4thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis5thSecondary_ICD
+		dataType: string
+		lineageTag: 3d040600-c714-41df-ac97-01aecaeff459
+		summarizeBy: none
+		sourceColumn: Diagnosis5thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis6thSecondary_ICD
+		dataType: string
+		lineageTag: f2e15402-0926-464d-bd0c-f150b21cb50b
+		summarizeBy: none
+		sourceColumn: Diagnosis6thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis7thSecondary_ICD
+		dataType: string
+		lineageTag: 47bb8205-76cd-4d4e-8d31-d9bf6df3693f
+		summarizeBy: none
+		sourceColumn: Diagnosis7thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis8thSecondary_ICD
+		dataType: string
+		lineageTag: 9ef93e37-178c-4b98-ad6d-ed17f6f889d3
+		summarizeBy: none
+		sourceColumn: Diagnosis8thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis9thSecondary_ICD
+		dataType: string
+		lineageTag: cf83850d-6824-4212-a84b-fdea03723bb2
+		summarizeBy: none
+		sourceColumn: Diagnosis9thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis10thSecondary_ICD
+		dataType: string
+		lineageTag: 381cf2e7-2989-491d-8e66-f5f29d66aa58
+		summarizeBy: none
+		sourceColumn: Diagnosis10thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diagnosis11thSecondary_ICD
+		dataType: string
+		lineageTag: 5bc1f52c-5274-487d-a746-fda7532e7a51
+		summarizeBy: none
+		sourceColumn: Diagnosis11thSecondary_ICD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: 95c1c60f-4d83-4f64-bd95-41642b97df91
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cluster
+		dataType: string
+		lineageTag: 9523669a-276e-48d7-aea5-038207bc74f5
+		summarizeBy: none
+		sourceColumn: Cluster
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Code'
+		dataType: string
+		lineageTag: 43129b61-3332-4298-b83a-79126e6db568
+		summarizeBy: none
+		sourceColumn: Practice Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Practice Name'
+		dataType: string
+		lineageTag: 26508f5b-8a6c-452b-b127-a9aafed47ba2
+		summarizeBy: none
+		sourceColumn: Practice Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column ICD10Code_4Desc
+		dataType: string
+		lineageTag: 4bc3e546-2891-465d-86a3-1585993ffc7a
+		summarizeBy: none
+		sourceColumn: ICD10Code_4Desc
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: #,0
+		lineageTag: af4bd764-caba-42b4-838b-d530eaa9bb23
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Readmission_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 149d7d69-6c3e-46fc-991d-0afe7e41b9d9
+		summarizeBy: sum
+		sourceColumn: Readmission_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Treatment Function'
+		dataType: string
+		lineageTag: ebae3b2c-5184-4c21-a558-63e8008be1f7
+		summarizeBy: none
+		sourceColumn: Treatment Function
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Admissions/Readmissions = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/*========================================================================================#(lf)Temp Table#(lf)========================================================================================*/#(lf)SET ANSI_NULLS ON#(lf)SET QUOTED_IDENTIFIER ON#(lf)set nocount on#(lf)set ansi_warnings off#(lf)#(lf)IF OBJECT_ID('tempdb..#TEMP_R', 'U') IS NOT NULL DROP TABLE #TEMP_R;#(lf)#(lf)Select #(lf)[Provider] = CASE WHEN a.[OrganisationCode_CodeOfProvider] like 'rte%' THEN 'GHT' ELSE 'OOC' END,#(lf)a.[OrganisationName_NameOfProvider] as [Provider Name],#(lf)case when a.[AdmissionMethod_HospitalProviderSpell] like '1%' then 'Elective'  when a.[AdmissionMethod_HospitalProviderSpell] like '2%' then 'Emergency' else 'Other Non - Elective'#(lf)end AS [Adm method], #(lf)case when a.[PatientClassification] ='2' then 'Daycase' else 'Inpatient' end as [Inpatient or Daycase],#(lf)a.[HospitalProviderSpellNumber] as [Hospital Provider Spell Number],#(lf)a.[Derived_Pseudo_NHS] as [NHS Number], --CHANGED FIELD NAME#(lf)a.[TreatmentFunction_Description] as [Treatment Function],#(lf)a.[StartDate_HospitalProviderSpell] as [Admission Date],#(lf)a.[DischargeDate_FromHospitalProviderSpell] as [Discharge Date],#(lf)c.[MonthYearName] as [Month Year],#(lf)c.[YearMonth] as [Month Date],#(lf)c.[FinancialYear] as [Year],#(lf)datediff(day,a.[StartDate_HospitalProviderSpell],a.[DischargeDate_FromHospitalProviderSpell]) as [Spell LOS Days],#(lf)datediff(hour,a.[StartDate_HospitalProviderSpell],a.[DischargeDate_FromHospitalProviderSpell]) as [Spell LOS Hours],#(lf)a.[AgeatCDSActivityDate] as [Age],#(lf)case when a.[AgeatCDSActivityDate] < 18 THEN '0-17' ELSE '18+' END AS [Adult/Child],#(lf)a.Derived_Current_TotalPlusMFF as [Total Income MFF], --CHANGED FIELD NAME#(lf)case when a.DiagnosisPrimary_ICD between 'E10' and 'E14' then 'Diabetes in primary diag' else 'Diabetes related condition' end as [Diagnosis Position],#(lf)case when a.DiagnosisPrimary_ICD like '%E10%' or a.Diagnosis1stSecondary_ICD like '%E10%' then 'Type 1 Diabetes'#(lf)     when a.DiagnosisPrimary_ICD between 'E11' and 'E14'or a.Diagnosis1stSecondary_ICD between 'E11' and 'E14' then 'Type 2 Diabetes'#(lf)     else 'Other' end as [Diabetes Type],#(lf)a.DiagnosisPrimary_ICD as [Primary Diagnosis],#(lf)a.Diagnosis1stSecondary_ICD as [Secondary Diagnosis],#(lf)b.DiagnosisPrimary_ICD,#(lf)b.Diagnosis1stSecondary_ICD,#(lf)b.Diagnosis2ndSecondary_ICD,#(lf)b.Diagnosis3rdSecondary_ICD,#(lf)b.Diagnosis4thSecondary_ICD,#(lf)b.Diagnosis5thSecondary_ICD,#(lf)b.Diagnosis6thSecondary_ICD,#(lf)b.Diagnosis7thSecondary_ICD,#(lf)b.Diagnosis8thSecondary_ICD,#(lf)b.Diagnosis9thSecondary_ICD,#(lf)b.Diagnosis10thSecondary_ICD,#(lf)b.Diagnosis11thSecondary_ICD,#(lf)case when d.[Locality] is NULL then 'Unregistered' else d.[Locality] end as [Locality],#(lf)case when d.[Network] is NULL then 'Unregistered' else d.[Network] end as [Cluster],#(lf)case when d.[OrganisationCode] is NULL then 'Unregistered' else d.[OrganisationCode] end as [Practice Code],#(lf)case when d.[OrganisationName] is NULL then 'Unregistered' else d.[OrganisationName] end as [Practice Name],#(lf)e.[ICD10Description] as [ICD10Code_4Desc],#(lf)1 as [Counter]#(lf)INTO #TEMP_R#(lf)#(lf)#(lf)From [CCG_Current].[SEM].[vw_HospitalProviderSpell] as a#(lf)inner join [CCG_Current].[SEM].[vw_FinishedConsultantEpisode] as b on a.[HospitalProviderSpellNumber] = b.[HospitalProviderSpellNumber] and b.episodenumber in ('1', '01')#(lf)left join [CCG_Reference].[Reference].[vw_DateLookup] as c on c.[Date] = cast(a.DischargeDate_FromHospitalProviderSpell as date)#(lf)left join CCG_Reference.Reference.vw_GPPractice as d ON a.[GPPractice_Derived] = d.[OrganisationCode]#(lf)left join [CCG_Reference].[Reference].[vw_ICD10] as e on LEFT(a.DiagnosisPrimary_ICD,4) = e.[ICD10Code]#(lf)#(lf)#(lf)Where b.[EpisodeNumber] IN ('1', '01')#(lf)and cast(a.[DischargeDate_FromHospitalProviderSpell] as date) >='20180401'#(lf)and a.[Derived_Pseudo_NHS] != '41CE1CCBA451E73DACE6' --CHANGED FIELD NAME#(lf)and a.[OrganisationCode_CodeOfCommissioner] like '%11M%'#(lf)--and a.[OrganisationCode_CodeOfProvider] not like '%RTE%'#(lf)and#(lf) ((a.DiagnosisPrimary_ICD between 'E10' and 'E14')#(lf)--or#(lf)--(b.diagnosis_02 between 'E10' and 'E14') ----- should we count just primary b.diagnosis of diabetes, or secondary also on its own? Over counting if including secondary#(lf)or#(lf)#(lf)((concat(b.DiagnosisPrimary_ICD, b.Diagnosis1stSecondary_ICD, b.Diagnosis2ndSecondary_ICD, b.Diagnosis3rdSecondary_ICD,b.Diagnosis4thSecondary_ICD, b.Diagnosis5thSecondary_ICD, b.Diagnosis6thSecondary_ICD, #(lf)                                         b.Diagnosis7thSecondary_ICD, b.Diagnosis8thSecondary_ICD, b.Diagnosis9thSecondary_ICD, b.Diagnosis10thSecondary_ICD, b.Diagnosis11thSecondary_ICD) like '%E1[0-4]%')#(lf) and#(lf)(a.DiagnosisPrimary_ICD like '%E16[012]%' or a.Diagnosis1stSecondary_ICD like '%E16[012]%' --- Hypoglycaemia#(lf)or a.DiagnosisPrimary_ICD like '%I702%' or a.Diagnosis1stSecondary_ICD like '%I702%' --- Athersclerosis of arteries of extremities#(lf)or a.DiagnosisPrimary_ICD like '%I739%' or a.Diagnosis1stSecondary_ICD like '%I739%' --- Peripheral vascular diseases#(lf)or a.DiagnosisPrimary_ICD like '%I743%' or a.Diagnosis1stSecondary_ICD like '%I743%' --- Embolism and thrombosis of arteries of lower extremities#(lf)or a.DiagnosisPrimary_ICD like '%I77[19]%' or a.Diagnosis1stSecondary_ICD like '%I77[19]%' --- Disorders of arteries and arterioles#(lf)or a.DiagnosisPrimary_ICD like '%I792%' or a.Diagnosis1stSecondary_ICD like '%I792%' --- Peripheral angiopathy#(lf)or a.DiagnosisPrimary_ICD like '%I80[023]%' or a.Diagnosis1stSecondary_ICD like '%I80[023]%' --- Phlebitis and thrombophlebitis of lower extremities#(lf)or a.DiagnosisPrimary_ICD like '%I83[02]%' or a.Diagnosis1stSecondary_ICD like '%I83[02]%' --- Varicose veins of lower extremities#(lf)or a.DiagnosisPrimary_ICD like '%L024%' or a.Diagnosis1stSecondary_ICD like '%L024%' --- Cutaneous abscess, furuncle and carbuncle of limb#(lf)or a.DiagnosisPrimary_ICD like '%L031%' or a.Diagnosis1stSecondary_ICD like '%L031%' --- Cellulitis of other parts of limb#(lf)or a.DiagnosisPrimary_ICD like '%L089%' or a.Diagnosis1stSecondary_ICD like '%L089%' --- Local infection of skin and subcutaneous tissue#(lf)or a.DiagnosisPrimary_ICD like '%L97%' or a.Diagnosis1stSecondary_ICD like '%L97%' --- Ulcer of lower limb#(lf)or a.DiagnosisPrimary_ICD like '%M869%' or a.Diagnosis1stSecondary_ICD like '%M869%' --- Osteomyelitis (infection of bone)#(lf)or a.DiagnosisPrimary_ICD like '%N083%' or a.Diagnosis1stSecondary_ICD like '%N083%' --- Glomerular disorders in diabetes mellitus#(lf)or a.DiagnosisPrimary_ICD like '%R02%' or a.Diagnosis1stSecondary_ICD like '%R02%' --- Gangrene#(lf)or a.DiagnosisPrimary_ICD like '%R739%' or a.Diagnosis1stSecondary_ICD like '%R739%'  --- Hyperglycaemia, unspecified#(lf)or a.DiagnosisPrimary_ICD like '%S81%' or a.Diagnosis1stSecondary_ICD like '%S81%'  --- Open wound of leg#(lf)or a.DiagnosisPrimary_ICD like '%S91[0-7]%' or a.Diagnosis1stSecondary_ICD like '%S91[0-7]%'  --- Open wound of foot/ ankle/ toe#(lf)or a.DiagnosisPrimary_ICD like '%T013%' or a.Diagnosis1stSecondary_ICD like '%T013%'  --- Open wounds involving multiple regions of lower limbs#(lf)or a.DiagnosisPrimary_ICD like '%T87[456]%' or a.Diagnosis1stSecondary_ICD like '%T87[456]%'  --- Infection/Necrosis/Complication of amputation stump#(lf)or a.DiagnosisPrimary_ICD like '%Y835%' or a.Diagnosis1stSecondary_ICD like '%Y835%'  --- Amputation of limb(s)#(lf)or a.DiagnosisPrimary_ICD like '%Z911%' or a.Diagnosis1stSecondary_ICD like '%Z911%'  --- Personal history of noncompliance with medical treatment and regimen#(lf)))#(lf)#(lf)or #(lf)#(lf)((concat(b.DiagnosisPrimary_ICD, b.Diagnosis1stSecondary_ICD, b.Diagnosis2ndSecondary_ICD, b.Diagnosis3rdSecondary_ICD,b.Diagnosis4thSecondary_ICD, b.Diagnosis5thSecondary_ICD, b.Diagnosis6thSecondary_ICD, #(lf)                                         b.Diagnosis7thSecondary_ICD, b.Diagnosis8thSecondary_ICD, b.Diagnosis9thSecondary_ICD, b.Diagnosis10thSecondary_ICD, b.Diagnosis11thSecondary_ICD) like '%E1[0-4]%')#(lf) and#(lf)(a.PrimaryProcedure_OPCS like '%X09[1234589]%' or a.Procedure2nd_OPCS like '%X09[1234589]%' --- Amputation of leg#(lf)or a.PrimaryProcedure_OPCS like '%X10[123489]%' or a.Procedure2nd_OPCS like '%X10[123489]%' --- Amputation of foot#(lf)or a.PrimaryProcedure_OPCS like '%X11[1289]%' or a.Procedure2nd_OPCS like '%X11[1289]%' --- Amputation of toe#(lf)or a.PrimaryProcedure_OPCS like '%X12%' or a.Procedure2nd_OPCS like '%X12%' --- Operations on amputation stump#(lf)or a.PrimaryProcedure_OPCS like '%S57[12]%' or a.Procedure2nd_OPCS like '%S57[12]%' --- Debridement of skin/ removal of slough#(lf)or a.PrimaryProcedure_OPCS like '%W336%' or a.Procedure2nd_OPCS like '%W336%' --- Debridement of bone#(lf))))#(lf)#(lf)order by year#(lf)#(lf)/*========================================================================================#(lf)Main Query#(lf)========================================================================================*/#(lf)#(lf)Select #(lf)[Provider] = CASE WHEN a.[OrganisationCode_CodeOfProvider] like 'rte%' THEN 'GHT' ELSE 'OOC' END,#(lf)a.[OrganisationName_NameOfProvider] as [Provider Name],#(lf)case when a.[AdmissionMethod_HospitalProviderSpell] like '1%' then 'Elective'  when a.[AdmissionMethod_HospitalProviderSpell] like '2%' then 'Emergency' else 'Other Non - Elective'#(lf)end AS [Adm method], #(lf)case when a.[PatientClassification] ='2' then 'Daycase' else 'Inpatient' end as [Inpatient or Daycase],#(lf)a.[HospitalProviderSpellNumber] as [Hospital Provider Spell Number],#(lf)a.[Derived_Pseudo_NHS] as [NHS Number], --CHANGED FIELD NAME#(lf)a.[TreatmentFunction_Description] as [Treatment Function],#(lf)a.[StartDate_HospitalProviderSpell] as [Admission Date],#(lf)a.[DischargeDate_FromHospitalProviderSpell] as [Discharge Date],#(lf)c.[MonthYearName] as [Month Year],#(lf)c.[YearMonth] as [Month Date],#(lf)c.[FinancialYear] as [Year],#(lf)datediff(day,a.[StartDate_HospitalProviderSpell],a.[DischargeDate_FromHospitalProviderSpell]) as [Spell LOS Days],#(lf)datediff(hour,a.[StartDate_HospitalProviderSpell],a.[DischargeDate_FromHospitalProviderSpell]) as [Spell LOS Hours],#(lf)a.[AgeatCDSActivityDate] as [Age],#(lf)case when a.[AgeatCDSActivityDate] < 18 THEN '0-17' ELSE '18+' END AS [Adult/Child],#(lf)a.Derived_Current_TotalPlusMFF as [Total Income MFF], --CHANGED FIELD NAME#(lf)case when a.DiagnosisPrimary_ICD between 'E10' and 'E14' then 'Diabetes in primary diag' else 'Diabetes related condition' end as [Diagnosis Position],#(lf)case when a.DiagnosisPrimary_ICD like '%E10%' or a.Diagnosis1stSecondary_ICD like '%E10%' then 'Type 1 Diabetes'#(lf)     when a.DiagnosisPrimary_ICD between 'E11' and 'E14'or a.Diagnosis1stSecondary_ICD between 'E11' and 'E14' then 'Type 2 Diabetes'#(lf)     else 'Other' end as [Diabetes Type],#(lf)a.DiagnosisPrimary_ICD as [Primary Diagnosis],#(lf)a.Diagnosis1stSecondary_ICD as [Secondary Diagnosis],#(lf)b.DiagnosisPrimary_ICD,#(lf)b.Diagnosis1stSecondary_ICD,#(lf)b.Diagnosis2ndSecondary_ICD,#(lf)b.Diagnosis3rdSecondary_ICD,#(lf)b.Diagnosis4thSecondary_ICD,#(lf)b.Diagnosis5thSecondary_ICD,#(lf)b.Diagnosis6thSecondary_ICD,#(lf)b.Diagnosis7thSecondary_ICD,#(lf)b.Diagnosis8thSecondary_ICD,#(lf)b.Diagnosis9thSecondary_ICD,#(lf)b.Diagnosis10thSecondary_ICD,#(lf)b.Diagnosis11thSecondary_ICD,#(lf)case when d.[Locality] is NULL then 'Unregistered' else d.[Locality] end as [Locality],#(lf)case when d.[Network] is NULL then 'Unregistered' else d.[Network] end as [Cluster],#(lf)case when d.[OrganisationCode] is NULL then 'Unregistered' else d.[OrganisationCode] end as [Practice Code],#(lf)case when d.[OrganisationName] is NULL then 'Unregistered' else d.[OrganisationName] end as [Practice Name],#(lf)e.[ICD10Description] as [ICD10Code_4Desc],#(lf)1 as [Counter],#(lf)--[Readmission_Flag] = CASE WHEN [R].[Admission Date] between a.[DischargeDate_FromHospitalProviderSpell] AND dateadd(day,+30,a.DischargeDate_FromHospitalProviderSpell) THEN 1 ELSE 0 END#(lf)[Readmission_Flag] = CASE WHEN [30day].[NHS Number] IS NOT NULL THEN 1 ELSE 0 END#(lf)#(lf)From [CCG_Current].[SEM].[vw_HospitalProviderSpell] as a#(lf)inner join [CCG_Current].[SEM].[vw_FinishedConsultantEpisode] as b on a.[HospitalProviderSpellNumber] = b.[HospitalProviderSpellNumber] and b.episodenumber in ('1', '01')#(lf)left join [CCG_Reference].[Reference].[vw_DateLookup] as c on c.[Date] = cast(a.DischargeDate_FromHospitalProviderSpell as date)#(lf)left join CCG_Reference.Reference.vw_GPPractice as d ON a.[GPPractice_Derived] = d.[OrganisationCode]#(lf)left join [CCG_Reference].[Reference].[vw_ICD10] as e on LEFT(a.DiagnosisPrimary_ICD,4) = e.[ICD10Code]#(lf)#(lf)--LEFT JOIN [#TEMP_R] as [R]#(lf)--ON [R].[NHS Number] = a.[Derived_Pseudo_NHS]#(lf)--AND [R].[Hospital Provider Spell Number] <> a.[HospitalProviderSpellNumber]#(lf)--AND CAST([R].[Admission Date] AS DATE) between a.[DischargeDate_FromHospitalProviderSpell] and dateadd(day,+30,a.DischargeDate_FromHospitalProviderSpell)#(lf)#(lf)#(lf)--30 DAY #(lf)LEFT JOIN [#TEMP_R] as [30day] #(lf)ON [A].[HospitalProviderSpellNumber] <> [30day].[Hospital Provider Spell Number] #(lf)AND [A].[Derived_Pseudo_NHS] = [30day].[NHS Number]#(lf)AND DATEDIFF(DAY, [A].[DischargeDate_FromHospitalProviderSpell], [30day].[Admission Date]) BETWEEN 0 AND 30#(lf)--AND [30day].[ADMISSION_METHOD_HOSPITAL_PROVIDER_SPELL] LIKE '2%'-- EMERGENCY ONLY#(lf)#(lf)Where b.[EpisodeNumber] IN ('1', '01')#(lf)and cast(a.[DischargeDate_FromHospitalProviderSpell] as date) >='20180401'#(lf)and a.[Derived_Pseudo_NHS] != '41CE1CCBA451E73DACE6' --CHANGED FIELD NAME#(lf)and a.[OrganisationCode_CodeOfCommissioner] like '%11M%'#(lf)--and a.[OrganisationCode_CodeOfProvider] not like '%RTE%'#(lf)and#(lf) ((a.DiagnosisPrimary_ICD between 'E10' and 'E14')#(lf)--or#(lf)--(b.diagnosis_02 between 'E10' and 'E14') ----- should we count just primary b.diagnosis of diabetes, or secondary also on its own? Over counting if including secondary#(lf)or#(lf)#(lf)((concat(b.DiagnosisPrimary_ICD, b.Diagnosis1stSecondary_ICD, b.Diagnosis2ndSecondary_ICD, b.Diagnosis3rdSecondary_ICD,b.Diagnosis4thSecondary_ICD, b.Diagnosis5thSecondary_ICD, b.Diagnosis6thSecondary_ICD, #(lf)                                         b.Diagnosis7thSecondary_ICD, b.Diagnosis8thSecondary_ICD, b.Diagnosis9thSecondary_ICD, b.Diagnosis10thSecondary_ICD, b.Diagnosis11thSecondary_ICD) like '%E1[0-4]%')#(lf) and#(lf)(a.DiagnosisPrimary_ICD like '%E16[012]%' or a.Diagnosis1stSecondary_ICD like '%E16[012]%' --- Hypoglycaemia#(lf)or a.DiagnosisPrimary_ICD like '%I702%' or a.Diagnosis1stSecondary_ICD like '%I702%' --- Athersclerosis of arteries of extremities#(lf)or a.DiagnosisPrimary_ICD like '%I739%' or a.Diagnosis1stSecondary_ICD like '%I739%' --- Peripheral vascular diseases#(lf)or a.DiagnosisPrimary_ICD like '%I743%' or a.Diagnosis1stSecondary_ICD like '%I743%' --- Embolism and thrombosis of arteries of lower extremities#(lf)or a.DiagnosisPrimary_ICD like '%I77[19]%' or a.Diagnosis1stSecondary_ICD like '%I77[19]%' --- Disorders of arteries and arterioles#(lf)or a.DiagnosisPrimary_ICD like '%I792%' or a.Diagnosis1stSecondary_ICD like '%I792%' --- Peripheral angiopathy#(lf)or a.DiagnosisPrimary_ICD like '%I80[023]%' or a.Diagnosis1stSecondary_ICD like '%I80[023]%' --- Phlebitis and thrombophlebitis of lower extremities#(lf)or a.DiagnosisPrimary_ICD like '%I83[02]%' or a.Diagnosis1stSecondary_ICD like '%I83[02]%' --- Varicose veins of lower extremities#(lf)or a.DiagnosisPrimary_ICD like '%L024%' or a.Diagnosis1stSecondary_ICD like '%L024%' --- Cutaneous abscess, furuncle and carbuncle of limb#(lf)or a.DiagnosisPrimary_ICD like '%L031%' or a.Diagnosis1stSecondary_ICD like '%L031%' --- Cellulitis of other parts of limb#(lf)or a.DiagnosisPrimary_ICD like '%L089%' or a.Diagnosis1stSecondary_ICD like '%L089%' --- Local infection of skin and subcutaneous tissue#(lf)or a.DiagnosisPrimary_ICD like '%L97%' or a.Diagnosis1stSecondary_ICD like '%L97%' --- Ulcer of lower limb#(lf)or a.DiagnosisPrimary_ICD like '%M869%' or a.Diagnosis1stSecondary_ICD like '%M869%' --- Osteomyelitis (infection of bone)#(lf)or a.DiagnosisPrimary_ICD like '%N083%' or a.Diagnosis1stSecondary_ICD like '%N083%' --- Glomerular disorders in diabetes mellitus#(lf)or a.DiagnosisPrimary_ICD like '%R02%' or a.Diagnosis1stSecondary_ICD like '%R02%' --- Gangrene#(lf)or a.DiagnosisPrimary_ICD like '%R739%' or a.Diagnosis1stSecondary_ICD like '%R739%'  --- Hyperglycaemia, unspecified#(lf)or a.DiagnosisPrimary_ICD like '%S81%' or a.Diagnosis1stSecondary_ICD like '%S81%'  --- Open wound of leg#(lf)or a.DiagnosisPrimary_ICD like '%S91[0-7]%' or a.Diagnosis1stSecondary_ICD like '%S91[0-7]%'  --- Open wound of foot/ ankle/ toe#(lf)or a.DiagnosisPrimary_ICD like '%T013%' or a.Diagnosis1stSecondary_ICD like '%T013%'  --- Open wounds involving multiple regions of lower limbs#(lf)or a.DiagnosisPrimary_ICD like '%T87[456]%' or a.Diagnosis1stSecondary_ICD like '%T87[456]%'  --- Infection/Necrosis/Complication of amputation stump#(lf)or a.DiagnosisPrimary_ICD like '%Y835%' or a.Diagnosis1stSecondary_ICD like '%Y835%'  --- Amputation of limb(s)#(lf)or a.DiagnosisPrimary_ICD like '%Z911%' or a.Diagnosis1stSecondary_ICD like '%Z911%'  --- Personal history of noncompliance with medical treatment and regimen#(lf)))#(lf)#(lf)or #(lf)#(lf)((concat(b.DiagnosisPrimary_ICD, b.Diagnosis1stSecondary_ICD, b.Diagnosis2ndSecondary_ICD, b.Diagnosis3rdSecondary_ICD,b.Diagnosis4thSecondary_ICD, b.Diagnosis5thSecondary_ICD, b.Diagnosis6thSecondary_ICD, #(lf)                                         b.Diagnosis7thSecondary_ICD, b.Diagnosis8thSecondary_ICD, b.Diagnosis9thSecondary_ICD, b.Diagnosis10thSecondary_ICD, b.Diagnosis11thSecondary_ICD) like '%E1[0-4]%')#(lf) and#(lf)(a.PrimaryProcedure_OPCS like '%X09[1234589]%' or a.Procedure2nd_OPCS like '%X09[1234589]%' --- Amputation of leg#(lf)or a.PrimaryProcedure_OPCS like '%X10[123489]%' or a.Procedure2nd_OPCS like '%X10[123489]%' --- Amputation of foot#(lf)or a.PrimaryProcedure_OPCS like '%X11[1289]%' or a.Procedure2nd_OPCS like '%X11[1289]%' --- Amputation of toe#(lf)or a.PrimaryProcedure_OPCS like '%X12%' or a.Procedure2nd_OPCS like '%X12%' --- Operations on amputation stump#(lf)or a.PrimaryProcedure_OPCS like '%S57[12]%' or a.Procedure2nd_OPCS like '%S57[12]%' --- Debridement of skin/ removal of slough#(lf)or a.PrimaryProcedure_OPCS like '%W336%' or a.Procedure2nd_OPCS like '%W336%' --- Debridement of bone#(lf))))#(lf)#(lf)order by year"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

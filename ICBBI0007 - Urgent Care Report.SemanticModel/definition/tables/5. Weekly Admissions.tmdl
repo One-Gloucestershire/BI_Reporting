@@ -1,0 +1,115 @@
+table '5. Weekly Admissions'
+	lineageTag: a14d8388-5e9b-4380-9795-26c74728f235
+
+	column spell_patient_identity_nhs_number_value
+		dataType: string
+		lineageTag: 07a5d74b-a490-475e-9b95-c224a517e4ce
+		summarizeBy: none
+		sourceColumn: spell_patient_identity_nhs_number_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_admission_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c016f375-98d0-4329-9af2-d5d8e69e60e7
+		summarizeBy: none
+		sourceColumn: spell_admission_date
+
+		variation Variation
+			isDefault
+			relationship: 272adc1c-4519-46fd-a9d2-b799241b5991
+			defaultHierarchy: LocalDateTable_f0b00df3-ad82-4485-a8c5-1b2e43b51d61.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_discharge_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 53a1fe4b-50c1-4cfb-a3e0-358d8d522681
+		summarizeBy: none
+		sourceColumn: spell_discharge_date
+
+		variation Variation
+			isDefault
+			relationship: 5a01bbb3-73d3-40be-acea-a0e8291dc3ec
+			defaultHierarchy: LocalDateTable_00b5c773-8a3b-4d4e-9793-8f3e171baea3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_admission_admission_type
+		dataType: string
+		lineageTag: 85c1fff4-1500-4797-bd3d-d1a7e53549e6
+		summarizeBy: none
+		sourceColumn: spell_admission_admission_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_admission_admission_sub_type
+		dataType: string
+		lineageTag: 5ee17444-42cd-4c1b-a4e0-21dd61c4f92f
+		summarizeBy: none
+		sourceColumn: spell_admission_admission_sub_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_discharge_ready_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 96060696-bf0b-4794-b2c3-847034b1389f
+		summarizeBy: none
+		sourceColumn: spell_discharge_ready_date
+
+		variation Variation
+			isDefault
+			relationship: 868a8564-35bd-4c82-8c1d-45247b08f704
+			defaultHierarchy: LocalDateTable_cc75f39c-0e72-42ba-aa43-2adc053f8fdb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_discharge_length_of_hospital_stay
+		dataType: int64
+		formatString: 0
+		lineageTag: 225dbaf2-58fa-4b8a-a4fa-3a39a1c45a77
+		summarizeBy: sum
+		sourceColumn: spell_discharge_length_of_hospital_stay
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_discharge_pbr_delayed_discharge_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 63e31994-792e-4f3b-8c89-cd3fb537c85c
+		summarizeBy: sum
+		sourceColumn: spell_discharge_pbr_delayed_discharge_days
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week
+		dataType: string
+		lineageTag: d3edee06-ab10-4d2f-934e-1839c85cf780
+		summarizeBy: none
+		sourceColumn: Week
+
+		annotation SummarizationSetBy = Automatic
+
+	column spell_patient_identity_local_patient_identifier_issuer
+		dataType: string
+		lineageTag: 9d4f1de6-fc0b-4aba-b1c5-8381f453d292
+		summarizeBy: none
+		sourceColumn: spell_patient_identity_local_patient_identifier_issuer
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '5. Weekly Admissions' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "Data_Mart_Unified_Extract", [Query="SELECT [spell_patient_identity_nhs_number_value]#(lf)      ,[spell_admission_date]#(lf)      ,[spell_discharge_date]#(lf)      ,[spell_admission_admission_type]#(lf)      ,[spell_admission_admission_sub_type]#(lf)      ,[spell_discharge_ready_date]#(lf)      ,[spell_discharge_length_of_hospital_stay]#(lf)      ,[spell_discharge_pbr_delayed_discharge_days]#(lf)      #(lf)#(tab)  ,case when [spell_admission_date] BETWEEN DATEADD(dd,  0, DATEADD(ww, DATEDIFF(ww, 0, DATEADD(dd, -1, CURRENT_TIMESTAMP)) - 1, 0))#(lf)                 AND DATEADD(dd,  6, DATEADD(ww, DATEDIFF(ww, 0, DATEADD(dd, -1, CURRENT_TIMESTAMP)) - 1, 0)) then 'Latest Week'#(lf)#(tab)#(tab)    when [spell_admission_date] BETWEEN DATEADD(dd,  0, DATEADD(ww, DATEDIFF(ww, 0, DATEADD(dd, -1, CURRENT_TIMESTAMP)) - 2, 0))#(lf)                 AND DATEADD(dd,  6, DATEADD(ww, DATEDIFF(ww, 0, DATEADD(dd, -1, CURRENT_TIMESTAMP)) - 2, 0)) then 'Previous Week'#(lf)#(tab)#(tab)#(tab)#(tab) end as [Week] #(lf)#(tab) ,[spell_patient_identity_local_patient_identifier_issuer]#(lf)  FROM [Data_Mart_Unified_Extract].[dbo].[APC]#(lf)#(lf)  where #(lf)   --[spell_patient_identity_local_patient_identifier_issuer] like '%RTE%'#(lf)  [spell_commissioning_service_agreement_provider] like '%RTE%'#(lf)  AND [spell_admission_date] BETWEEN DATEADD(dd,  0, DATEADD(ww, DATEDIFF(ww, 0, DATEADD(dd, -1, CURRENT_TIMESTAMP)) - 2, 0))#(lf)  AND DATEADD(dd,  6, DATEADD(ww, DATEDIFF(ww, 0, DATEADD(dd, -1, CURRENT_TIMESTAMP)) - 1, 0))#(lf)  and spell_admission_admission_sub_type like 'EMR'#(lf)#(lf)  order by [spell_admission_date], [spell_admission_time]"])
+				in
+				    Source
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

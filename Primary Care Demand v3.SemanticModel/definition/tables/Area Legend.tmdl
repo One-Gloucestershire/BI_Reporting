@@ -1,0 +1,94 @@
+table 'Area Legend'
+	lineageTag: 7252f15d-0ca4-4acd-84ff-7b5e95a25b73
+
+	measure 'Appointments (Variable Category)' =
+			
+			
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('Area Legend'[Field]) = "Locality",
+			    CALCULATE([Total Appointments],
+			    USERELATIONSHIP('Area Legend'[Area], 'GP Reference Table'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('Area Legend'[Field]) = "PCN",
+			    CALCULATE([Total Appointments],
+			    USERELATIONSHIP('Area Legend'[Area], 'GP Reference Table'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('Area Legend'[Field]) = "Practice",
+			    CALCULATE([Total Appointments],
+			    USERELATIONSHIP('Area Legend'[Area], 'GP Reference Table'[OrganisationName])
+			    ),
+			    BLANK()
+			)
+		formatString: 0
+		lineageTag: a5f46540-bf4a-470f-847b-f93c07b2e39c
+
+	measure 'GP Appointments per Person (Variable Category)' =
+			
+			
+			SWITCH (
+			    TRUE(),
+			    ------------------Locality------------------
+			    SELECTEDVALUE('Area Legend'[Field]) = "Locality",
+			    CALCULATE([GP Appointments per Person - By Month],
+			    USERELATIONSHIP('Area Legend'[Area], 'GP Reference Table'[Locality])
+			    ),
+			    ------------------PCN------------------
+			     SELECTEDVALUE('Area Legend'[Field]) = "PCN",
+			    CALCULATE([GP Appointments per Person - By Month],
+			    USERELATIONSHIP('Area Legend'[Area], 'GP Reference Table'[PrimaryCareNetwork])
+			    ),
+			    ------------------Practice------------------
+			    SELECTEDVALUE('Area Legend'[Field]) = "Practice",
+			    CALCULATE([GP Appointments per Person - By Month],
+			    USERELATIONSHIP('Area Legend'[Area], 'GP Reference Table'[OrganisationName])
+			    ),
+			    BLANK())
+		lineageTag: a9eb0f58-0973-4013-8a66-1cd62f0a2c9d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Area
+		lineageTag: e2fc01cb-b251-4eb3-acdd-5b24093f55f0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Area]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Field
+		lineageTag: eaf120f8-2c0d-46da-b5e4-6f706f2d0713
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Field]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Area Legend' = calculated
+		mode: import
+		source =
+				
+				
+				UNION(
+				    SELECTCOLUMNS(
+				        'GP Reference Table',
+				        "Area", 'GP Reference Table'[Locality],
+				        "Field", "Locality"
+				    ),
+				        SELECTCOLUMNS(
+				        'GP Reference Table',
+				        "Area", 'GP Reference Table'[PrimaryCareNetwork],
+				        "Field", "PCN"
+				    ),
+				        SELECTCOLUMNS(
+				        'GP Reference Table',
+				        "Area", 'GP Reference Table'[OrganisationName],
+				        "Field", "Practice"
+				        )
+				)
+
+	annotation PBI_Id = fd8ecd0b370a4651a7f0be7e06a4332b
+

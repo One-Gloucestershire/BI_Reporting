@@ -1,0 +1,51 @@
+table '2. A&E  Patient level data QOF'
+	lineageTag: 524d9853-8132-4ada-8415-d16f21295fcc
+
+	measure PercentageQOF = calculate(sum('2. A&E  Patient level data QOF'[Value]))/calculate(sum('2. A&E  Patient level data QOF'[Counter]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 5f159e04-761c-48eb-9bde-2503e1a8f88c
+
+	column CDS_Unique_Identifier
+		dataType: string
+		lineageTag: 4a163095-4c2c-4169-af7f-2ab9bc0a3cf7
+		summarizeBy: none
+		sourceColumn: CDS_Unique_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: fc495e79-f937-4883-b2f8-1f0080bd7b4a
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		formatString: 0
+		lineageTag: 819bbd01-ef8c-46ae-a4a3-0512cbd63e77
+		summarizeBy: sum
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter = 1
+		formatString: 0
+		lineageTag: 56b22bd5-9242-4162-8cea-c6061bee8817
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '2. A&E  Patient level data QOF' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="select *#(lf)from [PowerBI_Processing].[dbo].[ECDS_ED_Attendances] #(lf)where arrival_date >= '20180401'"]),
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"id", "data_source", "counter", "arrival_date", "arrival_time", "arrival_hour", "arrival_mode_code", "arrival_mode", "arrival_mode_grouped", "attendance_category_code", "attendance_category", "attendance_source_code", "attendance_source", "acuity_code", "acuity", "major_minor_flag", "departure_date", "departure_time", "minutes_in_ed", "length_of_time_in_department", "decision_to_admit_date", "breach_reason", "admitted_flag", "discharge_status_code", "discharge_status", "discharge_destination_code", "discharge_destination", "discharge_follow_up_code", "discharge_follow_up", "disposal_method_code", "disposal_method", "referred_service_code", "referred_service", "commissioner_group", "code_of_commissioner", "provider_group", "provider_code", "provider_name", "site_code", "site_name", "department_type_code", "department_type", "chief_complaint_code", "chief_complaint", "presenting_complaint", "diagnosis_code", "diagnosis_code_1", "diagnosis_code_1_description", "injury_mechanism_code", "injury_mechanism", "injury_intent_code", "injury_intent", "injury_place_code", "injury_place", "injury_activity_type_code", "injury_activity_type", "injury_illness_flag", "mental_health_classification_code", "mental_health_classification", "MH_Att_Flag", "hrg_code", "hrg_description", "hrg_sub_chapter_description", "tariff", "MFF", "total_tariff_plus_MFF", "tariff_applied", "financial_year", "month_name", "financial_month", "year_month", "census_date", "weekday_name", "gender", "age_at_activity_date", "locality", "primary_care_network", "practice_code", "practice_name", "lsoa", "postcode_key", "postcode_ecds", "deprivation_decile", "core_20", "5yr_age_band", "10yr_age_band", "working_age_band", "ethnic_origin_code", "ethnic_origin", "ethnic_origin_group", "living_in_a_care_home", "living_alone", "mild_frailty", "moderate_frailty", "severe_frailty", "efi_category", "YTD Flag", "Weekday Sorter", "SPC Flag", "nhs_number"}),
+				    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Removed Columns", {"CDS_Unique_Identifier"}, "Attribute", "Value")
+				in
+				    #"Unpivoted Other Columns"
+
+	annotation PBI_ResultType = Table
+

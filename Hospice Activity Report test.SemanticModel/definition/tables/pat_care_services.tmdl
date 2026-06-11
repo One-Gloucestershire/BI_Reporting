@@ -1,0 +1,344 @@
+table pat_care_services
+	lineageTag: f15a2827-3ff5-4aed-b1bc-e8a3d3fa79b8
+
+	measure counter_small_number_suppression_pcs = if(DISTINCTCOUNT(pat_care_services[patient_id])<5,"<5",DISTINCTCOUNT(pat_care_services[patient_id]))
+		formatString: 0
+		lineageTag: 4c5051f3-1c7e-49db-9f35-0c4d0fd96557
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure distinct_patients = DISTINCTCOUNT(pat_care_services[patient_id])
+		formatString: 0
+		lineageTag: c368a9f3-093f-4db9-b99f-9bc81e35f8c5
+
+	measure practice_%_of_total_pcs =
+			DIVIDE(
+			                            CALCULATE(
+			                                COUNT(pat_care_services[Practice])
+			                            ),
+			                            CALCULATE(
+			                                COUNT(pat_care_services[Practice]),
+			                                ALL(pat_care_services)
+			                                )
+			                            )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f7c35591-5281-4483-a707-ae7b98ffa4b2
+
+	measure %_of_total_pcs = ```
+			
+			        divide(
+			            distinctcount(pat_care_services[patient_id]),
+			                calculate(
+			                    distinctcount(pat_care_services[patient_id]),
+			                    allselected(pat_care_services)
+			                    ))
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bb9d03c6-8769-4c84-b697-ac02a70e7468
+
+	measure Average_PCS_activity =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('date_table'[day_month_year])),
+				'pat_care_services'[distinct_patients] + 0
+			)
+		lineageTag: 3371c4b9-de92-4032-b9e7-85dc5248265c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PCS Patients Rate per 1000 - By Month' =
+			
+			
+			VAR PCS = CALCULATE ( 'pat_care_services'[distinct_patients] )
+			VAR POP = CALCULATE ( SUM ( 'Population'[population] ) )
+			
+			RETURN (PCS/POP*1000)
+		lineageTag: 2a999c80-bd30-4e20-b0a2-8aee90a17129
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PCS Patients - By Year' =
+			
+			
+			VAR PCS = CALCULATE ( 'pat_care_services'[distinct_patients] , ALLEXCEPT( 'date_table', 'date_table'[financial_year] )  )
+			VAR POP = CALCULATE ( SUM ( Population[population] ) , ALLEXCEPT ('date_table', 'date_table'[financial_year] ), 'date_table'[month_name] IN {"Apr"} )
+			
+			RETURN (PCS/POP*1000)
+		lineageTag: 65ef0250-534e-4b66-b119-f9f9cf19609f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column patient_id
+		dataType: string
+		lineageTag: 0d7dfd08-d4b2-4591-9de0-7abdd824ea49
+		summarizeBy: none
+		sourceColumn: patient_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band_order
+		dataType: string
+		lineageTag: c8b65c00-8083-476e-b13b-f43a4593b03a
+		summarizeBy: none
+		sourceColumn: age_band_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: string
+		lineageTag: 6abe2415-0b9d-43b7-9688-2d5ff4a5fc01
+		summarizeBy: none
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider
+		dataType: string
+		lineageTag: 7ec712c5-de09-4187-a884-d51a8800b87a
+		summarizeBy: none
+		sourceColumn: provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column local_patient_identifier
+		dataType: string
+		lineageTag: f9883aae-0b02-4168-a720-9940932dd0ac
+		summarizeBy: none
+		sourceColumn: local_patient_identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_number
+		dataType: string
+		lineageTag: af6c37cc-61be-4e22-87d1-81e1954746cd
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column referral_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b9a52d97-3654-41c1-89e9-2ee60af170e0
+		summarizeBy: none
+		sourceColumn: referral_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column referral_date_yearmonth
+		dataType: string
+		lineageTag: 49253914-2a20-4163-837a-75baeb4e5db6
+		summarizeBy: none
+		sourceColumn: referral_date_yearmonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column referral_date_financialyear
+		dataType: string
+		lineageTag: 04be82f3-b881-4d60-a560-6300b1a5fec8
+		summarizeBy: none
+		sourceColumn: referral_date_financialyear
+
+		annotation SummarizationSetBy = Automatic
+
+	column registration_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 283db1dd-aa25-454a-a53e-e9d2ca21e41c
+		summarizeBy: none
+		sourceColumn: registration_date
+
+		variation Variation
+			isDefault
+			relationship: e9d859f0-05fc-4e6e-b8de-2f85aa59d64b
+			defaultHierarchy: LocalDateTable_b6eb4830-743b-458d-9240-dfebf1c9eaa4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cab81b69-e518-4f2a-bb34-a9008f6995b9
+		summarizeBy: none
+		sourceColumn: discharge_date
+
+		variation Variation
+			isDefault
+			relationship: 9cdd94a4-2126-4066-81ce-b57270d0b14e
+			defaultHierarchy: LocalDateTable_5d26e59b-9c05-46ff-a896-524231d09aa6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_of_referral
+		dataType: string
+		lineageTag: 67545211-b455-4ca3-b3f2-e93dbbfdbe1c
+		summarizeBy: none
+		sourceColumn: source_of_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column referral_accepted
+		dataType: string
+		lineageTag: 95f58baf-5c7d-4b76-9eae-60fe84b9ea01
+		summarizeBy: none
+		sourceColumn: referral_accepted
+
+		annotation SummarizationSetBy = Automatic
+
+	column reason_for_not_accepting
+		dataType: string
+		lineageTag: 19e4d3a6-3692-4871-88f6-2b471071b9b7
+		summarizeBy: none
+		sourceColumn: reason_for_not_accepting
+
+		annotation SummarizationSetBy = Automatic
+
+	column gp_practice
+		dataType: string
+		lineageTag: 59e909fa-8115-4122-96bb-20f1d691a055
+		summarizeBy: none
+		sourceColumn: gp_practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice
+		dataType: string
+		lineageTag: f902b819-1362-40ba-b3e2-f2b235b61170
+		summarizeBy: none
+		sourceColumn: practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 9bade25b-a231-44a0-9094-2927de2dd4ab
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_referral
+		dataType: string
+		lineageTag: 036047fc-88e5-4abf-b51c-88e3213aa359
+		summarizeBy: none
+		sourceColumn: age_at_referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: f2963278-0b76-4a5a-98c7-5fb573b5f95a
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: b6d3c698-4184-42ef-b795-3646b0717dc9
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 8f23bb70-caf1-41bc-9d90-dee382b31b2a
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column religious/personal_belief
+		dataType: string
+		lineageTag: 7fbc4d3c-0b61-4c6f-90b2-bac3b4e99715
+		summarizeBy: none
+		sourceColumn: religious/personal_belief
+
+		annotation SummarizationSetBy = Automatic
+
+	column support_provided_to
+		dataType: string
+		lineageTag: 8cdb2beb-cd65-4753-aa29-a1091c04c2c3
+		summarizeBy: none
+		sourceColumn: support_provided_to
+
+		annotation SummarizationSetBy = Automatic
+
+	column type_of_support_provided
+		dataType: string
+		lineageTag: 3752b0f0-9f5b-4413-be28-c3ce85577a29
+		summarizeBy: none
+		sourceColumn: type_of_support_provided
+
+		annotation SummarizationSetBy = Automatic
+
+	column location_of_course
+		dataType: string
+		lineageTag: 3e121317-18e1-4493-9aab-6d9e4b3445b3
+		summarizeBy: none
+		sourceColumn: location_of_course
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_booked_appointments
+		dataType: string
+		lineageTag: 92c0f3ef-d105-4ca4-be3b-fe63d4bd5d95
+		summarizeBy: none
+		sourceColumn: total_booked_appointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_attended_appointments
+		dataType: string
+		lineageTag: 95ac5849-2833-4478-90f2-f49da561f3ce
+		summarizeBy: none
+		sourceColumn: total_attended_appointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_dna_appointments
+		dataType: string
+		lineageTag: 13db05d4-3248-4f0e-93fd-971f46df3107
+		summarizeBy: none
+		sourceColumn: total_dna_appointments
+
+		annotation SummarizationSetBy = Automatic
+
+	column filename
+		dataType: string
+		lineageTag: 92bc06ef-91ed-45ad-a802-6bc08faaf5d1
+		summarizeBy: none
+		sourceColumn: filename
+
+		annotation SummarizationSetBy = Automatic
+
+	column processeddate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c4b42271-6203-4951-9b2d-fb00728aeb90
+		summarizeBy: none
+		sourceColumn: processeddate
+
+		variation Variation
+			isDefault
+			relationship: a04f238b-b90e-48e6-9ee0-4ac3679be1ab
+			defaultHierarchy: LocalDateTable_2e20086f-e0e6-4d53-b53b-dabd844c8a83.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition pat_care_services-1c01d9af-bb96-4f0b-997d-d033748de572 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT DISTINCT#(lf)#(tab)   [provider]#(lf)      ,[local_patient_identifier]#(lf)      ,[nhs_number]#(lf)      ,[referral_date] = CAST([Referral_Date] AS date)#(lf)#(tab)  ,[referral_date_yearmonth] = [D].[YearMonth]#(lf)#(tab)  ,[referral_date_financialyear] = [D].[FinancialYear]#(lf)      ,[registration_date] = CASE WHEN [Registration_Date] < '2019-01-01' THEN NULL ELSE CAST([Registration_Date] AS date) END#(lf)      ,[discharge_date] = CASE WHEN [Discharge_Date] < '2019-01-01' THEN NULL ELSE CAST([Discharge_Date] AS date) END#(lf)      ,[source_of_referral] = CASE WHEN [Source_of_Referral] = 'General Medical Practitioner' THEN 'GP'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [Source_of_Referral] = 'General Medical Practicioner' THEN 'GP'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE [Source_of_Referral] END#(lf)      ,[referral_accepted]#(lf)      ,[reason_for_not_accepting] = CASE WHEN [Reason_for_not_accepting] = ' ' THEN NULL#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Reason_for_not_accepting] = 'N/A' THEN NULL#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Reason_for_not_accepting] END#(lf)      ,[gp_practice]#(lf),[practice] = case when ([GP_Practice] <> ' ' and [GP_Practice] <> '0') then LEFT([GP_Practice],CHARINDEX('-',[GP_Practice])-1) else null end#(lf)#(tab)  ,[practice_code] = case when ([GP_Practice] <> ' ' and [GP_Practice] <> '0') then RIGHT([GP_Practice],CHARINDEX('-',(REVERSE([GP_Practice])))-2) else null end#(lf)      ,[age_at_referral]#(lf)#(tab)  ,[age_band] = CASE WHEN [Age_at_referral] between '0' and '39' THEN '<40'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] between '40' and '49' THEN '40-49'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] between '50' and '59' THEN '50-59'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] between '60' and '69' THEN '60-69'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] between '70' and '79' THEN '70-79'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] between '80' and '89' THEN '80-89'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] between '90' and '99' THEN '90-99'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) WHEN [Age_at_referral] >= '100' THEN '100+' #(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE 'Unknown' END#(lf)      ,[ethnicity]#(lf)      ,[gender] = case when [gender] = ' ' then 'Unknown' else [gender] end#(lf)      ,[religious/personal_belief]#(lf)      ,[support_provided_to] = case when [support_provided_to] = 'Relative' then 'Family/Relative' else [support_provided_to] end#(lf)      ,[type_of_support_provided] = case when [Type_of_support_provided] in ('Complementary therapy','Family & Carers Support','Therapy (including physiotherapy and occupational therapy)',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) 'Spiritual and psychological support','Exercise (to support breathlessness, fatigue and falls prevention)',#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) 'Social support','Bereavement support','Wellbeing','Clinical Support','Triage/Assessment','Other') then [Type_of_support_provided]#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) else 'Other' end#(lf)#(lf)      ,[location_of_course]#(lf)      ,[total_booked_appointments]#(lf)      ,[total_attended_appointments]#(lf)      ,[total_dna_appointments]#(lf)      ,[filename]#(lf)      ,[processeddate]#(lf)  FROM [CCG_Current].[Hospices].[vw_PatCareServices_Monthly] [H]#(lf)#(lf)#(tab)#(tab)LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup][D]#(lf)#(tab)#(tab)ON [H].[Referral_Date] = [D].[Date]#(lf)#(lf)WHERE [Referral_Date] != '2109-09-03'#(lf)AND [Referral_Date] != '2012-09-10'#(lf)"]),
+				    #"Added patient_id column" = Table.AddColumn(Source, "patient_id", each if [nhs_number] = "" then [local_patient_identifier] else [nhs_number]),
+				    #"Added age_band_order Column" = Table.AddColumn(#"Added patient_id column", "age_band_order", each if [age_band] = "<40" then 1 else if [age_band] = "40-49" then 2 else if [age_band] = "50-59" then 3 else if [age_band] = "60-69" then 4 else if [age_band] = "70-79" then 5 else if [age_band] = "80-89" then 6 else if [age_band] = "90-99" then 7 else if [age_band] = "100+" then 8 else null),
+				    #"Capitalized Each Word (source of referral)" = Table.TransformColumns(#"Added age_band_order Column",{{"source_of_referral", Text.Proper, type text}}),
+				    #"Added counter column" = Table.AddColumn(#"Capitalized Each Word (source of referral)", "counter", each 1),
+				    #"Replaced blank suppport_provided_to" = Table.ReplaceValue(#"Added counter column"," ","Unknown",Replacer.ReplaceText,{"support_provided_to"})
+				in
+				    #"Replaced blank suppport_provided_to"
+
+	annotation PBI_ResultType = Table
+

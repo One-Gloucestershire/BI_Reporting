@@ -1,0 +1,96 @@
+table 'Mental Health KPIs'
+	lineageTag: c7bf8e0b-249a-4b15-8813-86f4881ba309
+
+	measure 'Mental Health Variance (Plan)' = ```
+			
+			
+			    (CALCULATE(
+				SUM('Mental Health KPIs'[Activity]),
+				'Mental Health KPIs'[Time frame] IN { "2023/24" })
+			   
+			    -
+			    calculate(
+			   SUM('Mental Health KPIs'[Activity]),
+				'Mental Health KPIs'[Time frame] IN { "Plan" }))
+			    /
+			CALCULATE(
+				SUM('Mental Health KPIs'[Activity]),
+				'Mental Health KPIs'[Time frame] IN { "Plan" })
+			```
+		lineageTag: 7973ed2d-8c6d-405b-9ec9-a37f41626eda
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Mental Health Metric Selected' = IF ( ISFILTERED ( 'Mental Health KPIs'[Metric] ) , CONCATENATEX(ALLSELECTED('Mental Health KPIs'[Metric]), 'Mental Health KPIs'[Metric], ", ") , "No specific metric selected" )
+		lineageTag: 099a4644-84eb-4842-afdb-6de62c4a04e7
+
+	measure 'Mental Health Provider Selected' =
+			IF (
+			  HASONEVALUE ('Mental Health KPIs'[Provider]),
+			  SELECTEDVALUE ('Mental Health KPIs'[Provider]),
+			  "No provider selected"
+			)
+		lineageTag: 23e1ec36-f644-464d-b785-062ba867bb73
+
+	measure 'Mental Health Time Frame Selected' = IF ( ISFILTERED ( 'Mental Health KPIs'[Time frame] ) , CONCATENATEX(ALLSELECTED('Mental Health KPIs'[Time frame]), 'Mental Health KPIs'[Time frame], ", ") , "No specific time frame selected" )
+		lineageTag: 914307c5-c62a-437a-a0aa-7046de0a205d
+
+	measure 'Mental Health Variance 1 (Plan)' = if('Mental Health KPIs'[Mental Health Variance (Plan)] <>-1.00, 'Mental Health KPIs'[Mental Health Variance (Plan)], "")
+		lineageTag: 8d75eb3f-b92b-4e45-82ef-3a90449961c8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metric
+		dataType: string
+		lineageTag: 9190c9c9-b1c1-4013-9c8c-002927b9202d
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: f57fd911-f7dc-4b0a-87fb-54efdd053a34
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: c1ecd822-d983-4d69-b48c-6f0fbc6ae73b
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time frame'
+		dataType: string
+		lineageTag: 18bc3363-0d8a-41ed-ab93-ec6f3defdfe7
+		summarizeBy: none
+		sourceColumn: Time frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: double
+		formatString: #,0
+		lineageTag: 8d4c82c5-7321-4ac8-b5ea-d169f35a93ca
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition 'Mental Health KPIs-6797a799-0834-4342-9035-bbdfac682369' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "powerbi_reporting", [Query="SELECT *#(lf)  FROM [PowerBI_Reporting].[dbo].[Mental_health_KPIs]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Type", "Time frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

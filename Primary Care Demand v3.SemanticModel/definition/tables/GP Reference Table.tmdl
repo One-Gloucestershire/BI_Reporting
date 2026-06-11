@@ -1,0 +1,64 @@
+table 'GP Reference Table'
+	lineageTag: afdae27e-0b3b-4971-97f6-9da929c0b04b
+
+	column Locality
+		dataType: string
+		lineageTag: 4ffb1c60-2739-4bd3-8cd5-5ca81dc74548
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 188c131c-18cc-45b9-b36b-760369b6c646
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationCode
+		dataType: string
+		lineageTag: 7b8c825a-86f9-4ac5-9587-7398a79f1747
+		summarizeBy: none
+		sourceColumn: OrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrganisationName
+		dataType: string
+		lineageTag: 27373937-65a1-44ca-bb49-361886f67faa
+		summarizeBy: none
+		sourceColumn: OrganisationName
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Locality Hierarchy'
+		lineageTag: 997bfbee-ef95-49fe-b88a-710179acc34d
+
+		level Locality
+			lineageTag: 23621b3e-c2bd-4469-a006-0ec5f3696304
+			column: Locality
+
+		level PrimaryCareNetwork
+			lineageTag: 6bfb4528-a976-4a0e-a0e9-7ce7d6c346d8
+			column: PrimaryCareNetwork
+
+		level OrganisationName
+			lineageTag: e8b43489-244b-4215-a708-f706cdbd05bc
+			column: OrganisationName
+
+	partition 'GP Reference Table' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Locality] = CASE WHEN [Locality] LIKE 'North Cotswolds' THEN 'Cotswolds'#(lf)                         WHEN [Locality] LIKE 'South Cotswolds' THEN 'Cotswolds'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab) ELSE [Locality] END#(lf)      ,[PrimaryCareNetwork]#(lf)#(tab)  ,[OrganisationCode]#(lf)#(tab)  ,[OrganisationName]#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_GPPractice]#(lf)#(lf)WHERE [Commissioner] = '11M'#(lf)AND [Locality] IS NOT NULL#(lf)AND [StatusDescription] = 'Active'"]),
+				    #"Replaced Value" = Table.ReplaceValue(Source,"Tewkesbury, Newent and Staunton and West Cheltenham Medical","TWNS",Replacer.ReplaceText,{"PrimaryCareNetwork"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","Tewkesbury Newent and Staunton","Tewkesbury",Replacer.ReplaceText,{"Locality"})
+				in
+				    #"Replaced Value1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,139 @@
+table 'ICB Performance KPIs'
+	lineageTag: d94cd57e-444a-40ec-9f62-b532ac3697a2
+
+	measure 'ICB Performance Variance (2023/24)' =
+			
+			IFERROR(
+			    (CALCULATE(
+				SUM('ICB Performance KPIs'[Activity]),
+				'ICB Performance KPIs'[Time frame] IN { "2023/24" })
+			    -
+			    calculate(
+			    SUM('ICB Performance KPIs'[Activity]),
+				'ICB Performance KPIs'[Time frame] IN { "Plan" }))
+			    /
+			CALCULATE(
+				SUM('ICB Performance KPIs'[Activity]),
+				'ICB Performance KPIs'[Time frame] IN { "Plan" })
+			    ,"")
+		lineageTag: b2807b1f-d49a-4dbd-8d6d-ed845b997e63
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ICB Performance Metric Selected' = IF ( ISFILTERED ( 'ICB Performance KPIs'[Metric]) , CONCATENATEX(ALLSELECTED('ICB Performance KPIs'[Metric]), 'ICB Performance KPIs'[Metric], ", ") , "No specific metric selected" )
+		lineageTag: 0557a3d0-7ff4-4bb9-91a6-d27c521d51df
+
+	measure 'ICB Performance Assurance Selected' =
+			IF (
+			  HASONEVALUE ('ICB Performance KPIs'[Assurance]),
+			  SELECTEDVALUE ('ICB Performance KPIs'[Assurance]),
+			  "No assurance selected"
+			)
+		lineageTag: e5cd3042-3c8b-4e78-ba40-439537312961
+
+	measure 'ICB Performance Data Source Selected' =
+			IF (
+			  HASONEVALUE ('ICB Performance KPIs'[Data source]),
+			  SELECTEDVALUE ('ICB Performance KPIs'[Data source]),
+			  "No data source selected"
+			)
+		lineageTag: cbd36645-b6ce-4037-a331-33a1d72023fc
+
+	measure 'ICB Performance Provider Selected' =
+			IF (
+			  HASONEVALUE ('ICB Performance KPIs'[Provider]),
+			  SELECTEDVALUE ('ICB Performance KPIs'[Provider]),
+			  "No provider selected"
+			)
+		lineageTag: a1d1a0e6-33d3-4f50-bb85-41ba68f7af4e
+
+	measure 'ICB Performance Time Frame Selected' = IF ( ISFILTERED ( 'ICB Performance KPIs'[Time frame]) , CONCATENATEX(ALLSELECTED('ICB Performance KPIs'[Time frame]), 'ICB Performance KPIs'[Time frame], ", ") , "No specific time frame selected" )
+		lineageTag: e9f212b1-c998-4d7f-82c2-8419c6db238d
+
+	measure 'ICB Performance Variance Plan' = ```
+			if(
+			    'ICB Performance KPIs'[ICB Performance Variance (2023/24)] <>-1.0000, 
+			    'ICB Performance KPIs'[ICB Performance Variance (2023/24)], "")
+			```
+		lineageTag: c4204fee-772f-4eec-a0a1-42490050dfb2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metric
+		dataType: string
+		lineageTag: 4f2e8b29-01e3-4453-bb3f-c3c8a84dad5d
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Assurance
+		dataType: string
+		lineageTag: 08e0a26f-c3e8-42dd-819a-ca316ab7d586
+		summarizeBy: none
+		sourceColumn: Assurance
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data source'
+		dataType: string
+		lineageTag: 028d72a6-2c30-4ab8-bcbb-1b645fdc9977
+		summarizeBy: none
+		sourceColumn: Data source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: 5262920e-af80-44d3-818c-0531f49ae9c8
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: 9d1fcb5e-c4d6-4749-b6c1-aa5ca3ac4c9b
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month name'
+		dataType: string
+		lineageTag: 4bc9d47d-0767-46a7-bde4-c81ff949c90a
+		summarizeBy: none
+		sourceColumn: Month name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time frame'
+		dataType: string
+		lineageTag: 5b0f376d-f8af-43f2-a2bb-2d32e60c0aed
+		summarizeBy: none
+		sourceColumn: Time frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: double
+		formatString: #,0
+		lineageTag: 1c5a5db1-a19f-481d-b158-992665b46a36
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition 'ICB Performance KPIs-fcd45427-461b-4ea0-b576-5fdcde396936' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)  FROM [PowerBI_Reporting].[dbo].[ICB_performance_KPIs]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Type", "Time frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

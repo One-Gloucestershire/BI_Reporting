@@ -1,0 +1,88 @@
+table 'QOF Diagnoses'
+	lineageTag: 8019dd92-3dcc-40ab-86b6-306af2b893cd
+
+	column PseudoNHSNo
+		dataType: string
+		lineageTag: 9612a32b-ef7f-4b51-8073-25a0d2f71843
+		summarizeBy: none
+		sourceColumn: PseudoNHSNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCCode
+		dataType: string
+		lineageTag: 9c623fea-be1c-4b58-93f6-8bb2425187dc
+		summarizeBy: none
+		sourceColumn: LTCCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCDescription
+		dataType: string
+		lineageTag: 8408c9bf-b243-4590-a256-3348be7f2586
+		summarizeBy: none
+		sourceColumn: LTCDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCCategory
+		dataType: string
+		lineageTag: 9076596f-bf4c-4e80-bd20-805f5d40add3
+		summarizeBy: none
+		sourceColumn: LTCCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCCategoryDescription
+		dataType: string
+		lineageTag: d9854254-6806-464d-8ac0-42d627421b04
+		summarizeBy: none
+		sourceColumn: LTCCategoryDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstDiagnosisDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 30422c99-d456-46ce-9d7a-ebafb6381997
+		summarizeBy: none
+		sourceColumn: FirstDiagnosisDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: a149cf74-f897-4d78-ac3f-85123cb427de
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: 9403531c-ae3a-47e7-a4a2-399bdcd98933
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column Count
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4427efd2-68f9-4c70-842c-90a92ad560b2
+		summarizeBy: sum
+		sourceColumn: Count
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'QOF Diagnoses' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT distinct 1 AS Counter#(lf)        ,[PseudoNHSNo]#(lf)     -- ,[Locality]#(lf)      --,[Network]#(lf)      --,[PracticeCode]#(lf)      --,[PracticeDescription]#(lf)      ,[LTCCode]#(lf)      ,[LTCDescription]#(lf)      ,[LTCCategory]#(lf)      ,[LTCCategoryDescription]#(lf)      ,[FirstDiagnosisDate] = min([firstdiagnosisdate])#(lf)#(tab)  ,[YearMonth]#(lf)#(tab)  ,[FinancialYear]#(lf)  FROM [CCG_Current].[PrimaryCare].[vw_LongTermConditions][LTC]#(lf)#(lf)  LEFT JOIN [CCG_Reference].[Reference].[vw_DateLookup][D]#(lf)  ON [LTC].[FirstDiagnosisDate] = [D].[Date]#(lf)#(lf)  WHERE [LTCCode] = 'DIA' and [LTCCategory] = 'G'#(lf)  and [FirstDiagnosisDate] >= '2018-04-01'#(lf)  --and [PseudoNHSNo] in (select [PseudoNHSNo] from [CCG_Current].[PrimaryCare].[vw_LongTermConditions] where  group by [PseudoNHSNo] having count(*) >1) --checking for double counting#(lf)  and [PseudoNHSNo] is not null #(lf)#(lf)  group by [PseudoNHSNo]#(lf)  ,[LTCCode]#(lf)      ,[LTCDescription]#(lf)      ,[LTCCategory]#(lf)      ,[LTCCategoryDescription]#(lf)#(tab)  ,[YearMonth]#(lf)#(tab)  ,[FinancialYear]#(lf)  order by [PseudoNHSNo]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Counter", "Count"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

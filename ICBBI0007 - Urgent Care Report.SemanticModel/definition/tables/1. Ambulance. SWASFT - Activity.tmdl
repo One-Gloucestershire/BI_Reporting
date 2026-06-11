@@ -1,0 +1,729 @@
+table '1. Ambulance. SWASFT - Activity'
+	lineageTag: 287f8d5d-c6bf-4e34-bdd1-86cacdd35cd6
+
+	measure SeeConveyPercentage = ```
+			
+			VAR SeeConveyTotal = 
+			CALCULATE(SUM('1. Ambulance. SWASFT - Activity'[Counter]),
+			'1. Ambulance. SWASFT - Activity'[Outcome] in {"See & Convey"})
+			VAR SWASFTTotal = 
+			CALCULATE(SUM('1. Ambulance. SWASFT - Activity'[Counter]))
+			RETURN
+			SeeConveyTotal/SWASFTTotal
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Measures
+		lineageTag: aa8eb78f-b027-4fbf-bee2-8f4bbe8fe603
+
+	measure RatePer1000MAP =
+			
+			
+			VAR NoCalls = CALCULATE(sum('1. Ambulance. SWASFT - Activity'[Counter]))
+			
+			VAR Pop = CALCULATE(SUM('Current Populations'[Counter]))
+			
+			RETURN IFERROR((NoCalls/Pop)*1000,BLANK())
+		displayFolder: Measures
+		lineageTag: 2cb88f6c-9087-420e-af56-a1b0f9ffeef6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Conveyance Linear Regression' = ```
+			
+			 
+			VAR Temp_Table =
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Table'[FinancialYear], 'Date Table'[FinancialMonth],
+			                         'Date Table'[monthname], 'Date Table'[month_number] ),
+			            "Value_x", 'Date Table'[month_number],
+			            "Value_y", 'SWASFT - Activity'[SeeConveyPercentage]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			 
+			VAR LINESTX_Table =
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope =
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept =
+			    MAXX ( LINESTX_Table, [Intercept] )
+			 
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Table'[month_number] ),
+			        Intercept + Slope * 'Date Table'[month_number]
+			    )
+			```
+		displayFolder: Measures
+		lineageTag: 4a7b1884-e270-4c55-883e-523d795808e7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure TotalPerMonth_AmbAct =
+			
+			calculate(SUM('1. Ambulance. SWASFT - Activity'[Counter]),ALLSELECTED('1. Ambulance. SWASFT - Activity'),'1. Ambulance. SWASFT - Activity'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: 59b34266-2b22-4df2-9c2d-a1fb3917f966
+
+	measure NumberOfMonths_AmbAct = CALCULATE(DISTINCTCOUNT('1. Ambulance. SWASFT - Activity'[year_month]),ALLSELECTED('1. Ambulance. SWASFT - Activity'),'1. Ambulance. SWASFT - Activity'[SPC Flag]=1)
+		displayFolder: SPC
+		lineageTag: d83515e5-d843-4e6f-bfd2-e516d498b28a
+
+	measure Mean_AmbAct =
+			
+			[TotalPerMonth_AmbAct]/[NumberOfMonths_AmbAct]
+		displayFolder: SPC
+		lineageTag: 90fbf8cf-b8a8-4045-9c18-bcebf8cee298
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure MonthlyTotal_AmbAct =
+			SUMX (
+			    VALUES ( '1. Ambulance. SWASFT - Activity'[year_month] ),
+			    CALCULATE ( SUM ( '1. Ambulance. SWASFT - Activity'[CounteR] ),
+			    '1. Ambulance. SWASFT - Activity'[SPC Flag] = 1 )
+			)
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: b708fbbd-df7e-430d-8811-36a831a1f0b0
+
+	measure StdDev_AmbAct = ```
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( '1. Ambulance. SWASFT - Activity'[year_month]), [MonthlyTotal_AmbAct]), ALLEXCEPT('Date Table', 'Date Table'[year_month]))
+			 
+			RETURN IFERROR(STD_DEV, 0)
+			```
+		displayFolder: SPC
+		lineageTag: 2977569a-12e0-4f80-82c8-2684f83eb3bf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LCL_AmbAct = [Mean_AmbAct]-(3*[StdDev_AmbAct])
+		displayFolder: SPC
+		lineageTag: 9c59b4f2-0310-4ed3-8431-511715972172
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure UCL_AmbAct = [Mean_AmbAct]+(3*[StdDev_AmbAct])
+		displayFolder: SPC
+		lineageTag: 924f6e0b-7068-455d-84cd-e328a889ae58
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SWASFT_CounterSupressed =
+			IF(
+			    ISBLANK(SUM('1. Ambulance. SWASFT - Activity'[Counter])),"",
+			    IF(
+			        SUM('1. Ambulance. SWASFT - Activity'[Counter])<5,0,sum('1. Ambulance. SWASFT - Activity'[Counter])))
+		formatString: 0.00
+		displayFolder: Data Values
+		lineageTag: dd80743e-13a7-41ac-be00-7556a4b78b36
+
+	column Symptom_Group_Chief_Complaint_grouped
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 10978f45-5070-461f-ad1f-952e2c083293
+		summarizeBy: none
+		sourceColumn: Symptom_Group_Chief_Complaint_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YTD Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: Data Values
+		lineageTag: 466ea2d7-b58e-4051-960f-edf69ee2ed4b
+		summarizeBy: sum
+		sourceColumn: YTD Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Hospital Type'
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 760ca9a3-7900-48bf-90d6-378a016be3d4
+		summarizeBy: none
+		sourceColumn: Hospital Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_Hospital_Attended
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 036e7aa4-6990-4153-b6f7-7ecb562ebf31
+		summarizeBy: none
+		sourceColumn: First_Hospital_Attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column nhs_number
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 05e6d5a8-0bde-4a00-9293-10b952a8d1d6
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		displayFolder: Data Values
+		lineageTag: 313823e8-9c0a-4964-aa55-9d1e808a4b3c
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_set
+		dataType: string
+		displayFolder: z. Codes (not needed)
+		lineageTag: 22f7aeed-1edb-4c84-97dd-a63617cc09ed
+		summarizeBy: none
+		sourceColumn: data_set
+
+		annotation SummarizationSetBy = Automatic
+
+	column incident_number
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 9492f39e-942b-43f5-b2d3-fc94ed17c86c
+		summarizeBy: none
+		sourceColumn: incident_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column incident_datetime
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Ambulance Characteristics
+		lineageTag: 760bbc5e-6451-4995-b6d9-06f463ac43f5
+		summarizeBy: none
+		sourceColumn: incident_datetime
+
+		variation Variation
+			isDefault
+			relationship: 85546c61-ad71-4372-be8f-dbfc0a560426
+			defaultHierarchy: LocalDateTable_cfc08a82-02a3-46fb-8d87-7d72164141ed.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column incident_date
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Ambulance Characteristics
+		lineageTag: 26afbf63-e940-48db-9f12-7e581a92de1b
+		summarizeBy: none
+		sourceColumn: incident_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column incident_time
+		dataType: dateTime
+		formatString: Long Time
+		displayFolder: Ambulance Characteristics
+		lineageTag: d146f1d7-6c24-4202-902f-133bca741b8f
+		summarizeBy: none
+		sourceColumn: incident_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column incident_hour
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 6fe696a0-8ed5-4605-9f2c-c7f9b78f7587
+		summarizeBy: none
+		sourceColumn: incident_hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column call_date
+		dataType: dateTime
+		formatString: General Date
+		displayFolder: Ambulance Characteristics
+		lineageTag: 578e1bd9-4fed-48e9-a2dd-cae76820b95e
+		summarizeBy: none
+		sourceColumn: call_date
+
+		variation Variation
+			isDefault
+			relationship: aac51db5-b85a-4398-889b-28b4355807d8
+			defaultHierarchy: LocalDateTable_2e52707e-b2c9-4377-a348-f2e21319097e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column call_time
+		dataType: dateTime
+		formatString: Long Time
+		displayFolder: Ambulance Characteristics
+		lineageTag: 47087937-c331-4925-93ba-c7873c358dc0
+		summarizeBy: none
+		sourceColumn: call_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column call_hour
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: e4854b2b-53e7-4a1b-9313-a99437c44e2a
+		summarizeBy: none
+		sourceColumn: call_hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column category_flag
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 62da8d58-055a-41b3-96eb-8405c96ad21b
+		summarizeBy: none
+		sourceColumn: category_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: f76492bf-7cd5-4832-a143-f1022890bada
+		summarizeBy: none
+		sourceColumn: outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome_location
+		dataType: string
+		displayFolder: Ambulance Characteristics
+		lineageTag: 75914ca9-8f95-4bf6-a463-f54062415dfe
+		summarizeBy: none
+		sourceColumn: outcome_location
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		displayFolder: Date Values
+		lineageTag: b9637c04-f5ea-4429-8ed5-25e1ef5017be
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		displayFolder: Date Values
+		lineageTag: fd1f2116-4e1c-4a73-b889-eb4fba1ede4f
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		displayFolder: Date Values
+		lineageTag: db39708f-d164-4838-ad0e-b3816def6409
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 44692dc0-392c-40e5-89ac-a1f50bf84e96
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column census_date
+		dataType: string
+		displayFolder: z. Codes (not needed)
+		lineageTag: 0f764590-7ff6-4a80-9052-8cf322a77067
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday_name
+		dataType: string
+		displayFolder: Date Values
+		lineageTag: 78350612-73a8-4122-bd29-4a06f32fb4f9
+		summarizeBy: none
+		sourceColumn: weekday_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 2aed3e48-ca8f-41bd-9e6a-5aa691f14506
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_activity_date
+		dataType: int64
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: 61d1299b-a7a1-4d5d-99b3-1ff816aae9df
+		summarizeBy: sum
+		sourceColumn: age_at_activity_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column local_authority
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: bc2b6727-afa4-47a7-965c-feaad8430b1f
+		summarizeBy: none
+		sourceColumn: local_authority
+
+		annotation SummarizationSetBy = Automatic
+
+	column postcode_sector
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: e64ea63c-4729-4bea-aeac-7e9b32be00a3
+		summarizeBy: none
+		sourceColumn: postcode_sector
+
+		annotation SummarizationSetBy = Automatic
+
+	column residential_nursing_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: Demographics
+		lineageTag: 7f5db5aa-6f72-49b4-b430-e51f3cedfd21
+		summarizeBy: sum
+		sourceColumn: residential_nursing_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column residential_nursing_name
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: cfd020d7-9a42-4021-82c1-f2c86c2e8717
+		summarizeBy: none
+		sourceColumn: residential_nursing_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column cqc_residential_nursing_name
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 5027e5d0-c2f8-4006-89ad-08eb895b318d
+		summarizeBy: none
+		sourceColumn: cqc_residential_nursing_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column cqc_residential_nursing_type
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 5c93b318-2e97-4dad-b1ec-b38bad4fb37a
+		summarizeBy: none
+		sourceColumn: cqc_residential_nursing_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column ward_code
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: ff0c5763-2f0a-4b21-ae0a-7db68719e669
+		summarizeBy: none
+		sourceColumn: ward_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column ward_2021_name
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: fd055909-2faf-46ac-a893-27661a9cb59f
+		summarizeBy: none
+		sourceColumn: ward_2021_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5yr_age_band
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: d9330fc2-c538-44c1-8059-1a756e8c9407
+		summarizeBy: none
+		sourceColumn: 5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10yr_age_band
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 9f4345bf-766a-4b63-b368-df00401f2cf7
+		summarizeBy: none
+		sourceColumn: 10yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column working_age_band
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: cf6552ad-40a4-4354-8dda-47bc713fed0b
+		summarizeBy: none
+		sourceColumn: working_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_code
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: aa088c10-9d34-43c0-92f7-517e3d15f61f
+		summarizeBy: none
+		sourceColumn: ethnic_origin_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: aab255b3-4d39-4c66-a018-5deb468e8c33
+		summarizeBy: none
+		sourceColumn: ethnic_origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_group
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 68cbedbb-67c1-4543-a808-0babb4e4309d
+		summarizeBy: none
+		sourceColumn: ethnic_origin_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		displayFolder: Demographics
+		lineageTag: 00d1866c-8da4-456a-a898-47e4aa86fe5a
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column atrialfib_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 43148e69-b20e-4d2e-999c-923b536ad72b
+		summarizeBy: sum
+		sourceColumn: atrialfib_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column asthma_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 68816436-a86d-407d-9626-c1b1ea072d6b
+		summarizeBy: sum
+		sourceColumn: asthma_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancer_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: de29972f-6a9c-4b04-8e7f-d3bfbead22f9
+		summarizeBy: sum
+		sourceColumn: cancer_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column coronaryheart_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 27ea9661-90bc-496a-88c5-81ea9c2e0b0c
+		summarizeBy: sum
+		sourceColumn: coronaryheart_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column chronickidney_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 5420552e-8917-4e3a-8f51-27f026f9b9db
+		summarizeBy: sum
+		sourceColumn: chronickidney_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column copd_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 02f70827-fe6c-494a-9a4b-55e79d529d29
+		summarizeBy: sum
+		sourceColumn: copd_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 0cff654f-6907-45a1-be73-92612e6be563
+		summarizeBy: sum
+		sourceColumn: dementia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column depression_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 409301f5-922f-4488-b603-7b76e2d82e57
+		summarizeBy: sum
+		sourceColumn: depression_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column diabetes_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 274c0073-3c9f-434b-afb0-15fb42f32948
+		summarizeBy: sum
+		sourceColumn: diabetes_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column epilepsy_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 7c66f0ce-cf1c-482a-b469-a60693ea17a1
+		summarizeBy: sum
+		sourceColumn: epilepsy_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column heartfailure_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 6f7da069-1e21-4a3e-adbb-3c37a119cee0
+		summarizeBy: sum
+		sourceColumn: heartfailure_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column hypertension_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 8b198f08-53b3-4a63-b840-da6d5c8f225a
+		summarizeBy: sum
+		sourceColumn: hypertension_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column learningdisability_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 29ca07eb-413f-4c7c-a3ea-ec0f29364f31
+		summarizeBy: sum
+		sourceColumn: learningdisability_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column mentalhealth_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 3f846f20-104a-4e4a-a982-f541f30cc40a
+		summarizeBy: sum
+		sourceColumn: mentalhealth_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column obesity_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: b42a04ea-b951-4bca-8e25-36046740dcec
+		summarizeBy: sum
+		sourceColumn: obesity_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column peripheralarterialdisease_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 0015b890-10b3-4cc6-95fb-476bac0d5f8f
+		summarizeBy: sum
+		sourceColumn: peripheralarterialdisease_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliativecare_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 922d8468-248d-43ec-8d0c-87cf565f2d16
+		summarizeBy: sum
+		sourceColumn: palliativecare_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column stroke_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: 1614f7cb-dbc5-4acf-ab43-b675592892d5
+		summarizeBy: sum
+		sourceColumn: stroke_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column tia_flag
+		dataType: int64
+		formatString: 0
+		displayFolder: z. Codes (not needed)
+		lineageTag: c85d1392-3aa8-4fba-93f0-e73a9e1a5d72
+		summarizeBy: sum
+		sourceColumn: tia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Flag'
+		dataType: int64
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: e8feff26-ba19-40a7-9f5d-7d4d1c464205
+		summarizeBy: sum
+		sourceColumn: SPC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1. Ambulance. SWASFT - Activity' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from [PowerBI_Reporting].[USC].[SWASFT_Activity_Grouped]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

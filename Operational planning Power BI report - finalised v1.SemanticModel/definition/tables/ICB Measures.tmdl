@@ -1,0 +1,109 @@
+table 'ICB Measures'
+	lineageTag: 0023a8e0-9d76-4fa5-845d-e5b90aa25421
+
+	measure 'Variance (Plan)' = ```
+			
+			
+			    (CALCULATE(
+				SUM('ICB Measures'[Activity]),
+				'ICB Measures'[Time frame] IN { "Actual 2023/24" })
+			    -
+			    calculate(
+			    SUM('ICB Measures'[Activity]),
+				'ICB Measures'[Time frame] IN { "Plan" }))
+			    /
+			calculate(
+			    SUM('ICB Measures'[Activity]),
+				'ICB Measures'[Time frame] IN { "Plan" })
+			
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a39b0e9d-aab6-4778-a5c6-c1cf14f34fb3
+
+	measure 'Recovery (19/20)' =
+			(CALCULATE(
+				SUM('ICB Measures'[Activity]),
+				'ICB Measures'[Time frame] IN { "Actual 2023/24" })
+			
+			    /
+			calculate(
+			    SUM('ICB Measures'[Activity]),
+				'ICB Measures'[Time frame] IN { "Actual 2019/20" })
+			
+			)
+		lineageTag: 3a30cd25-bfc8-47f0-896a-11b5782c7123
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'ICB Measures Metric(s) Selected' = IF ( ISFILTERED ( 'ICB Measures'[Metric] ) , CONCATENATEX(ALLSELECTED('ICB Measures'[Metric]), 'ICB Measures'[Metric], ", ") , "No specific metric selected" )
+		lineageTag: 36e28b8b-17c0-4bdf-bfdb-9158d65e95c9
+
+	measure 'ICB Measures Provider(s) Selected' = IF ( ISFILTERED ( 'ICB Measures'[Provider] ) , CONCATENATEX(ALLSELECTED('ICB Measures'[Provider]), 'ICB Measures'[Provider], ", ") , "No specific provider selected" )
+		lineageTag: 4d35b501-726f-42a2-8544-bc51b02b9030
+
+	measure 'ICB Measures Time Frame(s) Selected' = IF ( ISFILTERED ( 'ICB Measures'[Time frame] ) , CONCATENATEX(ALLSELECTED('ICB Measures'[Time frame]), 'ICB Measures'[Time frame], ", ") , "No specific time frame selected" )
+		lineageTag: 4cc0aeb5-b87a-4eb9-8134-15e45dba5215
+
+	measure 'Recovery 1 (19/20)' = if('ICB Measures'[Recovery (19/20)] <>BLANK(), 'ICB Measures'[Recovery (19/20)], "")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 072bae75-054b-4b6b-8032-c04a209b7a6f
+
+	measure 'Variance 1 (Plan)' = if('ICB Measures'[Variance (Plan)] <>-1.0000, 'ICB Measures'[Variance (Plan)], "")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a0f600ae-0b5f-4558-a34a-009d25898c12
+
+	column Metric
+		dataType: string
+		lineageTag: d126b02a-9885-4c72-8f51-0a2e77d79742
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: ab5f48b4-5453-40cd-83fd-1cbf3b6c0c70
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month name'
+		dataType: string
+		lineageTag: b7cababb-c33b-49bc-9ab1-c29dca2db27b
+		summarizeBy: none
+		sourceColumn: Month name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Time frame'
+		dataType: string
+		lineageTag: 10070aa9-c0d2-4045-9c9b-90db86cacb94
+		summarizeBy: none
+		sourceColumn: Time frame
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: double
+		formatString: #,0
+		lineageTag: 327e0c0e-3f19-4e59-802c-12723cef1ffb
+		summarizeBy: sum
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	partition 'ICB Measures-c10ff34e-717c-4da6-95eb-ada4c536eb90' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="SELECT *#(lf)  FROM [PowerBI_Reporting].[dbo].[ICB_measures]"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Type", "Time frame"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

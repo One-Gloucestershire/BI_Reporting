@@ -1,0 +1,330 @@
+table 'Appointment Data'
+	lineageTag: d0e11ef4-079f-43af-83ae-d8e9ea3d840c
+
+	measure 'GP Appointments per Person - By Year - YTD' =
+			
+			
+			VAR GPAPP = CALCULATE ( SUM ('Appointment Data'[Appointments] ) , ALLEXCEPT( 'Date Table', 'Date Table'[financial_year] ) , 'Date Table'[ytd_flag] = 1 )
+			VAR POP = CALCULATE ( SUM ( Population[population] ) , ALLEXCEPT ('Date Table', 'Date Table'[financial_year] ), 'Date Table'[month_name] IN {"Apr"} )
+			
+			RETURN (GPAPP/POP)
+		lineageTag: d5dadfca-5604-4be1-81ba-b81cd65cee99
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointments Mean' =
+			
+			
+			CALCULATE ( SUM ( 'Appointment Data'[Appointments] ) / [Number of Months],
+			            ALLSELECTED('Date Table') )
+		lineageTag: 93312516-9ea7-4bd5-93b5-7c1bd31d8631
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointments UCL' = IF(([Appointments Mean]+(3*[Appointments STD DEV])) < 0, 0, ([Appointments Mean]+(3*[Appointments STD DEV])))
+		lineageTag: e47a85ad-f658-4855-8c3c-1f8c3dccd166
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointments LCL' = IF(([Appointments Mean]-(3*[Appointments STD DEV])) < 0, 0, ([Appointments Mean]-(3*[Appointments STD DEV])))
+		lineageTag: 7001a752-e79d-4ed5-ba9b-1efa2f73552e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointments STD DEV' = ```
+			
+			
+			VAR STD_DEV = CALCULATE(STDEVX.P ( VALUES ( 'Appointment Data'[YearMonth]), [Total Appointments]), ALLEXCEPT('Date Table', 'Date Table'[year_month]))
+			
+			RETURN IFERROR(STD_DEV, 0)
+			
+			```
+		lineageTag: 522e92e8-85b7-442d-bdec-cbcbc179a97f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Appointments' = SUM('Appointment Data'[Appointments])
+		formatString: 0
+		lineageTag: 1d60e8fb-c94c-4321-b969-9ddd4ff1eaac
+
+	measure 'Total Appointments Static' = CALCULATE(SUM('Appointment Data Static'[Appointments]), ALLEXCEPT('Date Table', 'Date Table'[financial_year], 'Date Table'[month_name]))
+		formatString: 0
+		lineageTag: 8dadf841-ebe8-49ab-a49b-b507f97277cb
+
+	measure 'GP Appointments per Person - By Month' =
+			
+			
+			VAR GPAPP = CALCULATE ( SUM ('Appointment Data'[Appointments]) )
+			VAR POP = CALCULATE ( SUM ( 'Population'[population] ) )
+			
+			RETURN (GPAPP/POP)
+		lineageTag: 89f562fa-0490-48ae-bd47-8039f39c3587
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Static - GP Appointments per Person - By Month' =
+			
+			
+			VAR GPAPP = CALCULATE ( SUM ('Appointment Data Static'[Appointments] ))
+			VAR POP = CALCULATE ( SUM ( 'Population Static'[population] ) )
+			
+			RETURN (GPAPP/POP)
+		lineageTag: 77ec95b7-098a-46ff-a4ec-2b5b164da78f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Static - GP Appointments per Person - By Year - YTD' =
+			
+			
+			VAR GPAPP = CALCULATE ( SUM ('Appointment Data Static'[Appointments] ) , ALLEXCEPT( 'Date Table', 'Date Table'[financial_year] ) , 'Date Table'[ytd_flag] = 1 )
+			VAR POP = CALCULATE ( SUM ( 'Population Static'[population] ) , ALLEXCEPT ('Date Table', 'Date Table'[financial_year] ), 'Date Table'[month_name] IN {"Apr"} )
+			
+			RETURN (GPAPP/POP)
+		lineageTag: 555edacf-d444-47b8-853e-8b6bb3cb5f65
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Area Legend Categories'
+		lineageTag: aa194464-0456-40fa-bf63-28ce144240c7
+
+	measure 'Number of Months' =
+			
+			
+			DISTINCTCOUNT('Appointment Data'[YearMonth])
+		formatString: 0
+		lineageTag: 8633dd28-92bf-413d-9f7a-1317c79a116c
+
+	measure 'Previous Year Total Appointments' =
+			
+			
+			CALCULATE ( SUM('Appointment Data'[Appointments]), (PREVIOUSYEAR('Date Table'[Date], "31/3")))
+			
+			//CALCULATE ( SUM ( 'Appointment Data'[Appointments] ) , PREVIOUSYEAR ('Date Table'[date])))
+		formatString: 0
+		lineageTag: cad3a6c3-ca4e-4cf0-8f3c-dcf60dd82c5c
+
+	measure '% Change Appointments Previous Year' = IF((DIVIDE([Total Appointments],[Previous Year Total Appointments]) - 1) <= 0, BLANK(), (DIVIDE([Total Appointments],[Previous Year Total Appointments]) - 1))
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 67580c47-95a9-498e-a83a-04f5960b6037
+
+	measure 'GP Appointments per Person - By Year' =
+			
+			
+			VAR GPAPP = CALCULATE ( SUM ('Appointment Data'[Appointments] ) , ALLEXCEPT( 'Date Table', 'Date Table'[financial_year] )  )
+			VAR POP = CALCULATE ( SUM ( Population[population] ) , ALLEXCEPT ('Date Table', 'Date Table'[financial_year] ), 'Date Table'[month_name] IN {"Apr"} )
+			
+			RETURN (GPAPP/POP)
+		lineageTag: ce7d8332-1e76-4fb9-8cf8-3ed2975bbdd7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Static - GP Appointments per Person - By Year' =
+			
+			
+			VAR GPAPP = CALCULATE ( SUM ('Appointment Data Static'[Appointments] ) , ALLEXCEPT( 'Date Table', 'Date Table'[financial_year] ) )
+			VAR POP = CALCULATE ( SUM ( 'Population Static'[population] ) , ALLEXCEPT ('Date Table', 'Date Table'[financial_year] ), 'Date Table'[month_name] IN {"Apr"} )
+			
+			RETURN (GPAPP/POP)
+		lineageTag: b08528b4-faec-4895-a0b9-6311a9be38bf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointment Linear Regression' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Table'[financial_year], 'Date Table'[financial_month],
+			                         'Date Table'[month_name], 'Date Table'[month_number] ),
+			            "Value_x", 'Date Table'[month_number],
+			            "Value_y", 'Appointment Data'[Total Appointments]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Table'[month_number] ),
+			        Intercept + Slope * 'Date Table'[month_number]
+			    )
+			```
+		lineageTag: cd56960c-a765-4f2f-972f-af5e30dd32cb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Appointment Linear Regression - Rate per 1000' = ```
+			
+			
+			VAR Temp_Table = 
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'Date Table'[financial_year], 'Date Table'[financial_month],
+			                         'Date Table'[month_name], 'Date Table'[month_number] ),
+			            "Value_x", 'Date Table'[month_number],
+			            "Value_y", 'Appointment Data'[GP Appointments per Person - By Month]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			
+			VAR LINESTX_Table = 
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope = 
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept = 
+			    MAXX ( LINESTX_Table, [Intercept] )
+			
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'Date Table'[month_number] ),
+			        Intercept + Slope * 'Date Table'[month_number]
+			    )
+			```
+		lineageTag: d2dbcdd7-59c9-4b6d-9926-b10c7f4b03ed
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Appointments
+		dataType: int64
+		formatString: 0
+		lineageTag: 74352bc0-0826-4936-81a6-faaeafffca39
+		summarizeBy: sum
+		sourceColumn: Appointments
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: bdfe54a5-6e83-49da-8764-1a8625cce31d
+		summarizeBy: sum
+		sourceColumn: YearMonth
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: d46f4daf-d300-450f-8713-bf18542f805f
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointment_Status
+		dataType: string
+		lineageTag: 4d4e15bb-b5d7-4df2-8dfe-ef9d999b2d34
+		summarizeBy: none
+		sourceColumn: Appointment_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointment_Type
+		dataType: string
+		lineageTag: 4bfa7993-f9fc-4985-92e0-d0feb427aaf5
+		summarizeBy: none
+		sourceColumn: Appointment_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column F2F_Identifier
+		dataType: string
+		lineageTag: 052ec3f5-80fa-4ccd-9ffe-616890137db5
+		summarizeBy: none
+		sourceColumn: F2F_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column DNA_Reason
+		dataType: string
+		lineageTag: 85cbe699-7fdc-4437-8d7c-094596bc55c3
+		summarizeBy: none
+		sourceColumn: DNA_Reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice
+		dataType: string
+		lineageTag: 3d3ab27b-8c61-421e-85e5-cc1b52df5927
+		summarizeBy: none
+		sourceColumn: Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 342183d5-242d-4625-a845-346a4ff97236
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: ed232fcb-1b4c-45ed-9f9f-d8b4ed5ecaa2
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Identifier
+		dataType: string
+		lineageTag: 1d68d58c-5580-43f2-9f1a-37cf66d43033
+		summarizeBy: none
+		sourceColumn: GP_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: string
+		lineageTag: e33d81b7-050b-4d59-aaef-14f55f47c35b
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: c05702dd-b033-4faf-8e05-7fbc36d2edbc
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastDateofMonth
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fab612cc-ab2e-4bf4-a3c4-4f3769dcb130
+		summarizeBy: none
+		sourceColumn: LastDateofMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Appointment Data' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Processing", [Query="  SELECT *#(lf)  FROM [PowerBI_Processing].[dbo].[Primary_Care_Demand_Table]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
