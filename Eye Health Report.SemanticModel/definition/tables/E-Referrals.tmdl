@@ -1,0 +1,317 @@
+table E-Referrals
+	lineageTag: 5e63965f-71ed-4589-8975-acf814382a89
+
+	measure 'KPI Latest month' = CALCULATE(COUNT('E-Referrals'[counter]), 'E-Referrals Date Table'[latest_month_flag] = 1 )
+		formatString: 0
+		lineageTag: a0439867-2f16-4550-a61e-ee4da74f711f
+
+	measure 'KPI Previous Month' = CALCULATE(SUM('E-Referrals'[counter]), 'E-Referrals Date Table'[previous_month_flag])
+		formatString: 0
+		lineageTag: ba86a063-2053-46c6-ad7b-ee96c03bf614
+
+	measure 'KPI YTD Latest' = ```
+			
+			VAR _CurrentFY = 'E-Referrals Date Table'[ERCurrentFY]
+			RETURN 
+			CALCULATE(
+			    SUM('E-Referrals'[Counter]),
+			    'E-Referrals Date Table'[ytd_flag] = 1,
+			    'E-Referrals Date Table'[financial_year] = _CurrentFY )
+			```
+		formatString: 0
+		lineageTag: 129fe4f6-f180-469d-b764-7b6b9442f9e5
+
+	measure 'KPI Month Diff' = CALCULATE(([KPI Latest month] - [KPI Previous Month])/ [KPI Previous Month])
+		lineageTag: cacb65e5-569e-43d3-beb3-40d5384246bb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI YTD Previous' = ```
+			
+			VAR _PreviousFY = 'E-Referrals Date Table'[ERPreviousFY]
+			RETURN 
+			CALCULATE(
+			    SUM('E-Referrals'[Counter]),
+			    'E-Referrals Date Table'[ytd_flag] = 1,
+			    'E-Referrals Date Table'[financial_year] = _PreviousFY )
+			```
+		formatString: 0
+		lineageTag: 0f9bc841-0304-4a0e-a125-70ca2a171eca
+
+	measure 'KPI YTD Diff' = CALCULATE(([KPI YTD Latest] - [KPI YTD Previous])/ [KPI YTD Previous])
+		lineageTag: fc6da089-ece5-4fd8-ae40-29449fc64607
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'EREF Year to Date' = CALCULATE(SUM('E-Referrals'[counter]), 'E-Referrals Date Table'[ytd_flag] = 1)
+		formatString: 0
+		lineageTag: 0d11bc1e-686a-41ae-a107-f24b1e66998f
+
+	measure 'KPI 12M Previous' = CALCULATE(SUM('E-Referrals'[counter]), 'E-Referrals Date Table'[previous_12_months_flag] = 1)
+		formatString: 0
+		lineageTag: 00c47077-14e2-4253-91ef-016e84eeaece
+
+	measure 'KPI 12M Latest' = CALCULATE(SUM('E-Referrals'[counter]), 'E-Referrals Date Table'[latest_12_months_flag] = 1)
+		formatString: 0
+		lineageTag: d03b439b-3a0d-4b8d-8162-1d9e77109a44
+
+	measure 'KPI 12M Diff' = ([KPI 12M Latest] - [KPI 12M Previous]) + 0
+		formatString: 0
+		lineageTag: efef7ee4-4d53-4691-a34e-d3c419ba2b01
+
+	measure 'KPI SameM Last' = CALCULATE(SUM('E-Referrals'[counter]), 'E-Referrals Date Table'[same_month_last_year_flag] = 1)
+		formatString: 0
+		lineageTag: 2ee1335c-735a-4e90-acac-adeb75f1927f
+
+	measure 'KPI SameM Diff' = ([KPI Latest month] - [KPI SameM Last]) +0
+		formatString: 0
+		lineageTag: e6b215b1-b450-4d90-97ca-9383a5baaa9f
+
+	measure 'SPC E-ref Mean' = ```
+			
+			VAR FilteredTable = 
+			    CALCULATETABLE(
+			        'A&G Date Table',
+			        ALL('A&G Date Table'),
+			        'A&G Date Table'[SPC_flag] = 1
+			    )
+			
+			VAR SummaryTable = 
+			    SUMMARIZE( 
+			       FilteredTable,
+			       [Financial Year],
+			       [month_name],
+			       "total_E_refs", COALESCE(SUM('E-Referrals'[counter]),0) 
+			    )
+			
+			VAR AverageRate =    
+			    AVERAGEX(
+			        SummaryTable,
+			        COALESCE([total_E_refs],0)  -- Use the already calculated column instead of recalculating SUM
+			    )
+			
+			RETURN
+			    AverageRate
+			
+			
+			```
+		lineageTag: cca69ce7-d40f-469a-8a81-5b50236f0bef
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Derived_ReferralYearMonth
+		dataType: string
+		lineageTag: e561d299-fcad-4001-add2-935342818712
+		summarizeBy: none
+		sourceColumn: Derived_ReferralYearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_PriorityDescription
+		dataType: string
+		lineageTag: 3f367812-2ac7-49db-bb1d-a925360e600b
+		summarizeBy: none
+		sourceColumn: Derived_PriorityDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ReferringOrganisationParentDescription
+		dataType: string
+		lineageTag: 2d8593c6-ebbb-455c-a240-6e8fb1a45d6b
+		summarizeBy: none
+		sourceColumn: Derived_ReferringOrganisationParentDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ProviderOrganisationCode
+		dataType: string
+		lineageTag: 11da0f66-5ff1-4f0b-b57b-a560cadf9349
+		summarizeBy: none
+		sourceColumn: Derived_ProviderOrganisationCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ProviderOrganisationDescription
+		dataType: string
+		lineageTag: e2cadfe5-83d9-4675-9c59-b7c03909bf18
+		summarizeBy: none
+		sourceColumn: Derived_ProviderOrganisationDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider ShortName'
+		dataType: string
+		lineageTag: b40297bf-4c12-406f-a3c3-282942bbe235
+		summarizeBy: none
+		sourceColumn: Provider ShortName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ProviderOrganisationDescription_2
+		dataType: string
+		lineageTag: 68155cf9-57c7-4875-a988-93f8c9ae4809
+		summarizeBy: none
+		sourceColumn: Derived_ProviderOrganisationDescription_2
+
+		annotation SummarizationSetBy = Automatic
+
+	column PatientAge
+		dataType: int64
+		formatString: 0
+		lineageTag: 2ece5bde-4157-497e-961e-51a73fc44341
+		summarizeBy: sum
+		sourceColumn: PatientAge
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Main Age Band'
+		dataType: string
+		lineageTag: d2fd4613-3bff-4194-b4e6-709418118d3f
+		summarizeBy: none
+		sourceColumn: Main Age Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_PatientGenderDescription
+		dataType: string
+		lineageTag: 93bb723e-f577-44b0-9211-558b459a1c00
+		summarizeBy: none
+		sourceColumn: Derived_PatientGenderDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ClinicTypeDescription
+		dataType: string
+		lineageTag: 185d4d23-5622-469b-a53e-280bedc035a9
+		summarizeBy: none
+		sourceColumn: Derived_ClinicTypeDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ClinicTypeDescrition_Grouped
+		dataType: string
+		lineageTag: 8d79bd71-49ca-4823-ae06-37940cb37768
+		summarizeBy: none
+		sourceColumn: Derived_ClinicTypeDescrition_Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column SpecialtyCode
+		dataType: string
+		lineageTag: b38697ac-865b-4d45-87f2-f8ece5ae1912
+		summarizeBy: none
+		sourceColumn: SpecialtyCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_MainSpecialtyCode
+		dataType: string
+		lineageTag: 66b6e22c-cc15-4611-a1dc-cc89c0555ac3
+		summarizeBy: none
+		sourceColumn: Derived_MainSpecialtyCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_MainSpecialtyDescription
+		dataType: string
+		lineageTag: 48549638-1569-4429-ac47-70b1a76e0ec9
+		summarizeBy: none
+		sourceColumn: Derived_MainSpecialtyDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_WaitToAppointmentDays
+		dataType: int64
+		formatString: 0
+		lineageTag: 52ca5566-37a9-4b64-8328-cbc271fc9cf4
+		summarizeBy: sum
+		sourceColumn: Derived_WaitToAppointmentDays
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_TreatmentFunctionCode
+		dataType: string
+		lineageTag: e7768db6-aefd-42cd-9d04-532f1348b154
+		summarizeBy: none
+		sourceColumn: Derived_TreatmentFunctionCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_TreatmentFunctionDescription
+		dataType: string
+		lineageTag: 166fef76-c455-4d62-a8f7-f1b4e12cf088
+		summarizeBy: none
+		sourceColumn: Derived_TreatmentFunctionDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column ServiceName
+		dataType: string
+		lineageTag: 683b1926-a356-448a-8899-2442fceb5c36
+		summarizeBy: none
+		sourceColumn: ServiceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ServiceSpecialtyCode
+		dataType: string
+		lineageTag: e9824d37-c2af-48c8-b80d-14459f628f2e
+		summarizeBy: none
+		sourceColumn: Derived_ServiceSpecialtyCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_ServiceSpecialtyDescription
+		dataType: string
+		lineageTag: 818fb413-6e07-46b8-b600-e9f88308ecae
+		summarizeBy: none
+		sourceColumn: Derived_ServiceSpecialtyDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column IS_Referral
+		dataType: int64
+		formatString: 0
+		lineageTag: 6015f4b0-2b43-48fd-a842-e998fcef17ce
+		summarizeBy: sum
+		sourceColumn: IS_Referral
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 6be7ad39-83a8-4305-bc8b-2f144546dbad
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_actionMonthYear
+		dataType: dateTime
+		formatString: dd mmmm yyyy
+		lineageTag: c0e1d972-c241-4595-9627-9e6287f883dc
+		summarizeBy: none
+		sourceColumn: Derived_actionMonthYear
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	partition E-Referrals = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[EyeHealth].[tbl02_Ereferrals]"]),
+				    #"Sorted Rows" = Table.Sort(Source,{{"Derived_ReferralYearMonth", Order.Descending}})
+				in
+				    #"Sorted Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

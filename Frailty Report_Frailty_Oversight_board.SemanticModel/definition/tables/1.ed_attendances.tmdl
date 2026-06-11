@@ -1,0 +1,3624 @@
+table '1.ed_attendances'
+	lineageTag: dab4862a-368a-4c1d-a93e-1dd14181dee6
+
+	measure mildly_frail_ed_att = CALCULATE(COUNT('1.ed_attendances'[counter]),FILTER(REF_EFI_Category,REF_EFI_Category[efi_category] IN {"Mild Frailty"}))
+		formatString: 0
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 126a31d0-c08b-430d-9d79-c32624ae918b
+
+	measure moderately_frail_ed_att = CALCULATE(COUNT('1.ed_attendances'[counter]),FILTER(REF_EFI_Category,REF_EFI_Category[efi_category] IN {"Moderate Frailty"}))
+		formatString: 0
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 887bdb8c-9a2f-4630-9c41-92151b615316
+
+	measure severely_frail_ed_att = CALCULATE(COUNT('1.ed_attendances'[counter]),FILTER(REF_EFI_Category,REF_EFI_Category[efi_category] IN {"Severe Frailty"}))
+		formatString: 0
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 7a0f8a60-fa36-4988-9ee8-37f09acd710e
+
+	measure dementia_ed_att_% = SUM('1.ed_attendances'[dementia_flag]) / [total_frail_ed_att]
+		formatString: 0%;-0%;0%
+		lineageTag: d6d09e57-1a97-4289-9d71-c143d7ac6ca2
+
+	measure ambulance_atts_% =
+			
+			CALCULATE(SUM('1.ed_attendances'[counter])
+			,FILTER('1.ed_attendances','1.ed_attendances'[arrival_mode] IN {"Ambulance"}))
+			/ SUM('1.ed_attendances'[counter])
+		formatString: 0%;-0%;0%
+		lineageTag: cdb370fa-f546-48aa-b412-4fa6629848fe
+
+	measure mildly_frail_ed_att_per_1000_ot = ([mildly_frail_ed_att]/sum(REF_GP_Practice_Populations_over_time[mild_frailty])*1000)
+		formatString: 0.0
+		lineageTag: 2062302d-3a19-4dfd-b173-2e8606d770cd
+
+	measure moderately_frail_ed_att_per_1000_ot = ([moderately_frail_ed_att]/sum(REF_GP_Practice_Populations_over_time[moderate_frailty])*1000)
+		formatString: 0.0
+		lineageTag: 7a1bc46f-37bf-4411-bdbb-d2c6d39933d2
+
+	measure severely_frail_ed_att_per_1000_ot = ([severely_frail_ed_att]/sum(REF_GP_Practice_Populations_over_time[severe_frailty])*1000)
+		formatString: 0.0
+		lineageTag: 03a4e704-5de8-4c56-bf92-d97064cf0659
+
+	measure total_frail_ed_att = CALCULATE(COUNT('1.ed_attendances'[counter]))
+		formatString: 0
+		lineageTag: a9ae510a-65e3-4cef-8ac9-3de3a1b57c11
+
+	measure total_frail_ed_att_per_1000 = if(isblank(([total_frail_ed_att]/[total_frail_population_ot])*1000),0,([total_frail_ed_att]/[total_frail_population_ot])*1000)
+		formatString: 0.00
+		lineageTag: 58d074b0-d9fb-432c-ad01-4a59a471874b
+
+	measure mildly_frail_ed_att_per_1000_current = ([mildly_frail_ed_att]/[mildly_frail_population_current])*1000
+		formatString: 0.00
+		lineageTag: c1025f9d-f34f-4017-8030-f7fa09d6c7ff
+
+	measure moderately_frail_ed_att_per_1000_current = ([moderately_frail_ed_att]/[moderately_frail_population_current])*1000
+		lineageTag: 6cbcf1ea-5ca2-402f-a181-7ce94dc03615
+
+	measure severely_frail_ed_att_per_1000_current = ([severely_frail_ed_att]/[severely_frail_population_current])*1000
+		formatString: 0.0
+		lineageTag: d9fa2c99-f50a-4886-86d8-00224c354f38
+
+	measure mildly_frail_ed_att_per_1000_at_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			var mildly_fail_populations_at_year_end = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			,REF_Date[date] = latest_month_in_range)
+			
+			RETURN
+			IFERROR(([mildly_frail_ed_att]/mildly_fail_populations_at_year_end)*1000,BLANK())
+			```
+		lineageTag: c212bf2c-078a-4854-b998-636854447ee0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure total_frail_ed_att_2022/23 = CALCULATE(DISTINCTCOUNT('1.ed_attendances'[nhs_number]),FILTER('1.ed_attendances','1.ed_attendances'[efi_category] IN {"Mild Frailty","Moderate Frailty","Severe Frailty"}), FILTER(REF_Date,'REF_Date'[financial_year] = "2022/23"))
+		formatString: 0
+		lineageTag: 16b554ff-d839-4ec4-8599-fa0b4b9be1db
+
+	measure %_ed_att_2022/23 = [total_frail_ed_att_2022/23]/[total_frail_population_current]
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 03623b06-61b8-48dc-8cda-3903f735cb7f
+
+	measure total_frail_ed_att_2024/25 = CALCULATE(DISTINCTCOUNT('1.ed_attendances'[nhs_number]),FILTER('1.ed_attendances','1.ed_attendances'[efi_category] IN {"Mild Frailty","Moderate Frailty","Severe Frailty"}), FILTER(REF_Date,'REF_Date'[financial_year] = "2024/25"))
+		formatString: 0
+		lineageTag: a5658e79-e31c-4f7c-ba9c-042e015433fa
+
+	measure %_ed_att_2024/25 =
+			
+			
+			IF([total_frail_ed_att_2024/25]<6,0, --SUPPRESSED
+			
+			if(ISBLANK([total_frail_ed_att_2024/25]/[total_frail_population_current]),"0%",[total_frail_ed_att_2024/25]/[total_frail_population_current])
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c0be4479-93de-4177-ad9a-a10b9c68500c
+
+	measure TITLE_ED_Attendances_by_locality = "ED Attendances by Locality "& "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 33cdd875-1bf8-4a88-98fc-3e26a8f74399
+
+	measure TITLE_ED_Attendances_by_primary_care_network = "ED Attendances by Primary Care Network "& "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 850905c5-0370-4f7d-87b8-d8a61e0bf697
+
+	measure TITLE_ED_Attendances_by_Deprivation = "ED Attendances by Deprivation ("& [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: b6f23bf2-b1ef-439d-a721-b73a4cbfe80e
+
+	measure TITLE_ED_Attendances_by_Age = "ED Attendances by Age " & "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: afa01a30-7634-4d7d-8d50-d724839e83f3
+
+	measure TITLE_ED_Attendances_by_arrival_hour = "ED Attendances by Arrival Hour " & "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: bb75f0ab-f9ea-45c8-89d5-fc23828052be
+
+	measure TITLE_ED_Attendances_by_Chief_Complaint = "ED Attendances by Chief Complaint " &  "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 8c8bcfc5-4655-4e62-91f7-f679dc5f63cb
+
+	measure TITLE_ED_Attendances_by_Diagnosis = "ED Attendances by Diagnosis " & "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 35e4a193-38cc-4f43-8d57-1ff2704b5532
+
+	measure TITLE_ED_Attendances_by_Discharge_Destination = "ED Attendances by Discharge Destination " & "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 2ce64efb-2857-4496-86b1-cd29f65b3d87
+
+	measure TITLE_ED_Major_vs_Minor = "Major vs Minor ED Attendances " & "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 865a70b7-e8c6-4333-927b-9e2476469c50
+
+	measure TITLE_ED_Injury_vs_Illness = "Injury vs Illness ED Attendances " & "(" & [Min_Data_up_to] & "-" & [Max_Data_up_to] & ")"
+		displayFolder: Dynamic_Titles_ED_attendances_page
+		lineageTag: 5b083249-ec7c-400a-ad6f-621decf7e951
+
+	measure 'ED attendances per 1000 frail population trend line' = ```
+			
+			 
+			VAR Temp_Table =
+			    FILTER (
+			        SELECTCOLUMNS (
+			            ALLSELECTED( 'REF_Date'[financial_year], 'REF_Date'[financial_month],
+			                         'REF_Date'[month_name], 'REF_Date'[month_number] ),
+			            "Value_x", 'REF_Date'[month_number],
+			            "Value_y", [total_frail_ed_att_per_1000]
+			        ),
+			        AND (
+			            NOT ( ISBLANK ( "Value_x" ) ),
+			            NOT ( ISBLANK ( "Value_y" ) )
+			        )
+			    )
+			 
+			VAR LINESTX_Table =
+			    LINESTX(Temp_Table, [Value_y], [Value_x], TRUE)
+			VAR Slope =
+			    MAXX ( LINESTX_Table, [Slope1] )
+			VAR Intercept =
+			    MAXX ( LINESTX_Table, [Intercept] )
+			 
+			RETURN
+			    SUMX (
+			        DISTINCT ( 'REF_Date'[month_number] ),
+			        Intercept + Slope * 'REF_Date'[month_number]
+			    )
+			```
+		lineageTag: 65b944fd-9f2c-4713-93d5-1a74c725ae36
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_Attendances_Small_Number_Suppression = IF(sum('1.ed_attendances'[counter])<6,0,SUM('1.ed_attendances'[counter]))
+		formatString: #,0
+		lineageTag: e2d92ecf-5dc4-4645-a685-567225e9dce8
+
+	measure Moderatley_frail_ed_att_per_1000_at_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			var moderateley_fail_populations_at_year_end = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			,REF_Date[date] = latest_month_in_range)
+			
+			RETURN
+			IFERROR(([moderately_frail_ed_att]/moderateley_fail_populations_at_year_end)*1000,BLANK())
+			```
+		lineageTag: bb31b212-4dfb-40f5-86cd-16dbfd6e855c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Severely_frail_ed_att_per_1000_at_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			var severely_fail_populations_at_year_end = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			,REF_Date[date] = latest_month_in_range)
+			
+			RETURN
+			IFERROR(([severely_frail_ed_att]/severely_fail_populations_at_year_end)*1000,BLANK())
+			```
+		lineageTag: 7ca21a9b-3b56-48fd-8f77-c4aa1027ba28
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Only_relevant_fields_in_ED_Att_slicers = countrows('1.ed_attendances')
+		formatString: 0
+		lineageTag: fa400b8a-63ae-457f-84cd-b1ebd5c8971b
+
+	measure countywide_mildly_frail_ed_att =
+			
+			CALCULATE(
+			    COUNT('1.ed_attendances'[counter]),
+			    FILTER(
+			       REF_EFI_Category,REF_EFI_Category[efi_category] = "Mild Frailty"
+			    ),
+			    ALL(REF_GP_Practice)
+			)
+		formatString: 0
+		lineageTag: 515334a7-27f6-4392-9b5a-33df3af8dc72
+
+	measure Countywide_mildly_frail_ed_att_per_1000_at_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			var mildly_fail_populations_at_year_end = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			,REF_Date[date] = latest_month_in_range
+			,all(REF_GP_Practice))
+			
+			RETURN
+			IFERROR(([countywide_mildly_frail_ed_att]/mildly_fail_populations_at_year_end)*1000,0)
+			```
+		formatString: 0.0
+		lineageTag: cdc1f769-e0ea-42c9-ae3c-b48e67672dc7
+
+	measure countywide_moderately_frail_ed_att =
+			
+			CALCULATE(
+			    COUNT('1.ed_attendances'[counter]),
+			    FILTER(
+			       REF_EFI_Category,REF_EFI_Category[efi_category] = "Moderate Frailty"
+			    ),
+			    ALL(REF_GP_Practice)
+			)
+		formatString: 0
+		lineageTag: 370f6964-3f57-4821-a577-5e636bf278c4
+
+	measure countywide_severe_frail_ed_att =
+			
+			CALCULATE(
+			    COUNT('1.ed_attendances'[counter]),
+			    FILTER(
+			       REF_EFI_Category,REF_EFI_Category[efi_category] = "Severe Frailty"
+			    ),
+			    ALL(REF_GP_Practice)
+			)
+		formatString: 0
+		lineageTag: 8ced2d77-96aa-48c2-b50b-4595cf1d3dfd
+
+	measure Countywide_moderateley_frail_ed_att_per_1000_at_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			var moderateley_fail_populations_at_year_end = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			,REF_Date[date] = latest_month_in_range
+			,all(REF_GP_Practice))
+			
+			RETURN
+			IFERROR(([countywide_moderately_frail_ed_att]/moderateley_fail_populations_at_year_end)*1000,0)
+			```
+		formatString: 0.0
+		lineageTag: 463917a6-5af2-443f-aded-46d28e8aad94
+
+	measure Countywide_severely_frail_ed_att_per_1000_at_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			var severely_fail_populations_at_year_end = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			,REF_Date[date] = latest_month_in_range
+			,all(REF_GP_Practice))
+			
+			RETURN
+			IFERROR(([countywide_severe_frail_ed_att]/severely_fail_populations_at_year_end)*1000,0)
+			```
+		formatString: 0.0
+		lineageTag: ccbb147b-bdf9-4aee-b314-81ca413e40c7
+
+	measure average_total_frail_ed_att_per_1000 = ```
+			
+			VAR  FilteredTable = 
+			    CALCULATETABLE(
+			        REF_Date,
+			        ALL(REF_Date),
+			        REF_Date[SPC_Flag] = 1
+			    )
+			
+			VAR SummaryTable = 
+			    SUMMARIZE(
+			       FilteredTable,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        "Total_Frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR AverageRate =
+			    AVERAGEX(
+			        SummaryTable,
+			        [total_frail_ed_att_per_1000]
+			    )
+			RETURN
+			    AverageRate
+			```
+		formatString: 0.00
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 46a4e361-e859-4c2d-8dc8-70151b0eaafd
+
+	measure SPC_Standard_deviation_total_frail_ed_att_per_1000 = ```
+			
+			VAR  FilteredTable = 
+			    CALCULATETABLE(
+			        REF_Date,
+			        ALL(REF_Date),
+			        REF_Date[SPC_Flag] = 1
+			    )
+			
+			VAR SummaryTable = 
+			    SUMMARIZE(
+			       FilteredTable,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        "Total_Frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR stand_dev =
+			    STDEVX.S(
+			        SummaryTable,
+			        [Total_Frail_ed_att_per_1000]
+			    )
+			RETURN
+			stand_dev
+			```
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: ac286573-dab7-4b61-9260-3664e6eafd36
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure UCL_deviation_total_frail_ed_att_per_1000 = [average_total_frail_ed_att_per_1000] +([ED_att_moving_range])
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: d544ae90-4501-45cc-ad25-7fdc8cf38ab9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LCL_total_frail_ed_att_per_1000 = IF([average_total_frail_ed_att_per_1000] -([ED_att_moving_range]) <0,0,[average_total_frail_ed_att_per_1000] -([ED_att_moving_range])) --If the lcl is below 0 then 0 else run the calc
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: f9df624b-916a-43cc-885c-b636c856b19c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_ed_att_per_1000_outside_of_UCL =
+			
+			IF
+			([total_frail_ed_att_per_1000] >[UCL_deviation_total_frail_ed_att_per_1000],[total_frail_ed_att_per_1000],BLANK())
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 916b3f03-c0fb-438d-ae54-892607b9dc83
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_ed_att_per_1000_6_points_above_mean =
+			
+			
+			VAR FilteredTable_ =
+			    CALCULATETABLE(
+			        REF_Date,
+			        filter(ALLSELECTED(REF_Date),REF_Date[YearMonthIndex] >= 1)
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR LatestYearMonthIndex = MAX(REF_Date[YearMonthIndex])
+			
+			VAR MeanValue = [average_total_frail_ed_att_per_1000]
+			
+			VAR SummaryTableWithCount =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "AboveMeanCount",
+			        VAR CurrentYearMonthIndex = REF_Date[YearMonthIndex]
+			        VAR CurrentLastSixMonths =
+			            FILTER(
+			                SummaryTable,
+			                REF_Date[YearMonthIndex] <= CurrentYearMonthIndex &&
+			                REF_Date[YearMonthIndex] > CurrentYearMonthIndex - 6
+			            )
+			        VAR CurrentAboveMeanCount =
+			            COUNTROWS(
+			                FILTER(
+			                    CurrentLastSixMonths,
+			                    [total_frail_ed_att_per_1000] > MeanValue
+			                )
+			            )
+			        RETURN IF(CurrentAboveMeanCount >= 6, 1, 0)
+			    )
+			
+			VAR FlaggedYearMonthIndexes =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            SummaryTableWithCount,
+			            [AboveMeanCount] = 1
+			        ),
+			        "YearMonthIndex", REF_Date[YearMonthIndex]
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 5),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 4),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 3),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			
+			VAR FinalTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithCount,
+			        "AdditionalFlag",
+			        IF(
+			            REF_Date[YearMonthIndex] IN AdditionalFlags, 1, 0
+			        )
+			    )
+			
+			
+			
+			RETURN
+			if(min(REF_Date[YearMonthIndex]) in  AdditionalFlags,[total_frail_ed_att_per_1000],BLANK())
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 68963793-b079-433d-afce-d8b06957f8b7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_ed_att_per_1000_6_points_below_mean =
+			
+			
+			VAR FilteredTable_ =
+			    CALCULATETABLE(
+			        REF_Date,
+			        filter(ALLSELECTED(REF_Date),REF_Date[YearMonthIndex] >= 1)
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000])
+			
+			
+			VAR LatestYearMonthIndex = MAX(REF_Date[YearMonthIndex])
+			
+			VAR MeanValue = [average_total_frail_ed_att_per_1000]
+			
+			VAR SummaryTableWithCount =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "AboveMeanCount",
+			        VAR CurrentYearMonthIndex = REF_Date[YearMonthIndex]
+			        VAR CurrentLastSixMonths =
+			            FILTER(
+			                SummaryTable,
+			                REF_Date[YearMonthIndex] <= CurrentYearMonthIndex &&
+			                REF_Date[YearMonthIndex] > CurrentYearMonthIndex - 6
+			            )
+			        VAR CurrentAboveMeanCount =
+			            COUNTROWS(
+			                FILTER(
+			                    CurrentLastSixMonths,
+			                    [total_frail_ed_att_per_1000] < MeanValue
+			                )
+			            )
+			        RETURN IF(CurrentAboveMeanCount >= 6, 1, 0)
+			    )
+			
+			VAR FlaggedYearMonthIndexes =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            SummaryTableWithCount,
+			            [AboveMeanCount] = 1
+			        ),
+			        "YearMonthIndex", REF_Date[YearMonthIndex]
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 5),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 4),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 3),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex] - 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(FlaggedYearMonthIndexes, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			
+			VAR FinalTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithCount,
+			        "AdditionalFlag",
+			        IF(
+			            REF_Date[YearMonthIndex] IN AdditionalFlags, 1, 0
+			        )
+			    )
+			
+			
+			
+			RETURN
+			if(min(REF_Date[YearMonthIndex]) in  AdditionalFlags,[total_frail_ed_att_per_1000],BLANK())
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 27356e0c-02cd-4587-ae4b-de92c5671bd5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_ed_att_per_1000_decreasing_trend = ```
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED(REF_Date),REF_Date[YearMonthIndex] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = REF_Date[YearMonthIndex]
+			        VAR PreviousValue =
+			            CALCULATE(
+			                MAXX(
+			                    FILTER(
+			                        SummaryTable,
+			                        REF_Date[YearMonthIndex] = CurrentYearMonthIndex - 1
+			                    ),
+			                    [total_frail_ed_att_per_1000]
+			                )
+			            )
+			        RETURN [total_frail_ed_att_per_1000] - PreviousValue
+			    )
+			
+			VAR SummaryTableWithDecreasingFlag =
+			    ADDCOLUMNS(
+			        SummaryTableWithDifference,
+			        "DecreasingFlag",
+			        IF([Difference] < 0, 1, 0)
+			    )
+			
+			VAR DecreasingSequence =
+			    FILTER(
+			        ADDCOLUMNS(
+			            SummaryTableWithDecreasingFlag,
+			            "DecreasingSequence",
+			            VAR CurrentYearMonthIndex = REF_Date[YearMonthIndex]
+			            VAR DecreasingCount =
+			                COUNTROWS(
+			                    FILTER(
+			                        SummaryTableWithDecreasingFlag,
+			                        REF_Date[YearMonthIndex] >= CurrentYearMonthIndex - 4 &&
+			                        REF_Date[YearMonthIndex] <= CurrentYearMonthIndex &&
+			                        [DecreasingFlag] = 1
+			                    )
+			                )
+			            RETURN IF(DecreasingCount =5 , 1, 0) -- Adjust the number of periods for your trend
+			        ),
+			        [DecreasingSequence] = 1
+			    )
+			
+			VAR AdditionalFlags =
+			    UNION(
+			   
+			   SELECTCOLUMNS(
+			           ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 5),
+			           "YearMonthIndex", [OffsetIndex]
+			       ),
+			       SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 4),
+			           "YearMonthIndex", [OffsetIndex]
+			       ),
+			       SELECTCOLUMNS(
+			           ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 3),
+			           "YearMonthIndex", [OffsetIndex]
+			       ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex] - 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(DecreasingSequence, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			
+			
+			RETURN
+			IF(
+			    MIN(REF_Date[YearMonthIndex]) IN AdditionalFlags,
+			    [total_frail_ed_att_per_1000],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: dc0c8aea-506d-47c6-81f4-7e246ac65459
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_ed_att_per_1000_increasing_trend = ```
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED(REF_Date),REF_Date[YearMonthIndex] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = REF_Date[YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MAXX(
+			                    FILTER(
+			                        SummaryTable,
+			                        REF_Date[YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                    COALESCE([total_frail_ed_att_per_1000],0)
+			                )
+			            )
+			        RETURN NextValue - [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR SummaryTableWithIncreasingFlag =
+			    ADDCOLUMNS(
+			        SummaryTableWithDifference,
+			        "IncreasingFlag",
+			        IF([Difference] > 0, 1, 0)
+			    )
+			
+			VAR IncreasingSequence =
+			    FILTER(
+			        ADDCOLUMNS(
+			            SummaryTableWithIncreasingFlag,
+			            "IncreasingSequence",
+			            VAR CurrentYearMonthIndex = REF_Date[YearMonthIndex]
+			            VAR IncreasingCount =
+			                COUNTROWS(
+			                    FILTER(
+			                        SummaryTableWithIncreasingFlag,
+			                        REF_Date[YearMonthIndex] >= CurrentYearMonthIndex &&
+			                        REF_Date[YearMonthIndex] <= CurrentYearMonthIndex + 4 &&
+			                        [IncreasingFlag] = 1
+			                    )
+			                )
+			            RETURN 
+			            
+			            IF(IncreasingCount =5, 1, 0) -- Adjust the number of periods for your trend
+			        ),
+			        [IncreasingSequence] = 1
+			    )
+			
+			
+			VAR AdditionalFlags =
+			   UNION(
+			        
+			
+			   
+			              SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 5),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			   
+			
+			              SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 4),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			   
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 3),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 2),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex] + 1),
+			            "YearMonthIndex", [OffsetIndex]
+			        ),
+			        SELECTCOLUMNS(
+			            ADDCOLUMNS(IncreasingSequence, "OffsetIndex", [YearMonthIndex]),
+			            "YearMonthIndex", [OffsetIndex]
+			        )
+			    )
+			
+			
+			
+			    
+			RETURN
+			IF(
+			    MIN(REF_Date[YearMonthIndex]) IN AdditionalFlags,
+			    [total_frail_ed_att_per_1000],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 18b856c5-cf90-47e1-9368-4ddc355f8af0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_Two_out_of_three_points_near_to_the_UCL = ```
+			
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED(REF_Date),REF_Date[YearMonthIndex]>=1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR MeanValue = [average_total_frail_ed_att_per_1000]
+			
+			VAR cumualitive_moving_average_value = divide([ED_att_moving_range],2.66)
+			
+			VAR UpperOuterThird = MeanValue + (2*(cumualitive_moving_average_value/1.128))
+			
+			VAR SummaryTableWithFlags =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "IsAboveUpperOuterThird",
+			        IF([total_frail_ed_att_per_1000] > UpperOuterThird, 1, 0),
+			        "IsAboveMean",
+			        IF([total_frail_ed_att_per_1000] > MeanValue, 1, 0)
+			    )
+			
+			VAR PatternTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithFlags,
+			        "PatternFlag",
+			        VAR CurrentIndex = REF_Date[YearMonthIndex]
+			        
+			        // Check the range of two months behind the current month index
+			        VAR CheckPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] >= CurrentIndex - 2 &&
+			                        REF_Date[YearMonthIndex] <= CurrentIndex
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of one month either side of the current month index
+			        VAR CheckMidRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] >= CurrentIndex - 1 &&
+			                        REF_Date[YearMonthIndex] <= CurrentIndex + 1
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of two months in front of the current month index
+			        VAR CheckNextRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] >= CurrentIndex &&
+			                        REF_Date[YearMonthIndex] <= CurrentIndex + 2
+			                    ),
+			                    [IsAboveUpperOuterThird]
+			                )
+			            )
+			        
+			        // Ensure all points in the previous range are above the mean
+			        VAR CheckAllAboveMeanPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] >= CurrentIndex - 2 &&
+			                        REF_Date[YearMonthIndex] <= CurrentIndex
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )
+			        
+			        // Ensure all points in the middle range are above the mean
+			        VAR CheckAllAboveMeanMidRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] >= CurrentIndex - 1 &&
+			                        REF_Date[YearMonthIndex] <= CurrentIndex + 1
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )
+			        
+			        // Ensure all points in the next range are above the mean
+			        VAR CheckAllAboveMeanNextRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] >= CurrentIndex &&
+			                        REF_Date[YearMonthIndex] <= CurrentIndex + 2
+			                    ),
+			                    [IsAboveMean]
+			                )
+			            )
+			        
+			        RETURN
+			            IF(
+			                AND(
+			                    [IsAboveUpperOuterThird] = 1,
+			                    OR(
+			                        AND(CheckPrevRange >= 2, CheckAllAboveMeanPrevRange = 3),
+			                        OR(
+			                            AND(CheckMidRange >= 2, CheckAllAboveMeanMidRange = 3),
+			                            AND(CheckNextRange >= 2, CheckAllAboveMeanNextRange = 3)
+			                        )
+			                    )
+			                ),
+			                1,
+			                0
+			            )
+			    )
+			
+			VAR AdditionalFlags =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            PatternTable,
+			            [PatternFlag] = 1 
+			        ),
+			        "YearMonthIndex", REF_Date[YearMonthIndex]
+			    )
+			
+			RETURN
+			IF(
+			    MIN(REF_Date[YearMonthIndex]) IN AdditionalFlags ,
+			    [total_frail_ed_att_per_1000],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 92b79f98-9474-448c-b6c0-de19a2c46b99
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure SCV_Two_out_of_three_points_near_to_the_LCL = ```
+			
+			
+			VAR FilteredTable_ =
+			    filter(ALLSELECTED(REF_Date),REF_Date[YearMonthIndex] >= 1)
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR MeanValue = [average_total_frail_ed_att_per_1000]
+			
+			VAR cumualitive_moving_average_value = divide([ED_att_moving_range],2.66)
+			
+			VAR LowerOuterThird = MeanValue - (2*(cumualitive_moving_average_value/1.128))
+			
+			VAR SummaryTableWithFlags =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "IsBelowLowerOuterThird",
+			        IF([total_frail_ed_att_per_1000] < LowerOuterThird, 1, 0),
+			        "IsBelowMean",
+			        IF([total_frail_ed_att_per_1000] < MeanValue, 1, 0)
+			    )
+			
+			VAR PatternTable =
+			    ADDCOLUMNS(
+			        SummaryTableWithFlags,
+			        "PatternFlag",
+			        VAR CurrentIndex = REF_Date[YearMonthIndex]
+			
+			        // Check the range of two months behind the current month index
+			        VAR CheckPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] IN {CurrentIndex - 2, CurrentIndex - 1, CurrentIndex}
+			                    ),
+			                    [IsBelowLowerOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of one month either side of the current month index
+			        VAR CheckMidRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] IN {CurrentIndex - 1, CurrentIndex, CurrentIndex + 1}
+			                    ),
+			                    [IsBelowLowerOuterThird]
+			                )
+			            )
+			        
+			        // Check the range of two months in front of the current month index
+			        VAR CheckNextRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] IN {CurrentIndex, CurrentIndex + 1, CurrentIndex + 2}
+			                    ),
+			                    [IsBelowLowerOuterThird]
+			                )
+			            )
+			        
+			        // Ensure all points in the previous range are below the mean
+			        VAR CheckAllBelowMeanPrevRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] IN {CurrentIndex - 2, CurrentIndex - 1, CurrentIndex}
+			                    ),
+			                    [IsBelowMean]
+			                )
+			            )
+			        
+			        // Ensure all points in the middle range are below the mean
+			        VAR CheckAllBelowMeanMidRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] IN {CurrentIndex - 1, CurrentIndex, CurrentIndex + 1}
+			                    ),
+			                    [IsBelowMean]
+			                )
+			            )
+			        
+			        // Ensure all points in the next range are below the mean
+			        VAR CheckAllBelowMeanNextRange =
+			            CALCULATE(
+			                SUMX(
+			                    FILTER(
+			                        SummaryTableWithFlags,
+			                        REF_Date[YearMonthIndex] IN {CurrentIndex, CurrentIndex + 1, CurrentIndex + 2}
+			                    ),
+			                    [IsBelowMean]
+			                )
+			            )
+			        
+			        RETURN
+			   
+			            IF(
+			                AND(
+			                    [IsBelowLowerOuterThird] = 1,
+			                    OR(
+			                        AND(CheckPrevRange >= 2, CheckAllBelowMeanPrevRange = 3),
+			                        OR(
+			                            AND(CheckMidRange >= 2, CheckAllBelowMeanMidRange = 3),
+			                            AND(CheckNextRange >= 2, CheckAllBelowMeanNextRange = 3)
+			                        )
+			                    )
+			                ),
+			                1,
+			                0
+			            )
+			    )
+			
+			VAR AdditionalFlags =
+			    SELECTCOLUMNS(
+			        FILTER(
+			            PatternTable,
+			            [PatternFlag] = 1
+			        ),
+			        "YearMonthIndex", REF_Date[YearMonthIndex]
+			    )
+			
+			RETURN
+			IF(
+			    MIN(REF_Date[YearMonthIndex]) IN AdditionalFlags,
+			    [total_frail_ed_att_per_1000],
+			    BLANK()
+			)
+			```
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: 6ed8fbf7-289d-4528-a4fd-65f40e92bf44
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Test_lower_2stddev =
+			
+			
+			VAR MeanValue = [SPC_average_total_frail_emg_adm_per_1000]
+			
+			VAR cumualitive_moving_average_value = divide([Emg_adm_moving_range],2.66)
+			
+			VAR UpperOuterThird = (2*(cumualitive_moving_average_value/1.128))
+			
+			
+			RETURN
+			UpperOuterThird
+		formatString: 0.0000
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: eb7428f2-8d4d-4b7c-b25b-a92ae7cc2c5e
+
+	measure SCV_ed_att_per_1000_outside_of_LCL =
+			
+			IF
+			([total_frail_ed_att_per_1000] <[LCL_total_frail_ed_att_per_1000],[total_frail_ed_att_per_1000],BLANK())
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: cdf36ddd-2a9b-4bb4-b502-899767bce1cf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_att_moving_range = ```
+			
+			VAR FilteredTable_ =
+			    FILTER(
+			        ALL(REF_Date),
+			        REF_Date[YearMonthIndex] >= 1 && REF_Date[SPC_Flag] = 1
+			    )
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        FilteredTable_,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        REF_Date[YearMonthIndex],
+			        REF_Date[SPC_Flag],
+			        "total_frail_ed_att_per_1000", [total_frail_ed_att_per_1000]
+			    )
+			
+			VAR SummaryTableWithDifference =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Difference",
+			        VAR CurrentYearMonthIndex = [YearMonthIndex]
+			        VAR NextValue =
+			            CALCULATE(
+			                MINX(
+			                    FILTER(
+			                        SummaryTable,
+			                        [YearMonthIndex] = CurrentYearMonthIndex + 1
+			                    ),
+			                   [total_frail_ed_att_per_1000]
+			                )
+			            )
+			        RETURN IF(ISBLANK(NextValue), BLANK(),  abs([total_frail_ed_att_per_1000] - NextValue))
+			    )
+			
+			VAR Differences =
+			    SELECTCOLUMNS(SummaryTableWithDifference, "Diff", [Difference])
+			
+			    VAR Cumulative_moving_range = (AVERAGEX(Differences, [Diff])) 
+			
+			RETURN Cumulative_moving_range *2.66
+			```
+		displayFolder: SPC Chart - ED Attendances
+		lineageTag: cd643b89-f222-4ee1-b56d-4dafce931d67
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Upper_ED_Mild_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [mildly_frail_ed_att]
+			VAR DenominatorVariable = [Mild_frailty_population_end_of_each_fy]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation for Upper Bound
+			RETURN
+			IFERROR(
+			IF(
+			 CountVariable < 10, 
+			iferror( (CHISQ.INV(1 - (0.5 - ConfidenceLevel / 200), 2*CountVariable+2) / 2),
+			 BLANK()), 
+			(CountVariable + 1) * (1 - 1 / (9 * (CountVariable + 1)) + (ApproxNORM_INV / (3 * SQRT(CountVariable + 1))))^3
+			) / DenominatorVariable * ScalingFactor 
+			,BLANK())
+			    
+			```
+		displayFolder: Frail_ED_att_Rate_Per_1000_Confidence_Limits
+		lineageTag: c3b4fd93-55b5-4ce2-8ff1-efe8c19ef001
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Lower_ED_Mild_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Mildly_frail_ed_att]
+			
+			
+			// =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band],
+			        "Total_Local_Observed_Events", '1.ed_attendances'[mildly_frail_ed_att],
+			        "Total_Local_Population",
+			            VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			            VAR mildly_fail_populations_at_year_end =
+			                CALCULATE(
+			                    SUM(REF_GP_Practice_Populations_over_time[mild_frailty]),
+			                    REF_Date[date] = latest_month_in_range
+			                )
+			            RETURN
+			                mildly_fail_populations_at_year_end,
+			        "Reference_Events",
+			            CALCULATE(
+			                '1.ed_attendances'[mildly_frail_ed_att],
+			                REMOVEFILTERS(REF_GP_Practice),
+			                REMOVEFILTERS(REF_LSOA),
+			                REMOVEFILTERS(REF_Ethnicity),
+			                REMOVEFILTERS(REF_EFI_Category),
+			                REMOVEFILTERS(REF_Gender),
+			                REMOVEFILTERS(REF_admission_method),
+			                -- REMOVEFILTERS(REF_Age_Bands),
+			                REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                REMOVEFILTERS(REF_ED_Department_Type),
+			                REMOVEFILTERS(REF_Site),
+			                REMOVEFILTERS(REF_Providers)
+			            ),
+			        "Reference_Population",
+			            CALCULATE(
+			                VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			                VAR Gloucestershire_mildly_fail_populations_at_year_end =
+			                    CALCULATE(
+			                        SUM(REF_GP_Practice_Populations_over_time[mild_frailty]),
+			                        REF_Date[date] = latest_month_in_range,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			                RETURN
+			                    CALCULATE(
+			                        Gloucestershire_mildly_fail_populations_at_year_end,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			            )
+			    )
+			
+			// =========================================================================
+			// Stage 2: Add in fields for reference rates
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			// =========================================================================
+			// Stage 3: Add in field for local expected events per age group
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			// =========================================================================
+			// Stage 4: Obtain totals
+			// =========================================================================
+			
+			VAR total_observed =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			// =========================================================================
+			// Stage 5: Calculate the reference crude rate
+			// =========================================================================
+			   
+			VAR reference_crude_rate =
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// =========================================================================
+			// Stage 6: Calculate the age standardised rate
+			// =========================================================================
+			
+			VAR age_standardised_rate =
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			// =========================================================================
+			// Stage 7: Calculate lower confidence limit
+			// =========================================================================
+			
+			VAR ConfidencePct = 0.95
+			VAR Alpha = 1 - ConfidencePct
+			VAR ZValue = 1.95996398454005
+			
+			VAR ObservedLower =
+			    IF(
+			        total_observed = 0,
+			        0,
+			        IF(
+			            total_observed < 10,
+			            CHISQ.INV(Alpha / 2, 2 * total_observed) / 2,
+			            total_observed
+			                * (1 - 1 / (9 * total_observed) - ZValue / (3 * SQRT(total_observed))) ^ 3
+			        )
+			    )
+			
+			RETURN
+			    DIVIDE(ObservedLower, total_expected, BLANK()) * reference_crude_rate
+			```
+		displayFolder: Frail_ED_att_Rate_Per_1000_Confidence_Limits
+		lineageTag: 57a7f89e-400d-4319-b030-679c36339fab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Lower_ED_Moderate_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Moderately_frail_ed_att]
+			
+			
+			// =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band],
+			        "Total_Local_Observed_Events", '1.ed_attendances'[Moderately_frail_ed_att],
+			        "Total_Local_Population",
+			            VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			            VAR Moderately_fail_populations_at_year_end =
+			                CALCULATE(
+			                    SUM(REF_GP_Practice_Populations_over_time[Moderate_frailty]),
+			                    REF_Date[date] = latest_month_in_range
+			                )
+			            RETURN
+			                Moderately_fail_populations_at_year_end,
+			        "Reference_Events",
+			            CALCULATE(
+			                '1.ed_attendances'[Moderately_frail_ed_att],
+			                REMOVEFILTERS(REF_GP_Practice),
+			                REMOVEFILTERS(REF_LSOA),
+			                REMOVEFILTERS(REF_Ethnicity),
+			                REMOVEFILTERS(REF_EFI_Category),
+			                REMOVEFILTERS(REF_Gender),
+			                REMOVEFILTERS(REF_admission_method),
+			                -- REMOVEFILTERS(REF_Age_Bands),
+			                REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                REMOVEFILTERS(REF_ED_Department_Type),
+			                REMOVEFILTERS(REF_Site),
+			                REMOVEFILTERS(REF_Providers)
+			            ),
+			        "Reference_Population",
+			            CALCULATE(
+			                VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			                VAR Gloucestershire_Moderately_fail_populations_at_year_end =
+			                    CALCULATE(
+			                        SUM(REF_GP_Practice_Populations_over_time[Moderate_frailty]),
+			                        REF_Date[date] = latest_month_in_range,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			                RETURN
+			                    CALCULATE(
+			                        Gloucestershire_Moderately_fail_populations_at_year_end,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			            )
+			    )
+			
+			// =========================================================================
+			// Stage 2: Add in fields for reference rates
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			// =========================================================================
+			// Stage 3: Add in field for local expected events per age group
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			// =========================================================================
+			// Stage 4: Obtain totals
+			// =========================================================================
+			
+			VAR total_observed =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			// =========================================================================
+			// Stage 5: Calculate the reference crude rate
+			// =========================================================================
+			   
+			VAR reference_crude_rate =
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// =========================================================================
+			// Stage 6: Calculate the age standardised rate
+			// =========================================================================
+			
+			VAR age_standardised_rate =
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			// =========================================================================
+			// Stage 7: Calculate lower confidence limit
+			// =========================================================================
+			
+			VAR ConfidencePct = 0.95
+			VAR Alpha = 1 - ConfidencePct
+			VAR ZValue = 1.95996398454005
+			
+			VAR ObservedLower =
+			    IF(
+			        total_observed = 0,
+			        0,
+			        IF(
+			            total_observed < 10,
+			            CHISQ.INV(Alpha / 2, 2 * total_observed) / 2,
+			            total_observed
+			                * (1 - 1 / (9 * total_observed) - ZValue / (3 * SQRT(total_observed))) ^ 3
+			        )
+			    )
+			
+			RETURN
+			    DIVIDE(ObservedLower, total_expected, BLANK()) * reference_crude_rate
+			```
+		displayFolder: Frail_ED_att_Rate_Per_1000_Confidence_Limits
+		lineageTag: 5c1b50e5-5e89-41f0-9737-f3b751424e5f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Upper_ED_Moderate_Frailty_Rate_per_1000 = ```
+			
+			
+			
+			
+			// =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band],
+			        "Total_Local_Observed_Events", '1.ed_attendances'[Moderately_frail_ed_att],
+			        "Total_Local_Population",
+			            VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			            VAR Moderately_fail_populations_at_year_end =
+			                CALCULATE(
+			                    SUM(REF_GP_Practice_Populations_over_time[Moderate_frailty]),
+			                    REF_Date[date] = latest_month_in_range
+			                )
+			            RETURN
+			                Moderately_fail_populations_at_year_end,
+			        "Reference_Events",
+			            CALCULATE(
+			                '1.ed_attendances'[Moderately_frail_ed_att],
+			                REMOVEFILTERS(REF_GP_Practice),
+			                REMOVEFILTERS(REF_LSOA),
+			                REMOVEFILTERS(REF_Ethnicity),
+			                REMOVEFILTERS(REF_EFI_Category),
+			                REMOVEFILTERS(REF_Gender),
+			                REMOVEFILTERS(REF_admission_method),
+			                -- REMOVEFILTERS(REF_Age_Bands),
+			                REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                REMOVEFILTERS(REF_ED_Department_Type),
+			                REMOVEFILTERS(REF_Site),
+			                REMOVEFILTERS(REF_Providers)
+			            ),
+			        "Reference_Population",
+			            CALCULATE(
+			                VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			                VAR Gloucestershire_Moderately_fail_populations_at_year_end =
+			                    CALCULATE(
+			                        SUM(REF_GP_Practice_Populations_over_time[Moderate_frailty]),
+			                        REF_Date[date] = latest_month_in_range,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			                RETURN
+			                    CALCULATE(
+			                        Gloucestershire_Moderately_fail_populations_at_year_end,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			            )
+			    )
+			
+			// =========================================================================
+			// Stage 2: Add in fields for reference rates
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			// =========================================================================
+			// Stage 3: Add in field for local expected events per age group
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			// =========================================================================
+			// Stage 4: Obtain totals
+			// =========================================================================
+			
+			VAR total_observed =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			// =========================================================================
+			// Stage 5: Calculate the reference crude rate
+			// =========================================================================
+			   
+			VAR reference_crude_rate =
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// =========================================================================
+			// Stage 6: Calculate the age standardised rate
+			// =========================================================================
+			
+			VAR age_standardised_rate =
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			// =========================================================================
+			// Stage 7: Calculate upper confidence limit
+			// =========================================================================
+			
+			VAR ConfidencePct = 0.95
+			VAR Alpha = 1 - ConfidencePct
+			VAR ZValue = 1.95996398454005
+			
+			VAR ObservedUpper =
+			    IF(
+			        total_observed < 10,
+			        CHISQ.INV(1 - Alpha / 2, 2 * (total_observed + 1)) / 2,
+			        (total_observed + 1)
+			            * (1 - 1 / (9 * (total_observed + 1)) + ZValue / (3 * SQRT(total_observed + 1))) ^ 3
+			    )
+			
+			RETURN
+			    DIVIDE(ObservedUpper, total_expected, BLANK()) * reference_crude_rate
+			```
+		displayFolder: Frail_ED_att_Rate_Per_1000_Confidence_Limits
+		lineageTag: 55a8c1e7-049b-4aae-818f-e78647bb52aa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Lower_ED_Severe_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Severely_frail_ed_att]
+			
+			
+			// =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band],
+			        "Total_Local_Observed_Events", '1.ed_attendances'[Severely_frail_ed_att],
+			        "Total_Local_Population",
+			            VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			            VAR Severely_fail_populations_at_year_end =
+			                CALCULATE(
+			                    SUM(REF_GP_Practice_Populations_over_time[Severe_frailty]),
+			                    REF_Date[date] = latest_month_in_range
+			                )
+			            RETURN
+			                Severely_fail_populations_at_year_end,
+			        "Reference_Events",
+			            CALCULATE(
+			                '1.ed_attendances'[Severely_frail_ed_att],
+			                REMOVEFILTERS(REF_GP_Practice),
+			                REMOVEFILTERS(REF_LSOA),
+			                REMOVEFILTERS(REF_Ethnicity),
+			                REMOVEFILTERS(REF_EFI_Category),
+			                REMOVEFILTERS(REF_Gender),
+			                REMOVEFILTERS(REF_admission_method),
+			                -- REMOVEFILTERS(REF_Age_Bands),
+			                REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                REMOVEFILTERS(REF_ED_Department_Type),
+			                REMOVEFILTERS(REF_Site),
+			                REMOVEFILTERS(REF_Providers)
+			            ),
+			        "Reference_Population",
+			            CALCULATE(
+			                VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			                VAR Gloucestershire_Severely_fail_populations_at_year_end =
+			                    CALCULATE(
+			                        SUM(REF_GP_Practice_Populations_over_time[Severe_frailty]),
+			                        REF_Date[date] = latest_month_in_range,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			                RETURN
+			                    CALCULATE(
+			                        Gloucestershire_Severely_fail_populations_at_year_end,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			            )
+			    )
+			
+			// =========================================================================
+			// Stage 2: Add in fields for reference rates
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			// =========================================================================
+			// Stage 3: Add in field for local expected events per age group
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			// =========================================================================
+			// Stage 4: Obtain totals
+			// =========================================================================
+			
+			VAR total_observed =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			// =========================================================================
+			// Stage 5: Calculate the reference crude rate
+			// =========================================================================
+			   
+			VAR reference_crude_rate =
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// =========================================================================
+			// Stage 6: Calculate the age standardised rate
+			// =========================================================================
+			
+			VAR age_standardised_rate =
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			// =========================================================================
+			// Stage 7: Calculate lower confidence limit
+			// =========================================================================
+			
+			VAR ConfidencePct = 0.95
+			VAR Alpha = 1 - ConfidencePct
+			VAR ZValue = 1.95996398454005
+			
+			VAR ObservedLower =
+			    IF(
+			        total_observed = 0,
+			        0,
+			        IF(
+			            total_observed < 10,
+			            CHISQ.INV(Alpha / 2, 2 * total_observed) / 2,
+			            total_observed
+			                * (1 - 1 / (9 * total_observed) - ZValue / (3 * SQRT(total_observed))) ^ 3
+			        )
+			    )
+			
+			RETURN
+			    DIVIDE(ObservedLower, total_expected, BLANK()) * reference_crude_rate
+			```
+		displayFolder: Frail_ED_att_Rate_Per_1000_Confidence_Limits
+		lineageTag: 0156623d-011a-4922-a36c-e6ed50d0028e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Upper_ED_Severe_Frailty_Rate_per_1000 = ```
+			
+			
+			
+			
+			// =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band],
+			        "Total_Local_Observed_Events", '1.ed_attendances'[Severely_frail_ed_att],
+			        "Total_Local_Population",
+			            VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			            VAR Severely_fail_populations_at_year_end =
+			                CALCULATE(
+			                    SUM(REF_GP_Practice_Populations_over_time[Severe_frailty]),
+			                    REF_Date[date] = latest_month_in_range
+			                )
+			            RETURN
+			                Severely_fail_populations_at_year_end,
+			        "Reference_Events",
+			            CALCULATE(
+			                '1.ed_attendances'[Severely_frail_ed_att],
+			                REMOVEFILTERS(REF_GP_Practice),
+			                REMOVEFILTERS(REF_LSOA),
+			                REMOVEFILTERS(REF_Ethnicity),
+			                REMOVEFILTERS(REF_EFI_Category),
+			                REMOVEFILTERS(REF_Gender),
+			                REMOVEFILTERS(REF_admission_method),
+			                -- REMOVEFILTERS(REF_Age_Bands),
+			                REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                REMOVEFILTERS(REF_ED_Department_Type),
+			                REMOVEFILTERS(REF_Site),
+			                REMOVEFILTERS(REF_Providers)
+			            ),
+			        "Reference_Population",
+			            CALCULATE(
+			                VAR latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			                VAR Gloucestershire_Severely_fail_populations_at_year_end =
+			                    CALCULATE(
+			                        SUM(REF_GP_Practice_Populations_over_time[Severe_frailty]),
+			                        REF_Date[date] = latest_month_in_range,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			                RETURN
+			                    CALCULATE(
+			                        Gloucestershire_Severely_fail_populations_at_year_end,
+			                        REMOVEFILTERS(REF_GP_Practice),
+			                        REMOVEFILTERS(REF_LSOA),
+			                        REMOVEFILTERS(REF_Ethnicity),
+			                        REMOVEFILTERS(REF_EFI_Category),
+			                        REMOVEFILTERS(REF_Gender),
+			                        REMOVEFILTERS(REF_admission_method),
+			                        -- REMOVEFILTERS(REF_Age_Bands),
+			                        REMOVEFILTERS(REF_Cinapsis_Pathways),
+			                        REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome),
+			                        REMOVEFILTERS(REF_ED_Department_Type),
+			                        REMOVEFILTERS(REF_Site),
+			                        REMOVEFILTERS(REF_Providers)
+			                    )
+			            )
+			    )
+			
+			// =========================================================================
+			// Stage 2: Add in fields for reference rates
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			// =========================================================================
+			// Stage 3: Add in field for local expected events per age group
+			// =========================================================================   
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			// =========================================================================
+			// Stage 4: Obtain totals
+			// =========================================================================
+			
+			VAR total_observed =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population =
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			// =========================================================================
+			// Stage 5: Calculate the reference crude rate
+			// =========================================================================
+			   
+			VAR reference_crude_rate =
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// =========================================================================
+			// Stage 6: Calculate the age standardised rate
+			// =========================================================================
+			
+			VAR age_standardised_rate =
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			// =========================================================================
+			// Stage 7: Calculate upper confidence limit
+			// =========================================================================
+			
+			VAR ConfidencePct = 0.95
+			VAR Alpha = 1 - ConfidencePct
+			VAR ZValue = 1.95996398454005
+			
+			VAR ObservedUpper =
+			    IF(
+			        total_observed < 10,
+			        CHISQ.INV(1 - Alpha / 2, 2 * (total_observed + 1)) / 2,
+			        (total_observed + 1)
+			            * (1 - 1 / (9 * (total_observed + 1)) + ZValue / (3 * SQRT(total_observed + 1))) ^ 3
+			    )
+			
+			RETURN
+			    DIVIDE(ObservedUpper, total_expected, BLANK()) * reference_crude_rate
+			```
+		displayFolder: Frail_ED_att_Rate_Per_1000_Confidence_Limits
+		lineageTag: 99800cd1-8451-4996-a752-cc90609b11da
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_att_mild_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events", '1.ed_attendances'[mildly_frail_ed_att], -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_fail_populations_at_year_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       mildly_fail_populations_at_year_end, -- set your local population figure
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			            CALCULATE(
+			                '1.ed_attendances'[mildly_frail_ed_att],
+			            REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			
+			            ),
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_mildly_fail_populations_at_year_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			       ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_mildly_fail_populations_at_year_end
+			           ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			         
+			         )
+			    )
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		formatString: 0.0000000
+		displayFolder: ED_att_age_standardised_rate_per_1000
+		lineageTag: 58faa046-1d58-4163-9f75-b3787d1a0a86
+
+	measure ED_att_moderate_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events", '1.ed_attendances'[moderately_frail_ed_att], -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var moderate_frail_populations_at_year_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       moderate_frail_populations_at_year_end, -- set your local population figure
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			            CALCULATE(
+			                '1.ed_attendances'[moderately_frail_ed_att],
+			                   REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits) -- remove filters from your GP practice reference table 
+			            ),
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_moderately_fail_populations_at_year_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			          ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits) --gets the last population at the last month of the time period 
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_moderately_fail_populations_at_year_end
+			            ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			         )
+			    )
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: ED_att_age_standardised_rate_per_1000
+		lineageTag: 9c420051-a628-4db3-b191-2cabd1ac4b17
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ED_att_severe_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events", '1.ed_attendances'[severely_frail_ed_att], -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var severe_frail_populations_at_year_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       severe_frail_populations_at_year_end, -- set your local population figure
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			            CALCULATE(
+			                '1.ed_attendances'[severely_frail_ed_att],
+			                REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			            ),
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_severely_fail_populations_at_year_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			          ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits) --gets the last population at the last month of the time period 
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_severely_fail_populations_at_year_end
+			            ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			         )
+			    )
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		formatString: 0.000000000
+		displayFolder: ED_att_age_standardised_rate_per_1000
+		lineageTag: bac00b13-4568-45ab-9562-b7373561fea1
+
+	measure total_frail_ed_att_2025/26 = CALCULATE(DISTINCTCOUNT('1.ed_attendances'[nhs_number]),FILTER('1.ed_attendances','1.ed_attendances'[efi_category] IN {"Mild Frailty","Moderate Frailty","Severe Frailty"}), FILTER(REF_Date,'REF_Date'[financial_year] = "2025/26"))
+		formatString: 0
+		lineageTag: a73e4a61-16b8-40d5-8fa3-5be6be72c6d6
+
+	measure %_ed_att_2025/26 =
+			
+			
+			IF([total_frail_ed_att_2025/26]<6,0, --SUPPRESSED
+			
+			if(ISBLANK([total_frail_ed_att_2025/26]/[total_frail_population_current]),"0%",[total_frail_ed_att_2025/26]/[total_frail_population_current])
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0b14400d-44ac-44f4-adc9-9648383ebc85
+
+	column nhs_number
+		dataType: string
+		lineageTag: ec309e28-45a4-468d-828a-0d3ad617af70
+		summarizeBy: none
+		sourceColumn: nhs_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5f8ca62c-a0fe-4ea6-907b-8a63660321f2
+		summarizeBy: none
+		sourceColumn: arrival_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: c1326939-98a8-4563-a3c2-b9bce5160570
+		summarizeBy: none
+		sourceColumn: arrival_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column provider_code
+		dataType: string
+		lineageTag: ca36a589-4baa-44bd-a1eb-ed385f2decd6
+		summarizeBy: none
+		sourceColumn: provider_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_code
+		dataType: string
+		lineageTag: 2d3f77ef-e777-4dd6-b61c-6285d1e5ad39
+		summarizeBy: none
+		sourceColumn: site_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: c6392265-9417-48ce-8c64-e6ae7ac11a08
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_at_activity_date
+		dataType: int64
+		formatString: 0
+		lineageTag: df053777-b8af-48bf-8f9b-2c7b36a673ff
+		summarizeBy: none
+		sourceColumn: age_at_activity_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprivation_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: c7ab50ab-9db0-4622-b9a6-5e432b765a3a
+		summarizeBy: sum
+		sourceColumn: deprivation_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: b0ba5880-a381-44f3-9898-35e78b375c41
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: e3b856c7-99a7-4898-a6c9-4572bada105a
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 1e270f0c-cae9-4521-8a0e-2c66a8f0fc67
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_name
+		dataType: string
+		lineageTag: 6da3967b-348a-467e-afbb-3ea3ea4ed535
+		summarizeBy: none
+		sourceColumn: site_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column chief_complaint_code
+		dataType: string
+		lineageTag: 17828ec4-3a6c-4181-a91d-42d1ebccf566
+		summarizeBy: none
+		sourceColumn: chief_complaint_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column id
+		dataType: string
+		lineageTag: 04d50321-36b5-4226-ae1a-3843f24436d1
+		summarizeBy: none
+		sourceColumn: id
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_mode_code
+		dataType: string
+		lineageTag: 94b6ef18-b2c7-422a-b8e2-7b5cba00810d
+		summarizeBy: none
+		sourceColumn: arrival_mode_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_category_code
+		dataType: string
+		lineageTag: f0c37a0c-7173-43d0-a2a2-7219823c6c04
+		summarizeBy: none
+		sourceColumn: attendance_category_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_type_code
+		dataType: int64
+		formatString: 0
+		lineageTag: 303cce56-b3fc-412e-9986-32447284167f
+		summarizeBy: none
+		sourceColumn: department_type_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column diagnosis_code
+		dataType: string
+		lineageTag: 4562d801-cf9c-49e7-8f6f-f123471634ae
+		summarizeBy: none
+		sourceColumn: diagnosis_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column code_of_commissioner
+		dataType: string
+		lineageTag: bf807b33-6d68-4bd6-b867-67ce96d7d94d
+		summarizeBy: none
+		sourceColumn: code_of_commissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column departure_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d861760c-b16a-4b92-a21e-084ccb0bdf6b
+		summarizeBy: none
+		sourceColumn: departure_date
+
+		variation Variation
+			isDefault
+			relationship: 5d1476e5-c094-416b-8f53-37953fea8336
+			defaultHierarchy: LocalDateTable_2c1d2b57-ee48-4d15-b330-e3ea84d52762.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column departure_time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 75f8e3fd-072c-42ad-b9ee-061ba645e2fb
+		summarizeBy: none
+		sourceColumn: departure_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column minutes_in_ed
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a3a74ad-2e4c-4f83-aad5-f7fd76da98d2
+		summarizeBy: sum
+		sourceColumn: minutes_in_ed
+
+		annotation SummarizationSetBy = Automatic
+
+	column decision_to_admit_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 43179a6a-cfca-4617-bc1a-f9e2948d2e38
+		summarizeBy: none
+		sourceColumn: decision_to_admit_date
+
+		variation Variation
+			isDefault
+			relationship: 7ea4921f-bc46-4f32-984b-4b45ae5d0325
+			defaultHierarchy: LocalDateTable_50b4db23-7e53-41d7-8687-0793a2e26514.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: e0ce4854-2666-4398-a099-758be9395aa5
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 8518ab8f-ba12-4280-89f6-02c443ae6c40
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 243a3e43-6bfb-4e76-ac1e-10b38eb5ad66
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 7652f7ef-f300-43f6-bbc2-b62429924fc5
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 0897502c-228f-4030-accc-68c1fe72aa9f
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa
+		dataType: string
+		lineageTag: 65098fc7-9823-4f22-97c1-05b9018f89f8
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5yr_age_band
+		dataType: string
+		lineageTag: 3992800b-650e-420f-a84e-ebf7c381f3b8
+		summarizeBy: none
+		sourceColumn: 5yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10yr_age_band
+		dataType: string
+		lineageTag: 810bfdf4-d45c-419c-9a0b-0903d64cf3ea
+		summarizeBy: none
+		sourceColumn: 10yr_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin
+		dataType: string
+		lineageTag: d1db968d-afef-4bbd-84de-b6c7bf44760b
+		summarizeBy: none
+		sourceColumn: ethnic_origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_group
+		dataType: string
+		lineageTag: 424837e7-d2bc-4a70-8cb4-c664ff2fe0b9
+		summarizeBy: none
+		sourceColumn: ethnic_origin_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column living_in_a_care_home
+		dataType: int64
+		formatString: 0
+		lineageTag: c98b914c-17c1-4865-ae6b-e7fe603803e4
+		summarizeBy: sum
+		sourceColumn: living_in_a_care_home
+
+		annotation SummarizationSetBy = Automatic
+
+	column living_alone
+		dataType: int64
+		formatString: 0
+		lineageTag: a36f5064-ac50-4974-9669-39af523b722d
+		summarizeBy: sum
+		sourceColumn: living_alone
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		lineageTag: b6b7dca5-bccc-4098-b2ef-64c1a17f1ea9
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_name
+		dataType: string
+		lineageTag: 60ce21fb-74c9-4532-bcf0-58194c3c578d
+		summarizeBy: none
+		sourceColumn: provider_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_group
+		dataType: string
+		lineageTag: 47033258-36a3-45b7-ab3b-7dcedec0c4af
+		summarizeBy: none
+		sourceColumn: provider_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column chief_complaint
+		dataType: string
+		lineageTag: 61d75b91-c1d7-4433-aaba-c736c4cca409
+		summarizeBy: none
+		sourceColumn: chief_complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column department_type
+		dataType: string
+		lineageTag: 9e375c73-9d38-4ef8-a2c8-eb8010b9c35e
+		summarizeBy: none
+		sourceColumn: department_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_mode
+		dataType: string
+		lineageTag: ce708323-330c-489d-ac6a-cc3fc64d4db7
+		summarizeBy: none
+		sourceColumn: arrival_mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_category
+		dataType: string
+		lineageTag: 86e9f764-8301-48ae-bfa5-70cca3ca71f6
+		summarizeBy: none
+		sourceColumn: attendance_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column dementia_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 93c59472-113a-40b9-9f5f-6fa142b30188
+		summarizeBy: sum
+		sourceColumn: dementia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column census_date
+		dataType: string
+		lineageTag: 6134cc35-230d-4e80-ab84-e9fc8d69a53d
+		summarizeBy: none
+		sourceColumn: census_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column mild_frailty
+		dataType: string
+		lineageTag: a5af13c8-c9d6-4e16-a965-7741f61cf3d5
+		summarizeBy: none
+		sourceColumn: mild_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column moderate_frailty
+		dataType: string
+		lineageTag: 026477c6-85cb-4f1c-9c93-b7caee237acf
+		summarizeBy: none
+		sourceColumn: moderate_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column severe_frailty
+		dataType: string
+		lineageTag: 8c1daeeb-8fc7-4a4b-82a0-087900a1dfa1
+		summarizeBy: none
+		sourceColumn: severe_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_hour
+		dataType: int64
+		formatString: 0
+		lineageTag: 0901ed84-7927-4cf9-ba62-838c59c35d73
+		summarizeBy: sum
+		sourceColumn: arrival_hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column postcode_key
+		dataType: string
+		lineageTag: c7e85b3e-d3ea-4ff2-b77d-252bfe291bc5
+		summarizeBy: none
+		sourceColumn: postcode_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column core_20
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d606753-d1a5-4580-806d-15e7cf43e2a2
+		summarizeBy: sum
+		sourceColumn: core_20
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_status
+		dataType: string
+		lineageTag: 1cb4dd42-0d32-4972-90dd-6af0c73006a2
+		summarizeBy: none
+		sourceColumn: discharge_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination
+		dataType: string
+		lineageTag: 98604b63-3ce7-4f52-b0a5-f6e77aa83712
+		summarizeBy: none
+		sourceColumn: discharge_destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_follow_up
+		dataType: string
+		lineageTag: 068c150c-2b3f-4565-ac60-e50a758c156d
+		summarizeBy: none
+		sourceColumn: discharge_follow_up
+
+		annotation SummarizationSetBy = Automatic
+
+	column acuity_code
+		dataType: string
+		lineageTag: cbb8920b-cbdd-4891-9200-9cebe57a6890
+		summarizeBy: none
+		sourceColumn: acuity_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column acuity
+		dataType: string
+		lineageTag: 0a467753-54f8-4838-a7f0-38019c7535b3
+		summarizeBy: none
+		sourceColumn: acuity
+
+		annotation SummarizationSetBy = Automatic
+
+	column major_minor_flag
+		dataType: string
+		lineageTag: 725f5793-6c8d-4cf0-9ac5-871ed2affca6
+		summarizeBy: none
+		sourceColumn: major_minor_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_illness_flag
+		dataType: string
+		lineageTag: 7973b55f-d5e2-480b-8b66-4bbdf5133dbe
+		summarizeBy: none
+		sourceColumn: injury_illness_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column mental_health_classification_code
+		dataType: string
+		lineageTag: bd4b72ec-a626-4215-863c-5949f815ec81
+		summarizeBy: none
+		sourceColumn: mental_health_classification_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column mental_health_classification
+		dataType: string
+		lineageTag: cffde491-d6b9-47b7-8f0b-e22ec8d6e333
+		summarizeBy: none
+		sourceColumn: mental_health_classification
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_status_code
+		dataType: string
+		lineageTag: 5bb03ed6-144c-4a07-8ebf-6096ddc49b19
+		summarizeBy: none
+		sourceColumn: discharge_status_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_destination_code
+		dataType: string
+		lineageTag: ab1af799-f5d4-4220-a2f7-5895654781e1
+		summarizeBy: none
+		sourceColumn: discharge_destination_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column discharge_follow_up_code
+		dataType: string
+		lineageTag: a13360c5-16ca-4f81-ba3f-bf7c2047c204
+		summarizeBy: none
+		sourceColumn: discharge_follow_up_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column admitted_flag
+		dataType: string
+		lineageTag: 1d979f85-6446-4ea4-9c5a-80ab29e77955
+		summarizeBy: none
+		sourceColumn: admitted_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: f532d60f-6ac2-47c2-b75f-37ee59f2637f
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_mechanism_code
+		dataType: string
+		lineageTag: 3a2c6ab2-da6b-4cf4-8917-6ce244053023
+		summarizeBy: none
+		sourceColumn: injury_mechanism_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_mechanism
+		dataType: string
+		lineageTag: 2d1da981-9988-44b3-a662-175cd3221725
+		summarizeBy: none
+		sourceColumn: injury_mechanism
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_intent_code
+		dataType: string
+		lineageTag: 7d2c3699-6a9d-432b-b28c-2b475caf2c99
+		summarizeBy: none
+		sourceColumn: injury_intent_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_intent
+		dataType: string
+		lineageTag: 32739fa4-97a2-4e9b-8d23-405fa37616c8
+		summarizeBy: none
+		sourceColumn: injury_intent
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_place
+		dataType: string
+		lineageTag: 2789f92e-4f6e-469e-9714-87a61d2b2b93
+		summarizeBy: none
+		sourceColumn: injury_place
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_place_code
+		dataType: string
+		lineageTag: 65092f3b-2055-4d94-ab88-fbbba42ec55b
+		summarizeBy: none
+		sourceColumn: injury_place_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_activity_type_code
+		dataType: string
+		lineageTag: d2315535-1659-46d8-88f7-5a24df509b73
+		summarizeBy: none
+		sourceColumn: injury_activity_type_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column injury_activity_type
+		dataType: string
+		lineageTag: b4d5d990-f3d0-4c96-91aa-6493a40be17a
+		summarizeBy: none
+		sourceColumn: injury_activity_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column referred_service_code
+		dataType: string
+		lineageTag: 42775655-6924-40d5-90bc-c5dce1299874
+		summarizeBy: none
+		sourceColumn: referred_service_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column referred_service
+		dataType: string
+		lineageTag: f0200ff3-2cb4-48c7-b985-e47a449cfe69
+		summarizeBy: none
+		sourceColumn: referred_service
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_source_code
+		dataType: string
+		lineageTag: 76af9380-d3f3-4ed6-8439-cce9c9da0990
+		summarizeBy: none
+		sourceColumn: attendance_source_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendance_source
+		dataType: string
+		lineageTag: b44697da-449b-47da-9240-b422b361152d
+		summarizeBy: none
+		sourceColumn: attendance_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_code
+		dataType: string
+		lineageTag: cd8edcbf-0632-4949-98f9-42212cb8db86
+		summarizeBy: none
+		sourceColumn: hrg_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_sub_chapter_description
+		dataType: string
+		lineageTag: f211356d-89d5-4f64-99f6-8d4fc3fdbca2
+		summarizeBy: none
+		sourceColumn: hrg_sub_chapter_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column hrg_description
+		dataType: string
+		lineageTag: 9f471d94-fadf-4c1e-9b94-ea0a22aaa2df
+		summarizeBy: none
+		sourceColumn: hrg_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column CDS_Unique_Identifier
+		dataType: string
+		lineageTag: c26de37b-98b1-4c3b-acfa-fbb952c7c7b8
+		summarizeBy: none
+		sourceColumn: CDS_Unique_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column presenting_complaint
+		dataType: string
+		lineageTag: 21520b97-6ee0-4a7b-a502-7b0c6c2f2b28
+		summarizeBy: none
+		sourceColumn: presenting_complaint
+
+		annotation SummarizationSetBy = Automatic
+
+	column diagnosis_code_1_description
+		dataType: string
+		lineageTag: d0f5c370-c26b-4634-9182-8f2068e2711c
+		summarizeBy: none
+		sourceColumn: diagnosis_code_1_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column MH_Att_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 627ddef1-fe8c-425a-86d3-64ef51c41b86
+		summarizeBy: sum
+		sourceColumn: MH_Att_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column postcode_ecds
+		dataType: string
+		lineageTag: f18cce2b-f401-49fa-a163-6cb97126dde4
+		summarizeBy: none
+		sourceColumn: postcode_ecds
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_source
+		dataType: string
+		lineageTag: e90e02ef-ed35-4e5d-ba5d-588275ad3182
+		summarizeBy: none
+		sourceColumn: data_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_mode_grouped
+		dataType: string
+		lineageTag: 3d919b10-796c-4676-88a7-2459c728c5f2
+		summarizeBy: none
+		sourceColumn: arrival_mode_grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column breach_reason
+		dataType: string
+		lineageTag: fbaf1431-00ec-419a-be12-531a3d7ab92b
+		summarizeBy: none
+		sourceColumn: breach_reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column disposal_method_code
+		dataType: string
+		lineageTag: a178b9a6-fd20-426a-81a6-10c8f1227b99
+		summarizeBy: none
+		sourceColumn: disposal_method_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column disposal_method
+		dataType: string
+		lineageTag: de026134-c0e1-45a4-9e65-ab3807b31eb3
+		summarizeBy: none
+		sourceColumn: disposal_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column commissioner_group
+		dataType: string
+		lineageTag: 571e7871-d802-48ce-82b4-2cb047dbed5f
+		summarizeBy: none
+		sourceColumn: commissioner_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column diagnosis_code_1
+		dataType: string
+		lineageTag: 8c60f851-209c-4bfe-8853-d1b4f2141afe
+		summarizeBy: none
+		sourceColumn: diagnosis_code_1
+
+		annotation SummarizationSetBy = Automatic
+
+	column tariff
+		dataType: double
+		lineageTag: 7de59662-4a3a-48a4-b96c-df5e86700da3
+		summarizeBy: sum
+		sourceColumn: tariff
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MFF
+		dataType: double
+		lineageTag: a781707a-9e74-4724-9fb1-3d141fce0c3e
+		summarizeBy: sum
+		sourceColumn: MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_tariff_plus_MFF
+		dataType: double
+		lineageTag: ac73f1e8-4f04-451f-83c3-914f9801b9b7
+		summarizeBy: sum
+		sourceColumn: total_tariff_plus_MFF
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column tariff_applied
+		dataType: string
+		lineageTag: 649287fa-fda5-4a60-be6c-696961724b80
+		summarizeBy: none
+		sourceColumn: tariff_applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column weekday_name
+		dataType: string
+		lineageTag: 40485bde-0b73-4e1f-b6f3-9a065da2fd03
+		summarizeBy: none
+		sourceColumn: weekday_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column working_age_band
+		dataType: string
+		lineageTag: b6e88c91-e110-4221-8494-db39764a98fe
+		summarizeBy: none
+		sourceColumn: working_age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnic_origin_code
+		dataType: string
+		lineageTag: b62dd382-7870-42b6-a012-d12b8596dc77
+		summarizeBy: none
+		sourceColumn: ethnic_origin_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'YTD Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5d3066a5-5b81-4f50-bccc-6ba87b345b23
+		summarizeBy: sum
+		sourceColumn: YTD Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weekday Sorter'
+		dataType: int64
+		formatString: 0
+		lineageTag: b7c01a4e-5ae4-4b80-bd16-159c4a2a24c2
+		summarizeBy: sum
+		sourceColumn: Weekday Sorter
+
+		annotation SummarizationSetBy = Automatic
+
+	column atrialfib_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 3493a601-e71f-4b48-8458-4edb56ed6220
+		summarizeBy: sum
+		sourceColumn: atrialfib_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column asthma_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 867e41de-ea2a-41b2-9a73-8fe0d7243c5b
+		summarizeBy: sum
+		sourceColumn: asthma_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column cancer_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 064a29a1-cf0f-4c9f-b8c3-de9c88b6878c
+		summarizeBy: sum
+		sourceColumn: cancer_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column coronaryheart_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: fbf731b9-41fa-47bd-a7c8-6ad96ee55492
+		summarizeBy: sum
+		sourceColumn: coronaryheart_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column chronickidney_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 03f5f0e0-cf27-476e-a666-9108dab96de7
+		summarizeBy: sum
+		sourceColumn: chronickidney_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column copd_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 108d3e88-e735-4857-af7d-3ced7b089717
+		summarizeBy: sum
+		sourceColumn: copd_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column depression_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 8307a25e-f301-4a2c-ac25-d952f7861808
+		summarizeBy: sum
+		sourceColumn: depression_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column diabetes_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 09457fa5-a89c-4624-9be9-c3715506a61f
+		summarizeBy: sum
+		sourceColumn: diabetes_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column epilepsy_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: e543b6f0-0a83-4d0d-bf6d-cd0979d3f66a
+		summarizeBy: sum
+		sourceColumn: epilepsy_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column heartfailure_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: b51685e9-4ad7-411b-96d3-f01ae61c7312
+		summarizeBy: sum
+		sourceColumn: heartfailure_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column hypertension_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 4f84a977-2688-47d3-ad3f-9e2fdb44c5d0
+		summarizeBy: sum
+		sourceColumn: hypertension_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column learningdisability_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 59a53ecf-98e6-44ef-ae9c-91f23b3ad0b3
+		summarizeBy: sum
+		sourceColumn: learningdisability_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column mentalhealth_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: d6c11f92-6038-4142-af24-b36ddd7a372a
+		summarizeBy: sum
+		sourceColumn: mentalhealth_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column obesity_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: df1bacb8-6ed0-4a22-b198-db3df2bc7879
+		summarizeBy: sum
+		sourceColumn: obesity_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column peripheralarterialdisease_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 3bac8038-1e92-43d1-8e06-fa4dd9f43be9
+		summarizeBy: sum
+		sourceColumn: peripheralarterialdisease_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliativecare_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 93aaddd6-1bdc-4f12-acfc-3941e23f2aae
+		summarizeBy: sum
+		sourceColumn: palliativecare_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column stroke_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: bcf4be3a-e207-48f5-ae19-eba10290035e
+		summarizeBy: sum
+		sourceColumn: stroke_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column tia_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a836856-a4ab-4b78-9f65-1017d6045388
+		summarizeBy: sum
+		sourceColumn: tia_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SPC Flag'
+		dataType: int64
+		formatString: 0
+		lineageTag: e1487eff-e1e6-4eb2-9025-1a880f7b6b33
+		summarizeBy: sum
+		sourceColumn: SPC Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Group1
+		dataType: string
+		lineageTag: 62a6e41b-b74d-48ca-a8c8-62d067d22493
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Group1
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Group2
+		dataType: string
+		lineageTag: 03049fac-76aa-4dce-a702-f1dd7cfef52a
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Group2
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Group3
+		dataType: string
+		lineageTag: 60d42a60-5c59-478a-9857-346471e7fe4b
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Group3
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_Description
+		dataType: string
+		lineageTag: b7502f11-0aa3-4b91-b2ad-3fdcf830e57e
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent
+		dataType: string
+		lineageTag: aa480422-c776-48e5-8dfa-b82b8b388959
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent_Description
+		dataType: string
+		lineageTag: 370cead5-87c5-494e-a5ca-f2c1ca206f98
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent_Chapter
+		dataType: string
+		lineageTag: 061bd706-b010-41e1-86fc-ad14016e62e2
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent_Chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_Diagnosis_ICD10_Equivalent_SubChapter
+		dataType: string
+		lineageTag: 399dc209-e472-4009-8d2a-4fcc98179694
+		summarizeBy: none
+		sourceColumn: ECDS_Diagnosis_ICD10_Equivalent_SubChapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender_code
+		dataType: string
+		lineageTag: ead6263e-abc4-49c3-9c53-ef8c6d6cd81e
+		summarizeBy: none
+		sourceColumn: gender_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latest_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a29498ad-3470-4903-8b82-fca2239f3a46
+		summarizeBy: sum
+		sourceColumn: Latest_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 1920_Latest_Month_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: a3051045-7d92-4852-8351-e02d01ef29f7
+		summarizeBy: sum
+		sourceColumn: 1920_Latest_Month_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column hours_in_ed
+		dataType: double
+		lineageTag: 9f9a9666-2399-411a-b6de-33b231be0995
+		summarizeBy: sum
+		sourceColumn: hours_in_ed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column provider_group_derived
+		dataType: string
+		lineageTag: 0ce75dcc-4578-4259-9bb7-6532b995ecc6
+		summarizeBy: none
+		sourceColumn: provider_group_derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_MH_ED_Reattendance_within_30_days_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: de8c860e-57f7-46bf-81e4-c6b6fd39813f
+		summarizeBy: sum
+		sourceColumn: ECDS_MH_ED_Reattendance_within_30_days_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_MH_ED_Reattendance_within_6_months_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 2af3ad1f-1ed7-4e27-ab4f-71dd59e36960
+		summarizeBy: sum
+		sourceColumn: ECDS_MH_ED_Reattendance_within_6_months_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column ECDS_MH_ED_Reattendance_within_12_months_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 0cf92db9-0938-48a0-a11f-44abe3b10058
+		summarizeBy: sum
+		sourceColumn: ECDS_MH_ED_Reattendance_within_12_months_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_HIU_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 4fd4b07b-5a01-452c-94b9-6a6a9564406a
+		summarizeBy: sum
+		sourceColumn: Current_HIU_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Current_HIU_flag_identified_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: eedda25c-7ce3-4093-813c-96e2f1ab3e40
+		summarizeBy: none
+		sourceColumn: Current_HIU_flag_identified_date
+
+		variation Variation
+			isDefault
+			relationship: 04a7f665-234b-4949-b613-bb72ab064e2f
+			defaultHierarchy: LocalDateTable_96453967-8391-4556-8950-4a2796c8b7ea.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 12hour_flag_in_ED_MH_Reasons
+		dataType: int64
+		formatString: 0
+		lineageTag: cfe00375-b1d8-4a8d-8708-9ba3e7da2d24
+		summarizeBy: sum
+		sourceColumn: 12hour_flag_in_ED_MH_Reasons
+
+		annotation SummarizationSetBy = Automatic
+
+	column Responsible_CCG_From_General_Practice
+		dataType: string
+		lineageTag: edf1ae3c-0a45-4006-bfa1-9fe62090c9d9
+		summarizeBy: none
+		sourceColumn: Responsible_CCG_From_General_Practice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0b7070ab-e70c-44e2-bf67-716e5368a15c
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 3346b80a-059c-4050-806e-8252397c93f4
+			defaultHierarchy: LocalDateTable_0fbf3130-efd6-4db5-95ae-b6b73adf8582.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_commissioner_based_on_postcode
+		dataType: string
+		lineageTag: b8bd68f9-a275-4f5a-8b5a-adb49c178712
+		summarizeBy: none
+		sourceColumn: Derived_commissioner_based_on_postcode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Local_Patient_Identifier
+		dataType: string
+		lineageTag: df3e166d-33cc-461b-9060-9a769d56b4fa
+		summarizeBy: none
+		sourceColumn: Local_Patient_Identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1.ed_attendances-7b0d53cd-4e71-485c-b9bf-5655f185b9a3' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select * from #(lf)#(lf)[PowerBI_Reporting].[UrgentCare].[tbl01_ECDS]#(lf)where [age_at_activity_date] >= '65'#(lf)and [efi_category] in ('Mild Frailty','Moderate Frailty','Severe Frailty')#(lf)and code_of_commissioner like '11M%'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

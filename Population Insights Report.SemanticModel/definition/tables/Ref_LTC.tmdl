@@ -1,0 +1,92 @@
+table Ref_LTC
+	lineageTag: da6d8a00-11b1-4887-a5c9-4943279f5451
+
+	measure '% LTC Proportions per PNG' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_LTC')
+			)
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			        (_NUMERATOR / _DENOMINATOR) = BLANK(),
+			        "",
+			        (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5927d723-d55c-4a8a-98ff-bd13d5a9c517
+
+	measure '% PNG Proportions per LTC' = ```
+			
+			
+			VAR _NUMERATOR = 
+			
+			SUM('PLS_Summary'[Counter])
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('Ref_PNG')
+			)
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			        (_NUMERATOR / _DENOMINATOR) = BLANK(),
+			        "",
+			        (_NUMERATOR / _DENOMINATOR)
+			)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 26e601ed-8fe7-4063-bf00-404cc79649d0
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 278597fc-30cd-40fc-b42e-cd46b1d21f72
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column LTCName
+		dataType: string
+		lineageTag: 7a13df42-301a-4875-8166-65f87369b087
+		summarizeBy: none
+		sourceColumn: LTCName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: ff1743e8-f571-41a9-b58d-dd325e013dc2
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_LTC = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="SELECT [PseudoNHSNumber]#(lf)      ,[LTCName] = CASE WHEN [LTCName] IN ('Obesity with values', 'Obesity without values') THEN 'Obesity'#(lf)                        WHEN [LTCName] IN ('Osteoporosis Diagnosis 1', 'Osteoporosis Diagnosis 2') THEN 'Osteoporosis'#(lf)#(tab)#(tab)    WHEN [LTCName] = 'CKD 3 and 5 Diagnosis' THEN 'Chronic Kidney Disease'#(lf)#(tab)#(tab)    ELSE REPLACE(REPLACE([LTCName], 'Register', ''), 'Diagnosis', '') END#(lf)      ,[Counter] = 1#(lf)#(lf)FROM [CCG_Current].[PrimaryCare].[vw_LongTermConditions]#(lf)#(lf)WHERE [LTCCategory] = 'QOF v48'"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

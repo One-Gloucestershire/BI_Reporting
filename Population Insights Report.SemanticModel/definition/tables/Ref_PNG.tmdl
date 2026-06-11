@@ -1,0 +1,128 @@
+table Ref_PNG
+	lineageTag: 9157f3b7-525f-415f-8690-f7efdf8007ff
+
+	column 'Health Group Hex Code'
+		dataType: string
+		lineageTag: a7ca53b5-6c89-46a3-a026-e339aea00cce
+		summarizeBy: none
+		sourceColumn: Health Group Hex Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Health Group Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1567524b-c8dc-4abf-b71f-67a1220f190c
+		summarizeBy: sum
+		sourceColumn: Health Group Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Health Group'
+		dataType: string
+		lineageTag: 93ae0b0e-99ff-4b68-b150-327b90eb49a0
+		summarizeBy: none
+		sourceColumn: Health Group
+		sortByColumn: 'Health Group Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PNG Hex Code'
+		dataType: string
+		lineageTag: cab67485-2f30-4059-aa9c-e39b3d5a8d12
+		summarizeBy: none
+		sourceColumn: PNG Hex Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PNG Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8856c4f2-83f1-4208-89cc-84feecaf78b2
+		summarizeBy: sum
+		sourceColumn: PNG Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PNG Number'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0ac04302-7a98-48ab-a3db-cdfbd836c555
+		summarizeBy: sum
+		sourceColumn: PNG Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column PNG
+		dataType: string
+		lineageTag: 7c82dcef-6388-407e-a985-a0aa878a7c30
+		summarizeBy: none
+		sourceColumn: PNG
+		sortByColumn: 'PNG Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PNG Group'
+		dataType: string
+		lineageTag: e08eb7c3-833b-4fc6-8c58-de2014e59f7a
+		summarizeBy: none
+		sourceColumn: PNG Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PNG Description'
+		dataType: string
+		lineageTag: 982f9394-8a56-4410-aa46-46640069e6e4
+		summarizeBy: none
+		sourceColumn: PNG Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PNG Order Display' = LEFT('Ref_PNG'[PNG Group], 2)
+		lineageTag: dcc66804-ac8e-4d0f-8030-29cd9b12aa9b
+		summarizeBy: none
+		sortByColumn: 'PNG Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sankey Groups'
+		dataType: string
+		lineageTag: 071d4bfa-3d85-4df2-be3a-43960e5b2771
+		summarizeBy: none
+		sourceColumn: Sankey Groups
+		sortByColumn: 'Sankey Order'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sankey Order'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8dad4ac7-5acd-4d67-8c59-79fc78e034ea
+		summarizeBy: sum
+		sourceColumn: Sankey Order
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_PNG = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\Projects\Health Inequalities and PHM\Risk Stratification\PNG Reference Table.xlsx"), null, true),
+				    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Health Group Hex Code", type text}, {"Health Group Order", Int64.Type}, {"Health Group", type text}, {"PNG Hex Code", type text}, {"PNG Order", Int64.Type}, {"PNG Number", Int64.Type}, {"PNG", type text}, {"PNG Group", type text}, {"PNG Description", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

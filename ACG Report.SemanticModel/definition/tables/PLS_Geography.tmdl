@@ -1,0 +1,150 @@
+table PLS_Geography
+	lineageTag: 3b2e2708-df16-4ace-b59d-1a8b6fde2a17
+
+	measure Measure
+		lineageTag: 7ae84121-c05b-4a6c-bda7-c043f96a3c15
+
+	measure 'Map Distribution - Crude Rate per 1,000' = ```
+			
+			
+			VAR _NUMERATOR = SUM('PLS_Summary'[Counter])
+			
+			VAR _DENOMINATOR = 
+			
+			CALCULATE(
+			    SUM('PLS_Summary'[Counter]),
+			    ALL('PLS_Geography')
+			)
+			
+			RETURN
+			
+			(_NUMERATOR / _DENOMINATOR) * 1000
+			```
+		formatString: 0.0
+		lineageTag: 95fd6ebe-80fa-458a-b80f-704c86b6a8d3
+
+	measure 'Map Distribution - Crude Rate per 1,000 - Max' =
+			
+			
+			MAXX(
+			    VALUES('PLS_Geography'[LSOACode]),
+			    [Map Distribution - Crude Rate per 1,000]
+			)
+		formatString: 0.0
+		lineageTag: d4fd5a5f-627b-469e-8a4a-d4253597b194
+
+	measure 'Map Distribution - Crude Rate per 1,000 - Min' =
+			
+			
+			MINX(
+			    VALUES('PLS_Geography'[LSOACode]),
+			    [Map Distribution - Crude Rate per 1,000]
+			)
+		formatString: 0.0
+		lineageTag: e4ae00e3-37d2-4a4e-b381-70338b654f3c
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: c1e6bbf2-70c6-4c46-9fc9-cf8ba4f8603d
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOACode
+		dataType: string
+		lineageTag: c5fb2228-e1df-4c69-9ef8-d3d92e6c2894
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column WardName
+		dataType: string
+		lineageTag: 5149fd47-36f3-42a6-bbf4-50f25b421f96
+		summarizeBy: none
+		sourceColumn: WardName
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistrictDescription
+		dataType: string
+		lineageTag: 7ab61cf8-fb8d-4467-a63d-772c6835a9d0
+		summarizeBy: none
+		sourceColumn: DistrictDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralUrbanClassification
+		dataType: string
+		lineageTag: f3aed74f-c403-4582-82d5-05856c94c7bd
+		summarizeBy: none
+		sourceColumn: RuralUrbanClassification
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralurbanFlag
+		dataType: string
+		lineageTag: 577d7616-566e-4a76-8692-742b6ab70ab6
+		summarizeBy: none
+		sourceColumn: RuralurbanFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_England_Decile
+		dataType: int64
+		formatString: 0
+		lineageTag: a435cf9b-cbfc-4bc4-86a7-db9ba765f111
+		summarizeBy: none
+		sourceColumn: IMD_England_Decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_Gloucester_Decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 3f97ab21-f89a-4880-9ed5-5a59693244be
+		summarizeBy: none
+		sourceColumn: IMD_Gloucester_Decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 60b22763-8e2d-4492-a016-6d14359a96a1
+		summarizeBy: none
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedIsLivingAlone
+		dataType: int64
+		formatString: 0
+		lineageTag: d776ef6a-7f3d-4392-a83a-8a0155ecc398
+		summarizeBy: none
+		sourceColumn: DerivedIsLivingAlone
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedIsLivingInCareHome
+		dataType: int64
+		formatString: 0
+		lineageTag: 08203673-1bc3-45e8-8d9f-8373f69b1aa5
+		summarizeBy: none
+		sourceColumn: DerivedIsLivingInCareHome
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PLS_Geography = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="  SELECT DISTINCT [PseudoNHSNumber]#(lf)                 ,[LSOACode]#(lf)#(tab)       ,[WardName]#(lf)#(tab)       ,[DistrictDescription]#(lf)#(tab)       ,[RuralUrbanClassification]#(lf)#(tab)       ,[RuralurbanFlag]#(lf)#(tab)       ,[IMD_England_Decile] = [IMDNationalDecile]#(lf)#(tab)       ,[IMD_Gloucester_Decile] = [IMDCountyDecile]#(lf)#(tab)       ,[Core20Flag]#(lf)#(tab)       ,[DerivedIsLivingAlone]#(lf)#(tab)       ,[DerivedIsLivingInCareHome]#(lf)#(lf)  FROM [ICB_Products].[Patient].[vw_IMD_and_Geography]"])
+				in
+				    Source
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Exception
+

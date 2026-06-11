@@ -1,0 +1,130 @@
+table 'PPW Daily Data (Unpivoted)'
+	lineageTag: 44e4f689-baf4-43c3-9fd0-d276df3130d4
+
+	column 'NHS Number (Pseudo) - Copy'
+		dataType: string
+		lineageTag: fa311f6b-f574-43a6-bc5d-d2792466888c
+		summarizeBy: none
+		sourceColumn: NHS Number (Pseudo) - Copy
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attribute
+		dataType: string
+		lineageTag: ac2b27f2-13ef-40b3-bb94-d19a21846999
+		summarizeBy: none
+		sourceColumn: Attribute
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: string
+		lineageTag: 82384902-4f70-4c14-a31b-c9b68565cd5d
+		summarizeBy: none
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Custom Order'
+		dataType: string
+		lineageTag: ffdc5013-e225-4f74-b3bf-17921f937883
+		summarizeBy: none
+		sourceColumn: Custom Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'PPW Daily Data (Unpivoted)' = m
+		mode: import
+		source =
+				let
+				    Source = #"PPW Daily Data",
+				    #"Duplicated Column (NHS Number)" = Table.DuplicateColumn(Source, "NHS Number (Pseudo)", "NHS Number (Pseudo) - Copy"),
+				    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Duplicated Column (NHS Number)", {"NHS Number (Pseudo) - Copy"}, "Attribute", "Value"),
+				    #"Added Custom Order Column" = Table.AddColumn(#"Unpivoted Columns", "Custom Order", each let
+				    // Normalize the value (trim + collapse double spaces)
+				    a0 = Text.Trim([Attribute] & ""),
+				    a1 = Text.Replace(a0, "  ", " "),
+				    a  = Text.Replace(a1, "  ", " "),  // Repeat to collapse multiple spaces
+				
+				    // Map each Attribute value to a sort order (all as text with leading zeros)
+				    orderMap = [
+				        #"Usual GP" = "001",
+				        #"NHS Number (Pseudo)" = "002",
+				        #"Surname" = "003",
+				        #"First Name" = "004",
+				        #"Full DOB" = "005",
+				        #"Age" = "006",
+				        #"Full address" = "007",
+				        #"Date of Death" = "008",
+				        #"Last Residence" = "009",
+				        #"Last GSF Status Date" = "010",
+				        #"Last GSF Status Desc" = "011",
+				        #"First Dementia Date" = "012",
+				        #"First Dementia Desc" = "013",
+				        #"Last Cancer Date" = "014",
+				        #"Last Cancer Desc" = "015",
+				        #"Last Frailty Code -grey the value is more recent Date" = "016",
+				        #"Last Frailty Code -red severe -orange moderate Desc" = "017",
+				        #"Last Rockwood Score -grey the code is more recent" = "018",
+				        #"Last Rockwood Score -red severe -orange moderate" = "019",
+				        #"Last Overall Plan of Care Date" = "020",
+				        #"Last Patients Concern Expectation Date" = "021",
+				        #"Last Personal Care Plan Date" = "022",
+				        #"Last Personal Care Plan Desc" = "023",
+				        #"Last Respect Form Date" = "024",
+				        #"Last Resuscitation Status Date" = "025",
+				        #"Last Resuscitation Discussion With Patient Desc" = "026",
+				        #"Last Treatment Escalation Plan Date" = "027",
+				        #"Last Special Patient Note Date" = "028",
+				        #"Last Fall Date" = "029",
+				        #"Last Fall Desc" = "030",
+				        #"Last Assessment for no. Falls" = "031",
+				        #"Total Falls in the last year" = "032",
+				        #"Last Emergency Department Date" = "033",
+				        #"Last Emergency Department Desc" = "034",
+				        #"Last Hospital Admission Date" = "035",
+				        #"Last Hospital Admission Desc" = "036",
+				        #"Last Comprehensive Geriatric Ass Date" = "037",
+				        #"Last Nutrition assessment Date" = "038",
+				        #"Last Nutrition assessment Desc" = "039",
+				        #"Last SMR Date" = "040",
+				        #"Last referral To Social prescriber Date" = "041",
+				        #"Last referral to Social Prescriber Desc" = "042",
+				        #"Last Care Coordinator Assess Date" = "043",
+				        #"Last Multi-agency Case Management Date" = "044",
+				        #"Last Frailty Assessment Date" = "045",
+				        #"Last Seen by Community Matron Date" = "046",
+				        #"Last seen by Health Support Worker Date" = "047",
+				        #"Last Care Home Assessment Date" = "048",
+				        #"Last Proactive Care Started Date" = "049",
+				        #"Last Proactive Care Ended Date" = "050",
+				        #"Last Lasting Power Of Attorney for Property Date" = "051",
+				        #"Last Lasting Power Of Attorney for Welfare Date" = "052",
+				        #"Last Mental Capacity Date" = "053",
+				        #"Last Communication Needs Date" = "054",
+				        #"Last Patient Aware Of Diagnosis Date" = "055",
+				        #"Last Preferred Place Of Care Date" = "056",
+				        #"Last Preferred Place Of Death Date" = "057",
+				        #"Last DS1500 Date" = "058",
+				        #"Last Anticipatory Prescribing Date" = "059",
+				        #"Last Referral To Palliative Care Team Date" = "060",
+				        #"Last End Of Life Care Plan Date" = "061",
+				        #"Last End Of Life Care Plan Desc" = "062",
+				        #"Latest Personalised Care and Support Plan Date" = "063",
+				        #"Latest Personalised Care Plan Desc" = "064",
+				        #"Count of Patients" = "065"
+				    ],
+				
+				    // Unknown values go to "999" so they sort to the end
+				    sortOrder = Record.FieldOrDefault(orderMap, a, "999")
+				in
+				    sortOrder)
+				in
+				    #"Added Custom Order Column"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

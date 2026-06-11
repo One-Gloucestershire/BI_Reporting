@@ -1,0 +1,175 @@
+table Par_Sankey
+	lineageTag: 96034d14-cf74-4721-a937-2c193f57010a
+
+	measure 'Starting Node - Date' = ```
+			
+			
+			VAR _DATE = 
+			
+			FORMAT(
+			    MAX('Dat_Sankey'[Start_Date]),
+			    "MMM-YYYY"
+			)
+			
+			RETURN
+			
+			CONCATENATE("Starting Date: ", _DATE)
+			```
+		lineageTag: 8fb389a6-e4b4-475c-9455-dbcb78e05f99
+
+	measure 'Ending Node - Date' = ```
+			
+			
+			VAR _MIDDLE_DATE = 
+			
+			FORMAT(
+			    MAX('Dat_Sankey'[Middle_Date]),
+			    "MMM-YYYY"
+			)
+			
+			VAR _END_DATE = 
+			
+			FORMAT(
+			    MAX('Dat_Sankey'[End_Date]),
+			    "MMM-YYYY"
+			)
+			
+			VAR _SANKEY_SELECT = MAX('Par_Sankey'[Parameter])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_SANKEY_SELECT, "12 Month Period"), CONCATENATE("Ending Date: ", _MIDDLE_DATE),
+			    CONTAINSSTRINGEXACT(_SANKEY_SELECT, "24 Month Period"), CONCATENATE("Ending Date: ", _END_DATE)
+			)
+			
+			
+			```
+		lineageTag: 073f9b6d-88a5-43a5-999c-3089202d6236
+
+	measure 'Ending Node - Totals' = ```
+			
+			
+			VAR _PAR_SELECT = MAX('Par_Sankey'[Parameter])
+			
+			VAR _MIDDLE = 
+			
+			    CALCULATE(
+			    SUM('Dat_Sankey'[Counter]),
+			    USERELATIONSHIP('Ref_PNG'[Sankey Groups], 'Dat_Sankey'[Middle_Health_Group])
+			    )
+			
+			VAR _END = 
+			
+			    CALCULATE(
+			    SUM('Dat_Sankey'[Counter]),
+			    USERELATIONSHIP('Ref_PNG'[Sankey Groups], 'Dat_Sankey'[End_Health_Group])
+			    )
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_PAR_SELECT, "12 Month Period"), _MIDDLE,
+			    CONTAINSSTRINGEXACT(_PAR_SELECT, "24 Month Period"), _END
+			)
+			```
+		formatString: #,0
+		lineageTag: af8fefd9-e7b0-4243-bfd4-ae6c69d54f60
+
+	measure 'Node Variation' =
+			
+			
+			IF(
+			    ISFILTERED('Dat_Sankey'[Start_Health_Group]) ||
+			    SELECTEDVALUE('Ref_PNG'[Sankey Groups]) IN {"New Patient", "Patient Died", "Left Population"},
+			    0,
+			    [Ending Node - Totals] - [Sankey Total]
+			)
+		lineageTag: db463dae-556a-4af7-84e5-73c52ea1adcd
+
+		formatStringDefinition = "+,0;- ,0;0"
+
+	measure 'Node % Variation' =
+			
+			
+			IF(
+			    [Sankey Total] = BLANK() || [Ending Node - Totals] = BLANK(),
+			    BLANK(),
+			    ([Ending Node - Totals] - [Sankey Total]) / [Sankey Total]
+			)
+		lineageTag: 6dbb7662-b1c3-46c6-83cd-47c3c05673fd
+
+		formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+	measure 'Node - % of Migration' =
+			
+			
+			IF(
+			    ISFILTERED('Dat_Sankey'[Start_Health_Group]),
+			    [Ending Node - Totals] / CALCULATE([Sankey Total], ALL('Ref_PNG')),
+			    BLANK()
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6b998fa2-0869-4a6f-a99c-1ff3b12b884a
+
+	measure 'Sankey Arrow Text' =
+			
+			
+			VAR _PAR_SELECT = MAX('Par_Sankey'[Parameter])
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRINGEXACT(_PAR_SELECT, "12 Month Period"), "12 Month Change",
+			    CONTAINSSTRINGEXACT(_PAR_SELECT, "24 Month Period"), "24 Month Change"
+			)
+		lineageTag: 4ec3203c-1326-4eef-9adb-23fe54fea022
+
+	column Parameter
+		lineageTag: 1fe6fc60-a557-4bc4-82e3-4cdfffaf82c5
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: cae93abc-66ef-4088-9f7f-f432ad2422a3
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: 19725c64-9af5-4187-9387-df4634c9ee13
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Par_Sankey = calculated
+		mode: import
+		source =
+				{
+				    ("12 Month Period", NAMEOF('Dat_Sankey'[Middle_Health_Group]), 0),
+				    ("24 Month Period", NAMEOF('Dat_Sankey'[End_Health_Group]), 1)
+				}
+
+	annotation PBI_Id = 60e3aca4c4214552a00c2e16cef3dff7
+

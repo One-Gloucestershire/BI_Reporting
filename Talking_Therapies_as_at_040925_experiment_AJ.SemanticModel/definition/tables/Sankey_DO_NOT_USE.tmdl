@@ -1,0 +1,40 @@
+table Sankey_DO_NOT_USE
+	lineageTag: ef81265b-6cb9-4ad9-b6e4-1d23682b8d5c
+
+	column Source
+		dataType: string
+		lineageTag: 77ce3e90-a29f-45d1-ac9c-4c207efceb48
+		summarizeBy: none
+		sourceColumn: Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Destination
+		dataType: string
+		lineageTag: d803e630-ae9b-463c-8514-b911ea43a031
+		summarizeBy: none
+		sourceColumn: Destination
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weight
+		dataType: int64
+		formatString: 0
+		lineageTag: 7fb2e47b-b292-4bf8-b7da-e8b7390b1c41
+		summarizeBy: sum
+		sourceColumn: Weight
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Sankey_DO_NOT_USE = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Current", [Query="SELECT #(lf)  Source,#(lf)  Destination,#(lf)  COUNT(*) AS Weight#(lf)FROM (#(lf)  SELECT #(lf)     'Referral' AS Source,#(lf)CASE WHEN [CARE_CONTACT_COUNT] IS NULL OR [CARE_CONTACT_COUNT] = 0 THEN 'Dropped_Out_Before_Assessment'#(lf)      WHEN [CARE_CONTACT_COUNT] = 1 THEN 'Seen_Once' ELSE '2_Plus_Contacts' END AS Destination#(lf)   #(lf)  FROM [CCG_Current].[IAPT].[vw_101_Referral] as r #(lf) LEFT JOIN [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Age] as a ON cast(r.AGE_AT_REFERRAL_REQUEST_RECEIVED_DATE as int) = a.[pk_Age]#(lf) LEFT JOIN [CCG_Reference].[Reference].[vw_GPPractice] as gp on gp.OrganisationCode =  r.GP_Code#(lf) LEFT JOIN [DSCRO_NATIONAL_LOOKUPS].[dbo].[ref_Dates] as d ON cast(d.Full_Date as date) = r.[REFERRAL_REQUEST_RECEIVED_DATE]#(lf) LEFT JOIN CCG_Reference.Reference.vw_Postcode as p on p.POSTCODE_PKEY = r.Derived_Postcode#(lf) LEFT JOIN CCG_Reference.Reference.vw_LSOA_IMD AS i on i.LSOACode = p.LSOA_2011#(lf) LEFT JOIN BIReports.MPI.Ethnicity_Table as e on e.PseudoNHSNo = r.Derived_Pseudo_NHS#(lf)#(lf)  Where  REFERRAL_REQUEST_RECEIVED_DATE >= '2022-04-01'#(lf) AND ORGANISATION_IDENTIFIER_CODE_OF_COMMISSIONER like'11M%'#(lf) AND Is_Active_Record = '1'#(lf)) AS FlowMap#(lf)GROUP BY Source, Destination"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,149 @@
+table Dat_Sankey
+	lineageTag: 18ecb02c-47f8-42bd-a8f0-a15a57640c8c
+
+	measure 'Sankey Total' = SUM('Dat_Sankey'[Counter])
+		formatString: #,0
+		lineageTag: 668458ac-7144-49b9-91cd-1e16d6cd1f6f
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 3a3158d0-ab63-4e5a-8fe7-39e7abef5473
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5f47ff7a-e8a0-4e3b-be6e-c158c626a597
+		summarizeBy: none
+		sourceColumn: Start_Date
+
+		variation Variation
+			isDefault
+			relationship: 4e7ce9aa-4403-4ca8-b29b-0a1e0aff4f65
+			defaultHierarchy: LocalDateTable_70eceb9a-7536-40cf-9f96-0ce462f1d205.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Patient_Need_Group
+		dataType: string
+		lineageTag: de9c5689-717b-48eb-904d-242f75a78d78
+		summarizeBy: none
+		sourceColumn: Start_Patient_Need_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Middle_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0fdfff66-8362-4f51-9215-7a77768fadf3
+		summarizeBy: none
+		sourceColumn: Middle_Date
+
+		variation Variation
+			isDefault
+			relationship: f9d73388-f02c-470f-9491-aaaf6905140f
+			defaultHierarchy: LocalDateTable_dd38c81e-f33c-45f5-be2c-d89ff1622d5c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Middle_Patient_Need_Group
+		dataType: string
+		lineageTag: dbefecd0-419d-4cab-bc87-982a10c63ef4
+		summarizeBy: none
+		sourceColumn: Middle_Patient_Need_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2466af8f-9a33-4d3c-94f9-52054c4c7659
+		summarizeBy: none
+		sourceColumn: End_Date
+
+		variation Variation
+			isDefault
+			relationship: 8b9e0ea2-04b3-4622-9f3e-204002371eb4
+			defaultHierarchy: LocalDateTable_31bda6e4-dd96-4624-a031-49394292d249.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_Patient_Need_Group
+		dataType: string
+		lineageTag: ce25d55d-fb1a-48e1-886b-34aece06368b
+		summarizeBy: none
+		sourceColumn: End_Patient_Need_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_Health_Group
+		dataType: string
+		lineageTag: 6735c5b5-acb0-4c09-b9c5-fb1092cded82
+		summarizeBy: none
+		sourceColumn: Start_Health_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column End_Health_Group
+		dataType: string
+		lineageTag: 5a557599-4d1f-4261-b32e-ae664af0a456
+		summarizeBy: none
+		sourceColumn: End_Health_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Start_to_End_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d613eb7-5456-474f-a831-ca00b9d8bed6
+		summarizeBy: sum
+		sourceColumn: Start_to_End_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: a9bee172-bb03-4911-9b44-dc2887da5ac8
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column REG_DATE_OF_DEATH
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 64e30239-3d7d-42a0-b1a5-4578137712a8
+		summarizeBy: none
+		sourceColumn: REG_DATE_OF_DEATH
+
+		variation Variation
+			isDefault
+			relationship: 54321085-6759-48cf-98e9-112ab2562a33
+			defaultHierarchy: LocalDateTable_af39b039-dde7-482a-bc8b-0ee66ec4b280.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Middle_Health_Group
+		dataType: string
+		lineageTag: 8ff3d603-f4b7-461c-bcfa-6ba13acbce80
+		summarizeBy: none
+		sourceColumn: Middle_Health_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dat_Sankey = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_ACG_START') IS NOT NULL DROP TABLE #TEMP_ACG_START#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_ACG_MIDDLE') IS NOT NULL DROP TABLE #TEMP_ACG_MIDDLE#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_ACG_END') IS NOT NULL DROP TABLE #TEMP_ACG_END#(lf)----#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_DEATHS') IS NOT NULL DROP TABLE #TEMP_DEATHS#(lf);#(lf)#(lf)DECLARE @START DATE#(lf)SET @START = (SELECT DATEADD(MONTH, -24, MAX([Month])) FROM [CCG_Current].[ACG].[vw_ACGResults])#(lf)#(lf)DECLARE @MIDDLE DATE#(lf)SET @MIDDLE = (SELECT DATEADD(MONTH, -12, MAX([Month])) FROM [CCG_Current].[ACG].[vw_ACGResults])#(lf)#(lf)DECLARE @END DATE#(lf)SET @END = (SELECT MAX([Month]) FROM [CCG_Current].[ACG].[vw_ACGResults])#(lf);#(lf)#(lf)/*==== Starting Node ====*/#(lf)#(lf)SELECT [PseudoNHSNumber]#(lf)      ,[Start_Date] = [Month]#(lf)      ,[Start_Patient_Need_Group] = [Patient_Need_Group]#(lf)      ,[Start_Health_Group] = CASE WHEN LEFT([Patient_Need_Group], 2) IN ('01', '02', '03') THEN 'Healthy'#(lf)                                   WHEN LEFT([Patient_Need_Group], 2) IN ('04', '05') THEN 'Moderate Needs'#(lf)#(tab)#(tab)#(tab)     WHEN LEFT([Patient_Need_Group], 2) IN ('06', '07') THEN 'Pregnant'#(lf)#(tab)#(tab)#(tab)     WHEN LEFT([Patient_Need_Group], 2) IN ('08', '09') THEN 'Dominant Chronic'#(lf)#(tab)#(tab)#(tab)     WHEN LEFT([Patient_Need_Group], 2) IN ('10', '11') THEN 'High Complexity; Multi-Morbidity'#(lf)                                   ELSE 'Left Population' END#(lf)#(lf)INTO #TEMP_ACG_START#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults]#(lf)#(lf)WHERE [Month] = @START#(lf);#(lf)#(lf)/*==== Middle Node ====*/#(lf)#(lf)SELECT [PseudoNHSNumber]#(lf)      ,[Middle_Date] = [Month]#(lf)      ,[Middle_Patient_Need_Group] = [Patient_Need_Group]#(lf)      ,[Middle_Health_Group] = CASE WHEN LEFT([Patient_Need_Group], 2) IN ('01', '02', '03') THEN 'Healthy'#(lf)                                    WHEN LEFT([Patient_Need_Group], 2) IN ('04', '05') THEN 'Moderate Needs'#(lf)#(tab)#(tab)#(tab)      WHEN LEFT([Patient_Need_Group], 2) IN ('06', '07') THEN 'Pregnant'#(lf)#(tab)#(tab)#(tab)      WHEN LEFT([Patient_Need_Group], 2) IN ('08', '09') THEN 'Dominant Chronic'#(lf)#(tab)#(tab)#(tab)      WHEN LEFT([Patient_Need_Group], 2) IN ('10', '11') THEN 'High Complexity; Multi-Morbidity'#(lf)                                    ELSE 'Left Population' END#(lf)#(lf)INTO #TEMP_ACG_MIDDLE#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults]#(lf)#(lf)WHERE [Month] = @MIDDLE#(lf);#(lf)#(lf)/*==== End Node ====*/#(lf)#(lf)SELECT [PseudoNHSNumber]#(lf)      ,[End_Date] = [Month]#(lf)      ,[End_Patient_Need_Group] = [Patient_Need_Group]#(lf)      ,[End_Health_Group] = CASE WHEN LEFT([Patient_Need_Group], 2) IN ('01', '02', '03') THEN 'Healthy'#(lf)                                   WHEN LEFT([Patient_Need_Group], 2) IN ('04', '05') THEN 'Moderate Needs'#(lf)#(tab)#(tab)#(tab)     WHEN LEFT([Patient_Need_Group], 2) IN ('06', '07') THEN 'Pregnant'#(lf)#(tab)#(tab)#(tab)     WHEN LEFT([Patient_Need_Group], 2) IN ('08', '09') THEN 'Dominant Chronic'#(lf)#(tab)#(tab)#(tab)     WHEN LEFT([Patient_Need_Group], 2) IN ('10', '11') THEN 'High Complexity; Multi-Morbidity'#(lf)                                   ELSE 'Left Population' END#(lf)#(lf)INTO #TEMP_ACG_END#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults]#(lf)#(lf)WHERE [Month] = @END#(lf);#(lf)#(lf)/*==== Deaths Reference ====*/#(lf)#(lf)SELECT DISTINCT [Derived_Pseudo_NHS]#(lf)               ,[REG_DATE_OF_DEATH]#(lf)#(lf)INTO #TEMP_DEATHS#(lf)FROM [Data_Mart_Civil_Registration].[dbo].[Mortality]#(lf)#(lf)WHERE [Derived_Pseudo_NHS] IS NOT NULL#(lf)AND [REG_DATE_OF_DEATH] <= (SELECT MAX([Month]) FROM [CCG_Current].[ACG].[vw_ACGResults])#(lf);#(lf)#(lf)/*=================================================================================================#(lf)Final Output #(lf)=================================================================================================*/#(lf)#(lf)WITH ACG_CTE AS#(lf)(#(lf)SELECT DISTINCT [PseudoNHSNumber]#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults]#(lf))#(lf)SELECT [ACG].[PseudoNHSNumber]#(lf)      ,[START].[Start_Date]#(lf)      ,[START].[Start_Patient_Need_Group]#(lf)      ,[Start_Health_Group] = CASE WHEN [START].[Start_Health_Group] IS NULL THEN 'New Patient'#(lf)                                   ELSE [START].[Start_Health_Group] END#(lf)      ,[MIDDLE].[Middle_Date]#(lf)      ,[MIDDLE].[Middle_Patient_Need_Group]#(lf)      ,[Middle_Health_Group] = CASE WHEN ([START].[Start_Date] IS NULL AND [MIDDLE].[Middle_Date] IS NULL) THEN 'New Patient'#(lf)                                    WHEN [DEATH].[REG_DATE_OF_DEATH] <= @MIDDLE THEN 'Patient Died'#(lf)                                    WHEN ([START].[Start_Date] IS NOT NULL AND [MIDDLE].[Middle_Health_Group] IS NULL) THEN 'Left Population'#(lf)#(tab)#(tab)#(tab)      ELSE [MIDDLE].[Middle_Health_Group] END#(lf)      ,[END].[End_Date]#(lf)      ,[END].[End_Patient_Need_Group]#(lf)      ,[End_Health_Group] = CASE WHEN [DEATH].[REG_DATE_OF_DEATH] <= @END THEN  'Patient Died'#(lf)                                 WHEN [END].[End_Health_Group] IS NULL THEN 'Left Population' #(lf)#(tab)#(tab)#(tab)   ELSE [END].[End_Health_Group] END#(lf)      ,[Start_to_End_Flag] = CASE WHEN [START].[Start_Date] IS NOT NULL AND [END].[End_Date] IS NOT NULL THEN 1 ELSE 0 END#(lf)      ,[DEATH].[REG_DATE_OF_DEATH]#(lf)      ,[Counter] = 1#(lf)#(lf)FROM ACG_CTE AS [ACG]#(lf)#(lf)LEFT JOIN #TEMP_ACG_START AS [START]#(lf)ON [START].[PseudoNHSNumber] = [ACG].[PseudoNHSNumber]#(lf)#(lf)LEFT JOIN #TEMP_ACG_MIDDLE AS [MIDDLE]#(lf)ON [MIDDLE].[PseudoNHSNumber] = [ACG].[PseudoNHSNumber]#(lf)#(lf)LEFT JOIN #TEMP_ACG_END AS [END]#(lf)ON [END].[PseudoNHSNumber] = [ACG].[PseudoNHSNumber]#(lf)#(lf)LEFT JOIN #TEMP_DEATHS AS [DEATH]#(lf)ON [DEATH].[Derived_Pseudo_NHS] = [ACG].[PseudoNHSNumber]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

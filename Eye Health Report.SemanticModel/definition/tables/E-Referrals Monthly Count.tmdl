@@ -1,0 +1,61 @@
+table 'E-Referrals Monthly Count'
+	lineageTag: c7f3b737-416a-41ba-8049-0b9449a73289
+
+	measure 'EREF Mean' = AVERAGEX('E-Referrals Monthly Count', [Monthly_Count])
+		lineageTag: 023fe6c1-a9c6-4c0c-bed0-1fab1f3fc091
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'EREF STD DEV' = STDEVX.P('E-Referrals Monthly Count', [Monthly_Count])
+		lineageTag: 98d9d638-ac2d-47dd-91cd-bac3acc2d8cf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'EREF UCL' = [EREF Mean] + (3 * [EREF STD DEV])
+		lineageTag: 59926976-a67a-44bb-bff5-a5dfd8eda01b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'EREF LCL' = ```
+			[EREF Mean] - (3 * [EREF STD DEV]) 
+			```
+		lineageTag: d6f74cca-0aa1-4a1d-933b-0752b5951236
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Monthly_Count
+		formatString: 0
+		lineageTag: c7570b4f-7e07-45cf-824c-1a8891b47658
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Monthly_Count]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_actionMonthYear
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 07d17fc2-5496-4a75-9b49-96e738b1ebfc
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: E-Referrals[Derived_actionMonthYear]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'E-Referrals Monthly Count' = calculated
+		mode: import
+		source = ```
+				
+				SUMMARIZE(
+				    FILTER(
+				    'E-Referrals',
+				    'E-Referrals'[Derived_actionMonthYear] >= DATE(2020, 04, 01) ), 
+				    'E-Referrals'[Derived_actionMonthYear],
+				    "Monthly_Count", COUNTROWS('E-Referrals')
+				)
+				```
+
+	annotation PBI_Id = c45518bbc2fc4c40be614b87010e1fcc
+

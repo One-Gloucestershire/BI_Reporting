@@ -1,0 +1,76 @@
+table Ref_PNG
+	lineageTag: b70ff0e4-49ed-4210-b880-a5cebac54665
+
+	column PNG_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: e309abdf-f555-4992-8370-f6c2f98387fb
+		summarizeBy: sum
+		sourceColumn: PNG_Order
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ACGPatientNeedsGroup
+		dataType: string
+		lineageTag: c62f37c1-8b6b-49fc-a9ec-4137821200a1
+		summarizeBy: none
+		sourceColumn: ACGPatientNeedsGroup
+		sortByColumn: PNG_Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Wider_PNG_Group
+		dataType: string
+		lineageTag: f8121b1d-ac91-479d-a3e0-8c89eb6ef15f
+		summarizeBy: none
+		sourceColumn: Wider_PNG_Group
+		sortByColumn: Wider_PNG_Order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Wider_PNG_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 18639765-8fc7-4210-93c1-42405c2b3d59
+		summarizeBy: sum
+		sourceColumn: Wider_PNG_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column PNG_Order_Display =
+			
+			
+			VAR _FORMAT = FORMAT([PNG_Order], "0")
+			
+			RETURN
+			
+			SWITCH(
+			    TRUE(),
+			    LEN(_FORMAT) = 2, _FORMAT,
+			    CONCATENATE("0", _FORMAT)
+			)
+		lineageTag: 27983049-5def-434d-9838-6baddf12f104
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_PNG = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="SELECT DISTINCT [PNG_Order] = LEFT([ACGPatientNeedsGroup], 2)#(lf)               ,[ACGPatientNeedsGroup]#(lf)               ,[Wider_PNG_Group] = CASE WHEN [ACGPatientNeedsGroup] IN ('01 Non-User', '02 Low Need Child', '03 Low Need Adult') THEN 'Healthy'#(lf)#(tab)                               WHEN [ACGPatientNeedsGroup] IN ('04 Multi-Morbidity Low Complexity', '05 Multi-Morbidity Medium Complexity') THEN 'Moderate Needs'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [ACGPatientNeedsGroup] IN ('06 Pregnancy Low Complexity', '07 Pregnancy High Complexity') THEN 'Pregnant'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [ACGPatientNeedsGroup] IN ('08 Dominant Psychiatric/Behavioral Condition', '09 Dominant Major Chronic Condition') THEN 'Dominant Chronic'#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [ACGPatientNeedsGroup] IN ('10 Multi-Morbidity High Complexity', '11 Frailty') THEN 'High Complexity; Multi-Morbidity'#(lf)#(tab)#(tab)#(tab)#(tab) ELSE NULL END#(lf)               ,[Wider_PNG_Order] = CASE WHEN [ACGPatientNeedsGroup] IN ('01 Non-User', '02 Low Need Child', '03 Low Need Adult') THEN 1#(lf)#(tab)                               WHEN [ACGPatientNeedsGroup] IN ('04 Multi-Morbidity Low Complexity', '05 Multi-Morbidity Medium Complexity') THEN 2#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [ACGPatientNeedsGroup] IN ('06 Pregnancy Low Complexity', '07 Pregnancy High Complexity') THEN 3#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [ACGPatientNeedsGroup] IN ('08 Dominant Psychiatric/Behavioral Condition', '09 Dominant Major Chronic Condition') THEN 4#(lf)#(tab)#(tab)#(tab)#(tab) WHEN [ACGPatientNeedsGroup] IN ('10 Multi-Morbidity High Complexity', '11 Frailty') THEN 5#(lf)#(tab)#(tab)#(tab)#(tab) ELSE NULL END#(lf)#(lf)FROM [ICB_Products].[Patient].[vw_Summary]#(lf)#(lf)WHERE [ACGPatientNeedsGroup] IS NOT NULL"])
+				in
+				    Source
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

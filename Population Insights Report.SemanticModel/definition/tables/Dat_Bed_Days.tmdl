@@ -1,0 +1,211 @@
+table Dat_Bed_Days
+	lineageTag: e4f3bed6-8598-48f3-845d-74a95f66fcbc
+
+	measure 'Dat_Bed_Days Average LoS' =
+			
+			
+			SUM('Dat_Bed_Days'[Bed_Days]) / SUM('Dat_Bed_Days'[Admission_Counter])
+		lineageTag: 4d799a12-b46d-4073-becf-0e4ca69fe21d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dat_Bed_Days Total Bed Days' =
+			
+			
+			SUM('Dat_Bed_Days'[Bed_Days])
+		formatString: #,0
+		lineageTag: 504807a6-f5c4-4b6d-bdba-45b9a81214e0
+
+	measure 'Dat_Bed_Days Total Admissions' =
+			
+			
+			SUM('Dat_Bed_Days'[Admission_Counter])
+		formatString: #,0
+		lineageTag: 26582f43-8478-4fee-ae11-ba71451ce922
+
+	measure 'Dat_Bed_Days Bed Days per Person' =
+			
+			
+			[Dat_Bed_Days Total Bed Days] / [Dat_Bed_Days Distinct Individuals]
+		lineageTag: 017a6c19-3091-44ff-a229-c692d86cc87c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dat_Bed_Days Distinct Individuals' =
+			
+			
+			DISTINCTCOUNT('Dat_Bed_Days'[NHS_Number])
+		formatString: #,0
+		lineageTag: f8f487c0-48f2-48a3-b59e-028ea8098d82
+
+	measure 'Dat_Bed_Days Average LoS (No 0 LOS)' = ```
+			
+			
+			VAR _BEDDAYS = 
+			
+			    CALCULATE(
+			        SUM('Dat_Bed_Days'[Bed_Days]),
+			        'Dat_Bed_Days'[Bed_Days] > 0
+			    )
+			
+			VAR _ADMISSIONS =
+			
+			    CALCULATE(
+			        SUM('Dat_Bed_Days'[Admission_Counter]),
+			        'Dat_Bed_Days'[Bed_Days] > 0
+			    )
+			
+			RETURN
+			
+			_BEDDAYS / _ADMISSIONS
+			```
+		lineageTag: 09fc1811-69ea-4c64-b7c9-5c2d495ea785
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dat_Bed_Days Bed Days per Person ALIVE' =
+			
+			
+			[Dat_Bed_Days Total Bed Days]  / DISTINCTCOUNT('PLS_Summary'[PseudoNHSNumber])
+		lineageTag: 8bf23fce-7c88-4e33-81de-e60316881361
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dat_Bed_Days Distinct Individuals ALIVE' =
+			
+			
+			DISTINCTCOUNT('PLS_Summary'[PseudoNHSNumber])
+		formatString: #,0
+		lineageTag: 92be48a7-83a5-4d3a-b1ac-cc6bb002dc77
+
+	measure 'Dat_Bed_Days Bed Days per Person (ICB)' = ```
+			
+			
+			CALCULATE(
+			    [Dat_Bed_Days Total Bed Days],
+			    ALL('Ref_GP_Primary'),
+			    ALL('Ref_Age')
+			)
+			 / 
+			 CALCULATE(
+			    [Dat_Bed_Days Distinct Individuals],
+			    ALL('Ref_GP_Primary'),
+			    ALL('Ref_Age')
+			)
+			
+			```
+		lineageTag: a7b75a95-40fa-42ee-8aed-3817e451ec77
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dat_Bed_Days Total Admissions 0 LoS' =
+			
+			
+			CALCULATE(
+			    SUM('Dat_Bed_Days'[Admission_Counter]),
+			    'Dat_Bed_Days'[Bed_Days] = 0
+			)
+		formatString: #,0
+		lineageTag: 8c9a8d5c-d8f4-436b-b2fe-e1b26e469b8e
+
+	column NHS_Number
+		dataType: string
+		lineageTag: 1e7b8781-89bf-49f7-89d2-c46d9ed9c42e
+		summarizeBy: none
+		sourceColumn: NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bed_Days
+		dataType: int64
+		formatString: 0
+		lineageTag: bb7ada71-7e65-4e43-824a-b4958938bff6
+		summarizeBy: sum
+		sourceColumn: Bed_Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Type
+		dataType: string
+		lineageTag: c135ac35-e388-4635-8ddd-6a4cc2c8f5c6
+		summarizeBy: none
+		sourceColumn: Admission_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Site_Type
+		dataType: string
+		lineageTag: a567ab0f-92b3-4c7d-b09d-6537d1af7c47
+		summarizeBy: none
+		sourceColumn: Site_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Elective_Type
+		dataType: string
+		lineageTag: 0b342641-6eb9-47c6-ada6-b151513f9257
+		summarizeBy: none
+		sourceColumn: Elective_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Need_Group
+		dataType: string
+		lineageTag: 910dfcf6-5be9-4588-b542-be7fda005211
+		summarizeBy: none
+		sourceColumn: Patient_Need_Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discharge_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 77c9ba99-ef31-4f6e-ac15-65707747f750
+		summarizeBy: none
+		sourceColumn: Discharge_Date
+
+		variation Variation
+			isDefault
+			relationship: e64dcf1a-af25-47cb-b4dc-7dfd860895e1
+			defaultHierarchy: LocalDateTable_06a4ced6-5b6a-4ac5-8f82-06539b9765cb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Admission_Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: 5f42bd08-e247-4116-81f1-05542ba27138
+		summarizeBy: sum
+		sourceColumn: Admission_Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Patient_Age
+		dataType: int64
+		formatString: 0
+		lineageTag: a934e43b-62d9-4305-ad9b-3b58b24cfc65
+		summarizeBy: none
+		sourceColumn: Patient_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column PracticeCode
+		dataType: string
+		lineageTag: dd4ffb80-6d3b-43e0-a863-ad083237b483
+		summarizeBy: none
+		sourceColumn: PracticeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dat_Bed_Days = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Current", [Query="/*=======================================================================================#(lf)STAGE 1 - SETTING TIME FRAMES#(lf)=======================================================================================*/#(lf)#(lf)/* Time frame to match PLS activity table to allow data to be comparable */#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_TIME_RANGE') IS NOT NULL DROP TABLE #TEMP_TIME_RANGE#(lf);#(lf)#(lf)SELECT [Start_Date] = MIN([ActivityEndDate])#(lf)      ,[End_Date] = MAX([ActivityEndDate])#(lf)#(lf)INTO #TEMP_TIME_RANGE#(lf)FROM [ICB_Products].[Patient].[vw_Activity]#(lf)#(lf)WHERE [ActivityEndDate] <> '1900-01-01'#(lf);#(lf)#(lf)/*=======================================================================================#(lf)STAGE 2 - ADMISSIONS TABLE#(lf)=======================================================================================*/#(lf)#(lf)/* Gloucester ICB Registered admissions during the established time range */#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_ADMISSIONS') IS NOT NULL DROP TABLE #TEMP_ADMISSIONS#(lf);#(lf)#(lf)SELECT [NHS_Number] = [HPS].[spell_patient_identity_nhs_number_value]#(lf)      ,[Admission_Date] = [HPS].[spell_admission_date]#(lf)      ,[Discharge_Date] = [HPS].[spell_discharge_date]#(lf)      ,[Site] = [HPS].[site_name_of_treatment_at_episode_end_date]#(lf)      ,[HPS].[spell_admission_method]#(lf)      ,[Patient_Age] = [HPS].[spell_patient_identity_age_at_cds_activity_date]#(lf)      ,[Spell_ID] = [spell_hospital_provider_spell_number]#(lf)#(lf)INTO #TEMP_ADMISSIONS#(lf)FROM [CCG_Current].[UnifiedSUS].[vw_HospitalProviderSpell] AS [HPS]#(lf)#(lf)CROSS JOIN #TEMP_TIME_RANGE AS [DATE]#(lf)#(lf)WHERE [HPS].[spell_discharge_date] BETWEEN [DATE].[Start_Date] AND [DATE].[End_Date]#(lf)AND LEFT([HPS].[spell_commissioning_service_agreement_commissioner], 3) IN ('11M', 'QR1')#(lf);#(lf)#(lf)/*=======================================================================================#(lf)STAGE 3 - ACG CATEGORY DURING PERIOD#(lf)=======================================================================================*/#(lf)#(lf)/* Using ACG census within the timeframe, the JOIN is using firstdateofmonth so it can correctly link to census dates */#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_ACG') IS NOT NULL DROP TABLE #TEMP_ACG#(lf);#(lf)#(lf)SELECT [ACG].[Month]#(lf)      ,[ACG].[PseudoNHSNumber]#(lf)      ,[ACG].[Patient_Need_Group]#(lf)#(lf)INTO #TEMP_ACG#(lf)FROM [CCG_Current].[ACG].[vw_ACGResults] AS [ACG]#(lf)#(lf)CROSS JOIN (#(lf)            SELECT [Start_Date] = [DATE_START].[FirstDateofMonth]#(lf)#(tab)        ,[End_Date] = [DATE_END].[FirstDateofMonth]#(lf)#(tab)  #(lf)#(tab)  FROM #TEMP_TIME_RANGE AS [TIME_RANGE]#(lf)#(lf)#(tab)#(tab)LEFT JOIN (#(lf)#(tab)#(tab)           SELECT DISTINCT [Date]#(lf)#(tab)#(tab)#(tab)                ,[FirstDateofMonth]#(lf)#(tab)#(tab)           FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(tab)#(tab)          ) AS [DATE_START]#(lf)#(tab)#(tab)ON [DATE_START].[Date] = [TIME_RANGE].[Start_Date]#(lf)#(lf)#(tab)#(tab)LEFT JOIN (#(lf)#(tab)#(tab)           SELECT DISTINCT [Date]#(lf)#(tab)#(tab)#(tab)                ,[FirstDateofMonth]#(lf)#(tab)#(tab)           FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(tab)#(tab)          ) AS [DATE_END]#(lf)#(tab)#(tab)ON [DATE_END].[Date] = [TIME_RANGE].[End_Date]#(lf)#(tab) ) AS [DATE]#(lf)#(lf)WHERE [ACG].[Month] BETWEEN [DATE].[Start_Date] AND [DATE].[End_Date]#(lf);#(lf)#(lf)/*=======================================================================================#(lf)STAGE 4 - FINAL OUTPUT#(lf)=======================================================================================*/#(lf)#(lf)IF OBJECT_ID ('TEMPDB..#TEMP_OUTPUT') IS NOT NULL DROP TABLE #TEMP_OUTPUT#(lf);#(lf)#(lf)SELECT [ADM].[NHS_Number]#(lf)      ,[ADM].[Admission_Date]#(lf)      ,[ADM].[Discharge_Date]#(lf)      ,[ADM].[spell_admission_method]#(lf)      ,[ADM].[Site]#(lf)      ,[Patient_Need_Group] = COALESCE([ACG1].[Patient_Need_Group], [ACG2].[Patient_Need_Group])#(lf)      ,[ADM].[Patient_Age]#(lf)      ,[GP].[PracticeCode]#(lf)      ,[RN] = ROW_NUMBER () OVER (PARTITION BY [ADM].[NHS_Number], [ADM].[Spell_ID] ORDER BY [ADM].[Discharge_Date])#(lf)      ,[Admission_Counter] = 1#(lf)#(lf)INTO #TEMP_OUTPUT#(lf)FROM #TEMP_ADMISSIONS AS [ADM]#(lf)#(lf)OUTER APPLY (#(lf)             SELECT TOP 1 [ACG].[Patient_Need_Group]#(lf)#(tab)   FROM #TEMP_ACG AS [ACG]#(lf)#(tab)   WHERE [ACG].[PseudoNHSNumber] = [ADM].[NHS_Number]#(lf)#(tab)   AND [ACG].[Month] <= [ADM].[Discharge_Date]#(lf)#(tab)   ORDER BY [ACG].[Month] DESC#(lf)/* Finds closest record before the discharge date */#(lf)#(tab)  ) AS [ACG1]#(lf)#(lf)OUTER APPLY (#(lf)             SELECT TOP 1 [ACG].[Patient_Need_Group]#(lf)             FROM #TEMP_ACG AS [ACG]#(lf)             WHERE [ACG].[PseudoNHSNumber] = [ADM].[NHS_Number]#(lf)             AND [ACG].[Month] > [ADM].[Discharge_Date]#(lf)             ORDER BY [ACG].[Month] ASC#(lf)/* Finds the closest record after the discharge date, this is for if [ACG1] is NULL */#(lf)             ) AS [ACG2]#(lf)#(lf)LEFT JOIN (#(lf)           SELECT DISTINCT [PseudoNHSNumber]#(lf)#(tab)#(tab)      ,[PracticeCode]#(lf)#(tab)                ,[DateRegistration]#(lf)#(tab)#(tab)      ,[DateDeregistration] = ISNULL([DateDeregistration], CAST(GETDATE() AS DATE))#(lf)#(lf)           FROM [CCG_Current].[PrimaryCare].[vw_Patients]#(lf)          ) AS [GP]#(lf)ON [GP].[PseudoNHSNumber] = [ADM].[NHS_Number]#(lf)AND [ADM].[Discharge_Date] BETWEEN [GP].[DateRegistration] AND [GP].[DateDeregistration]#(lf)#(lf)WHERE [ADM].[NHS_Number] IS NOT NULL#(lf)AND COALESCE([ACG1].[Patient_Need_Group], [ACG2].[Patient_Need_Group]) IS NOT NULL#(lf);#(lf)#(lf)#(lf)SELECT [NHS_Number]#(lf)      ,[Bed_Days] = CASE WHEN DATEDIFF(DAY, [Admission_Date], [Discharge_Date]) < 0 THEN 0#(lf)                         ELSE DATEDIFF(DAY, [Admission_Date], [Discharge_Date]) END#(lf)      ,[Elective_Type] = CASE WHEN [spell_admission_method] LIKE '1%' THEN 'Elective'#(lf)                              ELSE 'Non-Elective' END#(lf)      ,[Admission_Type] = CASE WHEN [spell_admission_method] LIKE '1%' THEN 'Elective'#(lf)                               WHEN [spell_admission_method] LIKE '2%' THEN 'Emergency'#(lf)#(tab)#(tab)#(tab) WHEN [spell_admission_method] LIKE '3%' AND [Patient_Age] < 55 THEN 'Maternity'#(lf)#(tab)#(tab)#(tab) WHEN [spell_admission_method] LIKE '3%' AND [Patient_Age] >= 55 THEN 'Not Known'#(lf)#(tab)#(tab)#(tab) WHEN [spell_admission_method] IN ('98', '99') THEN 'Not Known'#(lf)#(tab)#(tab)#(tab) ELSE 'Non-Elective' END#(lf)      ,[Site_Type] = CASE WHEN [Site] IN ('GLOUCESTERSHIRE ROYAL HOSPITAL', 'CHELTENHAM GENERAL HOSPITAL') THEN 'Acute'#(lf)                          WHEN [Site] IN ('STROUD GENERAL HOSPITAL', 'CIRENCESTER HOSPITAL', 'TEWKESBURY COMMUNITY HOSPITAL'#(lf)#(tab)#(tab)                     ,'FOREST OF DEAN COMMUNITY HOSPITAL', 'NORTH COTSWOLD HOSPITAL', 'VALE HOSPITAL') THEN 'Community'#(lf)#(tab)#(tab)      ELSE 'Other Provider' END#(lf)      ,[Discharge_Date]#(lf)      ,[Patient_Need_Group]#(lf)      ,[Patient_Age]#(lf)      ,[PracticeCode]#(lf)      ,[Admission_Counter] = 1#(lf)#(lf)FROM #TEMP_OUTPUT#(lf)#(lf)WHERE [RN] = 1"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,40 @@
+table Metric_Link_for_patient_level_ref
+	lineageTag: c7382dc5-a3bb-4963-b2cf-9ced0b36fe46
+
+	column 'Field Name'
+		dataType: string
+		lineageTag: dcd6e4fe-6e42-4086-b126-e8cbc52c1633
+		summarizeBy: none
+		sourceColumn: Field Name
+		sortByColumn: 'Field ID'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Field ID'
+		dataType: string
+		lineageTag: 42977c4a-f7e1-40a0-b936-d759cd268d0d
+		summarizeBy: none
+		sourceColumn: Field ID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Metric_Link_for_patient_level_ref = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = #"PPW Daily Data (Unpivoted)",
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Custom Order] <> "999")),
+				    #"Sorted Rows" = Table.Sort(#"Filtered Rows",{{"Custom Order", Order.Ascending}}),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Sorted Rows",{"Attribute", "Custom Order"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Duplicates",{{"Custom Order", "Field ID"}, {"Attribute", "Field Name"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

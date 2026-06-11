@@ -1,0 +1,434 @@
+table Outpatients
+	lineageTag: d67f5293-9a44-4c78-a5ae-5bca89a30a67
+
+	measure Ratio = CONCATENATE("1 : ", ROUND(DIVIDE(CALCULATE(COUNT('Outpatients'[Counter]), 'Outpatients'[First_Attendance_Desc] = "Follow-up appointment" ), CALCULATE(COUNT('Outpatients'[Counter]), 'Outpatients'[First_Attendance_Desc] = "First appointment" ) ), 2))
+		lineageTag: f0474f1a-9d9f-4c4d-bf84-6b75cd3d92e1
+
+	measure 'Cancel rates' = DIVIDE(CALCULATE(SUM('Outpatients'[Counter]), 'Outpatients'[Cancellation_flag] = 1), SUM('Outpatients'[Counter]))
+		lineageTag: 8c406bc0-91ac-4afd-b9a2-2cc55be754cd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'DNA rates' = DIVIDE(CALCULATE(SUM('Outpatients'[Counter]), 'Outpatients'[DNA_flag] = 1), SUM('Outpatients'[Counter]))
+		lineageTag: d195d727-2480-48d6-97f4-e564f8d3dfe6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutAppts LatestM' = CALCULATE(SUM(Outpatients[Counter]), 'Outpatients Date Table'[latest_month_flag] = 1, 'Outpatients'[Outcome_of_attendance] = "Attended")
+		formatString: 0
+		lineageTag: d111bd88-e031-4844-9200-9caadcce0f10
+
+	measure 'KPI OutAppts PreviousM' = CALCULATE(SUM(Outpatients[Counter]), 'Outpatients Date Table'[previous_month_flag]= 1, 'Outpatients'[Outcome_of_attendance] = "Attended")
+		formatString: 0
+		lineageTag: ab7253e1-a31b-4e35-931d-bf623897754b
+
+	measure 'KPI OutYTD Previous' = ```
+			
+			VAR _PreviousFY = 'Outpatients Date Table'[OPPreviousFY]
+			RETURN 
+			CALCULATE(
+			    SUM('Outpatients'[Counter]),
+			    'Outpatients Date Table'[ytd_flag] = 1,
+			    'Outpatients Date Table'[financial_year] = _PreviousFY,
+			     'Outpatients'[Outcome_of_attendance] = "Attended")
+			```
+		formatString: 0
+		lineageTag: b4b08241-7a9d-4c64-b463-be47a276935a
+
+	measure 'KPI OutYTD Latest' = ```
+			
+			VAR _CurrentFY = 'Outpatients Date Table'[OPCurrentFY]
+			RETURN 
+			CALCULATE(
+			    SUM('Outpatients'[Counter]),
+			    'Outpatients Date Table'[ytd_flag] = 1,
+			    'Outpatients Date Table'[financial_year] = _CurrentFY,
+			     'Outpatients'[Outcome_of_attendance] = "Attended")
+			```
+		formatString: 0
+		lineageTag: 29465f28-e1f7-4001-aa1e-b02d067da8db
+
+	measure 'KPI OutAppts Diff' = ([KPI OutAppts LatestM] - [KPI OutAppts PreviousM]) / [KPI OutAppts LatestM]
+		lineageTag: 8dec7269-d67d-4318-a0fa-6aef61fb3a7d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutYTD Diff' = ( [KPI OutYTD Latest] - [KPI OutYTD Previous]) / [KPI OutYTD Previous]
+		lineageTag: 3706639e-07f5-4ada-a235-918bdc30f580
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutYTD Diff Non Attended' = CALCULATE([KPI OutYTD Latest] - [KPI OutYTD Previous], Outpatients[Outcome_of_attendance] = "Did Not Attend")
+		formatString: 0
+		lineageTag: 5524625f-2767-431a-8d14-633624d8aecc
+
+	measure 'KPI OutAppts Diff Non Attended' = CALCULATE([KPI OutAppts LatestM] - [KPI OutAppts PreviousM], Outpatients[Outcome_of_attendance] = "Did Not Attend")
+		formatString: 0
+		lineageTag: 1b7e5717-d628-413b-bcc7-8d9e60b938c8
+
+	measure 'KPI OutYTD Diff First' = CALCULATE([KPI OutYTD Latest] - [KPI OutYTD Previous], Outpatients[First_Attendance_Desc] = "First appointment")
+		formatString: 0
+		lineageTag: 4e2b1f1f-05b2-41cc-8a3d-41099e035325
+
+	measure 'KPI OutAppts Diff First' = CALCULATE([KPI OutAppts LatestM] - [KPI OutAppts PreviousM], Outpatients[First_Attendance_Desc] = "First appointment")
+		formatString: 0
+		lineageTag: 7a24e0b2-22ea-45c1-8274-e65a27a0ef70
+
+	measure 'KPI OutAppts Diff Follow' = CALCULATE([KPI OutAppts LatestM] - [KPI OutAppts PreviousM], Outpatients[First_Attendance_Desc] = "Follow-up appointment")
+		formatString: 0
+		lineageTag: 23180b1c-91c4-4cfb-b881-779a6ad61c2d
+
+	measure 'KPI OutYTD Diff Follow' = CALCULATE([KPI OutYTD Latest] - [KPI OutYTD Previous], Outpatients[First_Attendance_Desc] = "Follow-up appointment")
+		formatString: 0
+		lineageTag: dcd37ac8-6aa4-47d2-a5e3-02acd67e49cb
+
+	measure 'Ratio FU' = ```
+			DIVIDE(CALCULATE(COUNT(Outpatients[Counter]), 'Outpatients'[First_Attendance_Desc] = "Follow-up appointment"), CALCULATE(COUNT(Outpatients[Counter]), 'Outpatients'[First_Attendance_Desc] = "First appointment") ) 
+			```
+		lineageTag: 18d1550f-3eb2-4699-b4c1-22751eb45ad4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutDNA% Latest Month' = CALCULATE([DNA rates], 'Outpatients Date Table'[latest_month_flag] = 1)
+		lineageTag: 2f655ecd-de93-43e1-92eb-a27b60ad9beb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutDNA% Previous Month' = CALCULATE([DNA rates], 'Outpatients Date Table'[previous_month_flag] = 1)
+		lineageTag: 1c6fb497-08fe-40d8-9bbe-154c15b859be
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutCAN Latest Month' = CALCULATE([Cancel rates], 'Outpatients Date Table'[latest_month_flag] )
+		formatString: 0
+		lineageTag: 955dc0dd-13ce-485b-8692-427c946112f8
+
+	measure 'KPI OutCAN PreviousMonth' = ```
+			CALCULATE([Cancel rates], 'Outpatients Date Table'[previous_month_flag] = 1) 
+			```
+		lineageTag: c6334afe-4140-4629-8171-fbfea113574a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Out Count Latest' = CALCULATE(SUM('Outpatients'[Counter]), 'Outpatients Date Table'[latest_month_flag] = 1)
+		formatString: 0
+		lineageTag: 4106a52a-6f1e-4db6-bef1-4ef7063e4333
+
+	measure 'KPI Out Count Previous' = CALCULATE(SUM('Outpatients'[Counter]), 'Outpatients Date Table'[previous_month_flag] = 1)
+		formatString: 0
+		lineageTag: b5b2dc04-1e51-40ef-b169-0a5dc7e66973
+
+	measure 'KPI OutDNA Diff' = ```
+			CALCULATE(([KPI Out Count Latest] - [KPI Out Count Previous]), 'Outpatients'[DNA_flag] = 1) 
+			```
+		formatString: 0
+		lineageTag: 4d7618fd-89a1-48a3-a417-541c15e52ceb
+
+	measure 'KPI OutCAN Diff' = ```
+			CALCULATE(([KPI Out Count Latest] - [KPI Out Count Previous]), 'Outpatients'[Cancellation_flag] = 1) 
+			```
+		formatString: 0
+		lineageTag: 980279d3-bb5d-4623-8bf5-da6e7f6e71a9
+
+	measure 'KPI OutDNA% Diff' = ```
+			[KPI OutDNA% Latest Month] - [KPI OutDNA% Previous Month] 
+			```
+		lineageTag: addefdf7-c2c1-4b7d-87b9-e60794f5e004
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI OutCAN% Diff' = [KPI OutCAN Latest Month] - [KPI OutCAN PreviousMonth]
+		lineageTag: fdfc7665-8b96-4921-a7a6-943a422145b8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Counter_No_Filter = CALCULATE(COUNT('Outpatients'[Counter]), REMOVEFILTERS('Outpatients'[Outcome_of_attendance]))
+		formatString: 0
+		lineageTag: 15fedf33-9441-4ca7-b0a7-ec002848cfcc
+
+	measure 'KPI OutAppts SameLastYearM' = CALCULATE(SUM(Outpatients[Counter]), 'Outpatients Date Table'[same_month_last_year_flag]= 1, 'Outpatients'[Outcome_of_attendance] = "Attended")
+		formatString: 0
+		lineageTag: c58ffe89-58e8-4890-bf24-8d2965353811
+
+	measure 'KPI OutAppts Latest12' = CALCULATE(SUM(Outpatients[Counter]), 'Outpatients Date Table'[latest_12_months_flag] = 1, 'Outpatients'[Outcome_of_attendance] = "Attended")
+		formatString: 0
+		lineageTag: a9e43f2d-ebb4-4b2f-8435-0ec7c1c88df1
+
+	measure 'KPI OutAppts Previous12' = CALCULATE(SUM(Outpatients[Counter]), 'Outpatients Date Table'[previous_12_months_flag] = 1, 'Outpatients'[Outcome_of_attendance] = "Attended")
+		formatString: 0
+		lineageTag: a99b73dc-a260-4f64-b962-8463d7e3f30e
+
+	measure 'KPI OutAppts SameLastYearM Diff' = 'Outpatients'[KPI OutAppts LatestM] - 'Outpatients'[KPI OutAppts SameLastYearM]
+		formatString: 0
+		lineageTag: 002ddfe7-0699-4b57-b054-7772c0b4aea6
+
+	measure 'KPI OutAppts 12m Diff' = 'Outpatients'[KPI OutAppts Latest12] - 'Outpatients'[KPI OutAppts Previous12]
+		formatString: 0
+		lineageTag: dc612349-8949-40a9-b584-63f62cce6644
+
+	measure Current_Month_Year = FORMAT(TODAY(), "MMMM YYYY")
+		lineageTag: 8cb51316-3235-41cc-a741-11de7149627b
+
+	measure Latest_Reporting_Date = FORMAT(MAX('Outpatients Date Table'[month_year_name]), "MMMM YYYY")
+		lineageTag: 210cf094-13cf-4197-bac7-0ce3c6556ad7
+
+	column Outcome_of_attendance
+		dataType: string
+		lineageTag: c33e3f19-4f8c-441d-9f31-87c832d73018
+		summarizeBy: none
+		sourceColumn: Outcome_of_attendance
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Main Age Band'
+		dataType: string
+		lineageTag: 3bfe1524-f73a-4618-8874-9959db838da8
+		summarizeBy: none
+		sourceColumn: Main Age Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'G&A Indicator'
+		dataType: string
+		lineageTag: a614e7c7-96ef-44e0-9ce3-76ccf8c980be
+		summarizeBy: none
+		sourceColumn: G&A Indicator
+
+		annotation SummarizationSetBy = Automatic
+
+	column Locality
+		dataType: string
+		lineageTag: c5053595-8ae1-4dfd-b6d2-85cfec962d13
+		summarizeBy: none
+		sourceColumn: Locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointment_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 9c54f285-bc74-40bb-9e44-75acc2ce3164
+		summarizeBy: none
+		sourceColumn: Appointment_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Attended_Or_Did_Not_Attend
+		dataType: string
+		lineageTag: 9c101bb2-4063-4dce-b105-70417d21f966
+		summarizeBy: none
+		sourceColumn: Attended_Or_Did_Not_Attend
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cancellation_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b8b7cca-2e09-4c58-abf2-6146207265dd
+		summarizeBy: sum
+		sourceColumn: Cancellation_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column DNA_flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 3421eb1e-3eae-4ecc-801e-1cc957f37025
+		summarizeBy: sum
+		sourceColumn: DNA_flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_CDS_Activity_Date
+		dataType: string
+		lineageTag: ae36586e-71f5-4ad8-9ae3-7d09f3bc267b
+		summarizeBy: none
+		sourceColumn: Age_at_CDS_Activity_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Treatment_Function_Code
+		dataType: string
+		lineageTag: 671678ce-4cb4-459b-a645-79d3babca802
+		summarizeBy: none
+		sourceColumn: Treatment_Function_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column PrimaryCareNetwork
+		dataType: string
+		lineageTag: 32d28325-83af-4ae6-997a-655b64ddd294
+		summarizeBy: none
+		sourceColumn: PrimaryCareNetwork
+
+		annotation SummarizationSetBy = Automatic
+
+	column Primary_Procedure_OPCS
+		dataType: string
+		lineageTag: 80928983-f133-4747-887a-454d82015347
+		summarizeBy: none
+		sourceColumn: Primary_Procedure_OPCS
+
+		annotation SummarizationSetBy = Automatic
+
+	column Main_Specialty_Code
+		dataType: string
+		lineageTag: 8ac1a028-b5be-4a46-ae81-ec75cea1cb53
+		summarizeBy: none
+		sourceColumn: Main_Specialty_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column MainSpecialtyDescription
+		dataType: string
+		lineageTag: 491f1b31-fedc-478d-bcf4-e1fdecc9029b
+		summarizeBy: none
+		sourceColumn: MainSpecialtyDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column First_Attendance_Desc
+		dataType: string
+		lineageTag: 80c85bdc-2741-443a-a271-096364d0d9df
+		summarizeBy: none
+		sourceColumn: First_Attendance_Desc
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointment_Type
+		dataType: string
+		lineageTag: f5c161e5-09e4-4fd9-9112-a1da395b3443
+		summarizeBy: none
+		sourceColumn: Appointment_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointment_Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 7543f041-e6ea-4162-b518-b96e75a01ae4
+		summarizeBy: none
+		sourceColumn: Appointment_Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Unique_CDS_identifier
+		dataType: string
+		lineageTag: a8981d64-d15a-4c56-84b8-16989fd7c596
+		summarizeBy: none
+		sourceColumn: Unique_CDS_identifier
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Pseudo_NHS
+		dataType: string
+		lineageTag: c8254d0b-e67a-4176-aa10-0ac1c771360e
+		summarizeBy: none
+		sourceColumn: Derived_Pseudo_NHS
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Practice_Derived
+		dataType: string
+		lineageTag: 1f33f008-cc91-45be-8052-f630fb8a4f6b
+		summarizeBy: none
+		sourceColumn: GP_Practice_Derived
+
+		annotation SummarizationSetBy = Automatic
+
+	column SEX
+		dataType: string
+		lineageTag: 4744e8a8-1c6b-4194-8fb6-3842a450b37e
+		summarizeBy: none
+		sourceColumn: SEX
+
+		annotation SummarizationSetBy = Automatic
+
+	column Appointment_Type_Both
+		dataType: string
+		lineageTag: 45fe78c1-4809-4ad4-aec7-f08c8c5df99e
+		summarizeBy: none
+		sourceColumn: Appointment_Type_Both
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider_Grouped
+		dataType: string
+		lineageTag: 9493189e-e759-498f-a933-53dc2712e859
+		summarizeBy: none
+		sourceColumn: Provider_Grouped
+
+		annotation SummarizationSetBy = Automatic
+
+	column Organisation_Name_Name_Of_Provider
+		dataType: string
+		lineageTag: b2067477-adb6-43da-9f73-f64164fb3186
+		summarizeBy: none
+		sourceColumn: Organisation_Name_Name_Of_Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Treatment_Function_Description
+		dataType: string
+		lineageTag: 9e269ca3-0ae4-40b7-ae9b-46b4585707c8
+		summarizeBy: none
+		sourceColumn: Treatment_Function_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority_Type
+		dataType: string
+		lineageTag: 2f972292-a683-4d6c-b425-4bdf93c2db65
+		summarizeBy: none
+		sourceColumn: Priority_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Priority_Type_Description
+		dataType: string
+		lineageTag: a6bdec4f-2cb9-4d31-8206-900fcc65685b
+		summarizeBy: none
+		sourceColumn: Priority_Type_Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referring_Organisation_Code
+		dataType: string
+		lineageTag: 5efd763c-fd9f-4b15-bac0-185b36fd5645
+		summarizeBy: none
+		sourceColumn: Referring_Organisation_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_Organisation_Code_Code_of_Commissioner
+		dataType: string
+		lineageTag: ed2baa73-0b66-4b49-b6cf-e65bc0807395
+		summarizeBy: none
+		sourceColumn: Derived_Organisation_Code_Code_of_Commissioner
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter = 1
+		formatString: 0
+		lineageTag: b736abf2-1ffd-4ba4-be18-e7a90f2324ba
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Outpatients = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ccg_current", [Query="SELECT *#(lf)FROM [PowerBI_Reporting].[EyeHealth].[tbl04_Outpatients]"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Appointment_Date", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

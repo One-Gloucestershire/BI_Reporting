@@ -1,0 +1,98 @@
+table Ref_Date
+	lineageTag: 1eac92e8-9d07-4534-9c9c-cd952e3a0386
+
+	column Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e9a5780d-efc0-4831-a2f5-4cf064e47ebc
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: 6a6a2c03-bfe4-4528-91ff-3968226f708f
+			defaultHierarchy: LocalDateTable_5734be5f-d88e-4335-aa32-7f7473636a67.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 4c1d04f8-1b7d-4a8d-b475-c58cac8a1f4f
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: FinancialMonth
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialYear
+		dataType: string
+		lineageTag: fdef3d1f-cfc4-4bbd-aa75-45d922bbc041
+		summarizeBy: none
+		sourceColumn: FinancialYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: int64
+		lineageTag: 237ad6dd-53f0-4afe-9fbf-204988c0b5d6
+		summarizeBy: sum
+		sourceColumn: YearMonth
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column FinancialMonth
+		dataType: int64
+		formatString: 0
+		lineageTag: a887672c-36fe-4b12-aa1b-96c55f594fc8
+		summarizeBy: sum
+		sourceColumn: FinancialMonth
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column FinancialQuarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 29004143-a020-4ccd-9dfe-5e79c9446551
+		summarizeBy: sum
+		sourceColumn: FinancialQuarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 4f6abdbe-3f68-4404-b653-843c4d1beea8
+		summarizeBy: none
+		sourceColumn: IsWeekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsHoliday
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 0acf3809-403d-4f95-9ee2-0855b097b7da
+		summarizeBy: none
+		sourceColumn: IsHoliday
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_Date = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Date]#(lf)      ,[MonthName] = LEFT([MonthName], 3)#(lf)      ,[FinancialYear]#(lf)      ,[YearMonth]#(lf)      ,[FinancialMonth]#(lf)      ,[FinancialQuarter]#(lf)      ,[IsWeekend]#(lf)      ,[IsHoliday]#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_DateLookup]#(lf)#(lf)  WHERE [Date] >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 12,0)#(lf)  AND [Date] < DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,35 @@
+table REF_Cinapsis_Specialist_Outcome
+	lineageTag: fbe98e2d-1ba8-40c7-b2cd-1d071976fc83
+
+	column specialist_outcome
+		dataType: string
+		lineageTag: 15a8f133-360c-4dbc-89c8-e81a8f90e9f8
+		summarizeBy: none
+		sourceColumn: specialist_outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column specialist_outcome_group
+		dataType: string
+		lineageTag: 9fa73b9c-e513-40bc-bde2-7e84ae8e423b
+		summarizeBy: none
+		sourceColumn: specialist_outcome_group
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Cinapsis_Specialist_Outcome = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = #"3.cinapsis_frailty_assessment",
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"specialist_outcome", "specialist_outcome_group"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Duplicates", each ([specialist_outcome] <> ""))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,131 @@
+table PLS_Geography_Secondary
+	lineageTag: 42a6e54e-8532-4eb8-9c93-0eb350627b3b
+
+	measure 'PLS_Geography Secondary Selected Option' =
+			
+			
+			VAR DistrictSelected = SELECTEDVALUE('PLS_Geography_Secondary'[DistrictDescription])
+			VAR WardSelected = SELECTEDVALUE('PLS_Geography_Secondary'[WardName])
+			RETURN
+			IF (
+			    NOT ISBLANK(WardSelected),
+			        WardSelected,
+			    IF (
+			        NOT ISBLANK(DistrictSelected),
+			            DistrictSelected,
+			            "Any Gloucestershire Residence"
+			    )
+			)
+		lineageTag: f80109f4-9819-4175-9ade-3ac36b57823b
+
+	column PseudoNHSNumber
+		dataType: string
+		lineageTag: 14fa1de9-37b0-4341-8019-b5d7958d1de0
+		summarizeBy: none
+		sourceColumn: PseudoNHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOACode
+		dataType: string
+		lineageTag: 12f69401-c549-4f41-b45f-f19d823bf40d
+		summarizeBy: none
+		sourceColumn: LSOACode
+
+		annotation SummarizationSetBy = Automatic
+
+	column WardName
+		dataType: string
+		lineageTag: b75fd172-ca33-487e-a7df-d507173db3d4
+		summarizeBy: none
+		sourceColumn: WardName
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistrictDescription
+		dataType: string
+		lineageTag: 6e39974b-111b-4a47-bcb7-1de78681d4e3
+		summarizeBy: none
+		sourceColumn: DistrictDescription
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralUrbanClassification
+		dataType: string
+		lineageTag: b797b5ef-4845-464d-b3d8-fd8df56e37c9
+		summarizeBy: none
+		sourceColumn: RuralUrbanClassification
+
+		annotation SummarizationSetBy = Automatic
+
+	column RuralurbanFlag
+		dataType: string
+		lineageTag: 0a47091c-315d-43fa-b29f-4d0c9ba5dcae
+		summarizeBy: none
+		sourceColumn: RuralurbanFlag
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_England_Decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 89b55ef7-65a3-42e2-a324-1ecbb8477d83
+		summarizeBy: none
+		sourceColumn: IMD_England_Decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column IMD_Gloucester_Decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 5c677f4b-85bb-4022-b952-478a03013c37
+		summarizeBy: none
+		sourceColumn: IMD_Gloucester_Decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 24872cf4-0cd2-4132-8eca-1654f4ecec3f
+		summarizeBy: none
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedIsLivingAlone
+		dataType: int64
+		formatString: 0
+		lineageTag: 1761dc0a-c15d-4979-b390-09e7d373e41c
+		summarizeBy: none
+		sourceColumn: DerivedIsLivingAlone
+
+		annotation SummarizationSetBy = Automatic
+
+	column DerivedIsLivingInCareHome
+		dataType: int64
+		formatString: 0
+		lineageTag: c78697d4-cba1-4644-ba9f-a98ea84631e8
+		summarizeBy: none
+		sourceColumn: DerivedIsLivingInCareHome
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountyofResidence
+		dataType: string
+		lineageTag: 5939febc-f358-4d42-aecb-f479cae3b34e
+		summarizeBy: none
+		sourceColumn: CountyofResidence
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PLS_Geography_Secondary = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="  SELECT DISTINCT [PseudoNHSNumber]#(lf)                 ,[LSOACode]#(lf)#(tab)       ,[WardName]#(lf)#(tab)       ,[DistrictDescription]#(lf)#(tab)       ,[RuralUrbanClassification]#(lf)#(tab)       ,[RuralurbanFlag]#(lf)#(tab)       ,[IMD_England_Decile] = [IMDNationalDecile]#(lf)#(tab)       ,[IMD_Gloucester_Decile] = [IMDCountyDecile]#(lf)#(tab)       ,[Core20Flag]#(lf)#(tab)       ,[DerivedIsLivingAlone]#(lf)#(tab)       ,[DerivedIsLivingInCareHome]#(lf)#(tab)       ,[CountyofResidence]#(lf)#(lf)  FROM [ICB_Products].[Patient].[vw_IMD_and_Geography]"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

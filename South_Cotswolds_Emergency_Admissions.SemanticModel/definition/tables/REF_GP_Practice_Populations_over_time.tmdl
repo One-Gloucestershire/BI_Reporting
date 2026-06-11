@@ -1,0 +1,2678 @@
+table REF_GP_Practice_Populations_over_time
+	lineageTag: 06fe48b5-e759-4587-86bb-9859b0c35532
+
+	measure Latest_census_in_population_over_time_dataset = ```
+			
+			 calculate(MAX(REF_GP_Practice_Populations_over_time[Census_Date])
+			 ,all(REF_Date))
+			```
+		formatString: Mmmm yyyy
+		lineageTag: 7220594c-52a7-4ecc-a4ad-f2b6de95e3aa
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure Total_moderately_frail_population_current = ```
+			
+			VAR Latest_available_census = [Latest_census_in_population_over_time_dataset]
+			return 
+			
+			calculate(DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+			,REF_GP_Practice_Populations_over_time[moderate_frailty] = 1
+			,REF_GP_Practice_Populations_over_time[Census_Date] = Latest_available_census)
+			```
+		formatString: 0
+		lineageTag: bc917d2e-5788-460b-904c-b5ff52da5047
+
+	measure Total_65+_Population_Current =
+			
+			
+			var latest_census_date = [Latest_census_in_population_over_time_dataset]
+			RETURN
+			
+			IF( CALCULATE(DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(REF_EFI_Category)
+			 ,all(ref_date)
+			 ) <6,0, -- SUPRESSED
+			
+			 CALCULATE(DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(REF_EFI_Category)
+			 ,all(ref_date)
+			 )
+			)
+		formatString: 0
+		lineageTag: f83c7afa-6ae3-4c31-aac9-afdd09451fd3
+
+	measure mild_frailty_%_growth = DIVIDE(SUM(REF_GP_Practice_Populations_over_time[mild_frailty]) - [mild_frailty_py], [mild_frailty_py])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 9de1b8c4-e4e8-44b7-a32b-32e5308a9cba
+
+	measure moderate_frailty_%_growth = DIVIDE(SUM('REF_GP_Practice_Populations_over_time'[moderate_frailty]) - [moderate_frailty_py], [moderate_frailty_py])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b0c82307-1886-40a3-933a-c03e074a45a7
+
+	measure severe_frailty_%_growth = DIVIDE(SUM(REF_GP_Practice_Populations_over_time[severe_frailty]) - [severe_frailty_py], [severe_frailty_py])
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 11fb1ffb-36a5-444a-8d2f-efe67515b6d8
+
+	measure Total_65+_Population_ot =
+			
+			DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+		formatString: 0
+		lineageTag: 0e57311f-7e92-4532-8b05-b81eca391d93
+
+	measure mild_frailty_pm = SUM(REF_GP_Practice_Populations_over_time[mild_frailty])-CALCULATE(SUM(REF_GP_Practice_Populations_over_time[mild_frailty]),PREVIOUSMONTH(REF_Date[date]))
+		formatString: 0
+		lineageTag: ecd63c47-5f8c-4d51-9c70-89fd75be8bf5
+
+	measure moderate_frailty_pm = SUM(REF_GP_Practice_Populations_over_time[moderate_frailty])-CALCULATE(SUM(REF_GP_Practice_Populations_over_time[moderate_frailty]),PREVIOUSMONTH(REF_Date[date]))
+		formatString: 0
+		lineageTag: 4b8af8db-50b0-41d9-9795-afc38195e92a
+
+	measure severe_frailty_pm = SUM(REF_GP_Practice_Populations_over_time[severe_frailty])-CALCULATE(SUM(REF_GP_Practice_Populations_over_time[severe_frailty]),PREVIOUSMONTH(REF_Date[date]))
+		formatString: 0
+		lineageTag: b6a7c713-fc2a-4c7e-89ac-138840c45ec9
+
+	measure Mildly_frail_population_current = ```
+			
+			var Latest_census_in_population_over_time_dataset = [Latest_census_in_population_over_time_dataset]
+			var mildly_fail_population_current = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] = Latest_census_in_population_over_time_dataset)
+			
+			RETURN
+			mildly_fail_population_current
+			
+			--IF(mildly_fail_population_current<6,0, -- supressed
+			
+			--if(isblank(mildly_fail_population_current),0,mildly_fail_population_current)
+			--)
+			```
+		formatString: #,0
+		lineageTag: ea9b6870-447c-4faa-a3dc-4a12c8e05efd
+
+	measure Moderately_frail_population_current = ```
+			
+			var Latest_census_in_population_over_time_dataset = [Latest_census_in_population_over_time_dataset]
+			var moderately_fail_population_current = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] = Latest_census_in_population_over_time_dataset)
+			
+			RETURN
+			moderately_fail_population_current 
+			--if(moderately_fail_population_current<6,0, -- supressed
+			--if(isblank(moderately_fail_population_current),0,moderately_fail_population_current)
+			--)
+			```
+		formatString: #,0
+		lineageTag: 6c70a793-ef65-4ac3-83be-727a4f30b14a
+
+	measure severely_frail_population_current = ```
+			
+			var Latest_census_in_population_over_time_dataset = [Latest_census_in_population_over_time_dataset]
+			var severe_fail_population_current = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] = Latest_census_in_population_over_time_dataset)
+			
+			RETURN
+			severe_fail_population_current
+			
+			--IF(severe_fail_population_current<6,0, --SUPPRESSED
+			--if(isblank(severe_fail_population_current),0,severe_fail_population_current)
+			--)
+			```
+		formatString: #,0
+		lineageTag: cd4cd320-660a-4254-9b7b-99707616f9d3
+
+	measure GP_population_65+_current = ```
+			
+			Var latest_census_date_in_population = [Latest_census_in_population_over_time_dataset]
+			var GP_population = 
+			calculate(DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date_in_population)
+			
+			RETURN
+			if(GP_population<6,0,
+			
+			if(isblank(GP_population),0,GP_population)
+			
+			)
+			```
+		formatString: #,0
+		lineageTag: ee7832cd-6b07-43e0-8f02-61b425523f1f
+
+	measure Midly_frail_per_1000_per_FY = (REF_GP_Practice_Populations_over_time[Mild_frailty_population_end_of_each_fy]/REF_GP_Practice_Populations_over_time[Total_65+_Population_at_the_end_of_each_fy])*1000
+		lineageTag: 9f3c0f9d-0ea4-45cf-8ed5-d9411613be7f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Moderately_frail_per_1000_per_FY = (REF_GP_Practice_Populations_over_time[Moderate_frailty_population_end_of_each_fy]/REF_GP_Practice_Populations_over_time[Total_65+_Population_at_the_end_of_each_fy])*1000
+		lineageTag: 9f2aa893-f978-428c-a8f1-976d1785b1db
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Severely_frail_per_1000_per_FY = (REF_GP_Practice_Populations_over_time[Severe_frailty_population_end_of_each_fy]/REF_GP_Practice_Populations_over_time[Total_65+_Population_at_the_end_of_each_fy])*1000
+		lineageTag: 09b2e1b5-4d55-4c2a-9b12-6099ecc5282c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Only_relevant_fields_in_GP_Population_dataset = countrows(REF_GP_Practice_Populations_over_time)
+		formatString: 0
+		lineageTag: 91fa659d-09e0-4ca1-8e6b-25c18c69e9e7
+
+	measure severe_frailty_per_1000_current =
+			
+			
+			
+			IF([severely_frail_population_current]<6,0, -- supressed
+			
+			([severely_frail_population_current]/[Total_65+_Population_Current])*1000
+			
+			)
+		formatString: 0.0
+		lineageTag: 523f311b-4020-4e9a-9f43-165141c65b71
+
+	measure New_indication_mild_frailty =
+			calculate(sum('REF_Frail_Patients_Deficits'[counter])
+			,USERELATIONSHIP(REF_Date[date],'REF_Frail_Patients_Deficits'[mild_frailty_date]))
+		formatString: 0
+		lineageTag: 68bd11e3-4119-4869-a179-076e7af53a07
+
+	measure New_indication_moderate_frailty =
+			calculate(sum('REF_Frail_Patients_Deficits'[counter])
+			,USERELATIONSHIP(REF_Date[date],'REF_Frail_Patients_Deficits'[moderate_frailty_date]))
+		formatString: 0
+		lineageTag: da496b71-9e3d-4345-9293-c8f44e590adf
+
+	measure New_indication_severe_frailty =
+			calculate(sum('REF_Frail_Patients_Deficits'[counter])
+			,USERELATIONSHIP(REF_Date[date],'REF_Frail_Patients_Deficits'[severe_frailty_date]))
+		formatString: 0
+		lineageTag: d6310b37-e6a3-4530-9686-c5c039001ee3
+
+	measure mild_frailty_per_1000_current =
+			
+			
+			If([mildly_frail_population_current]<6,0, --suppressed
+			
+			([mildly_frail_population_current]/[Total_65+_Population_Current])*1000
+			
+			)
+		formatString: 0.0
+		lineageTag: 91654e6d-d63f-4177-8f6c-19a23e1b2cd5
+
+	measure locality_mildly_frail_per_1000 =
+			
+			--var mildly_frail_population_current = [Total_Mildly_Frail_Population_Current]
+			--var locality_populations_65_plus = sum(REF_GP_Practice_Populations_over_time[Total 65+ Population]
+			IF(REF_GP_Practice_Populations_over_time[Mildly_frail_population_current]<6,0, -- SUPPRESSED
+			iferror((REF_GP_Practice_Populations_over_time[Mildly_frail_population_current]/REF_GP_Practice_Populations_over_time[Total_65+_Population_Current]*1000),0)
+			)
+		formatString: 0.00
+		lineageTag: 4431895e-dd1c-44e4-8535-894e2279c5ca
+
+	measure locality_moderately_frail_per_1000 =
+			
+			
+			if(REF_GP_Practice_Populations_over_time[Total_moderately_frail_population_current]<6,0, -- suppressed
+			iferror((REF_GP_Practice_Populations_over_time[Total_moderately_frail_population_current]/REF_GP_Practice_Populations_over_time[Total_65+_Population_Current]*1000),0)
+			)
+		lineageTag: b20b360a-c706-4b50-ba4f-37123e6bc0da
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure locality_severely_frail_per_1000 =
+			
+			
+			IF(REF_GP_Practice_Populations_over_time[severely_frail_population_current]<6,0, -- SUPPRESSED
+			iferror((REF_GP_Practice_Populations_over_time[severely_frail_population_current]/REF_GP_Practice_Populations_over_time[Total_65+_Population_Current]*1000),0)
+			)
+		formatString: 0.00
+		lineageTag: e15a51c6-d205-4be6-ac2c-f578a64cc090
+
+	measure moderate_frailty_per_1000_current =
+			
+			
+			IF([moderately_frail_population_current]<6,0, --suppressed
+			
+			([moderately_frail_population_current]/[Total_65+_Population_Current])*1000
+			
+			)
+		formatString: 0.0
+		lineageTag: 05ed398d-af76-4993-bc71-a500ba611c44
+
+	measure dementia_prevalence_current_census =
+			
+			IF([dementia_current] <6,0, -- SUPPRESSED
+			
+			[dementia_current]/'REF_GP_Practice_Populations_over_time'[total_frail_population_current]
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: 29200579-6e4b-4b0f-baef-a8bc348508f5
+
+	measure dementia_current =
+			
+			
+			var latest_census_date = [Latest_census_in_population_over_time_dataset]
+			RETURN
+			IF( CALCULATE(SUM(REF_GP_Practice_Populations_over_time[QOF_Dementia_Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )<6,0, -- suppressed
+			
+			
+			 CALCULATE(SUM(REF_GP_Practice_Populations_over_time[QOF_Dementia_Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )
+			
+			)
+		formatString: 0
+		lineageTag: 752061e9-f07e-4cf5-9eef-6547258fc0dc
+
+	measure Average_time_mild_to_moderate_years = ```
+			
+			 calculate(average('REF_Frail_Patients_Deficits'[mild_to_moderate_time_years])
+			 ,USERELATIONSHIP(REF_Date[date],'REF_Frail_Patients_Deficits'[moderate_frailty_date]))
+			```
+		lineageTag: 01f75531-1d9f-4834-8ef6-7f197cc20d9f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Average_time_moderate_to_severe = ```
+			
+			 calculate(average('REF_Frail_Patients_Deficits'[moderate_to_severe_time_years])
+			 ,USERELATIONSHIP(REF_Date[date],'REF_Frail_Patients_Deficits'[severe_frailty_date]))
+			```
+		lineageTag: 54d119ca-9f18-46ab-8066-ad5bc045a5e6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure core20_current =
+			
+			
+			var latest_census_date = [Latest_census_in_population_over_time_dataset]
+			RETURN
+			
+			
+			IF( CALCULATE(SUM(REF_GP_Practice_Populations_over_time[Core20Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )<6,0, -- suppressed
+			
+			 CALCULATE(SUM(REF_GP_Practice_Populations_over_time[Core20Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )
+			
+			)
+		formatString: 0
+		lineageTag: 31a740ab-6661-415b-8507-6ab72d7e8f6d
+
+	measure core20_prevalence =
+			
+			
+			IF([core20_current]<6,0, -- SUPPRESSED
+			
+			[core20_current]/'REF_GP_Practice_Populations_over_time'[total_frail_population_current]
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: d0b9b213-ab59-4cf4-8238-b6a5b47c198b
+
+	measure living_in_care_home_current =
+			
+			
+			var latest_census_date = [Latest_census_in_population_over_time_dataset]
+			RETURN
+			IF( CALCULATE(SUM(REF_GP_Practice_Populations_over_time[living_in_a_care_home])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )<6,0,--SUPPRESSED
+			
+			
+			 CALCULATE(SUM(REF_GP_Practice_Populations_over_time[living_in_a_care_home])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )
+			)
+		formatString: 0
+		lineageTag: 0c6aa4ed-ffb5-4694-aea1-e6a5f68693cd
+
+	measure living_in_care_home_prevalence =
+			
+			
+			IF([living_in_care_home_current]<6,0, -- SUPPRESSED
+			
+			[living_in_care_home_current]/'REF_GP_Practice_Populations_over_time'[total_frail_population_current]
+			
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: eb910f3b-2da8-4d5f-9e1f-faf84a621a7a
+
+	measure smoking_current =
+			
+			
+			var latest_census_date = [Latest_census_in_population_over_time_dataset]
+			RETURN
+			
+			IF(CALCULATE(SUM(REF_GP_Practice_Populations_over_time[Smoking_Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )<6,0, -- suppressed
+			
+			 CALCULATE(SUM(REF_GP_Practice_Populations_over_time[Smoking_Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = latest_census_date
+			 ,all(ref_date)
+			 )
+			)
+		formatString: 0
+		lineageTag: 8d954436-23da-4dc4-b188-562abbf3290c
+
+	measure smoking_prevalence =
+			
+			
+			IF([smoking_current]<6,0, -- suppressed
+			[smoking_current]/REF_GP_Practice_Populations_over_time[total_frail_population_current]
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: 539bd345-f031-4fbf-a5db-dc6c82bb5846
+
+	measure total_frail_population_current =
+			
+			VAR Total_frail_population = (REF_GP_Practice_Populations_over_time[Mildly_frail_population_current] + REF_GP_Practice_Populations_over_time[Moderately_frail_population_current] + REF_GP_Practice_Populations_over_time[severely_frail_population_current])
+			
+			RETURN
+			IF(Total_frail_population<6,0, -- suppressed
+			IF(ISBLANK(Total_frail_population),0,Total_frail_population)
+			
+			)
+		formatString: #,0
+		lineageTag: 53d6cd35-8917-4f49-9e7d-c57cbd6ec330
+
+	measure total_fraility_prevalence_current =
+			
+			
+			if([total_frail_population_current]<6,0,
+			
+			([total_frail_population_current]/[GP_population_65+_current])
+			
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 7bcd892b-8506-4288-b080-a0f3aaeda97d
+
+	measure Only_relevant_fields_in_Frailty_over_time_slicers = ```
+			countrows(REF_GP_Practice_Populations_over_time) 
+			```
+		formatString: 0
+		lineageTag: da0325dd-3040-4f71-bd24-060bff3973a4
+
+	measure TEXT_Month_Year_Latest_census_in_population_over_time_dataset = ```
+			
+			 calculate(MAX(REF_GP_Practice_Populations_over_time[Census_Date])
+			 ,all(REF_Date))
+			```
+		formatString: Mmmm yyyy
+		lineageTag: 7768d09e-3086-4dfb-a990-762c84dd8865
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure total_fraility_rate_per_1000 = IFERROR((([total_frail_population_current]/[GP_population_65+_current])*1000),0)
+		lineageTag: 3feb4e24-c492-4fcd-8b2d-723a5423e305
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Mild_frailty_population_end_of_each_fy =
+			
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			
+			RETURN
+			
+			calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			,REF_Date[date] = latest_month_in_range
+			)
+		formatString: 0
+		lineageTag: 4a75d01f-007a-4c3d-ac70-1d994bbad507
+
+	measure Total_65+_Population_at_the_end_of_each_fy = ```
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			RETURN
+			
+			calculate(DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+			,REF_Date[date] = latest_month_in_range)
+			
+			```
+		formatString: 0
+		lineageTag: 116f5f0e-6b5a-4a7e-a048-8fc3a9170d70
+
+	measure Moderate_frailty_population_end_of_each_fy = ```
+			
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			
+			RETURN
+			
+			calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			,REF_Date[date] = latest_month_in_range)
+			
+			```
+		formatString: 0
+		lineageTag: 08da8770-7328-4bd5-ab22-baabfdf9487f
+
+	measure Severe_frailty_population_end_of_each_fy = ```
+			
+			
+			var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			RETURN
+			
+			calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			,REF_Date[date] = latest_month_in_range)
+			
+			```
+		formatString: 0
+		lineageTag: 5033d892-c6a4-4e06-b5af-8948b03959cf
+
+	measure mild_frailty_py = ```
+			CALCULATE(SUM('REF_GP_Practice_Populations_over_time'[mild_frailty]), SAMEPERIODLASTYEAR(REF_Date[date]))  
+			```
+		formatString: 0
+		lineageTag: 4132e508-b051-4614-a350-75d24acc8c5b
+
+	measure moderate_frailty_py = ```
+			CALCULATE(SUM('REF_GP_Practice_Populations_over_time'[moderate_frailty]), SAMEPERIODLASTYEAR(REF_Date[date]))  
+			```
+		formatString: 0
+		lineageTag: 48805427-1dee-426a-89ff-6d13b7664769
+
+	measure severe_frailty_py = ```
+			CALCULATE(SUM('REF_GP_Practice_Populations_over_time'[severe_frailty]), SAMEPERIODLASTYEAR(REF_Date[date]))  
+			```
+		formatString: 0
+		lineageTag: 59e9b1ae-ef0b-43f8-bb5f-16dbdea7a304
+
+	measure total_frail_per_1000_ot = ([total_frail_population_ot]/[Total_65+_Population_ot])*1000
+		formatString: 0.0
+		lineageTag: a56cc2ed-29e5-4992-9ba1-30a9a3201d01
+
+	measure mildly_frail_per_1000_ot = CALCULATE((SUM(REF_GP_Practice_Populations_over_time[mild_frailty]))/([Total_65+_Population_ot]))*1000
+		lineageTag: b01d91a7-0810-4889-a1e6-10b7ea7708f3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure moderately_frail_per_1000_ot = CALCULATE((SUM(REF_GP_Practice_Populations_over_time[moderate_frailty]))/([Total_65+_Population_ot]))*1000
+		formatString: 0.0
+		lineageTag: bbe7627b-3235-40b7-ba67-8768403db7ce
+
+	measure severely_frail_per_1000_ot = CALCULATE((SUM(REF_GP_Practice_Populations_over_time[severe_frailty]))/([Total_65+_Population_ot]))*1000
+		lineageTag: 5a8d0b89-b138-4237-9864-00f0e29fb865
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure mild_frailty_variance = SUM('3.frail_population_over_time'[Mild_Frailty]) - [mild_frailty_py]
+		formatString: 0
+		lineageTag: 1f03f91f-c7e5-4a09-bbff-155fafac031e
+
+	measure total_frail_population_ot = SUM(REF_GP_Practice_Populations_over_time[mild_frailty]) + sum(REF_GP_Practice_Populations_over_time[moderate_frailty]) + SUM(REF_GP_Practice_Populations_over_time[severe_frailty])
+		formatString: 0
+		lineageTag: dedb88f8-473e-4068-8b3c-e5f60102e4d9
+
+	measure previous_census_in_population_over_time_dataset =
+			
+			VAR latest_date_in_dataset = CALCULATE(
+			    MAX(REF_GP_Practice_Populations_over_time[Census_Date]),
+			    ALL(REF_GP_Practice_Populations_over_time)
+			)
+			VAR previous_month_end_date = EOMONTH(latest_date_in_dataset, -1)
+			VAR previous_month_in_dataset = CALCULATE(
+			    MAX(REF_GP_Practice_Populations_over_time[Census_Date]),
+			    REF_GP_Practice_Populations_over_time[Census_Date] <= previous_month_end_date,
+			    REF_GP_Practice_Populations_over_time[Census_Date] >= EOMONTH(previous_month_end_date, -1) + 1
+			)
+			RETURN previous_month_in_dataset
+		formatString: MMMM YYYY
+		lineageTag: 61b4c215-ef0c-41ec-9547-55f01790a0bc
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	measure GP_population_65+_previous_census = ```
+			
+			Var previous_census_date_in_population_ = [previous_census_in_population_over_time_dataset]
+			var GP_population = 
+			calculate(DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] = previous_census_date_in_population_)
+			
+			RETURN
+			
+			if(GP_population<6,0, --supressed
+			
+			if(isblank(GP_population),0,GP_population)
+			
+			)
+			```
+		formatString: 0
+		lineageTag: 00d97c85-7005-4ede-ae82-c0900362009a
+
+	measure Mildly_frail_population_previous_census = ```
+			
+			var previous_census_in_population_over_time_dataset_temp = [previous_census_in_population_over_time_dataset]
+			var mildly_fail_population_previous = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] =previous_census_in_population_over_time_dataset_temp)
+			
+			RETURN
+			IF(mildly_fail_population_previous<6,0, --SUPRESSED
+			
+			if(isblank(mildly_fail_population_previous),0,mildly_fail_population_previous)
+			
+			)
+			```
+		formatString: 0
+		lineageTag: 17f02917-def1-4626-bdfe-aa4ed744043d
+
+	measure Moderate_frail_population_previous_census = ```
+			
+			var previous_census_in_population_over_time_dataset_temp = [previous_census_in_population_over_time_dataset]
+			var moderate_fail_population_previous = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] =previous_census_in_population_over_time_dataset_temp)
+			
+			RETURN
+			
+			IF(moderate_fail_population_previous<6,0, -- suppressed
+			if(isblank(moderate_fail_population_previous),0,moderate_fail_population_previous)
+			)
+			```
+		formatString: 0
+		lineageTag: d9db2f40-388c-43b9-83f6-7b9d90e9808b
+
+	measure severe_frail_population_previous_census = ```
+			
+			var previous_census_in_population_over_time_dataset_temp = [previous_census_in_population_over_time_dataset]
+			var severe_fail_population_previous = 
+			calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			,all(REF_Date)
+			,REF_GP_Practice_Populations_over_time[Census_Date] =previous_census_in_population_over_time_dataset_temp)
+			
+			RETURN
+			if(severe_fail_population_previous<6,0, -- suppressed
+			if(isblank(severe_fail_population_previous),0,severe_fail_population_previous)
+			)
+			```
+		formatString: 0
+		lineageTag: 5da8b439-670d-432d-a81f-9762cd28231a
+
+	measure total_frail_population_previous_census =
+			
+			VAR Total_frail_population_previous_census_temp = (REF_GP_Practice_Populations_over_time[Mildly_frail_population_previous_census] + REF_GP_Practice_Populations_over_time[Moderate_frail_population_previous_census] + REF_GP_Practice_Populations_over_time[severe_frail_population_previous_census])
+			
+			RETURN
+			IF(Total_frail_population_previous_census_temp<6,0, --suppressed
+			IF(ISBLANK(Total_frail_population_previous_census_temp),0,Total_frail_population_previous_census_temp)
+			)
+		formatString: #,0
+		lineageTag: 6319d0f8-08c4-49ce-9bd2-b3ab8b670b42
+
+	measure total_fraility_prevalence_previous_census =
+			
+			
+			IF([total_frail_population_previous_census]<6,0,
+			([total_frail_population_previous_census]/[GP_population_65+_previous_census])
+			
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: 3f0d6e8a-1e13-4dc0-bfec-dd8aeb295f38
+
+	measure living_in_care_home_previous =
+			
+			
+			var previous_census_date = [previous_census_in_population_over_time_dataset]
+			RETURN
+			
+			 CALCULATE(SUM(REF_GP_Practice_Populations_over_time[living_in_a_care_home])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = previous_census_date
+			 ,all(ref_date)
+			 )
+		formatString: 0
+		lineageTag: 3ec7b1f7-75dd-45dd-b936-fc9828f1e86c
+
+	measure living_in_care_home_previous_prevalence =
+			
+			
+			
+			IF([living_in_care_home_previous]<6,0, -- suppressed
+			
+			[living_in_care_home_previous]/'REF_GP_Practice_Populations_over_time'[total_frail_population_previous_census]
+			
+			)
+		lineageTag: 97068c60-63dd-484a-9e87-ebdbf5601378
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure dementia_previous_census =
+			
+			
+			var previous_census_date = [previous_census_in_population_over_time_dataset]
+			RETURN
+			
+			 CALCULATE(SUM(REF_GP_Practice_Populations_over_time[QOF_Dementia_Flag])
+			 ,REF_GP_Practice_Populations_over_time[Census_Date] = previous_census_date
+			 ,all(ref_date)
+			 )
+		formatString: 0
+		lineageTag: 349de9ea-8d0b-4f56-9c87-ded2790eb51e
+
+	measure dementia_prevalence_previous_census =
+			
+			IF([dementia_previous_census]<6,0, -- SUPPRESSED
+			
+			[dementia_previous_census]/'REF_GP_Practice_Populations_over_time'[total_frail_population_previous_census]
+			)
+		lineageTag: 3d68421f-a40c-49bf-87e7-fe4143ac1542
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure TEXT_frail_population_Gloucestershire_selected_or_not = ```
+			
+			IF(
+			    ISFILTERED(REF_GP_Practice),
+			    "selection",
+			    "Gloucestershire"
+			) 
+			```
+		lineageTag: c8d61e2d-1a28-40f2-9cf5-afdda47f754a
+
+	measure Confidence_Limits_Upper_Mild_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Mildly_frail_population_current]
+			VAR DenominatorVariable = [Total_65+_Population_Current]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation for Upper Bound
+			RETURN
+			
+			if(CountVariable<6,0, -- SUPPRESSED
+			
+			IFERROR(
+			IF(
+			 CountVariable < 10, 
+			iferror( (CHISQ.INV(1 - (0.5 - ConfidenceLevel / 200), 2*CountVariable+2) / 2),
+			 BLANK()), 
+			(CountVariable + 1) * (1 - 1 / (9 * (CountVariable + 1)) + (ApproxNORM_INV / (3 * SQRT(CountVariable + 1))))^3
+			) / DenominatorVariable * ScalingFactor 
+			,BLANK())
+			)
+			    
+			```
+		displayFolder: Confidence_Intervals_Frail_Population_Sheet
+		lineageTag: 9d1cd7d2-3dc4-49c7-9ef8-ead7a69c9cd0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Lower_Mild_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Mildly_frail_population_current]
+			VAR DenominatorVariable = [Total_65+_Population_Current]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation
+			RETURN
+			
+			if(CountVariable<6,0, -- SUPPRESSED
+			
+			 IFERROR(IF(
+			 CountVariable < 10, 
+			IFERROR( (CHISQ.INV(1 - (0.5 + ConfidenceLevel / 200), 2 * CountVariable) / 2),
+			 BLANK())
+			 
+			, CountVariable * (1 - 1 / (9 * CountVariable) - (ApproxNORM_INV / (3 * SQRT(CountVariable))))^3
+			 )
+			 / DenominatorVariable * ScalingFactor,BLANK()
+			
+			
+			
+			    )
+			)
+			```
+		displayFolder: Confidence_Intervals_Frail_Population_Sheet
+		lineageTag: 37ef240e-14c2-4b84-8ee2-85775c0f01f2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Lower_Moderate_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Moderately_frail_population_current]
+			VAR DenominatorVariable = [Total_65+_Population_Current]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation
+			RETURN
+			if(CountVariable<6,0, -- SUPPRESSED
+			
+			 IFERROR(IF(
+			 CountVariable < 10, 
+			IFERROR( (CHISQ.INV(1 - (0.5 + ConfidenceLevel / 200), 2 * CountVariable) / 2),
+			 BLANK())
+			 
+			, CountVariable * (1 - 1 / (9 * CountVariable) - (ApproxNORM_INV / (3 * SQRT(CountVariable))))^3
+			 )
+			 / DenominatorVariable * ScalingFactor,BLANK()
+			
+			
+			
+			    )
+			)
+			```
+		displayFolder: Confidence_Intervals_Frail_Population_Sheet
+		lineageTag: 673547c0-afdc-4072-a66e-2c782d806807
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Upper_Moderate_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [Moderately_frail_population_current]
+			VAR DenominatorVariable = [Total_65+_Population_Current]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation for Upper Bound
+			RETURN
+			if(CountVariable<6,0, -- SUPPRESSED
+			
+			IFERROR(
+			IF(
+			 CountVariable < 10, 
+			iferror( (CHISQ.INV(1 - (0.5 - ConfidenceLevel / 200), 2*CountVariable+2) / 2),
+			 BLANK()), 
+			(CountVariable + 1) * (1 - 1 / (9 * (CountVariable + 1)) + (ApproxNORM_INV / (3 * SQRT(CountVariable + 1))))^3
+			) / DenominatorVariable * ScalingFactor 
+			,BLANK())
+			)
+			```
+		displayFolder: Confidence_Intervals_Frail_Population_Sheet
+		lineageTag: 7ff62c9c-bd1c-4eb4-a916-24ca70364fc0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Lower_Severe_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [severely_frail_population_current]
+			VAR DenominatorVariable = [Total_65+_Population_Current]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation
+			RETURN
+			
+			if(CountVariable<6,0, -- SUPPRESSED
+			
+			 IFERROR(IF(
+			 CountVariable < 10, 
+			IFERROR( (CHISQ.INV(1 - (0.5 + ConfidenceLevel / 200), 2 * CountVariable) / 2),
+			 BLANK())
+			 
+			, CountVariable * (1 - 1 / (9 * CountVariable) - (ApproxNORM_INV / (3 * SQRT(CountVariable))))^3
+			 )
+			 / DenominatorVariable * ScalingFactor,BLANK()
+			
+			
+			
+			    )
+			)
+			```
+		displayFolder: Confidence_Intervals_Frail_Population_Sheet
+		lineageTag: 22b9ccaf-3843-4c2b-916d-39c24bce661e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Confidence_Limits_Upper_Severe_Frailty_Rate_per_1000 = ```
+			VAR CountVariable = [severely_frail_population_current]
+			VAR DenominatorVariable = [Total_65+_Population_Current]
+			VAR ConfidenceLevel = 95
+			VAR ScalingFactor = 1000
+			// Approximate the Inverse of the Standard Normal Distribution
+			VAR ApproxNORM_INV = 
+			IF(
+			 ConfidenceLevel = 95, 
+			1.9599639845400500, // 95% confidence level
+			 IF(
+			 ConfidenceLevel = 90, 
+			1.645, // 90% confidence level
+			 1.28 // 80% confidence level as an example
+			 )
+			 )
+			// Byars Calculation for Upper Bound
+			RETURN
+			
+			if(CountVariable<6,0, -- SUPPRESSED
+			IFERROR(
+			IF(
+			 CountVariable < 10, 
+			iferror( (CHISQ.INV(1 - (0.5 - ConfidenceLevel / 200), 2*CountVariable+2) / 2),
+			 BLANK()), 
+			(CountVariable + 1) * (1 - 1 / (9 * (CountVariable + 1)) + (ApproxNORM_INV / (3 * SQRT(CountVariable + 1))))^3
+			) / DenominatorVariable * ScalingFactor 
+			,BLANK())
+			)
+			```
+		displayFolder: Confidence_Intervals_Frail_Population_Sheet
+		lineageTag: 0b3f884f-b4a6-4e29-9f42-1abfeeda16ea
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Frail_population_IMD_age_standaradisation_mild frailty rate per 1000 population' = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			        
+			        RETURN 
+			        mildly_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			       
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			 ,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			        RETURN 
+			        mildly_frail_glos_populations_at_yearmonth_end,
+			
+			
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_mildly_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_mildly_fail_populations_at_year_end
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			    )
+			    ))
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		formatString: 0.00000
+		displayFolder: Frail_population_IMD_age_standaradisation  rate per 1000 population
+		lineageTag: 0aafbae2-9f4f-46b1-9060-7d510e9b6ae7
+
+	measure Frail_population_IMD_moderate_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var    moderate_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			    
+			        RETURN 
+			        moderate_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			        
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Moderate_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        
+			        )
+			        
+			        
+			        RETURN 
+			       CALCULATE(Moderate_frail_glos_populations_at_yearmonth_end
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        ,
+			         
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			          
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_moderate_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			         
+			         RETURN 
+			
+			       
+			         Gloucestershire_moderate_fail_populations_at_year_end
+			    
+			 
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_IMD_age_standaradisation  rate per 1000 population
+		lineageTag: 52d3fea9-5ff0-43a9-bca4-7f1f33ef07cf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Frailty_Population_IMD_severe_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var    severe_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			        
+			        RETURN 
+			        severe_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			        
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Severe_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			        RETURN 
+			       CALCULATE(severe_frail_glos_populations_at_yearmonth_end
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        
+			        ),
+			         
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_severe_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_severe_fail_populations_at_year_end
+			,REMOVEFILTERS(REF_GP_Practice)
+			 ,REMOVEFILTERS(REF_LSOA[DistrictName])
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			    )
+			    ))
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_IMD_age_standaradisation  rate per 1000 population
+		lineageTag: 7bd89b04-879b-431f-9727-5555095bd03d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure total_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events", 
+			         [total_frail_population_current],
+			        "Total_Local_Population", REF_GP_Practice_Populations_over_time[Total_65+_Population_Current], -- set your local population figure
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			            CALCULATE(
+			                REF_GP_Practice_Populations_over_time[total_frail_population_current],
+			        REMOVEFILTERS(REF_GP_Practice)
+			    -- ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			            ),
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			                REF_GP_Practice_Populations_over_time[Total_65+_Population_Current],
+			                REMOVEFILTERS(REF_GP_Practice)
+			    -- ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			            )
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		lineageTag: 2fdbdccf-0625-4b89-8f88-7a39a774115a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure TEST_AGE_STANDARD_County_65+_Mild_populaion = ```
+			
+			
+			
+			
+			
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Moderate_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			        ,REMOVEFILTERS(REF_GP_Practice)
+			        ,ALL(REF_EFI_Category)
+			        )
+			        
+			        RETURN 
+			      Moderate_frail_glos_populations_at_yearmonth_end
+			
+			   
+			```
+		formatString: 0
+		lineageTag: ccfbd9ee-7d65-4716-b640-1a35e908ebbc
+
+	measure 'Frail_population_Ethnicity_age_standaradisation_mild frailty rate per 1000 population' = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			        
+			        RETURN 
+			        mildly_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			       
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			    --    ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			        RETURN 
+			        mildly_frail_glos_populations_at_yearmonth_end,
+			
+			
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_mildly_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			    --    ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_mildly_fail_populations_at_year_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			  --      ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			    )
+			    ))
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_Ethnicity_age_standaradisation rate per 1000 population
+		lineageTag: cfecdac9-3583-483c-8001-d1b639e0c31a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Frail_population_Ethnicity_moderate_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var    moderate_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			    
+			        RETURN 
+			        moderate_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			        
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Moderate_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			     --   ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        
+			        )
+			        
+			        
+			        RETURN 
+			       CALCULATE(Moderate_frail_glos_populations_at_yearmonth_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			    --    ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        ,
+			         
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			          
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_moderate_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			    --    ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			         
+			         RETURN 
+			
+			       
+			         Gloucestershire_moderate_fail_populations_at_year_end
+			    
+			 
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_Ethnicity_age_standaradisation rate per 1000 population
+		lineageTag: 272b86b6-5700-43be-8027-2e9700d1b99c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Frailty_Population_Ethnicity_severe_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var    severe_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			        
+			        RETURN 
+			        severe_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			        
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Severe_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			    --    ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			        RETURN 
+			       CALCULATE(severe_frail_glos_populations_at_yearmonth_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			   --     ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        
+			        ),
+			         
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_severe_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			     --   ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_severe_fail_populations_at_year_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			   --     ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			    ))
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_Ethnicity_age_standaradisation rate per 1000 population
+		lineageTag: e0be5ce2-0428-4d44-a27b-6b420ea674f3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Frail_population_age_standaradisation_mild frailty rate per 1000 population' = ```
+			
+			
+			 // =========================================================================
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			        
+			        RETURN 
+			        mildly_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			       
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var mildly_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			        RETURN 
+			        mildly_frail_glos_populations_at_yearmonth_end,
+			
+			
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_mildly_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_mildly_fail_populations_at_year_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			    )
+			    ))
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_age_standaradisation_mild frailty rate per 1000 population
+		lineageTag: 239bae75-e1e0-43c6-87d2-cec4195d2f13
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Frail_population_moderate_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			// Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var    moderate_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			    
+			        RETURN 
+			        moderate_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			        
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Moderate_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[moderate_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        
+			        )
+			        
+			        
+			        RETURN 
+			       CALCULATE(Moderate_frail_glos_populations_at_yearmonth_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        ,
+			         
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			          
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_moderate_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			     ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			         
+			         RETURN 
+			
+			       
+			         Gloucestershire_moderate_fail_populations_at_year_end
+			    
+			 
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_age_standaradisation_mild frailty rate per 1000 population
+		lineageTag: fd23c9bc-80cf-4b12-824b-c203853c8bab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Frailty_Population_severe_frailty_age_standardised_rate_per_1000 = ```
+			
+			
+			 // Stage 1: Create your base table to house your virtual pivot table 
+			// =========================================================================   
+			
+			VAR SummaryTable =
+			    SUMMARIZE(
+			        REF_Age_Bands,
+			        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+			        "Total_Local_Observed_Events",
+			        
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var    severe_frail_local_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range)
+			        
+			        RETURN 
+			        severe_frail_local_populations_at_yearmonth_end,
+			        -- set you local observed measure 
+			        "Total_Local_Population",
+			         
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var total_local_65plus = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range)
+			         
+			         RETURN
+			         
+			       total_local_65plus, -- set your local population figure
+			        
+			        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+			         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Severe_frail_glos_populations_at_yearmonth_end = 
+			        calculate(sum(REF_GP_Practice_Populations_over_time[severe_frailty])
+			        ,REF_Date[date] = latest_month_in_range
+			     ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			        
+			        RETURN 
+			       CALCULATE(severe_frail_glos_populations_at_yearmonth_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        
+			        ),
+			         
+			        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+			            CALCULATE(
+			
+			        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+			        var Gloucestershire_severe_fail_populations_at_year_end = 
+			        calculate([Total_65+_Population_ot]
+			        ,REF_Date[date] = latest_month_in_range
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			        )
+			         
+			         RETURN 
+			
+			         CALCULATE(Gloucestershire_severe_fail_populations_at_year_end
+			   ,REMOVEFILTERS(REF_GP_Practice)
+			     ,REMOVEFILTERS(REF_LSOA)
+			        ,REMOVEFILTERS(REF_Ethnicity)
+			        ,REMOVEFILTERS(REF_EFI_Category)
+			        ,REMOVEFILTERS(REF_Gender)
+			        ,REMOVEFILTERS(REF_admission_method)
+			     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+			        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+			,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+			        ,REMOVEFILTERS(REF_ED_Department_Type)
+				,REMOVEFILTERS(REF_Site)
+				,REMOVEFILTERS(REF_Providers)
+			--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+			    ))
+			    )
+			    
+			 // =========================================================================
+			// Stage 2: Add in fields for reference events 
+			// =========================================================================   
+			
+			
+			VAR SummaryTable_with_reference_rates =
+			    ADDCOLUMNS(
+			        SummaryTable,
+			        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+			    )
+			
+			 // =========================================================================
+			// Stage 3: Add in field for local expected events per age group 
+			// =========================================================================   
+			
+			
+			
+			VAR SummaryTable_with_reference_rates_and_local_expected_events =
+			    ADDCOLUMNS(
+			        SummaryTable_with_reference_rates,
+			        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+			    )
+			
+			 // ==============================================================================================================================
+			// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+			// ================================================================================================================================
+			
+			VAR total_observed = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+			
+			VAR total_expected = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+			
+			VAR total_reference_events = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+			
+			VAR total_reference_population = 
+			    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+			
+			  // ==============================================================================================================================
+			// Stage 5: Calculate the reference crude rate 
+			// ================================================================================================================================
+			   
+			VAR reference_crude_rate = 
+			    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+			
+			// ==============================================================================================================================
+			// Stage 6: Calculate the age standarised rate
+			// ================================================================================================================================
+			
+			VAR age_standardised_rate = 
+			    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+			
+			RETURN
+			age_standardised_rate
+			
+			```
+		displayFolder: Frail_population_age_standaradisation_mild frailty rate per 1000 population
+		lineageTag: a4dc532b-c344-4f67-ae5d-ffc7abdf7c0f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Total_Population_ot = DISTINCTCOUNT(REF_GP_Practice_Populations_over_time[Derived_NHS_Number])
+		formatString: 0
+		lineageTag: 08332298-86f7-4eac-91ac-fff6b902fa93
+
+	column Census_Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b120acfb-cfdf-4682-a6b7-0238f3aefe04
+		summarizeBy: none
+		sourceColumn: Census_Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Derived_NHS_Number
+		dataType: string
+		lineageTag: 7f625cc3-14cd-472f-844b-7a32aac5759d
+		summarizeBy: none
+		sourceColumn: Derived_NHS_Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Practice_Code
+		dataType: string
+		lineageTag: 349e2086-d4a6-4244-b6e3-1156e241dd2c
+		summarizeBy: none
+		sourceColumn: Practice_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age_at_census
+		dataType: int64
+		formatString: 0
+		lineageTag: 01be22e3-4694-488a-86f1-64b301219bbe
+		summarizeBy: none
+		sourceColumn: Age_at_census
+
+		annotation SummarizationSetBy = Automatic
+
+	column LSOA
+		dataType: string
+		lineageTag: 5b743c89-d663-4cfe-8b81-50090babd2c9
+		summarizeBy: none
+		sourceColumn: LSOA
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_code
+		dataType: string
+		lineageTag: 9abb3ae0-807c-4630-80ba-cedb3497efcd
+		summarizeBy: none
+		sourceColumn: Ethnicity_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 4dd219fd-2a44-4669-91fb-d9363b201788
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		lineageTag: 0682fffc-67bb-4313-8cca-f1e5b9ae1718
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column mild_frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: ad8a1faa-fad5-4297-8684-75da51308b44
+		summarizeBy: sum
+		sourceColumn: mild_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column moderate_frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: 9790d161-bd72-4b6f-bf72-bb87c79d78f1
+		summarizeBy: sum
+		sourceColumn: moderate_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column severe_frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: 66c7d438-d848-44c1-8de4-1c240acdea59
+		summarizeBy: sum
+		sourceColumn: severe_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column QOF_Dementia_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e9f9b7f-34b4-4d84-8fe1-84ce00950124
+		summarizeBy: sum
+		sourceColumn: QOF_Dementia_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column living_in_a_care_home
+		dataType: int64
+		formatString: 0
+		lineageTag: 9428f9c1-9cb6-4366-9195-623538c509df
+		summarizeBy: sum
+		sourceColumn: living_in_a_care_home
+
+		annotation SummarizationSetBy = Automatic
+
+	column Core20Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 6eac20f0-84ec-4920-bb4d-7986be6c21a6
+		summarizeBy: sum
+		sourceColumn: Core20Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	column Smoking_Flag
+		dataType: int64
+		formatString: 0
+		lineageTag: 341c2bfd-c9ee-4950-98e2-23a619bd91b5
+		summarizeBy: sum
+		sourceColumn: Smoking_Flag
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_GP_Practice_Populations_over_time-3b9bd41f-4e8e-4093-bdac-9292b9e34415 = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="----------------------------------#(lf)-------- POPULATION TABLE --------#(lf)----------------------------------#(lf)#(lf)SELECT #(lf)Census_Date#(lf),Derived_NHS_Number#(lf),[Practice_Code] = gp.PrimaryCareProvider#(lf),Age_at_census#(lf),LSOA#(lf),Ethnicity_code#(lf),Gender#(lf),efi_category#(lf),QOF_Dementia_Flag#(lf),living_in_a_care_home#(lf),Core20Flag#(lf),Smoking_Flag#(lf),[mild_frailty] = case when efi_category = 'Mild Frailty' then 1 END #(lf),[moderate_frailty] = case when efi_category = 'Moderate Frailty' then 1 END#(lf),[severe_frailty] = case when efi_category = 'Severe Frailty' then 1 END#(lf)#(lf)#(lf)#(lf)FROM PowerBI_Reporting.AgeingWell.tbl02_Proactive_Whiteboard_Registered_Population_Over_Time as gp#(lf)left join CCG_Reference.Reference.vw_GPPractice as gp_ref on GP.PrimaryCareProvider = gp_ref.OrganisationCode#(lf)#(lf)WHERE cast(gp.Age_at_census as int) >= 65#(lf)and cast(gp.Census_Date as date) between '2021-04-01' and  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 2, 0) -- gets the start date of 2 months ago #(lf)and gp.Derived_Registered_CCG like '11M%'#(lf)#(lf)order by gp.Census_Date,gp.Age_at_census#(lf)#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

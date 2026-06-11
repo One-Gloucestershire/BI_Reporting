@@ -1,0 +1,88 @@
+table PES
+	lineageTag: 25873a5a-22b1-4b7e-9d7a-c576384437cb
+
+	measure Counter_No_Filter_PES = CALCULATE(COUNT('PES'[Counter]), REMOVEFILTERS('PES'[Provider]))
+		formatString: 0
+		lineageTag: 8a5b27ba-176f-489c-8332-5881b708bab8
+
+	column Financial_Year
+		dataType: string
+		lineageTag: 64652f2f-1482-495f-997c-06be549be6a0
+		summarizeBy: none
+		sourceColumn: Financial_Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: dateTime
+		formatString: mmmm yyyy
+		lineageTag: ffa15b5a-202b-46a6-87b0-e91b55cd4e42
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column Service
+		dataType: string
+		lineageTag: 3b1c53c9-36f5-4259-8fe2-3b24435ef6ba
+		summarizeBy: none
+		sourceColumn: Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sub Service'
+		dataType: string
+		lineageTag: 2ad44cc7-bf53-47d3-8cbc-d5e8f7d80efb
+		summarizeBy: none
+		sourceColumn: Sub Service
+
+		annotation SummarizationSetBy = Automatic
+
+	column Provider
+		dataType: string
+		lineageTag: cda2c412-d1f9-4481-85ed-8a1e6eb206b2
+		summarizeBy: none
+		sourceColumn: Provider
+
+		annotation SummarizationSetBy = Automatic
+
+	column Counter
+		dataType: int64
+		formatString: 0
+		lineageTag: fa8d12cc-21ce-4ade-bec6-a7e7cd04896c
+		summarizeBy: sum
+		sourceColumn: Counter
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Financial_Year Hierarchy'
+		lineageTag: 2dc7a767-ed3a-4d00-bf4b-9c94648148bf
+
+		level Financial_Year
+			lineageTag: 9e432aae-481c-4f6c-b594-0f5fff47df69
+			column: Financial_Year
+
+		level Month
+			lineageTag: e53d29e3-2af4-4821-b793-2198caf202b7
+			column: Month
+
+	partition PES = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("M:\Info\CPG\Eye Health (Ophthalmology)\Dashboard\PBI_PES_Metrics_Input_Sheet_2025_08.xlsx"), null, true),
+				    #"Input Sheet_Sheet" = Source{[Item="Input Sheet",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Input Sheet_Sheet", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Financial_Year", type text}, {"Month", type date}, {"Service", type text}, {"Sub Service", type text}, {"Provider", type text}, {"Counter", Int64.Type}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type",null,"All Providers",Replacer.ReplaceValue,{"Provider"})
+				in
+				    #"Replaced Value"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

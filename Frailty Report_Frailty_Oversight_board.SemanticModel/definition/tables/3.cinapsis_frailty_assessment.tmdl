@@ -1,0 +1,422 @@
+table '3.cinapsis_frailty_assessment'
+	lineageTag: 0238992a-e541-492c-8e5d-80ddc5c61bce
+
+	measure Cinapsis_Small_Number_Suppression = IF(sum('3.cinapsis_frailty_assessment'[counter])<6,0,sum('3.cinapsis_frailty_assessment'[counter]))
+		formatString: #,0
+		lineageTag: 13fa2f33-96b4-4c22-953f-b73fd1cb21ae
+
+	measure TITLE_Cinanpsis_Frailty_Assessment_Service_Pathway_Rolling_3_Month = ```
+			
+			"Cinapsis Frailty Assessment Service Pathway - " & 
+			FORMAT(MIN(REF_Date[Rolling_3_months_start_date]), "MMM YY") & 
+			" to " & 
+			FORMAT(MAX(REF_Date[Rolling_3_months_end_date]), "MMM YY")
+			```
+		lineageTag: 6190fb1e-ec48-48c0-b573-6464c148efb1
+
+	measure Only_relevant_fields_in_cinapsis_slicers = countrows('3.cinapsis_frailty_assessment')
+		formatString: 0
+		lineageTag: 77d62570-bdce-442d-832c-a2f098700a4b
+
+	measure average_total_cinapsis_calls = ```
+			
+			VAR  FilteredTable = 
+			    CALCULATETABLE(
+			        REF_Date,
+			        ALL(REF_Date),
+			        REF_Date[SPC_Flag] = 1
+			    )
+			
+			VAR SummaryTable = 
+			    SUMMARIZE(
+			       FilteredTable,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        "Total_cinapsis_calls", if(isblank(sum('3.cinapsis_frailty_assessment'[counter])),0,sum('3.cinapsis_frailty_assessment'[counter])))
+			
+			VAR AverageRate =
+			    AVERAGEX(
+			        SummaryTable,
+			        [Total_cinapsis_calls]
+			    )
+			RETURN
+			    AverageRate
+			```
+		formatString: 0.0000000000
+		lineageTag: 5a07a668-512b-4d51-9f63-7a3a1d9cbde3
+
+	measure SPC_Standard_deviation_total_cinapsis_calls = ```
+			
+			VAR  FilteredTable = 
+			    CALCULATETABLE(
+			        REF_Date,
+			        ALL(REF_Date),
+			        REF_Date[SPC_Flag] = 1 ---- Setup your SPC data range to calculate the mean/UCL/LCL 
+			    )
+			
+			VAR SummaryTable = 
+			    SUMMARIZE(
+			       FilteredTable,
+			        REF_Date[financial_year],
+			        REF_Date[month_name],
+			        "total_cinapsis_calls", if(isblank(sum('3.cinapsis_frailty_assessment'[counter])),0,sum('3.cinapsis_frailty_assessment'[counter]))) --- CHANGE THIS TO YOUR MEASURE
+			
+			VAR stand_dev =
+			    STDEVX.S(
+			        SummaryTable,
+			        [total_cinapsis_calls]
+			    )
+			RETURN
+			stand_dev
+			```
+		formatString: 0.0000000000
+		lineageTag: 560f6bbe-3eb2-4a95-863d-564c683b0381
+
+	measure UCL_total_cinapsis_calls =
+			
+			
+			[average_total_cinapsis_calls] +([SPC_Standard_deviation_total_cinapsis_calls]*3)
+		lineageTag: 6738b11c-1420-437b-ba41-afb7d18ffac7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure LCL_total_cinapsis_calls = if([average_total_cinapsis_calls] -([SPC_Standard_deviation_total_cinapsis_calls]*3) <0,0,[average_total_cinapsis_calls] -([SPC_Standard_deviation_total_cinapsis_calls]*3) )
+		lineageTag: 3192d40d-10cd-4382-8fd5-beeba0fa5f94
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure conditional_formatting_total_cinapsis_calls_above_below_limits =
+			
+			
+			if(sum('3.cinapsis_frailty_assessment'[counter])<6,0, --SUPPRESSED
+			
+			IF
+			(
+			OR
+			(
+			sum('3.cinapsis_frailty_assessment'[counter])
+			<
+			[LCL_total_cinapsis_calls]
+			,
+			sum('3.cinapsis_frailty_assessment'[counter])
+			>
+			[UCL_total_cinapsis_calls]
+			),
+			sum('3.cinapsis_frailty_assessment'[counter])
+			,
+			BLANK
+			())
+			
+			)
+		formatString: 0
+		lineageTag: 144d6e6d-5b5c-44b2-a6a6-3cd424fafa93
+
+	column request_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 28eb0b63-40bf-477a-a826-661d2c6474e1
+		summarizeBy: none
+		sourceColumn: request_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column counter
+		dataType: int64
+		formatString: 0
+		lineageTag: e64ec183-fed6-4bb1-b874-73a3d9c5b4f6
+		summarizeBy: sum
+		sourceColumn: counter
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 1da0d1a9-4e6b-4ded-a4bd-6f071f091c9c
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column primary_care_network
+		dataType: string
+		lineageTag: bcfbb9d2-a6b0-4929-a99e-fb54bb1e4086
+		summarizeBy: none
+		sourceColumn: primary_care_network
+
+		annotation SummarizationSetBy = Automatic
+
+	column specialist_outcome
+		dataType: string
+		lineageTag: 31e77152-4423-49fe-b5bc-8d072d1689ea
+		summarizeBy: none
+		sourceColumn: specialist_outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	column specialist_outcome_group
+		dataType: string
+		lineageTag: 11c6f243-361d-4b47-8e92-bcef402530b6
+		summarizeBy: none
+		sourceColumn: specialist_outcome_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column pathway
+		dataType: string
+		lineageTag: 9455df85-fc9e-47fd-90b0-ccfdfc64950f
+		summarizeBy: none
+		sourceColumn: pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	column type
+		dataType: string
+		lineageTag: e7cfc052-c7fd-4fdd-bc0d-aaad19045006
+		summarizeBy: none
+		sourceColumn: type
+
+		annotation SummarizationSetBy = Automatic
+
+	column case_id
+		dataType: string
+		lineageTag: ec57bc07-63d4-45f7-9fbc-36d9adef8c16
+		summarizeBy: none
+		sourceColumn: case_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisation_code_of_caller
+		dataType: string
+		lineageTag: 630e113c-fc0a-439b-8bf6-c13e8d029fb0
+		summarizeBy: none
+		sourceColumn: organisation_code_of_caller
+
+		annotation SummarizationSetBy = Automatic
+
+	column organisation_name_of_caller
+		dataType: string
+		lineageTag: 10f7a703-73ce-43d8-871d-55ae33c20ee9
+		summarizeBy: none
+		sourceColumn: organisation_name_of_caller
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 650541f1-0c0b-4f71-8359-989eb5d3d53a
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column request_time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 3e6241bd-ec78-487b-b8e8-45b4a08a2cf0
+		summarizeBy: none
+		sourceColumn: request_time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column service
+		dataType: string
+		lineageTag: a3363f79-0e45-4b97-a271-78f370df5c36
+		summarizeBy: none
+		sourceColumn: service
+
+		annotation SummarizationSetBy = Automatic
+
+	column main_specialty_code
+		dataType: int64
+		formatString: 0
+		lineageTag: dbbdebd0-763e-41a4-ae4d-90390f295287
+		summarizeBy: sum
+		sourceColumn: main_specialty_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_name
+		dataType: string
+		lineageTag: b6e1c421-55f3-4afa-92cc-29f2bea3a520
+		summarizeBy: none
+		sourceColumn: provider_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 704cede8-db20-4223-b045-a9b392c9610f
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 1df1af36-0e62-4651-85d9-8a43a0732f46
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_month
+		dataType: int64
+		formatString: 0
+		lineageTag: 34c57e88-f71a-4585-8891-28361f35048a
+		summarizeBy: sum
+		sourceColumn: financial_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column financial_year
+		dataType: string
+		lineageTag: 75c6871a-55c4-4325-bf49-57a63d5d1f23
+		summarizeBy: none
+		sourceColumn: financial_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		lineageTag: a48c666e-9d8c-403f-8af8-7d9b957fa32b
+		summarizeBy: sum
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column main_specialty_description
+		dataType: string
+		lineageTag: 71e57578-24aa-43ba-9e89-94db990c3f07
+		summarizeBy: none
+		sourceColumn: main_specialty_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: f1dc8b00-92c0-4445-8e88-04d2e71fde8e
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column call_answered
+		dataType: string
+		lineageTag: 3cc9f406-524c-4f3c-b856-e436ac9b6b28
+		summarizeBy: none
+		sourceColumn: call_answered
+
+		annotation SummarizationSetBy = Automatic
+
+	column NHSNumber
+		dataType: string
+		lineageTag: 21a72a58-a016-4ce2-8d18-5b63d3115fea
+		summarizeBy: none
+		sourceColumn: NHSNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ethnicity_Code
+		dataType: string
+		lineageTag: 2538ae12-66b0-48fc-b0a2-38295ddc5de5
+		summarizeBy: none
+		sourceColumn: Ethnicity_Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		lineageTag: 57d79ffe-3603-4e64-b313-48c6041639f4
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column EFI_Category
+		dataType: string
+		lineageTag: 258b2431-10d7-4e27-859f-3aa01626aa5a
+		summarizeBy: none
+		sourceColumn: EFI_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column mild_frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: 4023ee67-6d19-4f84-973b-bb20800b25c1
+		summarizeBy: sum
+		sourceColumn: mild_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column moderate_frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: be42a87a-9401-4a15-b4e1-d3109e5ba38b
+		summarizeBy: sum
+		sourceColumn: moderate_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column severe_frailty
+		dataType: int64
+		formatString: 0
+		lineageTag: 06343c6e-cbe2-40ed-8e01-a76553607cbd
+		summarizeBy: sum
+		sourceColumn: severe_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column frailty_specialist_outcome_group
+		dataType: string
+		lineageTag: e175ddd8-6748-4281-9323-f7965140b3a5
+		summarizeBy: none
+		sourceColumn: frailty_specialist_outcome_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 88702d48-f2fa-4986-9156-01245cb9a23d
+		summarizeBy: none
+		sourceColumn: Last_Updated
+
+		variation Variation
+			isDefault
+			relationship: 930983ad-d82d-4f2e-9c67-f26a559cf790
+			defaultHierarchy: LocalDateTable_9086acc5-16cd-451a-835b-92bc291e69f1.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Last_Updated_FAS
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2b0ce0bc-2527-4252-9699-9fcd1aa14117
+		summarizeBy: none
+		sourceColumn: Last_Updated_FAS
+
+		variation Variation
+			isDefault
+			relationship: 5595f874-35c4-4044-bc0d-735a3aacd6c0
+			defaultHierarchy: LocalDateTable_4b53bd2c-2fda-4ba4-9a06-28bb4b434639.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '3.cinapsis_frailty_assessment-92b8fe2d-8f0d-4dd7-8ae4-e0a601972358' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select *#(lf)from [PowerBI_Reporting].[AgeingWell].[tbl11_Frailty_CPG_FAS]"]),
+				    #"Amended blank pathways to 'Not Recorded'" = Table.ReplaceValue(Source,"","Not Recorded",Replacer.ReplaceValue,{"pathway"})
+				in
+				    #"Amended blank pathways to 'Not Recorded'"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

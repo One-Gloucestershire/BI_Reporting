@@ -1,0 +1,25 @@
+table 'Patient Link Ref'
+	lineageTag: 79bc6056-0a65-42f5-9bab-3310e663afbe
+
+	column 'NHS Number (Pseudo)'
+		dataType: string
+		lineageTag: 61a7f8fd-9520-4f0f-aeae-6234c1f69405
+		summarizeBy: none
+		sourceColumn: NHS Number (Pseudo)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Patient Link Ref' = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="select distinct nhs_number#(lf)from PowerBI_Reporting.AgeingWell.tbl18_Daily_Proactive_Whiteboard_Cohort#(lf)#(lf)"]),
+				    #"Renamed Columns" = Table.RenameColumns(Source,{{"nhs_number", "NHS Number (Pseudo)"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,28 @@
+table REF_Cinapsis_Pathways
+	lineageTag: aa5a0b21-5937-4aae-a684-10e61c674529
+
+	column pathway
+		dataType: string
+		lineageTag: bf8b855e-6d29-4f6c-af3e-c6e0987635ed
+		summarizeBy: none
+		sourceColumn: pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	partition REF_Cinapsis_Pathways = m
+		mode: import
+		queryGroup: 'Reference Tables'
+		source =
+				let
+				    Source = #"3.cinapsis_frailty_assessment",
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"pathway"}),
+				    #"Cleaned Text (Remove trailing special characters)" = Table.TransformColumns(#"Removed Other Columns",{{"pathway", Text.Clean, type text}}),
+				    #"Removed Duplicates" = Table.Distinct(#"Cleaned Text (Remove trailing special characters)"),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Duplicates", each ([pathway] = "Chronic diarrhoea & vomiting >2 weeks duration" or [pathway] = "Dementia Diagnosis" or [pathway] = "Deteriorating diabetic foot" or [pathway] = "Dialysis patient" or [pathway] = "Diarrhoea and vomiting" or [pathway] = "Diarrhoea and/or vomiting" or [pathway] = "Discharged Community HF Service patient, OR Confirmed diagnosis, previously not under the Community HF Service" or [pathway] = "Metabolic (including diabetes)" or [pathway] = "Undiagnosed breathlessness" or [pathway] = "Undiagnosed cough"))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

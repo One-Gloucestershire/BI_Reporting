@@ -1,0 +1,57 @@
+table Ref_Age
+	lineageTag: 0f203236-c283-42c4-a176-7237b5028f0e
+
+	column Age
+		dataType: int64
+		formatString: 0
+		lineageTag: a0814698-3d91-419d-ab7c-f0b167e4e28d
+		summarizeBy: none
+		sourceColumn: Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 5YR_Age_Band
+		dataType: string
+		lineageTag: 38a36b2f-542b-47f8-a4c8-f2da98c46acf
+		summarizeBy: none
+		sourceColumn: 5YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column 10YR_Age_Band
+		dataType: string
+		lineageTag: dd0c8831-6e5b-4a6c-b683-bc69b27b4d40
+		summarizeBy: none
+		sourceColumn: 10YR_Age_Band
+
+		annotation SummarizationSetBy = Automatic
+
+	column Wider_Age_Bands
+		dataType: string
+		lineageTag: 55ce25b7-7bf5-4c07-b053-b887f9145cd5
+		summarizeBy: none
+		sourceColumn: Wider_Age_Bands
+
+		annotation SummarizationSetBy = Automatic
+
+	column Wider_Age_Bands_Order
+		dataType: int64
+		formatString: 0
+		lineageTag: 1bb62cf2-a1cc-46f6-b079-52cf0faefd10
+		summarizeBy: none
+		sourceColumn: Wider_Age_Bands_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ref_Age = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="SELECT [Age]#(lf)      ,[5YR_Age_Band]#(lf)      ,[10YR_Age_Band]#(lf)      ,[Wider_Age_Bands] = CASE WHEN [Age] BETWEEN 0 AND 17 THEN '< 18'#(lf)                                WHEN [Age] BETWEEN 18 AND 64 THEN '18-64'#(lf)#(tab)#(tab)#(tab)  WHEN [Age] BETWEEN 65 AND 84 THEN '65-84'#(lf)#(tab)#(tab)#(tab)  WHEN [Age] <= 85 THEN '85+'#(lf)#(tab)#(tab)#(tab)  ELSE NULL END#(lf)      ,[Wider_Age_Bands_Order] = CASE WHEN [Age] BETWEEN 0 AND 17 THEN 1#(lf)                                      WHEN [Age] BETWEEN 18 AND 64 THEN 2#(lf)                                      WHEN [Age] BETWEEN 65 AND 84 THEN 3#(lf)                                      WHEN [Age] <= 85 THEN 4#(lf)                                      ELSE NULL END#(lf)#(lf)FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)#(lf)WHERE [Age] BETWEEN 0 AND 120"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

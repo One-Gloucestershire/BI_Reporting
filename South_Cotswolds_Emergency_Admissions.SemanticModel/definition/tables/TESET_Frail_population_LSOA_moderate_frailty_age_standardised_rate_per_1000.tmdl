@@ -1,0 +1,246 @@
+table TESET_Frail_population_LSOA_moderate_frailty_age_standardised_rate_per_1000
+	lineageTag: a9342d91-407e-450c-900f-7077645c2ec1
+
+	column 5YR_Age_Band
+		lineageTag: f1190714-814c-476c-bbab-07b7d686d072
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: REF_Age_Bands[5YR_Age_Band]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_Local_Observed_Events
+		formatString: 0
+		lineageTag: 737a8c57-b4fd-476d-83f1-cf2270fe5f1e
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total_Local_Observed_Events]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Total_Local_Population
+		formatString: 0
+		lineageTag: 6e714604-c959-4bef-ae07-81a344811f09
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Total_Local_Population]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reference_Events
+		formatString: 0
+		lineageTag: 076721fa-d148-48ed-9f41-92b3b235755d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Reference_Events]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reference_Population
+		formatString: 0
+		lineageTag: d6fced19-f8f1-4c7e-9636-b465d51f5051
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Reference_Population]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reference_Rates
+		lineageTag: 4fee5248-13b0-4d40-8a0d-a1937fc92c8c
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Reference_Rates]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Local_Expected_Events
+		lineageTag: 241ba643-5383-4587-a9df-ee83f48bd69b
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Local_Expected_Events]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition TESET_Frail_population_LSOA_moderate_frailty_age_standardised_rate_per_1000 = calculated
+		mode: import
+		source = ```
+				
+				
+				
+				
+				 // =========================================================================
+				// Stage 1: Create your base table to house your virtual pivot table 
+				// =========================================================================   
+				
+				VAR SummaryTable =
+				    SUMMARIZE(
+				        REF_Age_Bands,
+				        REF_Age_Bands[5YR_Age_Band], -- set your age bands 
+				        "Total_Local_Observed_Events",  
+				
+				           calculate([mildly_frail_ed_att]
+				    
+				        ,REF_GP_Practice[Reporting_PrimaryCareNetwork] = "Cheltenham Central"
+				        ,REF_Date[financial_year] = "2024/25"), -- set you local observed measure 
+				        "Total_Local_Population",
+				         
+				         var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+				        var mildly_fail_populations_at_year_end = 
+				        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+				        ,REF_Date[date] = latest_month_in_range
+				        ,REF_GP_Practice[Reporting_PrimaryCareNetwork] = "Cheltenham Central"
+				        ,REF_Date[financial_year] = "2024/25")
+				         
+				         RETURN
+				         
+				       mildly_fail_populations_at_year_end, -- set your local population figure
+				        "Reference_Events",  -- set you number of reference events i.e total Gloucestershire events
+				            CALCULATE(
+				                '1.ed_attendances'[mildly_frail_ed_att],
+				            REMOVEFILTERS(REF_GP_Practice)
+				     ,REMOVEFILTERS(REF_LSOA)
+				        ,REMOVEFILTERS(REF_Ethnicity)
+				        ,REMOVEFILTERS(REF_EFI_Category)
+				        ,REMOVEFILTERS(REF_Gender)
+				        ,REMOVEFILTERS(REF_admission_method)
+				     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+				        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+				,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+				        ,REMOVEFILTERS(REF_ED_Department_Type)
+					,REMOVEFILTERS(REF_Site)
+					,REMOVEFILTERS(REF_Providers)
+				    
+				--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+				              ,REF_Date[financial_year] = "2024/25"),
+				        "Reference_Population",   ---set your number for reference population i.e. total Gloucestershire population 
+				            CALCULATE(
+				
+				        var latest_month_in_range = STARTOFMONTH(LASTDATE(REF_Date[date]))
+				        var Gloucestershire_mildly_fail_populations_at_year_end = 
+				        calculate(sum(REF_GP_Practice_Populations_over_time[mild_frailty])
+				        ,REF_Date[date] = latest_month_in_range
+				       ,REMOVEFILTERS(REF_GP_Practice)
+				     ,REMOVEFILTERS(REF_LSOA)
+				        ,REMOVEFILTERS(REF_Ethnicity)
+				        ,REMOVEFILTERS(REF_EFI_Category)
+				        ,REMOVEFILTERS(REF_Gender)
+				        ,REMOVEFILTERS(REF_admission_method)
+				     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+				        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+				,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+				        ,REMOVEFILTERS(REF_ED_Department_Type)
+					,REMOVEFILTERS(REF_Site)
+					,REMOVEFILTERS(REF_Providers)
+				--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+				             ,REF_Date[financial_year] = "2024/25")
+				         
+				         RETURN 
+				
+				         CALCULATE(Gloucestershire_mildly_fail_populations_at_year_end
+				           ,REMOVEFILTERS(REF_GP_Practice)
+				     ,REMOVEFILTERS(REF_LSOA)
+				        ,REMOVEFILTERS(REF_Ethnicity)
+				        ,REMOVEFILTERS(REF_EFI_Category)
+				        ,REMOVEFILTERS(REF_Gender)
+				        ,REMOVEFILTERS(REF_admission_method)
+				     ---    ,REMOVEFILTERS(REF_Age_Bands) -- AGE STANDARDISING SO NEED TO KEEP AGE BAND REF
+				        ,REMOVEFILTERS(REF_Cinapsis_Pathways)
+				,REMOVEFILTERS(REF_Cinapsis_Specialist_Outcome)
+				        ,REMOVEFILTERS(REF_ED_Department_Type)
+					,REMOVEFILTERS(REF_Site)
+					,REMOVEFILTERS(REF_Providers)
+				--,REMOVEFILTERS(REF_Frail_Patients_Deficits)
+				             ,REF_Date[financial_year] = "2024/25")
+				         
+				    )
+				    )
+				    
+				 // =========================================================================
+				// Stage 2: Add in fields for reference events 
+				// =========================================================================   
+				
+				
+				VAR SummaryTable_with_reference_rates =
+				    ADDCOLUMNS(
+				        SummaryTable,
+				        "Reference_Rates", DIVIDE([Reference_Events], [Reference_Population], 0)
+				    )
+				
+				 // =========================================================================
+				// Stage 3: Add in field for local expected events per age group 
+				// =========================================================================   
+				
+				
+				
+				VAR SummaryTable_with_reference_rates_and_local_expected_events =
+				    ADDCOLUMNS(
+				        SummaryTable_with_reference_rates,
+				        "Local_Expected_Events", [Reference_Rates] * [Total_Local_Population]
+				    )
+				
+				 // ==============================================================================================================================
+				// Stage 4: Obtain totals for observed and expected results (local population & reference population i.e. Gloucestershire
+				// ================================================================================================================================
+				
+				VAR total_observed = 
+				    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Total_Local_Observed_Events])
+				
+				VAR total_expected = 
+				    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Local_Expected_Events])
+				
+				VAR total_reference_events = 
+				    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Events])
+				
+				VAR total_reference_population = 
+				    SUMX(SummaryTable_with_reference_rates_and_local_expected_events, [Reference_Population])
+				
+				  // ==============================================================================================================================
+				// Stage 5: Calculate the reference crude rate 
+				// ================================================================================================================================
+				   
+				VAR reference_crude_rate = 
+				    DIVIDE(total_reference_events, total_reference_population, 0) * 1000
+				
+				// ==============================================================================================================================
+				// Stage 6: Calculate the age standarised rate
+				// ================================================================================================================================
+				
+				VAR age_standardised_rate = 
+				    DIVIDE(total_observed, total_expected, 0) * reference_crude_rate
+				
+				//=========================================================================
+				// Stage 7: Calculate Confidence Limits using Precise Z Value
+				// =========================================================================
+				
+				VAR ConfidenceLevel = 95
+				VAR ZValue = 1.959963984540050
+				
+				VAR Confidence_Lower = IF(
+				total_observed = 0, 0,
+				IF(
+				total_observed < 10,
+				(total_observed - (ZValue^2 / (9 * total_observed))) / (1 + (ZValue^2 / (9 * total_observed)))^3,
+				total_observed * (1 - 1 / (9 * total_observed) - ZValue / (3 * SQRT(total_observed)))^3
+				)
+				) / total_expected * reference_crude_rate
+				
+				VAR Confidence_Upper = IF(
+				total_observed = 0, 0,
+				IF(
+				total_observed < 10,
+				(total_observed + (ZValue^2 / (9 * total_observed))) / (1 - (ZValue^2 / (9 * total_observed)))^3,
+				total_observed * (1 + 1 / (9 * total_observed) + ZValue / (3 * SQRT(total_observed)))^3
+				)
+				) / total_expected * reference_crude_rate
+				
+				RETURN
+				SummaryTable_with_reference_rates_and_local_expected_events
+				
+				```
+
+	annotation PBI_Id = 2b49ac573e4e45b48921a3b282dcb172
+
