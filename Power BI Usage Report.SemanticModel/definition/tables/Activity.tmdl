@@ -1,67 +1,86 @@
 table Activity
-	lineageTag: 2c1a7b30-0000-4a00-9b00-432246588614
+	lineageTag: 2c1a7b30-0000-4a00-9b00-452344326723
 
 	measure 'Total Events' = COUNTROWS ( Activity )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-979295899704
+		lineageTag: 2c1a7b30-0000-4a00-9b00-491962313917
 
 	measure 'Report Views' = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "View" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-601559670159
+		lineageTag: 2c1a7b30-0000-4a00-9b00-563538358004
 
 	measure 'Unique Reports Viewed' = CALCULATE ( DISTINCTCOUNT ( Activity[report_name] ), Activity[event_category] = "View" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-079309284975
+		lineageTag: 2c1a7b30-0000-4a00-9b00-377822791260
 
 	measure 'Active Users' = DISTINCTCOUNT ( Activity[user_id] )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-664167110304
+		lineageTag: 2c1a7b30-0000-4a00-9b00-288471907980
 
 	measure 'Active Users (Views)' = CALCULATE ( DISTINCTCOUNT ( Activity[user_id] ), Activity[event_category] = "View" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-840614998737
+		lineageTag: 2c1a7b30-0000-4a00-9b00-605789634345
+
+	measure 'Report Views (excl. authors)' = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "View", Activity[is_report_author] = FALSE () )
+		formatString: #,0
+		lineageTag: 2c1a7b30-0000-4a00-9b00-218240171643
+
+	measure 'Active Users (excl. authors)' = CALCULATE ( DISTINCTCOUNT ( Activity[user_id] ), Activity[event_category] = "View", Activity[is_report_author] = FALSE () )
+		formatString: #,0
+		lineageTag: 2c1a7b30-0000-4a00-9b00-932872372781
+
+	measure 'Report Authors' = CALCULATE ( DISTINCTCOUNT ( Activity[user_id] ), Activity[is_report_author] = TRUE () )
+		formatString: #,0
+		lineageTag: 2c1a7b30-0000-4a00-9b00-156111684678
+
+	measure 'Author Self-View %' = ```
+			VAR _v = [Report Views]
+			RETURN DIVIDE ( _v - [Report Views (excl. authors)], _v )
+			```
+		formatString: 0.0%
+		lineageTag: 2c1a7b30-0000-4a00-9b00-621149475140
 
 	measure 'Refresh Count' = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "Refresh" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-904584607029
+		lineageTag: 2c1a7b30-0000-4a00-9b00-562306898302
 
 	measure 'Refresh Failures' = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "Refresh", Activity[is_success] = FALSE () )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-463298778600
+		lineageTag: 2c1a7b30-0000-4a00-9b00-598556245038
 
 	measure 'Refresh Success Rate' = ```
 			VAR _total = [Refresh Count]
 			RETURN DIVIDE ( _total - [Refresh Failures], _total )
 			```
 		formatString: 0.0%
-		lineageTag: 2c1a7b30-0000-4a00-9b00-120132278802
+		lineageTag: 2c1a7b30-0000-4a00-9b00-896417205437
 
 	measure Exports = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "Export" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-568953020954
+		lineageTag: 2c1a7b30-0000-4a00-9b00-738022978651
 
 	measure Shares = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "Share" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-212173947663
+		lineageTag: 2c1a7b30-0000-4a00-9b00-101340161852
 
 	measure 'New Reports' = CALCULATE ( COUNTROWS ( Activity ), Activity[event_category] = "Create" )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-450673794244
+		lineageTag: 2c1a7b30-0000-4a00-9b00-035928001694
 
 	measure 'Report Views PM' = CALCULATE ( [Report Views], DATEADD ( 'Date'[Date], -1, MONTH ) )
 		formatString: #,0
-		lineageTag: 2c1a7b30-0000-4a00-9b00-298536598024
+		lineageTag: 2c1a7b30-0000-4a00-9b00-200911271116
 
 	measure 'Report Views MoM %' = ```
 			VAR _pm = [Report Views PM]
 			RETURN DIVIDE ( [Report Views] - _pm, _pm )
 			```
 		formatString: 0.0%
-		lineageTag: 2c1a7b30-0000-4a00-9b00-267505781485
+		lineageTag: 2c1a7b30-0000-4a00-9b00-734080759107
 
 	column event_type
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-472360389398
+		lineageTag: 2c1a7b30-0000-4a00-9b00-884255986124
 		summarizeBy: none
 		sourceColumn: event_type
 
@@ -69,7 +88,7 @@ table Activity
 
 	column event_category
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-959545484119
+		lineageTag: 2c1a7b30-0000-4a00-9b00-327508711932
 		summarizeBy: none
 		sourceColumn: event_category
 
@@ -78,7 +97,7 @@ table Activity
 	column event_timestamp
 		dataType: dateTime
 		formatString: General Date
-		lineageTag: 2c1a7b30-0000-4a00-9b00-657465139386
+		lineageTag: 2c1a7b30-0000-4a00-9b00-912411467124
 		summarizeBy: none
 		sourceColumn: event_timestamp
 
@@ -87,7 +106,7 @@ table Activity
 	column event_date
 		dataType: dateTime
 		formatString: dd/mm/yyyy
-		lineageTag: 2c1a7b30-0000-4a00-9b00-006898977509
+		lineageTag: 2c1a7b30-0000-4a00-9b00-507684312498
 		summarizeBy: none
 		sourceColumn: event_date
 
@@ -95,15 +114,23 @@ table Activity
 
 	column user_id
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-419010422685
+		lineageTag: 2c1a7b30-0000-4a00-9b00-049979974587
 		summarizeBy: none
 		sourceColumn: user_id
 
 		annotation SummarizationSetBy = Automatic
 
+	column is_report_author
+		dataType: boolean
+		lineageTag: 2c1a7b30-0000-4a00-9b00-767695672484
+		summarizeBy: none
+		sourceColumn: is_report_author
+
+		annotation SummarizationSetBy = Automatic
+
 	column workspace
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-919519201066
+		lineageTag: 2c1a7b30-0000-4a00-9b00-891571947361
 		summarizeBy: none
 		sourceColumn: workspace
 
@@ -111,7 +138,7 @@ table Activity
 
 	column report_name
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-534044296806
+		lineageTag: 2c1a7b30-0000-4a00-9b00-823325684420
 		summarizeBy: none
 		sourceColumn: report_name
 
@@ -119,7 +146,7 @@ table Activity
 
 	column dataset_name
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-121462411889
+		lineageTag: 2c1a7b30-0000-4a00-9b00-179162981930
 		summarizeBy: none
 		sourceColumn: dataset_name
 
@@ -127,7 +154,7 @@ table Activity
 
 	column capacity
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-736922985610
+		lineageTag: 2c1a7b30-0000-4a00-9b00-368668451944
 		summarizeBy: none
 		sourceColumn: capacity
 
@@ -135,7 +162,7 @@ table Activity
 
 	column consumption_method
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-343046936373
+		lineageTag: 2c1a7b30-0000-4a00-9b00-547353578471
 		summarizeBy: none
 		sourceColumn: consumption_method
 
@@ -143,7 +170,7 @@ table Activity
 
 	column distribution_method
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-432150241475
+		lineageTag: 2c1a7b30-0000-4a00-9b00-020124420076
 		summarizeBy: none
 		sourceColumn: distribution_method
 
@@ -151,7 +178,7 @@ table Activity
 
 	column is_success
 		dataType: boolean
-		lineageTag: 2c1a7b30-0000-4a00-9b00-237788396895
+		lineageTag: 2c1a7b30-0000-4a00-9b00-452501495316
 		summarizeBy: none
 		sourceColumn: is_success
 
@@ -159,7 +186,7 @@ table Activity
 
 	column user_agent
 		dataType: string
-		lineageTag: 2c1a7b30-0000-4a00-9b00-730001362011
+		lineageTag: 2c1a7b30-0000-4a00-9b00-503834190523
 		summarizeBy: none
 		sourceColumn: user_agent
 
@@ -169,7 +196,7 @@ table Activity
 		mode: import
 		source =
 				let
-				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select#(lf)    u.event_type,#(lf)    u.event_category,#(lf)    u.event_timestamp,#(lf)    cast(u.event_timestamp as date) as event_date,#(lf)    u.user_id,#(lf)    u.workspace,#(lf)    u.report_name,#(lf)    u.dataset_name,#(lf)    u.capacity,#(lf)    u.consumption_method,#(lf)    u.distribution_method,#(lf)    u.is_success,#(lf)    u.user_agent#(lf)from (#(lf)  select#(lf)    'View Report'::varchar as event_type,#(lf)    'View'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    consumptionmethod as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditviewreport_201_load#(lf)union all#(lf)  select#(lf)    'View Dashboard'::varchar as event_type,#(lf)    'View'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    null::varchar as dataset_name,#(lf)    capacityname as capacity,#(lf)    consumptionmethod as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditviewdashboard_201_load#(lf)union all#(lf)  select#(lf)    'Refresh Dataset'::varchar as event_type,#(lf)    'Refresh'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    null::varchar as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditrefreshdataset_201_load#(lf)union all#(lf)  select#(lf)    'Export Report'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditexportreport_201_load#(lf)union all#(lf)  select#(lf)    'Download Report'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditdownloadreport_201_load#(lf)union all#(lf)  select#(lf)    'Print Report'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditprintreport_201_load#(lf)union all#(lf)  select#(lf)    'Analyze in Excel'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditanalyzeinexcel_201_load#(lf)union all#(lf)  select#(lf)    'Share Report'::varchar as event_type,#(lf)    'Share'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    null::varchar as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    null::varchar as distribution_method,#(lf)    case when lower(trim(issuccess)) in ('true','t','1') then true when issuccess is null or trim(issuccess)='' then null else false end as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditsharereport_201_load#(lf)union all#(lf)  select#(lf)    'Share Dataset'::varchar as event_type,#(lf)    'Share'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    null::varchar as dataset_name,#(lf)    null::varchar as capacity,#(lf)    null::varchar as consumption_method,#(lf)    null::varchar as distribution_method,#(lf)    case when lower(trim(issuccess)) in ('true','t','1') then true when issuccess is null or trim(issuccess)='' then null else false end as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditsharedataset_201_load#(lf)union all#(lf)  select#(lf)    'Create Report'::varchar as event_type,#(lf)    'Create'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditcreatereport_201_load#(lf)union all#(lf)  select#(lf)    'Edit Report'::varchar as event_type,#(lf)    'Edit'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditeditreport_201_load#(lf)union all#(lf)  select#(lf)    'Delete Report'::varchar as event_type,#(lf)    'Delete'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditdeletereport_201_load#(lf)) u", null, [EnableFolding=true])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "with authors as (#(lf)    select distinct lower(userid) as au from data_mart_l007_icb_powerbi.tbl_auditcreatereport_201_load#(lf)    union#(lf)    select distinct lower(userid) as au from data_mart_l007_icb_powerbi.tbl_auditeditreport_201_load#(lf))#(lf)select#(lf)    u.event_type,#(lf)    u.event_category,#(lf)    u.event_timestamp,#(lf)    cast(u.event_timestamp as date) as event_date,#(lf)    u.user_id,#(lf)    case when a.au is not null then true else false end as is_report_author,#(lf)    u.workspace,#(lf)    u.report_name,#(lf)    u.dataset_name,#(lf)    u.capacity,#(lf)    u.consumption_method,#(lf)    u.distribution_method,#(lf)    u.is_success,#(lf)    u.user_agent#(lf)from (#(lf)  select#(lf)    'View Report'::varchar as event_type,#(lf)    'View'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    consumptionmethod as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditviewreport_201_load#(lf)union all#(lf)  select#(lf)    'View Dashboard'::varchar as event_type,#(lf)    'View'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    null::varchar as dataset_name,#(lf)    capacityname as capacity,#(lf)    consumptionmethod as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditviewdashboard_201_load#(lf)union all#(lf)  select#(lf)    'Refresh Dataset'::varchar as event_type,#(lf)    'Refresh'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    null::varchar as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditrefreshdataset_201_load#(lf)union all#(lf)  select#(lf)    'Export Report'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditexportreport_201_load#(lf)union all#(lf)  select#(lf)    'Download Report'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditdownloadreport_201_load#(lf)union all#(lf)  select#(lf)    'Print Report'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditprintreport_201_load#(lf)union all#(lf)  select#(lf)    'Analyze in Excel'::varchar as event_type,#(lf)    'Export'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditanalyzeinexcel_201_load#(lf)union all#(lf)  select#(lf)    'Share Report'::varchar as event_type,#(lf)    'Share'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    null::varchar as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    null::varchar as distribution_method,#(lf)    case when lower(trim(issuccess)) in ('true','t','1') then true when issuccess is null or trim(issuccess)='' then null else false end as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditsharereport_201_load#(lf)union all#(lf)  select#(lf)    'Share Dataset'::varchar as event_type,#(lf)    'Share'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    null::varchar as report_name,#(lf)    null::varchar as dataset_name,#(lf)    null::varchar as capacity,#(lf)    null::varchar as consumption_method,#(lf)    null::varchar as distribution_method,#(lf)    case when lower(trim(issuccess)) in ('true','t','1') then true when issuccess is null or trim(issuccess)='' then null else false end as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditsharedataset_201_load#(lf)union all#(lf)  select#(lf)    'Create Report'::varchar as event_type,#(lf)    'Create'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditcreatereport_201_load#(lf)union all#(lf)  select#(lf)    'Edit Report'::varchar as event_type,#(lf)    'Edit'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditeditreport_201_load#(lf)union all#(lf)  select#(lf)    'Delete Report'::varchar as event_type,#(lf)    'Delete'::varchar as event_category,#(lf)    creationtime as event_timestamp,#(lf)    userid as user_id,#(lf)    workspacename as workspace,#(lf)    reportname as report_name,#(lf)    datasetname as dataset_name,#(lf)    capacityname as capacity,#(lf)    null::varchar as consumption_method,#(lf)    distributionmethod as distribution_method,#(lf)    issuccess as is_success,#(lf)    useragent as user_agent#(lf)  from data_mart_l007_icb_powerbi.tbl_auditdeletereport_201_load#(lf)) u#(lf)left join authors a on lower(u.user_id) = a.au", null, [EnableFolding=true])
 				in
 				    Source
 
