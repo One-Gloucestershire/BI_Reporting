@@ -45,6 +45,46 @@ table Demographics
 		formatString: #,0
 		lineageTag: 1f9c0a00-0000-4b00-9c00-58992066317492
 
+	measure 'Avg Conditions' = AVERAGE ( Demographics[multimorbidity_count] )
+		formatString: 0.00
+		lineageTag: 1f9c0a00-0000-4b00-9c00-149362740318257
+
+	measure '% Multimorbid (2+)' = DIVIDE ( CALCULATE ( COUNTROWS ( Demographics ), Demographics[multimorbidity_count] >= 2 ), [Population] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-8515943342740
+
+	measure '% Hypertension' = DIVIDE ( CALCULATE ( COUNTROWS ( Demographics ), Demographics[qof_hypertension] = TRUE () ), [Population] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-181500947926352
+
+	measure '% Diabetes' = DIVIDE ( CALCULATE ( COUNTROWS ( Demographics ), Demographics[qof_diabetes] = TRUE () ), [Population] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-83451068310000
+
+	measure '% COPD' = DIVIDE ( CALCULATE ( COUNTROWS ( Demographics ), Demographics[qof_copd] = TRUE () ), [Population] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-40688400952055
+
+	measure '% SMI' = DIVIDE ( CALCULATE ( COUNTROWS ( Demographics ), Demographics[qof_mentalhealth] = TRUE () ), [Population] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-29910608562056
+
+	measure '% Cancer' = DIVIDE ( CALCULATE ( COUNTROWS ( Demographics ), Demographics[qof_cancer] = TRUE () ), [Population] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-206447575717697
+
+	measure 'Multimorbid Most Deprived' = CALCULATE ( [% Multimorbid (2+)], Demographics[imd_decile_england] <= 2 )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-164376679765062
+
+	measure 'Multimorbid Least Deprived' = CALCULATE ( [% Multimorbid (2+)], Demographics[imd_decile_england] >= 9 )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-156032084383869
+
+	measure 'Deprivation Gap (x)' = DIVIDE ( [Multimorbid Most Deprived], [Multimorbid Least Deprived] )
+		formatString: 0.00
+		lineageTag: 1f9c0a00-0000-4b00-9c00-266543032946679
+
 	column age
 		dataType: int64
 		formatString: 0
@@ -194,11 +234,100 @@ table Demographics
 
 		annotation SummarizationSetBy = Automatic
 
+	column qof_hypertension
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-239769885803650
+		summarizeBy: none
+		sourceColumn: qof_hypertension
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_diabetes
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-79209163518532
+		summarizeBy: none
+		sourceColumn: qof_diabetes
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_copd
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-190908382738109
+		summarizeBy: none
+		sourceColumn: qof_copd
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_asthma
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215768747210860
+		summarizeBy: none
+		sourceColumn: qof_asthma
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_mentalhealth
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-11645742018452
+		summarizeBy: none
+		sourceColumn: qof_mentalhealth
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_cancer
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-255678324854707
+		summarizeBy: none
+		sourceColumn: qof_cancer
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_coronaryheartdisease
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-228005432795063
+		summarizeBy: none
+		sourceColumn: qof_coronaryheartdisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_chronickidneydisease
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-228342488535880
+		summarizeBy: none
+		sourceColumn: qof_chronickidneydisease
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_dementia
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-236748823671076
+		summarizeBy: none
+		sourceColumn: qof_dementia
+
+		annotation SummarizationSetBy = Automatic
+
+	column qof_depression
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-86156428535388
+		summarizeBy: none
+		sourceColumn: qof_depression
+
+		annotation SummarizationSetBy = Automatic
+
+	column multimorbidity_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-274564430969801
+		summarizeBy: sum
+		sourceColumn: multimorbidity_count
+
+		annotation SummarizationSetBy = Automatic
+
 	partition Demographics = m
 		mode: import
 		source =
 				let
-				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select#(lf)    actual_age as age,#(lf)    case when actual_age is null then 'Unknown' when actual_age>=90 then '90+'#(lf)         else lpad(cast(floor(actual_age/5)*5 as int)::varchar,2,'0')||'-'||lpad(cast(floor(actual_age/5)*5+4 as int)::varchar,2,'0') end as age_band,#(lf)    case when actual_age is null then 999 when actual_age>=90 then 90 else cast(floor(actual_age/5)*5 as int) end as age_band_sort,#(lf)    gender, ethnicity, ethnicminority,#(lf)    imd_decile_england, imd_decile_gloucester, core20,#(lf)    gp_practice_code, gp_practice_name, primarycarenetwork as pcn, locality,#(lf)    lsoa_code, ward_name, district_name, age_65_and_over, care_home#(lf)from data_mart_powerbi_phm.tbl02_demographicsoverview", null, [EnableFolding=true])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select#(lf)    actual_age as age,#(lf)    case when actual_age is null then 'Unknown' when actual_age>=90 then '90+'#(lf)         else lpad(cast(floor(actual_age/5)*5 as int)::varchar,2,'0')||'-'||lpad(cast(floor(actual_age/5)*5+4 as int)::varchar,2,'0') end as age_band,#(lf)    case when actual_age is null then 999 when actual_age>=90 then 90 else cast(floor(actual_age/5)*5 as int) end as age_band_sort,#(lf)    gender, ethnicity, ethnicminority,#(lf)    imd_decile_england, imd_decile_gloucester, core20,#(lf)    gp_practice_code, gp_practice_name, primarycarenetwork as pcn, locality,#(lf)    lsoa_code, ward_name, district_name, age_65_and_over, care_home,#(lf)    qof_hypertension, qof_diabetes, qof_copd, qof_asthma, qof_mentalhealth,#(lf)    qof_cancer, qof_coronaryheartdisease, qof_chronickidneydisease, qof_dementia, qof_depression,#(lf)    (case when qof_diabetes then 1 else 0 end + case when qof_hypertension then 1 else 0 end#(lf)     + case when qof_copd then 1 else 0 end + case when qof_asthma then 1 else 0 end#(lf)     + case when qof_coronaryheartdisease then 1 else 0 end + case when qof_atrialfibrilation then 1 else 0 end#(lf)     + case when qof_heartfailure then 1 else 0 end + case when qof_strokeandtia then 1 else 0 end#(lf)     + case when qof_chronickidneydisease then 1 else 0 end + case when qof_dementia then 1 else 0 end#(lf)     + case when qof_depression then 1 else 0 end + case when qof_mentalhealth then 1 else 0 end#(lf)     + case when qof_cancer then 1 else 0 end + case when qof_epilepsy then 1 else 0 end#(lf)     + case when qof_osteoporosis then 1 else 0 end + case when qof_peripheralarterialdisease then 1 else 0 end#(lf)     + case when qof_rheumatoidarthritis then 1 else 0 end + case when qof_learningdisability then 1 else 0 end) as multimorbidity_count#(lf)from data_mart_powerbi_phm.tbl02_demographicsoverview", null, [EnableFolding=true])
 				in
 				    Source
 
