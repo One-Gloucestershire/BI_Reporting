@@ -1,0 +1,126 @@
+table EndOfLife
+	lineageTag: 1f9c0a00-0000-4b00-9c00-25637446690381
+
+	measure Deaths = COUNTROWS ( EndOfLife )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-12478938514241
+
+	measure 'Avg Age at Death' = AVERAGE ( EndOfLife[age] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-26898711798404
+
+	measure 'Died in Preferred Place' = SUM ( EndOfLife[died_preferred] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-48734002467476
+
+	measure 'Preferred Place Rate' = DIVIDE ( SUM ( EndOfLife[died_preferred] ), SUM ( EndOfLife[preference_recorded] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-182480063661523
+
+	measure 'Palliative Care %' = DIVIDE ( SUM ( EndOfLife[palliative] ), [Deaths] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-65916237057207
+
+	column death_month
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-195894839275475
+		summarizeBy: none
+		sourceColumn: death_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-219960589315107
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-71868209778705
+		summarizeBy: none
+		sourceColumn: imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-244527884310373
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column cause_chapter
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-105958310257115
+		summarizeBy: none
+		sourceColumn: cause_chapter
+
+		annotation SummarizationSetBy = Automatic
+
+	column ons_category
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-17980827852723
+		summarizeBy: none
+		sourceColumn: ons_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column place_of_death
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-409457253637
+		summarizeBy: none
+		sourceColumn: place_of_death
+
+		annotation SummarizationSetBy = Automatic
+
+	column died_preferred
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-193710293534831
+		summarizeBy: sum
+		sourceColumn: died_preferred
+
+		annotation SummarizationSetBy = Automatic
+
+	column preference_recorded
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-244015176244098
+		summarizeBy: sum
+		sourceColumn: preference_recorded
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-127735374924995
+		summarizeBy: sum
+		sourceColumn: palliative
+
+		annotation SummarizationSetBy = Automatic
+
+	column age
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-3966130918250
+		summarizeBy: average
+		sourceColumn: age
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EndOfLife = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', death_date)::date as death_month,#(lf)    lsoa_code as lsoa,#(lf)    nullif(deprivation_national,'')::int as imd_decile,#(lf)    nullif(ethnicity,'') as ethnicity,#(lf)    nullif(cause_of_death_primary_chapter,'') as cause_chapter,#(lf)    nullif(ons_category_cause_of_death,'') as ons_category,#(lf)    nullif(place_of_death,'') as place_of_death,#(lf)    case when died_in_preferred_place_of_death_flag = 'Died in preferred place' then 1 else 0 end as died_preferred,#(lf)    case when died_in_preferred_place_of_death_flag in ('Died in preferred place','Did not die in preferred place') then 1 else 0 end as preference_recorded,#(lf)    case when palliative_care_flag = 'Palliative Care' then 1 else 0 end as palliative,#(lf)    age#(lf)from data_mart_powerbi_endoflife.tbl01_eol_report_table#(lf)where death_date is not null", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
