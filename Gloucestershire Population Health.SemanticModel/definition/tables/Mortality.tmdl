@@ -1,0 +1,136 @@
+table Mortality
+	lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000069
+
+	measure 'Deaths' = SUM ( Mortality[deaths] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000050
+
+	measure 'Palliative Deaths' = SUM ( Mortality[palliative_deaths] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000051
+
+	measure '% Palliative' = DIVIDE ( [Palliative Deaths], [Deaths] )
+		formatString: 0.0%
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000052
+
+	measure 'Deaths (Latest Month)' = CALCULATE ( [Deaths], Mortality[month_date] = MAX ( Mortality[month_date] ) )
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000053
+
+	measure 'Deaths Prev Month' = VAR l = MAX ( Mortality[month_date] ) RETURN CALCULATE ( [Deaths], Mortality[month_date] = EDATE ( l, -1 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000054
+
+	measure 'Deaths Prev Year' = VAR l = MAX ( Mortality[month_date] ) RETURN CALCULATE ( [Deaths], Mortality[month_date] = EDATE ( l, -12 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000055
+
+	measure 'Deaths MoM Δ' = [Deaths (Latest Month)] - [Deaths Prev Month]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000056
+
+	measure 'Deaths MoM Δ%' = DIVIDE ( [Deaths MoM Δ], [Deaths Prev Month] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000057
+
+	measure 'Deaths YoY Δ' = [Deaths (Latest Month)] - [Deaths Prev Year]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000058
+
+	measure 'Deaths YoY Δ%' = DIVIDE ( [Deaths YoY Δ], [Deaths Prev Year] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000059
+
+	measure 'Deaths MoM' = VAR d = [Deaths MoM Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000060
+
+	measure 'Deaths YoY' = VAR d = [Deaths YoY Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000061
+
+	measure 'Deaths MoM Colour' = VAR d = [Deaths MoM Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000062
+
+	measure 'Deaths YoY Colour' = VAR d = [Deaths YoY Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000063
+
+	measure 'Deaths Mean' = AVERAGEX ( SUMMARIZE ( ALLSELECTED ( Mortality[month_date] ), Mortality[month_date] ), CALCULATE ( [Deaths] ) )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000064
+
+	measure 'Deaths MeanMR' = VAR _b = ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( Mortality[month_date] ), Mortality[month_date] ), "@v", CALCULATE ( [Deaths] ) ) VAR _r = ADDCOLUMNS ( _b, "@i", RANKX ( _b, Mortality[month_date],, ASC, DENSE ) ) VAR _mr = FILTER ( ADDCOLUMNS ( _r, "@d", VAR _ci = [@i] RETURN IF ( _ci > 1, ABS ( [@v] - MAXX ( FILTER ( _r, [@i] = _ci - 1 ), [@v] ) ) ) ), NOT ISBLANK ( [@d] ) ) RETURN AVERAGEX ( _mr, [@d] )
+		formatString: #,0
+		displayFolder: SPC
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000065
+
+	measure 'Deaths UCL' = [Deaths Mean] + 2.66 * [Deaths MeanMR]
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000066
+
+	measure 'Deaths LCL' = MAX ( 0, [Deaths Mean] - 2.66 * [Deaths MeanMR] )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000067
+
+	measure 'Deaths Months Out of Control' = COUNTROWS ( FILTER ( ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( Mortality[month_date] ), Mortality[month_date] ), "@v", CALCULATE ( [Deaths] ) ), [@v] > [Deaths UCL] || [@v] < [Deaths LCL] ) )
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000068
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000070
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column deaths
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000071
+		summarizeBy: none
+		sourceColumn: deaths
+
+		annotation SummarizationSetBy = Automatic
+
+	column palliative_deaths
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000072
+		summarizeBy: none
+		sourceColumn: palliative_deaths
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Mortality = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', death_date)::date as month_date,#(lf)count(*) as deaths,#(lf)count(case when palliative_care_flag ilike '%palliat%' then 1 end) as palliative_deaths#(lf)from data_mart_powerbi_endoflife.tbl01_eol_report_table#(lf)where death_date is not null and death_date >= date '2019-01-01'#(lf)group by 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
