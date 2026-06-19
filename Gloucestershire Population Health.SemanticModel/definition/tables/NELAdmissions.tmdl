@@ -1,0 +1,62 @@
+table NELAdmissions
+	lineageTag: 1f9c0a00-0000-4b00-9c00-193733522908358
+
+	measure Admissions = SUM ( NELAdmissions[admissions] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-153557070051158
+
+	measure 'Emergency Admissions' = CALCULATE ( SUM ( NELAdmissions[admissions] ), NELAdmissions[admission_type] = "Emergency" )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-136273673295577
+
+	measure 'Readmissions (30d)' = CALCULATE ( SUM ( NELAdmissions[admissions] ), NELAdmissions[readmit] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-115504594054730
+
+	measure 'Readmission Rate' = DIVIDE ( [Readmissions (30d)], [Admissions] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-139962204271438
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column admission_type
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-270498394586768
+		summarizeBy: none
+		sourceColumn: admission_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column readmit
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-89508006923016
+		summarizeBy: none
+		sourceColumn: readmit
+
+		annotation SummarizationSetBy = Automatic
+
+	column admissions
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-204385256160334
+		summarizeBy: sum
+		sourceColumn: admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	partition NELAdmissions = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', admission_datetime::timestamp)::date as month_date,#(lf)    case when admission_method ilike 'Elective%' then 'Elective'#(lf)         when admission_method ilike '%emergency%' or admission_method ilike 'ED or Dental%'#(lf)              or admission_method ilike 'Immediate%' then 'Emergency'#(lf)         when admission_method ilike '%partum%' or admission_method ilike 'Baby born%' then 'Maternity'#(lf)         else 'Other' end as admission_type,#(lf)    (readmission_30_day ilike 'readmission%') as readmit,#(lf)    count(*) as admissions#(lf)from data_mart_l018_ghft_acute.tbl_iphospitalproviderspell_201_load#(lf)where admission_datetime >= '2023-01-01'#(lf)group by 1,2,3", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
