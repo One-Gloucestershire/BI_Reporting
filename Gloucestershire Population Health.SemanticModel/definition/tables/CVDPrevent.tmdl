@@ -1,0 +1,88 @@
+table CVDPrevent
+	lineageTag: 1f9c0a00-0000-4b00-9c00-171534534014089
+
+	measure 'CVD Value' = AVERAGE ( CVDPrevent[value] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-120474187725801
+
+	measure 'CVD Numerator' = SUM ( CVDPrevent[numerator] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-73393543632018
+
+	column period_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-42970672985103
+		summarizeBy: none
+		sourceColumn: period_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-90854662464379
+		summarizeBy: none
+		sourceColumn: indicator
+
+		annotation SummarizationSetBy = Automatic
+
+	column area
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-23099366578463
+		summarizeBy: none
+		sourceColumn: area
+
+		annotation SummarizationSetBy = Automatic
+
+	column cat_type
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-244975136824061
+		summarizeBy: none
+		sourceColumn: cat_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column cat
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-219186510682875
+		summarizeBy: none
+		sourceColumn: cat
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-265003805350590
+		summarizeBy: average
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+	column numerator
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-78159547575863
+		summarizeBy: sum
+		sourceColumn: numerator
+
+		annotation SummarizationSetBy = Automatic
+
+	column denominator
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-162166991379614
+		summarizeBy: sum
+		sourceColumn: denominator
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CVDPrevent = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select timeperioddate as period_date,#(lf)    indicatorshortname as indicator, areaname as area,#(lf)    metriccategorytypename as cat_type, metriccategoryname as cat,#(lf)    nullif(value,'')::numeric as value,#(lf)    nullif(numerator,'')::numeric as numerator,#(lf)    nullif(denominator,'')::numeric as denominator#(lf)from data_mart_l049_nhse_cvdprevent.tbl_circulatoryprevent_201_load#(lf)where timeperioddate = (select max(timeperioddate) from data_mart_l049_nhse_cvdprevent.tbl_circulatoryprevent_201_load)#(lf)  and (metriccategoryname = 'Persons' or metriccategorytypename = 'Deprivation quintile')", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
