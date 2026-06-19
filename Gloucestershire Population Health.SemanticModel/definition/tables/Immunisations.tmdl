@@ -1,0 +1,42 @@
+table Immunisations
+	lineageTag: 1f9c0a00-0000-4b00-9c00-191748885487607
+
+	measure Vaccinations = SUM ( Immunisations[n] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-271051575776614
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column vaccine_term
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-211111634563125
+		summarizeBy: none
+		sourceColumn: vaccine_term
+
+		annotation SummarizationSetBy = Automatic
+
+	column n
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-122425678173511
+		summarizeBy: sum
+		sourceColumn: n
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Immunisations = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select date_trunc('month', dt)::date as month_date, vaccine_term, count(*) as n#(lf)from data_mart_l050_phm_rpt.immunisations#(lf)group by 1,2", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
