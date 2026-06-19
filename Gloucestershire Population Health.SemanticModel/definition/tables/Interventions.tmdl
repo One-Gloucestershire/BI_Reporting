@@ -1,0 +1,94 @@
+table Interventions
+	lineageTag: 1f9c0a00-0000-4b00-9c00-186892169247522
+
+	measure 'Intv Impact' = SUM ( Interventions[Impact] )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-152335185514227
+
+	measure 'Intv Feasibility' = SUM ( Interventions[Feasibility] )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-198585247980575
+
+	measure 'Intv Cost' = SUM ( Interventions[Cost] )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-217754303385212
+
+	measure 'Intervention Priority' = [Intv Impact] + [Intv Feasibility] + SUM ( Interventions[Evidence] ) - [Intv Cost]
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-76567231383634
+
+	column Intervention
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-277290383433024
+		summarizeBy: none
+		sourceColumn: [Intervention]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cohort
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-187384725513690
+		summarizeBy: none
+		sourceColumn: [Cohort]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Impact
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-119350847282027
+		summarizeBy: sum
+		sourceColumn: [Impact]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Feasibility
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-117063047225949
+		summarizeBy: sum
+		sourceColumn: [Feasibility]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cost
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-227235410694182
+		summarizeBy: sum
+		sourceColumn: [Cost]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Evidence
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-226632790987062
+		summarizeBy: sum
+		sourceColumn: [Evidence]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Interventions = calculated
+		mode: import
+		source = ```
+				DATATABLE (
+				    "Intervention", STRING, "Cohort", STRING, "Impact", INTEGER, "Feasibility", INTEGER, "Cost", INTEGER, "Evidence", INTEGER,
+				    {
+				    {"Anticoagulation for untreated AF", "CVD", 8, 8, 2, 9},
+				    {"Targeted statin optimisation (deprived practices)", "CVD", 8, 7, 3, 9},
+				    {"Hypertension case-finding & control", "CVD", 8, 7, 4, 9},
+				    {"Rising-risk case management (CMS Q4)", "High-risk", 9, 5, 5, 8},
+				    {"Proactive frailty reviews (priority LSOAs)", "Frailty", 8, 6, 4, 8},
+				    {"Enhanced EOL planning (care-home residents)", "End of life", 7, 7, 3, 7},
+				    {"SMI annual health checks (deprived)", "Mental health", 7, 7, 3, 8},
+				    {"Diabetes structured education (deprived)", "Diabetes", 6, 7, 3, 7},
+				    {"Cancer screening uplift (deprived)", "Cancer", 7, 6, 4, 8},
+				    {"ED frequent-attender navigation", "Urgent care", 7, 5, 4, 7},
+				    {"COPD rescue packs and reviews", "Respiratory", 6, 7, 3, 7},
+				    {"Social prescribing (deprived neighbourhoods)", "Wider determinants", 6, 6, 3, 6}
+				    }
+				)
+				```
+
+	annotation PBI_ResultType = Table
