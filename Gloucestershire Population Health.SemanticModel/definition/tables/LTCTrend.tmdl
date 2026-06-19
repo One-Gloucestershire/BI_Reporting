@@ -1,0 +1,56 @@
+table LTCTrend
+	lineageTag: 1f9c0a00-0000-4b00-9c00-29155077590522
+
+	measure 'Condition Patients' = SUM ( LTCTrend[patients] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-159543426645453
+
+	measure 'Patients (latest)' = VAR m = CALCULATE ( MAX ( LTCTrend[month_date] ), ALL ( LTCTrend[month_date] ) )
+RETURN CALCULATE ( SUM ( LTCTrend[patients] ), LTCTrend[month_date] = m )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-212596095328803
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column ltcname
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-235948368711280
+		summarizeBy: none
+		sourceColumn: ltcname
+
+		annotation SummarizationSetBy = Automatic
+
+	column england_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-85450681175177
+		summarizeBy: none
+		sourceColumn: england_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-206166340368235
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition LTCTrend = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select month_date, ltcname, england_imd_decile,#(lf)    count(distinct pseudonhsnumber) as patients#(lf)from data_mart_powerbi_phm.tbl07_ltc_population_monthly#(lf)group by 1,2,3", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
