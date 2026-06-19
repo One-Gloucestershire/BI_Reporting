@@ -1,0 +1,50 @@
+table Cohorts
+	lineageTag: 1f9c0a00-0000-4b00-9c00-171607425956946
+
+	measure 'Cohort Size' = SUM ( Cohorts[n] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-45232919178114
+
+	measure 'Cohort in Deprived' = SUM ( Cohorts[deprived_n] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-141352017416345
+
+	measure 'Cohort Deprived %' = DIVIDE ( SUM ( Cohorts[deprived_n] ), SUM ( Cohorts[n] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-153686139172010
+
+	column cohort
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-170761418181082
+		summarizeBy: none
+		sourceColumn: cohort
+
+		annotation SummarizationSetBy = Automatic
+
+	column n
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-122425678173511
+		summarizeBy: sum
+		sourceColumn: n
+
+		annotation SummarizationSetBy = Automatic
+
+	column deprived_n
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-5236447397901
+		summarizeBy: sum
+		sourceColumn: deprived_n
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Cohorts = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select 'Older people (65+)' as cohort, sum(case when age_65_and_over then 1 else 0 end) as n, sum(case when age_65_and_over and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Care home residents' as cohort, sum(case when care_home then 1 else 0 end) as n, sum(case when care_home and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Hypertension' as cohort, sum(case when qof_hypertension then 1 else 0 end) as n, sum(case when qof_hypertension and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Diabetes' as cohort, sum(case when qof_diabetes then 1 else 0 end) as n, sum(case when qof_diabetes and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Coronary heart disease' as cohort, sum(case when qof_coronaryheartdisease then 1 else 0 end) as n, sum(case when qof_coronaryheartdisease and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'COPD' as cohort, sum(case when qof_copd then 1 else 0 end) as n, sum(case when qof_copd and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Asthma' as cohort, sum(case when qof_asthma then 1 else 0 end) as n, sum(case when qof_asthma and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Chronic kidney disease' as cohort, sum(case when qof_chronickidneydisease then 1 else 0 end) as n, sum(case when qof_chronickidneydisease and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Dementia' as cohort, sum(case when qof_dementia then 1 else 0 end) as n, sum(case when qof_dementia and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Depression' as cohort, sum(case when qof_depression then 1 else 0 end) as n, sum(case when qof_depression and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Serious mental illness' as cohort, sum(case when qof_mentalhealth then 1 else 0 end) as n, sum(case when qof_mentalhealth and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Cancer' as cohort, sum(case when qof_cancer then 1 else 0 end) as n, sum(case when qof_cancer and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)union all select 'Learning disability' as cohort, sum(case when qof_learningdisability then 1 else 0 end) as n, sum(case when qof_learningdisability and imd_decile_england <= 2 then 1 else 0 end) as deprived_n from data_mart_powerbi_phm.tbl02_demographicsoverview", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
