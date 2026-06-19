@@ -1,0 +1,84 @@
+table MentalHealth
+	lineageTag: f1ee81f9-06ca-dafc-4dd0-9fea7f3f42d8
+
+	measure 'MH Referrals' = SUM ( MentalHealth[referrals] )
+		formatString: #,0
+		lineageTag: 364ab3bb-d10b-08b9-7185-0a56bc42fdb4
+
+	measure 'MH People (latest)' = VAR m = CALCULATE ( MAX ( MentalHealth[month_date] ), ALL ( MentalHealth[month_date] ) ) RETURN CALCULATE ( SUM ( MentalHealth[patients] ), MentalHealth[month_date] = m )
+		formatString: #,0
+		lineageTag: 80c7592d-dd8e-8426-67f2-c121cb063880
+
+	measure 'MH % Most Deprived' = DIVIDE ( CALCULATE ( SUM ( MentalHealth[referrals] ), MentalHealth[glos_imd_decile] <= 2 ), SUM ( MentalHealth[referrals] ) )
+		formatString: 0.0%
+		lineageTag: f60e62be-e6cb-3044-c918-980d7eac8e09
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 56b566c9-1fec-3e70-342d-049935b11625
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column glos_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: cfff1f2c-f497-c3dd-d479-13a8ca1c6725
+		summarizeBy: none
+		sourceColumn: glos_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column referral_source
+		dataType: string
+		lineageTag: 027dc4ea-c46c-a170-df96-8f92f71fed06
+		summarizeBy: none
+		sourceColumn: referral_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 5620cf8e-7a16-c49e-2fca-665ed410bbaa
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: a2466ce7-2c8b-7cfe-8cbb-1a387c513c33
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column referrals
+		dataType: int64
+		formatString: #,0
+		lineageTag: 0b252d73-c822-02f5-f9cc-b64905117d1e
+		summarizeBy: sum
+		sourceColumn: referrals
+
+		annotation SummarizationSetBy = Automatic
+
+	column patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 6e2c16e7-d700-1944-5ef5-1cd97a9502ed
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MentalHealth = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select case when referral_recieved_date>='2016-01-01' then date_trunc('month', referral_recieved_date)::date end as month_date, case when imdcountydecile_on_referral ~ '^[0-9]+$' then imdcountydecile_on_referral::int end as glos_imd_decile, coalesce(derived_source_of_referral_group,'Unknown') as referral_source, coalesce(locality,'Unknown') as locality, coalesce(gender_description,'Unknown') as gender, count(*) as referrals, count(distinct nhs_number) as patients from data_mart_powerbi_mentalhealth.tbl01_mhsds_mh_referrals group by 1,2,3,4,5", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

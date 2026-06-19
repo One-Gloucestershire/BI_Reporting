@@ -1,0 +1,34 @@
+table WeightMgmtTrend
+	lineageTag: ee788886-1130-1f35-7aa1-8f6ecac5e911
+
+	measure 'WMT T3/4 Referrals' = SUM ( WeightMgmtTrend[referrals] )
+		formatString: #,0
+		lineageTag: 18d6bad7-a4f8-33c9-09c6-19234982f3de
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 2d928978-cf42-2b4c-2aef-98a63f3e2ece
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column referrals
+		dataType: int64
+		formatString: #,0
+		lineageTag: ce64eb5d-1e33-06df-19a3-7db5b9d89c98
+		summarizeBy: sum
+		sourceColumn: referrals
+
+		annotation SummarizationSetBy = Automatic
+
+	partition WeightMgmtTrend = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', start_date)::date as month_date, count(distinct nhs_number) as referrals from data_mart_powerbi_weightmanagement.tbl02_tier3_tier4 where start_date>='2014-01-01' group by 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
