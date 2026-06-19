@@ -5,6 +5,10 @@ table Practice
 		formatString: 0
 		lineageTag: 1f9c0a00-0000-4b00-9c00-108155294482712
 
+	measure 'Registered List' = SUM ( Practice[list_size] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-66561243353246
+
 	column practice_code
 		dataType: string
 		lineageTag: 1f9c0a00-0000-4b00-9c00-177580610354773
@@ -45,11 +49,20 @@ table Practice
 
 		annotation SummarizationSetBy = Automatic
 
-	column lad
+	column place
 		dataType: string
-		lineageTag: 1f9c0a00-0000-4b00-9c00-187986307515779
+		lineageTag: 1f9c0a00-0000-4b00-9c00-64389264692547
 		summarizeBy: none
-		sourceColumn: lad
+		sourceColumn: place
+
+		annotation SummarizationSetBy = Automatic
+
+	column list_size
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-23698563081855
+		summarizeBy: sum
+		sourceColumn: list_size
 
 		annotation SummarizationSetBy = Automatic
 
@@ -57,7 +70,7 @@ table Practice
 		mode: import
 		source =
 				let
-				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select practice_code, max(practice_name) as practice_name,#(lf)    max(lat) as latitude, max(lon) as longitude, max(pcn_code) as pcn_code, max(lad19nm) as lad#(lf)from data_mart_l050_phm_rpt.practice_locations where is_glos = true group by practice_code", null, [EnableFolding=true])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select practice_code,#(lf)    max(practice_name) as practice_name,#(lf)    max(gp_longitude) as latitude, max(gp_latitude) as longitude,#(lf)    max(primary_care_network) as pcn_code, max(place) as place,#(lf)    sum(population) as list_size#(lf)from data_mart_primarycare.tbl01_gp_practice_populations#(lf)where census_date = (select max(census_date) from data_mart_primarycare.tbl01_gp_practice_populations)#(lf)group by practice_code", null, [EnableFolding=true])
 				in
 				    Source
 
