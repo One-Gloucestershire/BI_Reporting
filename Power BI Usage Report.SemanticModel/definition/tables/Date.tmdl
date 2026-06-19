@@ -1,0 +1,72 @@
+table Date
+	lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a001
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: dd/mm/yyyy
+		lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a002
+		summarizeBy: none
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a003
+		summarizeBy: none
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a004
+		summarizeBy: none
+		sourceColumn: [MonthNo]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a005
+		summarizeBy: none
+		sourceColumn: [Month]
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Month'
+		dataType: string
+		lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a006
+		summarizeBy: none
+		sourceColumn: [Year Month]
+		sortByColumn: MonthStart
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthStart
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 1b8e4a90-2c47-4f1a-9c33-7e21d4b6a007
+		summarizeBy: none
+		sourceColumn: [MonthStart]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Date = calculated
+		mode: import
+		source = ```
+				ADDCOLUMNS (
+				    CALENDAR ( DATE ( 2025, 9, 1 ), MAX ( Activity[event_date] ) ),
+				    "Year", YEAR ( [Date] ),
+				    "MonthNo", MONTH ( [Date] ),
+				    "Month", FORMAT ( [Date], "mmm" ),
+				    "Year Month", FORMAT ( [Date], "yyyy-mm" ),
+				    "MonthStart", DATE ( YEAR ( [Date] ), MONTH ( [Date] ), 1 )
+				)
+				```
+
+	annotation PBI_Id = a1b2c3d4e5f600112233445566778899
