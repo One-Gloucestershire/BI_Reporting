@@ -1,0 +1,64 @@
+table Practice
+	lineageTag: 1f9c0a00-0000-4b00-9c00-153932928007050
+
+	measure 'GP Practices' = DISTINCTCOUNT ( Practice[practice_code] )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-108155294482712
+
+	column practice_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-177580610354773
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-86804709732754
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column latitude
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-245951245708884
+		summarizeBy: none
+		sourceColumn: latitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column longitude
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-233267183535118
+		summarizeBy: none
+		sourceColumn: longitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcn_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-050471614819
+		summarizeBy: none
+		sourceColumn: pcn_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column lad
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-187986307515779
+		summarizeBy: none
+		sourceColumn: lad
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Practice = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select practice_code, max(practice_name) as practice_name,#(lf)    max(lat) as latitude, max(lon) as longitude, max(pcn_code) as pcn_code, max(lad19nm) as lad#(lf)from data_mart_l050_phm_rpt.practice_locations where is_glos = true group by practice_code", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
