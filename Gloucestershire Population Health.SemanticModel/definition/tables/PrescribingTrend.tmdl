@@ -1,0 +1,136 @@
+table PrescribingTrend
+	lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000092
+
+	measure 'Prescribing Items' = SUM ( PrescribingTrend[items] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000073
+
+	measure 'Prescribing Cost' = SUM ( PrescribingTrend[actual_cost] )
+		formatString: \£#,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000074
+
+	measure 'Cost per Item' = DIVIDE ( [Prescribing Cost], [Prescribing Items] )
+		formatString: \£0.00
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000075
+
+	measure 'Prescribing Items (Latest Month)' = CALCULATE ( [Prescribing Items], PrescribingTrend[month_date] = MAX ( PrescribingTrend[month_date] ) )
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000076
+
+	measure 'Prescribing Prev Month' = VAR l = MAX ( PrescribingTrend[month_date] ) RETURN CALCULATE ( [Prescribing Items], PrescribingTrend[month_date] = EDATE ( l, -1 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000077
+
+	measure 'Prescribing Prev Year' = VAR l = MAX ( PrescribingTrend[month_date] ) RETURN CALCULATE ( [Prescribing Items], PrescribingTrend[month_date] = EDATE ( l, -12 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000078
+
+	measure 'Prescribing MoM Δ' = [Prescribing Items (Latest Month)] - [Prescribing Prev Month]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000079
+
+	measure 'Prescribing MoM Δ%' = DIVIDE ( [Prescribing MoM Δ], [Prescribing Prev Month] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000080
+
+	measure 'Prescribing YoY Δ' = [Prescribing Items (Latest Month)] - [Prescribing Prev Year]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000081
+
+	measure 'Prescribing YoY Δ%' = DIVIDE ( [Prescribing YoY Δ], [Prescribing Prev Year] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000082
+
+	measure 'Prescribing MoM' = VAR d = [Prescribing MoM Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000083
+
+	measure 'Prescribing YoY' = VAR d = [Prescribing YoY Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000084
+
+	measure 'Prescribing MoM Colour' = VAR d = [Prescribing MoM Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000085
+
+	measure 'Prescribing YoY Colour' = VAR d = [Prescribing YoY Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000086
+
+	measure 'Prescribing Mean' = AVERAGEX ( SUMMARIZE ( ALLSELECTED ( PrescribingTrend[month_date] ), PrescribingTrend[month_date] ), CALCULATE ( [Prescribing Items] ) )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000087
+
+	measure 'Prescribing MeanMR' = VAR _b = ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( PrescribingTrend[month_date] ), PrescribingTrend[month_date] ), "@v", CALCULATE ( [Prescribing Items] ) ) VAR _r = ADDCOLUMNS ( _b, "@i", RANKX ( _b, PrescribingTrend[month_date],, ASC, DENSE ) ) VAR _mr = FILTER ( ADDCOLUMNS ( _r, "@d", VAR _ci = [@i] RETURN IF ( _ci > 1, ABS ( [@v] - MAXX ( FILTER ( _r, [@i] = _ci - 1 ), [@v] ) ) ) ), NOT ISBLANK ( [@d] ) ) RETURN AVERAGEX ( _mr, [@d] )
+		formatString: #,0
+		displayFolder: SPC
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000088
+
+	measure 'Prescribing UCL' = [Prescribing Mean] + 2.66 * [Prescribing MeanMR]
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000089
+
+	measure 'Prescribing LCL' = MAX ( 0, [Prescribing Mean] - 2.66 * [Prescribing MeanMR] )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000090
+
+	measure 'Prescribing Months Out of Control' = COUNTROWS ( FILTER ( ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( PrescribingTrend[month_date] ), PrescribingTrend[month_date] ), "@v", CALCULATE ( [Prescribing Items] ) ), [@v] > [Prescribing UCL] || [@v] < [Prescribing LCL] ) )
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000091
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000093
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column items
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000094
+		summarizeBy: none
+		sourceColumn: items
+
+		annotation SummarizationSetBy = Automatic
+
+	column actual_cost
+		dataType: double
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000095
+		summarizeBy: none
+		sourceColumn: actual_cost
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PrescribingTrend = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select to_date(yearmonth::varchar,'YYYYMM') as month_date,#(lf)sum(nullif(trim(translate(items::varchar,chr(0),'')),'')::float) as items,#(lf)sum(nullif(trim(translate(actualcost::varchar,chr(0),'')),'')::float) as actual_cost#(lf)from data_mart_powerbi_prescribing.tbl01_prescribing_report#(lf)where yearmonth >= 202104#(lf)group by 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
