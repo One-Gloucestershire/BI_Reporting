@@ -1,6 +1,49 @@
 table PracticeKPI
 	lineageTag: 1f9c0a00-0000-4b00-9c00-98552138055968
 
+	measure 'Funnel Centre (Glos)' = VAR num = CALCULATE ( SUM ( PracticeKPI[statin_gap] ), ALLSELECTED ( PracticeKPI ) ) VAR den = CALCULATE ( SUM ( PracticeKPI[cvd_patients] ), ALLSELECTED ( PracticeKPI ) ) RETURN DIVIDE ( num, den )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000001
+	measure 'Funnel Upper 95%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MIN ( 1, p + 1.96 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000002
+	measure 'Funnel Lower 95%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MAX ( 0, p - 1.96 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000003
+	measure 'Funnel Upper 99.8%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MIN ( 1, p + 3.09 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000004
+	measure 'Funnel Lower 99.8%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MAX ( 0, p - 3.09 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000005
+	measure 'Practice Outside 95%' = VAR r = [Statin Gap Rate] RETURN IF ( ISBLANK ( r ), BLANK (), IF ( r > [Funnel Upper 95%] || r < [Funnel Lower 95%], 1, 0 ) )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000006
+	measure 'Practice Funnel Status' = VAR r = [Statin Gap Rate] VAR u2 = [Funnel Upper 95%] VAR l2 = [Funnel Lower 95%] VAR u3 = [Funnel Upper 99.8%] VAR l3 = [Funnel Lower 99.8%] RETURN SWITCH ( TRUE (), ISBLANK ( r ), "—", r > u3, "▲▲ High outlier (>99.8%)", r > u2, "▲ High (>95%)", r < l3, "▼▼ Low outlier (<99.8%)", r < l2, "▼ Low (<95%)", "● Within control limits" )
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000007
+	measure 'Practice Funnel Tone' = VAR r = [Statin Gap Rate] RETURN SWITCH ( TRUE (), ISBLANK ( r ), 0, r > [Funnel Upper 95%], -1, r < [Funnel Lower 95%], 1, 0 )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000008
+	measure 'Practice Wilson Low' = VAR n = SUM ( PracticeKPI[cvd_patients] ) VAR x = SUM ( PracticeKPI[statin_gap] ) VAR p = DIVIDE ( x, n ) VAR z = 1.96 VAR z2 = z * z VAR denom = 1 + DIVIDE ( z2, n ) VAR centre = DIVIDE ( p + DIVIDE ( z2, 2 * n ), denom ) VAR margin = DIVIDE ( z * SQRT ( DIVIDE ( p * ( 1 - p ) + DIVIDE ( z2, 4 * n ), n ) ), denom ) RETURN IF ( n > 0 && x >= 0 && x <= n, MAX ( 0, centre - margin ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000009
+	measure 'Practice Wilson High' = VAR n = SUM ( PracticeKPI[cvd_patients] ) VAR x = SUM ( PracticeKPI[statin_gap] ) VAR p = DIVIDE ( x, n ) VAR z = 1.96 VAR z2 = z * z VAR denom = 1 + DIVIDE ( z2, n ) VAR centre = DIVIDE ( p + DIVIDE ( z2, 2 * n ), denom ) VAR margin = DIVIDE ( z * SQRT ( DIVIDE ( p * ( 1 - p ) + DIVIDE ( z2, 4 * n ), n ) ), denom ) RETURN IF ( n > 0 && x >= 0 && x <= n, MIN ( 1, centre + margin ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000010
+	measure 'Practice Wilson CI' = VAR lo = [Practice Wilson Low] VAR hi = [Practice Wilson High] RETURN IF ( NOT ISBLANK ( lo ), "(" & FORMAT ( lo * 100, "0.0" ) & " – " & FORMAT ( hi * 100, "0.0" ) & ")" )
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000011
+
 	measure 'Registered (GP list)' = SUM ( PracticeKPI[total_patients] )
 		formatString: #,0
 		lineageTag: 1f9c0a00-0000-4b00-9c00-91340759634108
