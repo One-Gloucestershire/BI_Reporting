@@ -1,6 +1,65 @@
 table CVDPrevent
 	lineageTag: 1f9c0a00-0000-4b00-9c00-171534534014089
 
+	measure 'CVD Denominator' = SUM ( CVDPrevent[denominator] )
+		formatString: #,0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000001
+	measure 'CVD Rate' = DIVIDE ( SUM ( CVDPrevent[numerator] ), SUM ( CVDPrevent[denominator] ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000002
+	measure 'CVD England Numerator' = CALCULATE ( SUM ( CVDPrevent[numerator] ), ALL ( CVDPrevent[area] ) )
+		formatString: #,0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000003
+	measure 'CVD England Denominator' = CALCULATE ( SUM ( CVDPrevent[denominator] ), ALL ( CVDPrevent[area] ) )
+		formatString: #,0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000004
+	measure 'CVD England Rate' = DIVIDE ( [CVD England Numerator], [CVD England Denominator] )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000005
+	measure 'CVD Wilson Low' = VAR n = SUM ( CVDPrevent[denominator] ) VAR x = SUM ( CVDPrevent[numerator] ) VAR p = DIVIDE ( x, n ) VAR z = 1.96 VAR z2 = z * z VAR denom = 1 + DIVIDE ( z2, n ) VAR centre = DIVIDE ( p + DIVIDE ( z2, 2 * n ), denom ) VAR margin = DIVIDE ( z * SQRT ( DIVIDE ( p * ( 1 - p ) + DIVIDE ( z2, 4 * n ), n ) ), denom ) RETURN IF ( n > 0 && x >= 0 && x <= n, MAX ( 0, centre - margin ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000006
+	measure 'CVD Wilson High' = VAR n = SUM ( CVDPrevent[denominator] ) VAR x = SUM ( CVDPrevent[numerator] ) VAR p = DIVIDE ( x, n ) VAR z = 1.96 VAR z2 = z * z VAR denom = 1 + DIVIDE ( z2, n ) VAR centre = DIVIDE ( p + DIVIDE ( z2, 2 * n ), denom ) VAR margin = DIVIDE ( z * SQRT ( DIVIDE ( p * ( 1 - p ) + DIVIDE ( z2, 4 * n ), n ) ), denom ) RETURN IF ( n > 0 && x >= 0 && x <= n, MIN ( 1, centre + margin ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000007
+	measure 'CVD Wilson CI' = VAR lo = [CVD Wilson Low] VAR hi = [CVD Wilson High] RETURN IF ( NOT ISBLANK ( lo ), "(" & FORMAT ( lo * 100, "0.0" ) & " – " & FORMAT ( hi * 100, "0.0" ) & ")" )
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000008
+	measure 'CVD Z (vs England)' = VAR p0 = [CVD England Rate] VAR n = SUM ( CVDPrevent[denominator] ) VAR pObs = DIVIDE ( SUM ( CVDPrevent[numerator] ), n ) VAR se = SQRT ( DIVIDE ( p0 * ( 1 - p0 ), n ) ) RETURN IF ( n > 0 && se > 0 && p0 > 0 && p0 < 1, DIVIDE ( pObs - p0, se ) )
+		formatString: 0.00
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000009
+	measure 'CVD P Value (vs England)' = VAR z = [CVD Z (vs England)] VAR az = ABS ( z ) VAR t = DIVIDE ( 1, 1 + 0.2316419 * az ) VAR pdf = 0.39894228 * EXP ( - az * az / 2 ) VAR poly = t * ( 0.31938153 + t * ( -0.356563782 + t * ( 1.781477937 + t * ( -1.821255978 + t * 1.330274429 ) ) ) ) RETURN IF ( NOT ISBLANK ( z ), MIN ( 1, 2 * pdf * poly ) )
+		formatString: 0.000
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000010
+	measure 'CVD Significant (vs England)' = VAR pv = [CVD P Value (vs England)] RETURN IF ( ISBLANK ( pv ), BLANK (), IF ( pv < 0.05, 1, 0 ) )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000011
+	measure 'CVD Is Prevalence' = IF ( CONTAINSSTRING ( SELECTEDVALUE ( CVDPrevent[indicator] ), "Prevalence" ), 1, 0 )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000012
+	measure 'CVD Higher Is Better' = VAR ind = SELECTEDVALUE ( CVDPrevent[indicator] ) RETURN IF ( CONTAINSSTRING ( ind, "overtreatment" ) || CONTAINSSTRING ( ind, "overprescrib" ), 0, 1 )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000013
+	measure 'CVD vs England' = VAR z = [CVD Z (vs England)] VAR sig = [CVD Significant (vs England)] VAR hib = [CVD Higher Is Better] VAR prev = [CVD Is Prevalence] RETURN SWITCH ( TRUE (), ISBLANK ( z ), "— n/a", sig = 0, "● Consistent with England", prev = 1 && z > 0, "▲ Higher than England", prev = 1, "▼ Lower than England", ( z > 0 && hib = 1 ) || ( z < 0 && hib = 0 ), "▲ Significantly better than England", "▼ Significantly worse than England" )
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000014
+	measure 'CVD vs England Tone' = VAR z = [CVD Z (vs England)] VAR sig = [CVD Significant (vs England)] VAR hib = [CVD Higher Is Better] VAR prev = [CVD Is Prevalence] RETURN SWITCH ( TRUE (), ISBLANK ( z ), 0, sig = 0, 0, prev = 1, 0, ( z > 0 && hib = 1 ) || ( z < 0 && hib = 0 ), 1, -1 )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-910000000015
+
 	measure 'CVD Value' = AVERAGE ( CVDPrevent[value] )
 		formatString: 0.0
 		lineageTag: 1f9c0a00-0000-4b00-9c00-120474187725801
