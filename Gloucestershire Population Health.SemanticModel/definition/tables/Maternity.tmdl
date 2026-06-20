@@ -1,0 +1,97 @@
+table Maternity
+	lineageTag: 9059cf1b-3513-0261-3377-049541351a1a
+
+	measure 'Mat Births' = SUM ( Maternity[births] )
+		formatString: #,0
+		lineageTag: 2d416fa2-9440-f3d0-4544-d017f4a29f80
+
+	measure 'Mat Mothers' = SUM ( Maternity[mothers] )
+		formatString: #,0
+		lineageTag: 6d5289e0-05d6-36f6-dc26-67165cab40a2
+
+	measure 'Mat % Preterm' = DIVIDE ( SUM ( Maternity[preterm_births] ), SUM ( Maternity[births] ) )
+		formatString: 0.0%
+		lineageTag: 69324491-1585-1c78-71cb-2841308816e1
+
+	measure 'Mat % Most Deprived' = DIVIDE ( CALCULATE ( SUM ( Maternity[births] ), Maternity[glos_imd_decile] <= 2 ), SUM ( Maternity[births] ) )
+		formatString: 0.0%
+		lineageTag: 7a69788d-7923-2e35-0466-c7c948daf128
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 0c17458e-2789-d2ee-d937-b0dc89b929e5
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column glos_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f13b4bc-9081-be6a-8c31-0b8a9c853e28
+		summarizeBy: none
+		sourceColumn: glos_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column delivery_method
+		dataType: string
+		lineageTag: 4de731e8-670b-a910-6dad-e9f59d7c52ec
+		summarizeBy: none
+		sourceColumn: delivery_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 88e63bba-33dc-89a0-734a-0815b4c57f99
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity_mother
+		dataType: string
+		lineageTag: 72508565-548c-2f67-03a8-4d540f658121
+		summarizeBy: none
+		sourceColumn: ethnicity_mother
+
+		annotation SummarizationSetBy = Automatic
+
+	column births
+		dataType: int64
+		formatString: #,0
+		lineageTag: f8412dc2-6b30-747e-dc4b-db9037d01386
+		summarizeBy: sum
+		sourceColumn: births
+
+		annotation SummarizationSetBy = Automatic
+
+	column mothers
+		dataType: int64
+		formatString: #,0
+		lineageTag: 58048cd7-12b8-7003-6065-c6435ad0c10d
+		summarizeBy: sum
+		sourceColumn: mothers
+
+		annotation SummarizationSetBy = Automatic
+
+	column preterm_births
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1bf8423c-b054-dfb5-ced9-42b3eff7d195
+		summarizeBy: sum
+		sourceColumn: preterm_births
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Maternity = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', birth_date)::date as month_date, case when imd_glos_decile ~ '^[0-9]' then left(imd_glos_decile,2)::int end as glos_imd_decile, coalesce(delivery_method_description,'Unknown') as delivery_method, coalesce(locality_current,'Unknown') as locality, coalesce(ethniccategorymotherdescription,'Unknown') as ethnicity_mother, count(*) as births, count(distinct nhs_no_mother) as mothers, count(distinct case when pretermflag=1 then uniqpregid end) as preterm_births from data_mart_powerbi_maternity.tbl01_births group by 1,2,3,4,5", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

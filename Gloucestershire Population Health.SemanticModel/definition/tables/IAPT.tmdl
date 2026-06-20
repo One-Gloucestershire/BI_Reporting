@@ -1,0 +1,47 @@
+table IAPT
+	lineageTag: 0aecf41f-20e7-114d-c126-d50144717eb0
+
+	measure 'IAPT Referrals' = SUM ( IAPT[referrals] )
+		formatString: #,0
+		lineageTag: 615b1d5f-a939-1b6f-fd15-5b1dd276580a
+
+	measure 'IAPT People' = SUM ( IAPT[patients] )
+		formatString: #,0
+		lineageTag: 8c3538e7-c812-5438-9b7c-ddb1846d8d82
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: fc004fa9-e712-cae7-0f14-2a3c77eb7064
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column referrals
+		dataType: int64
+		formatString: #,0
+		lineageTag: 0e3a87f9-0c51-954c-42e7-3504e9bdb9c3
+		summarizeBy: sum
+		sourceColumn: referrals
+
+		annotation SummarizationSetBy = Automatic
+
+	column patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 84fcba45-31de-4312-4b7f-de290a149ff5
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition IAPT = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', referral_request_received_date)::date as month_date, count(*) as referrals, count(distinct person_id) as patients from data_mart_n007_csu_iapt.tbl_ids101referral_201_load where referral_request_received_date>='2018-01-01' group by 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
