@@ -1,0 +1,112 @@
+table WeightMgmt
+	lineageTag: 340c6e2f-6a0e-05ad-714a-0a5cbca89677
+
+	measure 'WM Cohort' = SUM ( WeightMgmt[patients] )
+		formatString: #,0
+		lineageTag: 6b1a0ff6-eff0-0099-6506-99f09387a89d
+
+	measure 'WM % Obese' = DIVIDE ( SUM ( WeightMgmt[obese_patients] ), SUM ( WeightMgmt[patients] ) )
+		formatString: 0.0%
+		lineageTag: be2729b4-ebe6-137f-cd23-5913c4dd1871
+
+	measure 'WM Avg BMI' = DIVIDE ( SUM ( WeightMgmt[bmi_sum] ), SUM ( WeightMgmt[bmi_n] ) )
+		formatString: 0.00
+		lineageTag: 4574390e-0678-a14d-1e5f-10185a23b9b9
+
+	measure 'WM % Most Deprived' = DIVIDE ( CALCULATE ( SUM ( WeightMgmt[patients] ), WeightMgmt[england_imd_decile] <= 2 ), SUM ( WeightMgmt[patients] ) )
+		formatString: 0.0%
+		lineageTag: b7be33e0-5f09-bcd0-323a-83bd7c8cf4cc
+
+	column england_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 49d60f2d-abd0-42e8-a57e-20b9640a0e95
+		summarizeBy: none
+		sourceColumn: england_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column bmi_group
+		dataType: string
+		lineageTag: 80800af5-7240-9f79-474b-7751f9552a03
+		summarizeBy: none
+		sourceColumn: bmi_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		lineageTag: d18662af-8bf8-7abf-a140-f62fdd5c3239
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 75ab6c54-da0b-3d10-b1b3-5cfc5e542856
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 56ac84e7-9c78-2cb4-9ec3-2757a554703b
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: 42571239-28b7-52ad-558e-d43264ae750b
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: b78f271c-6041-6a0f-9fd2-c94b7e975c2a
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column obese_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 370e2121-cc19-04cf-e6bc-ae84b0242618
+		summarizeBy: sum
+		sourceColumn: obese_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column bmi_sum
+		dataType: double
+		lineageTag: 81a27c8b-519e-da18-ff63-caaaae420762
+		summarizeBy: sum
+		sourceColumn: bmi_sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column bmi_n
+		dataType: int64
+		formatString: #,0
+		lineageTag: 91e6e25b-a31e-9605-3e07-03d45586fdd6
+		summarizeBy: sum
+		sourceColumn: bmi_n
+
+		annotation SummarizationSetBy = Automatic
+
+	partition WeightMgmt = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select imdnationaldecile as england_imd_decile, coalesce(bmigroup,'Unknown') as bmi_group, coalesce(eficategoryderived,'Unknown') as efi_category, coalesce(localityname,'Unknown') as locality, coalesce(gender,'Unknown') as gender, coalesce(ethnicoriginwidergroups,'Unknown') as ethnicity, count(distinct derived_pseudo_nhs) as patients, count(distinct case when obesity=1 then derived_pseudo_nhs end) as obese_patients, sum(bmi) as bmi_sum, count(bmi) as bmi_n from data_mart_powerbi_weightmanagement.tbl01_cohort group by 1,2,3,4,5,6", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
