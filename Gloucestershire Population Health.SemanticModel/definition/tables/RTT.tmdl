@@ -1,0 +1,155 @@
+table RTT
+	lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000045
+
+	measure 'RTT Incomplete Pathways' = SUM ( RTT[incomplete_pathways] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000024
+
+	measure 'RTT Within 18wk' = SUM ( RTT[within_18_weeks] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000025
+
+	measure 'RTT 52wk Breaches' = SUM ( RTT[breaches_52_week] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000026
+
+	measure 'RTT % Within 18wk' = DIVIDE ( [RTT Within 18wk], [RTT Incomplete Pathways] )
+		formatString: 0.0%
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000027
+
+	measure 'RTT Incomplete Pathways (Latest Month)' = CALCULATE ( [RTT Incomplete Pathways], RTT[month_date] = MAX ( RTT[month_date] ) )
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000028
+
+	measure 'RTT Prev Month' = VAR l = MAX ( RTT[month_date] ) RETURN CALCULATE ( [RTT Incomplete Pathways], RTT[month_date] = EDATE ( l, -1 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000029
+
+	measure 'RTT Prev Year' = VAR l = MAX ( RTT[month_date] ) RETURN CALCULATE ( [RTT Incomplete Pathways], RTT[month_date] = EDATE ( l, -12 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000030
+
+	measure 'RTT MoM Δ' = [RTT Incomplete Pathways (Latest Month)] - [RTT Prev Month]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000031
+
+	measure 'RTT MoM Δ%' = DIVIDE ( [RTT MoM Δ], [RTT Prev Month] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000032
+
+	measure 'RTT YoY Δ' = [RTT Incomplete Pathways (Latest Month)] - [RTT Prev Year]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000033
+
+	measure 'RTT YoY Δ%' = DIVIDE ( [RTT YoY Δ], [RTT Prev Year] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000034
+
+	measure 'RTT MoM' = VAR d = [RTT MoM Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000035
+
+	measure 'RTT YoY' = VAR d = [RTT YoY Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000036
+
+	measure 'RTT MoM Colour' = VAR d = [RTT MoM Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000037
+
+	measure 'RTT YoY Colour' = VAR d = [RTT YoY Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000038
+
+	measure 'RTT Mean' = AVERAGEX ( SUMMARIZE ( ALLSELECTED ( RTT[month_date] ), RTT[month_date] ), CALCULATE ( [RTT Incomplete Pathways] ) )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000039
+
+	measure 'RTT MeanMR' = VAR _b = ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( RTT[month_date] ), RTT[month_date] ), "@v", CALCULATE ( [RTT Incomplete Pathways] ) ) VAR _r = ADDCOLUMNS ( _b, "@i", RANKX ( _b, RTT[month_date],, ASC, DENSE ) ) VAR _mr = FILTER ( ADDCOLUMNS ( _r, "@d", VAR _ci = [@i] RETURN IF ( _ci > 1, ABS ( [@v] - MAXX ( FILTER ( _r, [@i] = _ci - 1 ), [@v] ) ) ) ), NOT ISBLANK ( [@d] ) ) RETURN AVERAGEX ( _mr, [@d] )
+		formatString: #,0
+		displayFolder: SPC
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000040
+
+	measure 'RTT UCL' = [RTT Mean] + 2.66 * [RTT MeanMR]
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000041
+
+	measure 'RTT LCL' = MAX ( 0, [RTT Mean] - 2.66 * [RTT MeanMR] )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000042
+
+	measure 'RTT Months Out of Control' = COUNTROWS ( FILTER ( ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( RTT[month_date] ), RTT[month_date] ), "@v", CALCULATE ( [RTT Incomplete Pathways] ) ), [@v] > [RTT UCL] || [@v] < [RTT LCL] ) )
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000043
+
+	measure 'RTT %18 MoM Δ%%' = VAR l = MAX ( RTT[month_date] ) RETURN [RTT % Within 18wk] - CALCULATE ( [RTT % Within 18wk], RTT[month_date] = EDATE ( l, -1 ) )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000044
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000046
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column incomplete_pathways
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000047
+		summarizeBy: none
+		sourceColumn: incomplete_pathways
+
+		annotation SummarizationSetBy = Automatic
+
+	column within_18_weeks
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000048
+		summarizeBy: none
+		sourceColumn: within_18_weeks
+
+		annotation SummarizationSetBy = Automatic
+
+	column breaches_52_week
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000049
+		summarizeBy: none
+		sourceColumn: breaches_52_week
+
+		annotation SummarizationSetBy = Automatic
+
+	partition RTT = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select left(period_name,10)::date as month_date,#(lf)sum(nullif(trim(translate(total,chr(0),'')),'')::float) as incomplete_pathways,#(lf)sum(nullif(trim(translate(wk_0_18_sum_1,chr(0),'')),'')::float) as within_18_weeks,#(lf)sum(nullif(trim(translate(gt_52_weeks_plus,chr(0),'')),'')::float) as breaches_52_week#(lf)from data_mart_powerbi_performance.tbl03_rtt#(lf)group by 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

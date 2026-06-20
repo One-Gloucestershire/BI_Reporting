@@ -1,0 +1,136 @@
+table AE
+	lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000020
+
+	measure 'A&E Attendances' = SUM ( AE[attendances] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000001
+
+	measure 'A&E Admissions' = SUM ( AE[admissions] )
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000002
+
+	measure 'A&E % Admitted' = DIVIDE ( [A&E Admissions], [A&E Attendances] )
+		formatString: 0.0%
+		displayFolder: Base
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000003
+
+	measure 'A&E Attendances (Latest Month)' = CALCULATE ( [A&E Attendances], AE[month_date] = MAX ( AE[month_date] ) )
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000004
+
+	measure 'A&E Prev Month' = VAR l = MAX ( AE[month_date] ) RETURN CALCULATE ( [A&E Attendances], AE[month_date] = EDATE ( l, -1 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000005
+
+	measure 'A&E Prev Year' = VAR l = MAX ( AE[month_date] ) RETURN CALCULATE ( [A&E Attendances], AE[month_date] = EDATE ( l, -12 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000006
+
+	measure 'A&E MoM Δ' = [A&E Attendances (Latest Month)] - [A&E Prev Month]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000007
+
+	measure 'A&E MoM Δ%' = DIVIDE ( [A&E MoM Δ], [A&E Prev Month] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000008
+
+	measure 'A&E YoY Δ' = [A&E Attendances (Latest Month)] - [A&E Prev Year]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000009
+
+	measure 'A&E YoY Δ%' = DIVIDE ( [A&E YoY Δ], [A&E Prev Year] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000010
+
+	measure 'A&E MoM' = VAR d = [A&E MoM Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000011
+
+	measure 'A&E YoY' = VAR d = [A&E YoY Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000012
+
+	measure 'A&E MoM Colour' = VAR d = [A&E MoM Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000013
+
+	measure 'A&E YoY Colour' = VAR d = [A&E YoY Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000014
+
+	measure 'A&E Mean' = AVERAGEX ( SUMMARIZE ( ALLSELECTED ( AE[month_date] ), AE[month_date] ), CALCULATE ( [A&E Attendances] ) )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000015
+
+	measure 'A&E MeanMR' = VAR _b = ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( AE[month_date] ), AE[month_date] ), "@v", CALCULATE ( [A&E Attendances] ) ) VAR _r = ADDCOLUMNS ( _b, "@i", RANKX ( _b, AE[month_date],, ASC, DENSE ) ) VAR _mr = FILTER ( ADDCOLUMNS ( _r, "@d", VAR _ci = [@i] RETURN IF ( _ci > 1, ABS ( [@v] - MAXX ( FILTER ( _r, [@i] = _ci - 1 ), [@v] ) ) ) ), NOT ISBLANK ( [@d] ) ) RETURN AVERAGEX ( _mr, [@d] )
+		formatString: #,0
+		displayFolder: SPC
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000016
+
+	measure 'A&E UCL' = [A&E Mean] + 2.66 * [A&E MeanMR]
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000017
+
+	measure 'A&E LCL' = MAX ( 0, [A&E Mean] - 2.66 * [A&E MeanMR] )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000018
+
+	measure 'A&E Months Out of Control' = COUNTROWS ( FILTER ( ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( AE[month_date] ), AE[month_date] ), "@v", CALCULATE ( [A&E Attendances] ) ), [@v] > [A&E UCL] || [@v] < [A&E LCL] ) )
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000019
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000021
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendances
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000022
+		summarizeBy: none
+		sourceColumn: attendances
+
+		annotation SummarizationSetBy = Automatic
+
+	column admissions
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000023
+		summarizeBy: none
+		sourceColumn: admissions
+
+		annotation SummarizationSetBy = Automatic
+
+	partition AE = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', arrival_date)::date as month_date,#(lf)count(*) as attendances,#(lf)count(case when admitted_flag ilike '%admit%' then 1 end) as admissions#(lf)from data_mart_powerbi_urgentcare.tbl01_ecds#(lf)where arrival_date >= date '2021-04-01'#(lf)group by 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
