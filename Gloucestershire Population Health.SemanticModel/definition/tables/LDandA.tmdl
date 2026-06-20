@@ -1,0 +1,122 @@
+table LDandA
+	lineageTag: c574712c-a6e0-eead-0b80-7e67c7213e8b
+
+	measure 'LDA Cohort (latest)' = VAR m = CALCULATE ( MAX ( LDandA[month_date] ), ALL ( LDandA[month_date] ) ) RETURN CALCULATE ( SUM ( LDandA[patients] ), LDandA[month_date] = m )
+		formatString: #,0
+		lineageTag: 0e95ac56-dc7f-e8f1-5eb5-b23081345759
+
+	measure 'LDA LD (latest)' = VAR m = CALCULATE ( MAX ( LDandA[month_date] ), ALL ( LDandA[month_date] ) ) RETURN CALCULATE ( SUM ( LDandA[ld_patients] ), LDandA[month_date] = m )
+		formatString: #,0
+		lineageTag: 0f0d44ad-f39c-c263-609b-e0e62325301b
+
+	measure 'LDA Autism (latest)' = VAR m = CALCULATE ( MAX ( LDandA[month_date] ), ALL ( LDandA[month_date] ) ) RETURN CALCULATE ( SUM ( LDandA[autism_patients] ), LDandA[month_date] = m )
+		formatString: #,0
+		lineageTag: 99c33b9a-e7e9-f64d-d331-2bbbb3f8cad6
+
+	measure 'LDA ADHD (latest)' = VAR m = CALCULATE ( MAX ( LDandA[month_date] ), ALL ( LDandA[month_date] ) ) RETURN CALCULATE ( SUM ( LDandA[adhd_patients] ), LDandA[month_date] = m )
+		formatString: #,0
+		lineageTag: 7b37b478-200e-806b-e0a4-64a4a61aefec
+
+	measure 'LDA Patient-Months' = SUM ( LDandA[patients] )
+		formatString: #,0
+		lineageTag: b981e333-1027-33c2-8d5d-e9d002ad8634
+
+	measure 'LDA % Most Deprived' = VAR m = CALCULATE ( MAX ( LDandA[month_date] ), ALL ( LDandA[month_date] ) ) RETURN DIVIDE ( CALCULATE ( SUM ( LDandA[patients] ), LDandA[month_date] = m, LDandA[glos_imd_decile] <= 2 ), CALCULATE ( SUM ( LDandA[patients] ), LDandA[month_date] = m ) )
+		formatString: 0.0%
+		lineageTag: f9bdd1f1-64e7-4795-a42e-0ea7083a23bc
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 72336315-ccb1-eb78-0e2a-60a79ec8d623
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column glos_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 370a1385-f5d9-ac27-18df-76404fcfed51
+		summarizeBy: none
+		sourceColumn: glos_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: 85f47511-a7d6-8bc9-bf48-a045f8a3f998
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: a632681a-64e9-5b03-ef25-c9bf072daf89
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column ethnicity
+		dataType: string
+		lineageTag: fa6e4406-f37c-89c4-8c91-dedc6a05fd83
+		summarizeBy: none
+		sourceColumn: ethnicity
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: c6e70fa2-35a7-15a7-1911-6af0f2d4cc6f
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: da6ec790-dd0e-2174-fd2a-0ee20f3d6270
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column ld_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: bdcb0ea0-c90f-95de-64fd-81f55822714e
+		summarizeBy: sum
+		sourceColumn: ld_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column autism_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 462cff07-25bb-d753-d72e-808879a35471
+		summarizeBy: sum
+		sourceColumn: autism_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column adhd_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 33e1567c-408d-2067-8293-27c7b8820696
+		summarizeBy: sum
+		sourceColumn: adhd_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition LDandA = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', census_date)::date as month_date, imdcountydecile as glos_imd_decile, coalesce(age_band_10yr,'Unknown') as age_band, coalesce(gender,'Unknown') as gender, coalesce(ethnic_origin_grouped,'Unknown') as ethnicity, coalesce(locality,'Unknown') as locality, count(distinct derived_nhs_number) as patients, count(distinct case when ld_flag=1 then derived_nhs_number end) as ld_patients, count(distinct case when autism_flag=1 then derived_nhs_number end) as autism_patients, count(distinct case when adhd_flag=1 then derived_nhs_number end) as adhd_patients from data_mart_powerbi_ldanda.tbl01_ld_autism_adhd_cohort group by 1,2,3,4,5,6", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,194 @@
+table PracticeKPI
+	lineageTag: 1f9c0a00-0000-4b00-9c00-98552138055968
+
+	measure 'Funnel Centre (Glos)' = VAR num = CALCULATE ( SUM ( PracticeKPI[statin_gap] ), ALLSELECTED ( PracticeKPI ) ) VAR den = CALCULATE ( SUM ( PracticeKPI[cvd_patients] ), ALLSELECTED ( PracticeKPI ) ) RETURN DIVIDE ( num, den )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000001
+	measure 'Funnel Upper 95%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MIN ( 1, p + 1.96 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000002
+	measure 'Funnel Lower 95%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MAX ( 0, p - 1.96 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000003
+	measure 'Funnel Upper 99.8%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MIN ( 1, p + 3.09 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000004
+	measure 'Funnel Lower 99.8%' = VAR p = [Funnel Centre (Glos)] VAR n = SUM ( PracticeKPI[cvd_patients] ) RETURN IF ( n > 0, MAX ( 0, p - 3.09 * SQRT ( DIVIDE ( p * ( 1 - p ), n ) ) ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000005
+	measure 'Practice Outside 95%' = VAR r = [Statin Gap Rate] RETURN IF ( ISBLANK ( r ), BLANK (), IF ( r > [Funnel Upper 95%] || r < [Funnel Lower 95%], 1, 0 ) )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000006
+	measure 'Practice Funnel Status' = VAR r = [Statin Gap Rate] VAR u2 = [Funnel Upper 95%] VAR l2 = [Funnel Lower 95%] VAR u3 = [Funnel Upper 99.8%] VAR l3 = [Funnel Lower 99.8%] RETURN SWITCH ( TRUE (), ISBLANK ( r ), "—", r > u3, "▲▲ High outlier (>99.8%)", r > u2, "▲ High (>95%)", r < l3, "▼▼ Low outlier (<99.8%)", r < l2, "▼ Low (<95%)", "● Within control limits" )
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000007
+	measure 'Practice Funnel Tone' = VAR r = [Statin Gap Rate] RETURN SWITCH ( TRUE (), ISBLANK ( r ), 0, r > [Funnel Upper 95%], -1, r < [Funnel Lower 95%], 1, 0 )
+		formatString: 0
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000008
+	measure 'Practice Wilson Low' = VAR n = SUM ( PracticeKPI[cvd_patients] ) VAR x = SUM ( PracticeKPI[statin_gap] ) VAR p = DIVIDE ( x, n ) VAR z = 1.96 VAR z2 = z * z VAR denom = 1 + DIVIDE ( z2, n ) VAR centre = DIVIDE ( p + DIVIDE ( z2, 2 * n ), denom ) VAR margin = DIVIDE ( z * SQRT ( DIVIDE ( p * ( 1 - p ) + DIVIDE ( z2, 4 * n ), n ) ), denom ) RETURN IF ( n > 0 && x >= 0 && x <= n, MAX ( 0, centre - margin ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000009
+	measure 'Practice Wilson High' = VAR n = SUM ( PracticeKPI[cvd_patients] ) VAR x = SUM ( PracticeKPI[statin_gap] ) VAR p = DIVIDE ( x, n ) VAR z = 1.96 VAR z2 = z * z VAR denom = 1 + DIVIDE ( z2, n ) VAR centre = DIVIDE ( p + DIVIDE ( z2, 2 * n ), denom ) VAR margin = DIVIDE ( z * SQRT ( DIVIDE ( p * ( 1 - p ) + DIVIDE ( z2, 4 * n ), n ) ), denom ) RETURN IF ( n > 0 && x >= 0 && x <= n, MIN ( 1, centre + margin ) )
+		formatString: 0.0%
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000010
+	measure 'Practice Wilson CI' = VAR lo = [Practice Wilson Low] VAR hi = [Practice Wilson High] RETURN IF ( NOT ISBLANK ( lo ), "(" & FORMAT ( lo * 100, "0.0" ) & " – " & FORMAT ( hi * 100, "0.0" ) & ")" )
+		displayFolder: Statistics (credibility)
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000011
+
+	measure 'Registered (GP list)' = SUM ( PracticeKPI[total_patients] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-91340759634108
+
+	measure 'Patients per GP FTE' = DIVIDE ( SUM ( PracticeKPI[total_patients] ), SUM ( PracticeKPI[total_gp_fte] ) )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-235516389820785
+
+	measure 'GP Survey Satisfaction' = DIVIDE ( AVERAGE ( PracticeKPI[overall_exp_pct] ), 100 )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-49356321664332
+
+	measure 'Phone Access %' = DIVIDE ( AVERAGE ( PracticeKPI[phone_access_pct] ), 100 )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-256438654795219
+
+	measure 'Statin Gap Rate' = DIVIDE ( SUM ( PracticeKPI[statin_gap] ), SUM ( PracticeKPI[cvd_patients] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-242457671055536
+
+	measure 'CVD Patients' = SUM ( PracticeKPI[cvd_patients] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-184507041298496
+
+	measure 'Statin Gap (n)' = SUM ( PracticeKPI[statin_gap] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-161606082953873
+
+	measure 'GP FTE per 10k' = DIVIDE ( SUM ( PracticeKPI[total_gp_fte] ), SUM ( PracticeKPI[total_patients] ) ) * 10000
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-10391186331993
+
+	measure 'Need Index' = 11 - AVERAGE ( PracticeKPI[practice_imd_decile] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-173631237275829
+
+	measure 'Inverse Care Index' = DIVIDE ( [Need Index], [GP FTE per 10k] )
+		formatString: 0.00
+		lineageTag: 1f9c0a00-0000-4b00-9c00-277725160873017
+
+	measure 'Mean Statin Gap' = CALCULATE ( [Statin Gap Rate], ALL ( PracticeKPI ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-68468234253500
+
+	column practice_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-177580610354773
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-252450502351030
+		summarizeBy: sum
+		sourceColumn: total_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_gp_fte
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-99603593511651
+		summarizeBy: sum
+		sourceColumn: total_gp_fte
+
+		annotation SummarizationSetBy = Automatic
+
+	column nurse_fte
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-167601114234367
+		summarizeBy: sum
+		sourceColumn: nurse_fte
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_fte
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-150269045952286
+		summarizeBy: sum
+		sourceColumn: total_fte
+
+		annotation SummarizationSetBy = Automatic
+
+	column overall_exp_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-76089812836511
+		summarizeBy: average
+		sourceColumn: overall_exp_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column gp_contact_overall_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-243412282198427
+		summarizeBy: average
+		sourceColumn: gp_contact_overall_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column phone_access_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-220509129428650
+		summarizeBy: average
+		sourceColumn: phone_access_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column cvd_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-177624346517052
+		summarizeBy: sum
+		sourceColumn: cvd_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column statin_gap
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-209425709798462
+		summarizeBy: sum
+		sourceColumn: statin_gap
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-62856259007879
+		summarizeBy: none
+		sourceColumn: practice_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	partition PracticeKPI = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "with glos as (#(lf)    select pl.practice_code, max(la.imd_decile) as practice_imd_decile#(lf)    from data_mart_l050_phm_rpt.practice_locations pl#(lf)    left join data_mart_l050_phm_rpt.lsoa_aggregates la on la.lsoa11cd = pl.lsoa11cd#(lf)    where pl.is_glos = true#(lf)    group by pl.practice_code#(lf)),#(lf)wf as (select practice_code, total_patients, total_gp_fte, nurse_fte, total_fte,#(lf)    row_number() over (partition by practice_code order by extract_date desc) rn#(lf)    from data_mart_l050_phm_rpt.kpi_practice_workforce),#(lf)gp as (select practice_code, overall_exp_pct, gp_contact_overall_pct, phone_access_pct,#(lf)    row_number() over (partition by practice_code order by survey_year desc) rn#(lf)    from data_mart_l050_phm_rpt.kpi_practice_gpps),#(lf)st as (select practice_code, count(*) as cvd_patients,#(lf)    sum(case when is_gap then 1 else 0 end) as statin_gap#(lf)    from data_mart_l050_phm_rpt.statin_compliance group by 1)#(lf)select w.practice_code, w.total_patients, w.total_gp_fte, w.nurse_fte, w.total_fte,#(lf)    gp.overall_exp_pct, gp.gp_contact_overall_pct, gp.phone_access_pct,#(lf)    st.cvd_patients, st.statin_gap,#(lf)    coalesce(gl.practice_imd_decile, 0) as practice_imd_decile#(lf)from wf w#(lf)join glos gl on gl.practice_code = w.practice_code#(lf)left join gp on gp.practice_code = w.practice_code and gp.rn = 1#(lf)left join st on st.practice_code = w.practice_code#(lf)where w.rn = 1", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

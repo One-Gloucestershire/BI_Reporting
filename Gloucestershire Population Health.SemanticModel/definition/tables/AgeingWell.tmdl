@@ -1,0 +1,79 @@
+table AgeingWell
+	lineageTag: 26fea72a-4b44-b10a-80c8-a3554004fa8e
+
+	measure 'AW Cohort (latest)' = VAR m = CALCULATE ( MAX ( AgeingWell[month_date] ), ALL ( AgeingWell[month_date] ) ) RETURN CALCULATE ( SUM ( AgeingWell[patients] ), AgeingWell[month_date] = m )
+		formatString: #,0
+		lineageTag: cecf8a88-5136-f4f2-0d63-82d26a17eaed
+
+	measure 'AW Patient-Months' = SUM ( AgeingWell[patients] )
+		formatString: #,0
+		lineageTag: 57e2c888-452e-d6d9-2c68-bb249186c4c3
+
+	measure 'AW % Most Deprived' = VAR m = CALCULATE ( MAX ( AgeingWell[month_date] ), ALL ( AgeingWell[month_date] ) ) RETURN DIVIDE ( CALCULATE ( SUM ( AgeingWell[patients] ), AgeingWell[month_date] = m, AgeingWell[england_imd_decile] <= 2 ), CALCULATE ( SUM ( AgeingWell[patients] ), AgeingWell[month_date] = m ) )
+		formatString: 0.0%
+		lineageTag: f956b05a-1746-f73e-d5c4-d6986054143c
+
+	measure 'AW Localities' = DISTINCTCOUNT ( AgeingWell[locality] )
+		formatString: 0
+		lineageTag: 0d6705ff-1f7e-4c7c-6811-a83a85bf671a
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 93a3b6fd-80ec-0de6-103f-4a57fe319157
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column england_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 8a606a7e-d79a-1dd9-a38c-a53d85ad8816
+		summarizeBy: none
+		sourceColumn: england_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_category
+		dataType: string
+		lineageTag: b6c41bb0-617b-5274-9179-b35b013c61f3
+		summarizeBy: none
+		sourceColumn: efi_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 0658557e-2742-d3dd-6d90-4e6b2b7ef80f
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: e79ae2a5-28f2-1d46-1a7e-5318f2290b6b
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: bee93141-a9b7-b760-07cd-91cc55c63f3f
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition AgeingWell = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', census_date)::date as month_date, imdnationaldecile as england_imd_decile, coalesce(efi_category,'Unknown') as efi_category, coalesce(locality,'Unknown') as locality, coalesce(gender,'Unknown') as gender, count(distinct derived_nhs_number) as patients from data_mart_powerbi_ageingwell.tbl02_proactive_whiteboard_registered_population_over_time where proactive_care_whiteboard_cohort_flag=1 group by 1,2,3,4,5", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
