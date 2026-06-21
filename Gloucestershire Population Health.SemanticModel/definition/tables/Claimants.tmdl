@@ -1,0 +1,81 @@
+table Claimants
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000401
+
+	measure 'Total Claimants' = ```
+			VAR lp = CALCULATE ( MAX ( Claimants[period_date] ), ALL ( Claimants ) )
+			RETURN CALCULATE ( SUM ( Claimants[claimants] ), Claimants[period_date] = lp )
+			```
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000402
+
+	measure 'Claimant Rate %' = ```
+			VAR lp = CALCULATE ( MAX ( Claimants[period_date] ), ALL ( Claimants ) )
+			RETURN CALCULATE ( DIVIDE ( SUM ( Claimants[claimants] ), SUM ( Claimants[total_population] ) ), Claimants[period_date] = lp )
+			```
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000403
+
+	measure 'Claimant Rate (by period)' = DIVIDE ( SUM ( Claimants[claimants] ), SUM ( Claimants[total_population] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000404
+
+	column lad19nm
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000358242433
+		summarizeBy: none
+		sourceColumn: lad19nm
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_yyyymm
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000685416666
+		summarizeBy: none
+		sourceColumn: period_yyyymm
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000984067951
+		summarizeBy: none
+		sourceColumn: period_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column claimants
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000873542356
+		summarizeBy: sum
+		sourceColumn: claimants
+
+		annotation SummarizationSetBy = Automatic
+
+	column claimant_rate_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000243052870
+		summarizeBy: sum
+		sourceColumn: claimant_rate_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_population
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000757387333
+		summarizeBy: sum
+		sourceColumn: total_population
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Claimants = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid"), "select lad19nm, period_yyyymm, (period_yyyymm || '-01')::date as period_date, claimants, claimant_rate_pct, total_population from data_mart_l050_phm_rpt.lad_claimants where is_glos = true and lad19nm <> 'Gloucestershire'", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
