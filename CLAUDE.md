@@ -285,11 +285,17 @@ merged categories, a chart-type swap) but colours/fonts/axis-titles **don't**,
 it's the theme cache — not a failed sync. Don't re-edit the visuals; bump the
 theme name.
 
-**`multiRowCard` ≠ KPI card.** Big-number KPIs are `visualType: card`. The
-text-insight/action boxes (bound to long DAX text measures) are
-`multiRowCard`, and their data labels were **18pt** → long sentences clipped to
-one line. For text insights set `dataLabels` ~**11pt + wordWrap** (theme or
-per-visual) and hide `categoryLabels` (the measure name adds nothing).
+**Long dynamic text measures need a TABLE, not a card.** Neither `card` nor
+`multiRowCard` reliably **word-wraps** a long DAX text measure — they render one
+line and clip (no `wordWrap`/height tweak fixes it). For insight/action/"The
+Ask" prose, use a single-column, header-less **`tableEx`**:
+`columnHeaders.show=false`, `values.wordWrap=true` + ~11pt, `grid` off,
+`title.show=false`, keep the card background/border. The cell wraps and the row
+grows; size the visual tall enough (tables **scroll**, they don't auto-grow the
+container). Big-number KPIs stay `card`. **Watch the override trap:** these boxes
+were cloned from a card carrying a per-visual `objects.dataLabels` block, and
+**per-visual `objects` beat the theme** — so a theme-level wrap/font never
+applied. When cloning, strip the per-visual overrides you don't want.
 
 **Treemap with many categories is the wrong chart.** ~50 specialties in a
 treemap = unreadable truncated tiles at any label length. Convert to a **sorted
