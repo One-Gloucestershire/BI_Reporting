@@ -1,0 +1,66 @@
+table Crime
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000461
+
+	measure 'Crimes (12m)' = SUM ( Crime[crimes_12m] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000462
+
+	column lsoa11cd
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000463
+		summarizeBy: none
+		sourceColumn: lsoa11cd
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa11nm
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000464
+		summarizeBy: none
+		sourceColumn: lsoa11nm
+
+		annotation SummarizationSetBy = Automatic
+
+	column lad19nm
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000465
+		summarizeBy: none
+		sourceColumn: lad19nm
+
+		annotation SummarizationSetBy = Automatic
+
+	column imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000466
+		summarizeBy: none
+		sourceColumn: imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Crime type'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000467
+		summarizeBy: none
+		sourceColumn: crime_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column crimes_12m
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000468
+		summarizeBy: sum
+		sourceColumn: crimes_12m
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Crime = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select lsoa11cd, lsoa11nm, lad19nm, imd_decile, crime_type, crimes_12m from db03_pid.data_mart_l050_phm_rpt.crime_lsoa", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

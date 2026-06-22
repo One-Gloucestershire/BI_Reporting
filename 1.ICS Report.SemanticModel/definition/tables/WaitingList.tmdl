@@ -1,0 +1,93 @@
+table WaitingList
+	lineageTag: 1f9c0a00-0000-4b00-9c00-24892416509772
+
+	measure 'Waiting List' = SUM ( WaitingList[waiting] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-277072453956636
+
+	measure 'Waiting (current)' = ```
+			VAR m = CALCULATE ( MAX ( WaitingList[month_date] ), ALL ( WaitingList[month_date] ) )
+			RETURN CALCULATE ( SUM ( WaitingList[waiting] ), WaitingList[month_date] = m )
+			```
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-135396857242544
+
+	measure '52+ Week Waiters' = SUM ( WaitingList[wait_52plus] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-271914390837096
+
+	measure '52+ (current)' = ```
+			VAR m = CALCULATE ( MAX ( WaitingList[month_date] ), ALL ( WaitingList[month_date] ) )
+			RETURN CALCULATE ( SUM ( WaitingList[wait_52plus] ), WaitingList[month_date] = m )
+			```
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-259185791189811
+
+	measure '65+ Week Waiters' = SUM ( WaitingList[wait_65plus] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-25993761968023
+
+	measure '65+ (current)' = ```
+			VAR m = CALCULATE ( MAX ( WaitingList[month_date] ), ALL ( WaitingList[month_date] ) )
+			RETURN CALCULATE ( SUM ( WaitingList[wait_65plus] ), WaitingList[month_date] = m )
+			```
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-111665949965887
+
+	measure '52wk Breach Rate' = DIVIDE ( [52+ (current)], [Waiting (current)] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-262145418904178
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column specialty
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-228193213002850
+		summarizeBy: none
+		sourceColumn: specialty
+
+		annotation SummarizationSetBy = Automatic
+
+	column waiting
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-49773219534554
+		summarizeBy: sum
+		sourceColumn: waiting
+
+		annotation SummarizationSetBy = Automatic
+
+	column wait_52plus
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-88453968032535
+		summarizeBy: sum
+		sourceColumn: wait_52plus
+
+		annotation SummarizationSetBy = Automatic
+
+	column wait_65plus
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-197608099398792
+		summarizeBy: sum
+		sourceColumn: wait_65plus
+
+		annotation SummarizationSetBy = Automatic
+
+	partition WaitingList = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select to_date(left(report_date,10),'DD/MM/YYYY') as month_date,#(lf)    replace(replace(replace(replace(treatment_function_name,'Paediatric','Paeds'),' and ',' & '),'Anaesthetics-Pre Admission Clinics','Anaesthetics (Pre-Admit)'),'-Chemotherapy',' (Chemo)') as specialty,#(lf)    sum(nullif(total_all,'')::numeric) as waiting,#(lf)    sum(nullif(gt_52_weeks_plus,'')::numeric) as wait_52plus,#(lf)    sum(nullif(wk_gt_65,'')::numeric) as wait_65plus#(lf)from data_mart_n012_csu_performance.tbl_rtt_incompletes#(lf)where report_date is not null#(lf)group by 1,2", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,167 @@
+table Geography
+	lineageTag: 1f9c0a00-0000-4b00-9c00-145363923956272
+
+	measure 'Mean Risk %' = AVERAGE ( Geography[mean_risk_pct] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-268860782514141
+
+	measure 'Avg IMD Decile' = AVERAGE ( Geography[imd_decile] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-144550842041690
+
+	measure 'LSOA Patients' = SUM ( Geography[patient_count] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-88026271891514
+
+	measure '% Most Deprived LSOAs' = DIVIDE ( CALCULATE ( DISTINCTCOUNT ( Geography[lsoa] ), Geography[imd_decile] <= 2 ), DISTINCTCOUNT ( Geography[lsoa] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-156581669398779
+
+	measure 'Frailty (LSOA)' = SUM ( Geography[Frailty] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-253473605313880
+
+	measure 'Polypharmacy (LSOA)' = SUM ( Geography[Polypharmacy] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-81613178335087
+
+	measure 'Diabetes (LSOA)' = SUM ( Geography[Diabetes] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-237440067620394
+
+	measure 'Hypertension (LSOA)' = SUM ( Geography[Hypertension] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-87922185855611
+
+	measure 'High-risk (LSOA)' = SUM ( Geography[High-risk count] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-247131230334144
+
+	measure 'Priority Index' = AVERAGE ( Geography[mean_risk_pct] ) * ( 11 - AVERAGE ( Geography[imd_decile] ) )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-164383702702221
+
+	measure 'High-risk Annual Cost' = [High-risk (LSOA)] * 3500
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-160393624316054
+
+	measure 'Avertable Spend' = [High-risk Annual Cost] * ( [Reach % Value] / 100 ) * ( [Avertable % Value] / 100 )
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-141809499658237
+
+	measure 'Avertable Spend (deprived)' = CALCULATE ( [Avertable Spend], Geography[imd_decile] <= 2 )
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-188114641829210
+
+	column lsoa
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-219960589315107
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column Neighbourhood
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-54239616966871
+		summarizeBy: none
+		sourceColumn: lsoa_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column lad
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-187986307515779
+		summarizeBy: none
+		sourceColumn: lad
+
+		annotation SummarizationSetBy = Automatic
+
+	column imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-71868209778705
+		summarizeBy: none
+		sourceColumn: imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column imd_score
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-180104897561636
+		summarizeBy: none
+		sourceColumn: imd_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_count
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-206166340368235
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column mean_risk_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-141212488645667
+		summarizeBy: average
+		sourceColumn: mean_risk_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column Frailty
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-62696290940881
+		summarizeBy: sum
+		sourceColumn: frailty_n
+
+		annotation SummarizationSetBy = Automatic
+
+	column Polypharmacy
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-247737371414625
+		summarizeBy: sum
+		sourceColumn: poly_n
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diabetes
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-179929297933175
+		summarizeBy: sum
+		sourceColumn: diabetes_n
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hypertension
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-77496368005793
+		summarizeBy: sum
+		sourceColumn: htn_n
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'High-risk count'
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-217792356985249
+		summarizeBy: sum
+		sourceColumn: top_risk_n
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Geography = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select lsoa11cd as lsoa, lsoa11nm as lsoa_name, lad19nm as lad,#(lf)    imd_decile, imd_score, patients, mean_risk_pct, frailty_n, poly_n, diabetes_n, htn_n, top_risk_n#(lf)from data_mart_l050_phm_rpt.lsoa_aggregates", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

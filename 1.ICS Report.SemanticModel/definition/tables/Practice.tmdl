@@ -1,0 +1,79 @@
+table Practice
+	lineageTag: 1f9c0a00-0000-4b00-9c00-153932928007050
+
+	measure 'GP Practices' = DISTINCTCOUNT ( Practice[practice_code] )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-108155294482712
+
+	measure 'Registered List' = SUM ( Practice[list_size] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-66561243353246
+
+	column practice_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-177580610354773
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_name
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-86804709732754
+		summarizeBy: none
+		sourceColumn: practice_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column latitude
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-245951245708884
+		summarizeBy: none
+		sourceColumn: latitude
+		dataCategory: Latitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column longitude
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-233267183535118
+		summarizeBy: none
+		sourceColumn: longitude
+		dataCategory: Longitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcn_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-050471614819
+		summarizeBy: none
+		sourceColumn: pcn_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column place
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-64389264692547
+		summarizeBy: none
+		sourceColumn: place
+
+		annotation SummarizationSetBy = Automatic
+
+	column list_size
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-23698563081855
+		summarizeBy: sum
+		sourceColumn: list_size
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Practice = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select practice_code,#(lf)    max(practice_name) as practice_name,#(lf)    max(gp_longitude) as latitude, max(gp_latitude) as longitude,#(lf)    max(primary_care_network) as pcn_code, max(place) as place,#(lf)    sum(population) as list_size#(lf)from data_mart_primarycare.tbl01_gp_practice_populations#(lf)where census_date = (select max(census_date) from data_mart_primarycare.tbl01_gp_practice_populations)#(lf)group by practice_code", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

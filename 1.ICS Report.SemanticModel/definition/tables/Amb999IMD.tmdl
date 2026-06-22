@@ -1,0 +1,85 @@
+table Amb999IMD
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000421
+
+	measure '999 Demand per 1,000' = SUM ( Amb999IMD[encounters_per_1000] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000422
+
+	measure '999 Encounters (12m)' = SUM ( Amb999IMD[encounters_12m] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000423
+
+	measure '999 Conveyance Rate' = DIVIDE ( SUM ( Amb999IMD[conveyed_12m] ), SUM ( Amb999IMD[encounters_12m] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000424
+
+	column imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000425
+		summarizeBy: none
+		sourceColumn: imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column encounters_12m
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000426
+		summarizeBy: sum
+		sourceColumn: encounters_12m
+
+		annotation SummarizationSetBy = Automatic
+
+	column conveyed_12m
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000427
+		summarizeBy: sum
+		sourceColumn: conveyed_12m
+
+		annotation SummarizationSetBy = Automatic
+
+	column see_treat_12m
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000428
+		summarizeBy: sum
+		sourceColumn: see_treat_12m
+
+		annotation SummarizationSetBy = Automatic
+
+	column resident_pop
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000429
+		summarizeBy: sum
+		sourceColumn: resident_pop
+
+		annotation SummarizationSetBy = Automatic
+
+	column encounters_per_1000
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000430
+		summarizeBy: none
+		sourceColumn: encounters_per_1000
+
+		annotation SummarizationSetBy = Automatic
+
+	column conveyed_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000431
+		summarizeBy: none
+		sourceColumn: conveyed_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Amb999IMD = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select imd_decile, encounters_12m, conveyed_12m, see_treat_12m, resident_pop, encounters_per_1000, conveyed_pct from db03_pid.data_mart_l050_phm_rpt.amb_999_imd", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

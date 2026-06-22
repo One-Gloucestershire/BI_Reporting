@@ -1,0 +1,85 @@
+table Schools
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000411
+
+	measure 'Schools' = COUNTROWS ( Schools )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000412
+
+	measure 'Total Pupils' = SUM ( Schools[total_pupils] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000413
+
+	measure 'Avg FSM %' = DIVIDE ( SUMX ( Schools, Schools[total_pupils] * Schools[fsm_pct] ), SUM ( Schools[total_pupils] ) )
+		formatString: 0.0\%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000414
+
+	measure 'Avg EAL %' = DIVIDE ( SUMX ( Schools, Schools[total_pupils] * Schools[eal_pct] ), SUM ( Schools[total_pupils] ) )
+		formatString: 0.0\%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000415
+
+	column 'Phase'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000173603206
+		summarizeBy: none
+		sourceColumn: school_phase
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'School'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000008179490
+		summarizeBy: none
+		sourceColumn: school_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'District'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000358242433
+		summarizeBy: none
+		sourceColumn: lad19nm
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa11cd
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000972472975
+		summarizeBy: none
+		sourceColumn: lsoa11cd
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_pupils
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000248526978
+		summarizeBy: sum
+		sourceColumn: total_pupils
+
+		annotation SummarizationSetBy = Automatic
+
+	column fsm_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000693105017
+		summarizeBy: sum
+		sourceColumn: fsm_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column eal_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000500449832
+		summarizeBy: sum
+		sourceColumn: eal_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Schools = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select school_phase, school_name, lad19nm, lsoa11cd, total_pupils, fsm_pct, eal_pct from db03_pid.data_mart_l050_phm_rpt.school_locations where is_glos = true", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

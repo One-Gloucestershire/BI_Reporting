@@ -1,0 +1,59 @@
+table Ambulance
+	lineageTag: 1f9c0a00-0000-4b00-9c00-229204759033622
+
+	measure 'Ambulance Incidents' = SUM ( Ambulance[incidents] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-271142910077832
+
+	measure Conveyances = CALCULATE ( SUM ( Ambulance[incidents] ), Ambulance[conveyed] = 1 )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-212194074100114
+
+	measure 'Conveyance Rate' = DIVIDE ( [Conveyances], [Ambulance Incidents] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-15360099894145
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Response category'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-111960088183602
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column conveyed
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-58475305823239
+		summarizeBy: none
+		sourceColumn: conveyed
+
+		annotation SummarizationSetBy = Automatic
+
+	column incidents
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-216530497293684
+		summarizeBy: sum
+		sourceColumn: incidents
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Ambulance = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', time_of_incident::timestamp)::date as month_date,#(lf)    incident_colour as category,#(lf)    case when nullif(trim(conveyed_to_ward_type), '') is not null then 1 else 0 end as conveyed,#(lf)    count(*) as incidents#(lf)from data_mart_swasft.vw_ambulanceservicepatient#(lf)where time_of_incident is not null and time_of_incident <> ''#(lf)group by 1,2,3", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

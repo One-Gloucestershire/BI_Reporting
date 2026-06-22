@@ -1,0 +1,88 @@
+table CareHomes
+	lineageTag: 9d4aa275-c3a5-17e3-2795-92c0776f6573
+
+	measure 'CH Current Residents' = SUM ( CareHomes[current_patients] )
+		formatString: #,0
+		lineageTag: 0f027b18-f958-65f6-114d-ecbb2a4d8e09
+
+	measure 'CH Residents (ever)' = SUM ( CareHomes[patient_count] )
+		formatString: #,0
+		lineageTag: d18fd133-c3f7-a21a-f1bb-9db3986028bf
+
+	measure 'CH % Most Deprived' = DIVIDE ( CALCULATE ( SUM ( CareHomes[current_patients] ), CareHomes[england_imd_decile] <= 2 ), SUM ( CareHomes[current_patients] ) )
+		formatString: 0.0%
+		lineageTag: d0292868-d0f9-3abb-2706-58440fb70412
+
+	measure 'CH Localities' = DISTINCTCOUNT ( CareHomes[locality] )
+		formatString: 0
+		lineageTag: d299a5df-9189-26fa-3702-2bc39acdd514
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 2fc40556-98bf-cf6a-db62-b5f85d5784e4
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column england_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 5248ed1d-c191-f715-3d32-4acb6d885dde
+		summarizeBy: none
+		sourceColumn: england_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: 2943fee2-6e61-8725-38da-d5c28e4fab0f
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: a4173f29-c019-8353-5a3b-04e167d17c5b
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column gender
+		dataType: string
+		lineageTag: 64188537-0835-58c5-011f-2a732f519ad1
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_count
+		dataType: int64
+		formatString: #,0
+		lineageTag: 6e5b4419-c21b-14e9-6e70-36907c1354ff
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_patients
+		dataType: int64
+		formatString: #,0
+		lineageTag: cef5c14e-62a1-a62e-19c2-0a7641c5bb89
+		summarizeBy: sum
+		sourceColumn: current_patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CareHomes = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select case when p.care_home_date>='2012-01-01' then date_trunc('month', p.care_home_date)::date end as month_date, d.imd_decile_england as england_imd_decile, coalesce(d.locality,'Unknown') as locality, case when d.actual_age is null then 'Unknown' when d.actual_age>=90 then '90+' else lpad((floor(d.actual_age/5)*5)::int::varchar,2,'0')||'-'||lpad((floor(d.actual_age/5)*5+4)::int::varchar,2,'0') end as age_band, coalesce(d.gender,'Unknown') as gender, count(distinct p.pseudonhsnumber) as patients, count(distinct case when p.current_patient_flag=1 then p.pseudonhsnumber end) as current_patients from data_mart_powerbi_carehomes.tbl01_population p left join data_mart_powerbi_phm.tbl02_demographicsoverview d on p.pseudonhsnumber=d.derived_nhs_number group by 1,2,3,4,5", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,61 @@
+table Projection
+	lineageTag: 1f9c0a00-0000-4b00-9c00-36429513308240
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-258856547083765
+		summarizeBy: none
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Years Out'
+		isHidden
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-30776436218875
+		summarizeBy: none
+		sourceColumn: [Years Out]
+
+		annotation SummarizationSetBy = Automatic
+
+	measure 'Projected High-risk' = CALCULATE ( [High Risk (CMS Q5)] ) * POWER ( 1.035, SELECTEDVALUE ( Projection[Years Out], 0 ) )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-188682065843460
+
+	measure 'Projected High-risk (with action)' = [Projected High-risk] * ( 1 - ( [Reach % Value] / 100 ) * ( [Avertable % Value] / 100 ) )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-114511879669731
+
+	measure 'High-risk Cost (do nothing)' = [Projected High-risk] * 3500
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000101
+
+	measure 'High-risk Cost (with action)' = [Projected High-risk (with action)] * 3500
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000102
+
+	measure 'Annual Averted Cost' = [High-risk Cost (do nothing)] - [High-risk Cost (with action)]
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000103
+
+	measure 'Cumulative Averted Cost' = SUMX ( VALUES ( Projection[Year] ), [Annual Averted Cost] )
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000104
+
+	measure 'Patients Avoided by 2031' = CALCULATE ( [Projected High-risk] - [Projected High-risk (with action)], Projection[Year] = 2031 )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000105
+
+	measure 'High-risk 2031 (do nothing)' = CALCULATE ( [Projected High-risk], Projection[Year] = 2031 )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000106
+
+	partition Projection = calculated
+		mode: import
+		source = ```
+				ADDCOLUMNS ( SELECTCOLUMNS ( GENERATESERIES ( 2026, 2031, 1 ), "Year", [Value] ), "Years Out", [Year] - 2026 )
+				```
+
+	annotation PBI_ResultType = Table

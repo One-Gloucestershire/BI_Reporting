@@ -1,0 +1,84 @@
+table Appointments
+	lineageTag: 1f9c0a00-0000-4b00-9c00-187447133242726
+
+	measure Appointments = SUM ( Appointments[appts] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-179238094636477
+
+	measure DNAs = SUM ( Appointments[dna_appts] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-53368362783326
+
+	measure 'DNA Rate' = DIVIDE ( [DNAs], [Appointments] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-10332788033440
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-177580610354773
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcn
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-146659922085729
+		summarizeBy: none
+		sourceColumn: pcn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modality'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-50721616947515
+		summarizeBy: none
+		sourceColumn: modality
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-62856259007879
+		summarizeBy: none
+		sourceColumn: practice_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column appts
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-267308039130699
+		summarizeBy: sum
+		sourceColumn: appts
+
+		annotation SummarizationSetBy = Automatic
+
+	column dna_appts
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-35852907860738
+		summarizeBy: sum
+		sourceColumn: dna_appts
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Appointments = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "with glos as (#(lf)    select pl.practice_code, max(la.imd_decile) as practice_imd_decile#(lf)    from data_mart_l050_phm_rpt.practice_locations pl#(lf)    left join data_mart_l050_phm_rpt.lsoa_aggregates la on la.lsoa11cd = pl.lsoa11cd#(lf)    where pl.is_glos = true#(lf)    group by pl.practice_code#(lf))#(lf)select date_trunc('month', a.appt_date)::date as month_date,#(lf)    a.practice_code, a.nhs_pcn_bucket as pcn, case a.modality when 'faceToFace' then 'Face to face' when 'telephone' then 'Telephone' when 'home' then 'Home visit' when 'written' then 'Written' when 'video' then 'Video' when 'other' then 'Other' else initcap(a.modality) end as modality,#(lf)    coalesce(g.practice_imd_decile, 0) as practice_imd_decile,#(lf)    sum(a.n) as appts,#(lf)    sum(case when a.dna_flag = 1 then a.n else 0 end) as dna_appts#(lf)from data_mart_l050_phm_rpt.appts_daily a#(lf)left join glos g on g.practice_code = a.practice_code#(lf)group by 1,2,3,4,5", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
