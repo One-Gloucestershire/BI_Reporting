@@ -63,6 +63,40 @@ the icsuser managed secret) or they're invisible on the reporting cluster —
 
 ---
 
+## 2a. Bulk-converting on-prem `Sql.Database` partitions → Redshift `Value.NativeQuery`
+
+When repointing a report's data source from on-prem MSSQL to the reporting
+cluster, you rewrite each table's `partition … = m` source. Pitfalls that each
+cost a failed Fabric import:
+
+- **Match the WHOLE `Sql.Database(...)` call.** A non-greedy regex like
+  `Sql\.Database\(.*?\]\)` stops at the **first `])`** — which for any bespoke
+  query containing `MAX([col])` / `[x])` is **inside the original T-SQL**, not the
+  call's end. It leaves a dangling T-SQL fragment after your `Value.NativeQuery`,
+  and Fabric import dies: **`M Engine error: Token ',' expected`**. Use a
+  query-string-aware pattern, e.g.
+  `Sql\.Database\([^[]*\[Query="(?:[^"]|"")*"[^\]]*\]\)` (also handles
+  `, CommandTimeout=…`). This bit the Virtual Wards date tables.
+- **A well-formed `Value.NativeQuery(...)` always ends `…[EnableFolding=true])`
+  immediately followed by `,` or a newline.** Anything else = corruption.
+  `validate_phm_repo.py` check 7 now flags this repo-wide — run it after any
+  conversion.
+- **Escape `"` as `""`** inside the M query string. Odd `"` counts ⇒ unterminated
+  string ⇒ same `Token ',' expected`. (check 7 also flags odd quote counts.)
+- **Redshift lowercases identifiers.** Alias every column back to the casing the
+  model's `sourceColumn` expects (`died_in_hospital_flag as "Died in hospital flag"`).
+  This only survives because the **reporting cluster has
+  `enable_case_sensitive_identifier=true`** (param group `ccg-reporting-group`,
+  reporting cluster only — *not* the shared `ccg-group`). Double-quote any RS
+  identifier that isn't a safe bare token (digit-leading / `-` `+` space).
+- **Reusable sources:** the date dimension lives at `ccg_reference.vw_date`
+  (snake_case) / `ccg_reference.vw_datelookup` (mixed-case `DateKey…`); GP ref =
+  `icb_data_reference.vw_gppractice`; populations = `data_mart_primarycare.tbl01_gp_practice_populations`.
+  Always **read the original `[Query=…]`** — most "Date"/"GP"/"ref" partitions are
+  bespoke aliased `SELECT`s (or temp-table scripts), not `select *`.
+
+---
+
 ## 3. PBIR visual field references need `queryRef` AND `nativeQueryRef`
 
 A projection is not just `{ "field": {...} }`. Every measure/column reference

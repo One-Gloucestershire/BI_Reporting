@@ -12,6 +12,9 @@ Catches the import-killers we've hit repeatedly:
   6. layout: visuals pushed off the 1280x720 canvas, or two substantial
      visuals overlapping >40% (guards against re-layout/legibility mistakes;
      textbox/shape/image/button overlays are excluded)
+  7. malformed Value.NativeQuery M in ANY report's SemanticModel (repo-wide) —
+     dangling T-SQL fragment / broken "" escaping from a bad Sql.Database ->
+     Redshift conversion; Fabric import dies "M Engine error: Token ',' expected"
 
 Usage:  python validate_phm_repo.py [--fix]   (run from the BI_Reporting repo root)
 Exit code 0 = clean, 1 = problems remain.
@@ -146,6 +149,36 @@ if oob:
     problems.append(f"Visuals off-canvas (>{CANVAS_W}x{CANVAS_H}): {oob[:8]}")
 if overlaps:
     problems.append(f"Substantial visuals overlapping >40%: {overlaps[:8]}")
+
+# 7) malformed Value.NativeQuery (REPO-WIDE) — guards the bulk Sql.Database ->
+#    Redshift source migration. A non-greedy rewrite regex that stops at the
+#    first `])` inside the original T-SQL (e.g. MAX([Year_Month])) leaves a
+#    dangling fragment after the call, so Fabric import dies with
+#    "M Engine error: Token ',' expected." A well-formed NativeQuery's closing
+#    `[EnableFolding=true])` is ALWAYS immediately followed by ',' (next M step)
+#    or a newline (then `in`/next step). Also flags odd `"` counts in the SQL
+#    string (broken `""` escaping) and any partition still mixing Sql.Database
+#    with NativeQuery. Scans every report's SemanticModel, not just PHM.
+nq_bad = []
+NQ_END = re.compile(r'\[EnableFolding=true\]\)')
+NQ_STR = re.compile(r'Value\.NativeQuery\(AmazonRedshift\.Database\([^)]*\),\s*"(.*?)",\s*null,\s*\[EnableFolding=true\]\)', re.S)
+for f in glob.glob("**/*.SemanticModel/definition/tables/*.tmdl", recursive=True):
+    t = open(f, encoding="utf-8").read()
+    if "Value.NativeQuery" not in t:
+        continue
+    why = None
+    for m in NQ_END.finditer(t):
+        nxt = t[m.end():m.end() + 1]
+        if nxt not in (",", "\n", ""):
+            why = f"dangling fragment after call ({nxt!r})"
+            break
+    for sm in NQ_STR.finditer(t):
+        if sm.group(1).count('"') % 2:
+            why = why or "odd quote count in SQL string (broken \"\" escaping)"
+    if why:
+        nq_bad.append(f"{os.path.relpath(f)} [{why}]")
+if nq_bad:
+    problems.append(f"Malformed Value.NativeQuery M in {len(nq_bad)} file(s): {nq_bad[:8]}")
 
 if problems:
     print("PHM VALIDATION FAILED:")
