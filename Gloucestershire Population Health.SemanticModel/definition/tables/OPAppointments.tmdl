@@ -52,7 +52,7 @@ table OPAppointments
 		mode: import
 		source =
 				let
-				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', appointment_datetime::timestamp)::date as month_date,#(lf)    local_treatment_function as specialty,#(lf)    sum(case when attended_or_did_not_attend_code in ('5','6') then 1 else 0 end) as attended,#(lf)    sum(case when attended_or_did_not_attend_code = '3' then 1 else 0 end) as dna#(lf)from data_mart_l018_ghft_acute.tbl_opappointment_201_load#(lf)where appointment_datetime is not null and appointment_datetime <> ''#(lf)group by 1,2", null, [EnableFolding=true])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', appointment_datetime::timestamp)::date as month_date,#(lf)    replace(replace(replace(replace(local_treatment_function,'Paediatric','Paeds'),' and ',' & '),'Anaesthetics-Pre Admission Clinics','Anaesthetics (Pre-Admit)'),'-Chemotherapy',' (Chemo)') as specialty,#(lf)    sum(case when attended_or_did_not_attend_code in ('5','6') then 1 else 0 end) as attended,#(lf)    sum(case when attended_or_did_not_attend_code = '3' then 1 else 0 end) as dna#(lf)from data_mart_l018_ghft_acute.tbl_opappointment_201_load#(lf)where appointment_datetime is not null and appointment_datetime <> ''#(lf)group by 1,2", null, [EnableFolding=true])
 				in
 				    Source
 
