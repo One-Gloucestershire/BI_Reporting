@@ -9,6 +9,9 @@ Catches the import-killers we've hit repeatedly:
      even though the Fabric Service import tolerates it.
   4. customTheme in report.json missing reportVersionAtImport
   5. visual field refs that don't resolve to a model column/measure
+  6. layout: visuals pushed off the 1280x720 canvas, or two substantial
+     visuals overlapping >40% (guards against re-layout/legibility mistakes;
+     textbox/shape/image/button overlays are excluded)
 
 Usage:  python validate_phm_repo.py [--fix]   (run from the BI_Reporting repo root)
 Exit code 0 = clean, 1 = problems remain.
@@ -108,6 +111,41 @@ for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.j
     walk(j)
 if unresolved:
     problems.append(f"Unresolved visual field refs: {sorted(unresolved)[:10]}")
+
+# 6) layout sanity — catch re-layout mistakes: visuals pushed off the 1280x720
+#    canvas, or two substantial visuals overlapping (textbox/shape/image/button
+#    are excluded — they're legitimately layered, e.g. map-scale captions).
+CANVAS_W, CANVAS_H = 1280, 720
+OVERLAY = {"textbox", "shape", "image", "actionButton", "basicShape"}
+oob, overlaps = [], []
+for vdir in glob.glob(os.path.join(REPORT, "pages", "*", "visuals")):
+    page = os.path.basename(os.path.dirname(vdir))
+    subs = []
+    for vf in glob.glob(os.path.join(vdir, "*", "visual.json")):
+        try:
+            j = json.load(open(vf, encoding="utf-8"))
+        except Exception:
+            continue
+        vid = os.path.basename(os.path.dirname(vf))[:8]
+        t = j.get("visual", {}).get("visualType", "")
+        p = j.get("position", {})
+        x, y, w, h = p.get("x", 0), p.get("y", 0), p.get("width", 0), p.get("height", 0)
+        if x < -1 or y < -1 or x + w > CANVAS_W + 1 or y + h > CANVAS_H + 1:
+            oob.append(f"{page}/{vid} ({int(x)},{int(y)},{int(w)},{int(h)})")
+        if t not in OVERLAY:
+            subs.append((vid, t, (x, y, w, h)))
+    for i in range(len(subs)):
+        for k in range(i + 1, len(subs)):
+            (ai, at, a), (bi, bt, b) = subs[i], subs[k]
+            ix = max(0, min(a[0] + a[2], b[0] + b[2]) - max(a[0], b[0]))
+            iy = max(0, min(a[1] + a[3], b[1] + b[3]) - max(a[1], b[1]))
+            sm = min(a[2] * a[3], b[2] * b[3]) or 1
+            if ix * iy / sm > 0.4:
+                overlaps.append(f"{page}: {ai}({at})<>{bi}({bt}) {ix*iy/sm:.0%}")
+if oob:
+    problems.append(f"Visuals off-canvas (>{CANVAS_W}x{CANVAS_H}): {oob[:8]}")
+if overlaps:
+    problems.append(f"Substantial visuals overlapping >40%: {overlaps[:8]}")
 
 if problems:
     print("PHM VALIDATION FAILED:")

@@ -150,3 +150,53 @@ When you repoint a visual to a new/renamed measure, update `queryRef`
   --show-current` and `git -C <dir> log --oneline -1` before debugging the file.
 - Power BI Desktop re-serialises files on open (whitespace/formatting churn);
   these `M` changes are usually noise, safe to `git stash`/discard.
+
+---
+
+## 9. Layout & legibility — fixing truncation without breaking things
+
+Hard-won from a 43-page / 570-visual legibility pass. The canvas is **1280 × 720**.
+`validate_phm_repo.py` now guards layout (check 6): **off-canvas** and **two
+substantial visuals overlapping >40%** (textbox/shape/image/button overlays are
+excluded). Run it after any re-layout.
+
+**Safe vs risky edit levers (from least to most risky):**
+1. **`position` {x,y,width,height}** — 100% safe, no schema risk. This is the
+   main lever: widen truncating bars/tables, grow short narratives, re-flow rows.
+2. **`visualContainerObjects.title[].properties.text`** — safe; shorten over-long
+   titles (keep the `'…'` quoting exact).
+3. **Source-label shortening** (a SQL `CASE` in the model query) — safe and the
+   best fix for long category labels, because it changes the **values**, not the
+   column name, so **no visual.json edit is needed** (e.g. ICD cause-of-death
+   chapters → "Circulatory"; bind stays on `cause_chapter`).
+4. **Model column display rename** (raw `snake_case` headers → friendly) — medium:
+   ripples into measures *and* visual `queryRef`/`nativeQueryRef`. Keep
+   `sourceColumn` unchanged; update every `Table[col]` DAX ref and every visual
+   ref; **check model-wide name collisions first** (the validator catches them).
+5. **`objects` formatting keys** (categoryAxis `wordWrap`/`fontSize`/rotate,
+   column auto-size) — RISKY: the exact PBIR property format is version-specific
+   and a wrong literal can fail the report import. **Avoid these** unless you can
+   verify on the Service; prefer (1)+(3) instead.
+
+**Truncation playbook (the #1 legibility problem — horizontal bars + tables):**
+- Long category labels (specialty, crime type, BNF chapter, ONS cause, test):
+  **widen** the bar if the row has room; if it's a **tight row** (e.g. 3 bars at
+  x≈24/434/844, each ~400px), you can't widen — **shorten the labels at source**
+  (lever 3), or shrink the least label-sensitive neighbour (a map/treemap) to
+  hand width to the long-label bar.
+- Tables with many columns crammed into <900px hide the right columns behind a
+  scrollbar — widen toward the canvas edge (`x+width ≤ ~1264`) or drop columns.
+- Narrative/insight cards need **≥ ~100px height** for multi-line text (cards
+  ~78–100); too short → text cut with "…". Grow height and cascade the rows
+  below down so nothing collides.
+
+**Fan-out re-layout (multi-agent):** give each agent a **distinct set of pages**
+(distinct files) → they never touch the same `visual.json`, so no worktree
+isolation is needed and there's nothing to merge. Constrain agents to
+**position + title-text only** (forbid any `query`/`queryRef`/`Property`/model
+edit — that's how the `Report_Import_FailedToImportReport` happens), and make
+them self-check JSON-parse + canvas-bounds + no-overlap before returning.
+
+**Don't chase phantom mojibake.** Terminals and tool output render legit Unicode
+(`—` em-dash, `·` middot, `£`) as `�`. The *files* are usually clean UTF-8 —
+check the actual bytes for U+FFFD / `Â£` / `â€"` before "fixing" anything.
