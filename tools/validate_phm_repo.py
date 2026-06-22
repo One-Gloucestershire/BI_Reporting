@@ -16,6 +16,7 @@ Catches the import-killers we've hit repeatedly:
   8. custom-theme resource integrity (report.json ref <-> manifest <-> file)
   9. pages.json pageOrder <-> page-folder consistency (unregistered/dangling)
  10. every visual.json 'name' equals its folder name (clone/rename mistakes)
+ 11. no duplicate item logicalId across .platform files (copy-without-dedup)
   7. malformed Value.NativeQuery M in ANY report's SemanticModel (repo-wide) —
      dangling T-SQL fragment / broken "" escaping from a bad Sql.Database ->
      Redshift conversion; Fabric import dies "M Engine error: Token ',' expected"
@@ -239,6 +240,25 @@ for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.j
         namemismatch.append(f"{folder} (name='{nm}')")
 if namemismatch:
     problems.append(f"visual.json 'name' != folder: {namemismatch[:8]}")
+
+# 11) duplicate item logical IDs across ALL .platform files (repo-wide). Copying
+#     a report/model folder without regenerating its `config.logicalId` (and
+#     renaming `metadata.displayName`) makes Fabric raise "Fix duplicate logical
+#     IDs" and jams git sync for the originals. (Caused by PR #76's '1.ICS Report'
+#     copy.) Scans every item in the repo, not just PHM.
+lid_map = collections.defaultdict(list)
+for pf in glob.glob("**/.platform", recursive=True):
+    try:
+        pj = json.load(open(pf, encoding="utf-8"))
+    except Exception:
+        continue
+    lid = pj.get("config", {}).get("logicalId")
+    if lid:
+        lid_map[lid].append(os.path.dirname(pf) or ".")
+dup_lids = {k: v for k, v in lid_map.items() if len(v) > 1}
+if dup_lids:
+    problems.append("Duplicate item logicalId(s) across items (Fabric will jam "
+                    "sync): " + "; ".join(f"{k} -> {v}" for k, v in dup_lids.items()))
 
 if problems:
     print("PHM VALIDATION FAILED:")
