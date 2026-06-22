@@ -17,6 +17,7 @@ Catches the import-killers we've hit repeatedly:
   9. pages.json pageOrder <-> page-folder consistency (unregistered/dangling)
  10. every visual.json 'name' equals its folder name (clone/rename mistakes)
  11. no duplicate item logicalId across .platform files (copy-without-dedup)
+ 12. no malformed TMDL relationships (unindented fromColumn/toColumn; inline braces)
   7. malformed Value.NativeQuery M in ANY report's SemanticModel (repo-wide) —
      dangling T-SQL fragment / broken "" escaping from a bad Sql.Database ->
      Redshift conversion; Fabric import dies "M Engine error: Token ',' expected"
@@ -259,6 +260,29 @@ dup_lids = {k: v for k, v in lid_map.items() if len(v) > 1}
 if dup_lids:
     problems.append("Duplicate item logicalId(s) across items (Fabric will jam "
                     "sync): " + "; ".join(f"{k} -> {v}" for k, v in dup_lids.items()))
+
+# 12) Malformed TMDL relationships (repo-wide). These fail Fabric import with
+#     Workload_FailedToParseFile / "Invalid indentation". TMDL is indentation-
+#     based: `fromColumn`/`toColumn` are ALWAYS nested under a `relationship`
+#     block so they MUST be indented, and there is no inline-brace
+#     `relationship X Y { ... }` form. (Grok's 1.ICS Report relationships.tmdl
+#     had both — column-0 fromColumn/toColumn and brace syntax — which jammed
+#     the whole workspace's git sync.)
+tmdl_bad = []
+for f in glob.glob("**/*.tmdl", recursive=True):
+    try:
+        lines = open(f, encoding="utf-8").read().splitlines()
+    except Exception:
+        continue
+    for i, ln in enumerate(lines, 1):
+        if re.match(r"^(fromColumn|toColumn)\s*:", ln):
+            tmdl_bad.append(f"{os.path.relpath(f)}:{i} unindented "
+                            f"'{ln.strip()[:36]}' (must nest under a relationship)")
+        elif re.match(r"^\s*relationship\b.*\{", ln):
+            tmdl_bad.append(f"{os.path.relpath(f)}:{i} inline-brace relationship "
+                            f"syntax (TMDL is indentation-based)")
+if tmdl_bad:
+    problems.append(f"Malformed TMDL relationships ({len(tmdl_bad)}): {tmdl_bad[:6]}")
 
 if problems:
     print("PHM VALIDATION FAILED:")
