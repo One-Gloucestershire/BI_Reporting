@@ -251,3 +251,64 @@ them self-check JSON-parse + canvas-bounds + no-overlap before returning.
 **Don't chase phantom mojibake.** Terminals and tool output render legit Unicode
 (`—` em-dash, `·` middot, `£`) as `�`. The *files* are usually clean UTF-8 —
 check the actual bytes for U+FFFD / `Â£` / `â€"` before "fixing" anything.
+
+---
+
+## 10. Themes, pages & the "half-worked deploy" diagnosis
+
+Hard-won fixing a 37-page PDF where most legibility fixes *didn't appear* even
+though the deploy "succeeded". `validate_phm_repo.py` now adds checks 8–10 for
+the structural traps below.
+
+**The registered custom theme caches by NAME — editing its JSON does NOT
+re-apply it.** A `customTheme` of `type: RegisteredResources`
+(`StaticResources/RegisteredResources/<name>.json`, referenced from
+`report.json` `themeCollection.customTheme` + `resourcePackages`) is compiled
+and applied **at import, keyed by name**. On "Update all", model/report-
+definition changes deploy + refresh fine, but changed *theme content* keeps
+rendering the **old cached theme** — telltale: new `dataColors`/font/
+`showAxisTitle` never show. **Fix: bump the theme NAME** (e.g. `… → … v2`) in
+**all three** places — the theme file's internal `name`, the `resourcePackages`
+item `name` (+`path` if you rename the file), and `themeCollection.customTheme.
+name` — to force a fresh registration. Check 8 verifies the three stay
+consistent and the file exists (a partial rename silently drops you to the base
+theme).
+
+**Per-visual `objects` OVERRIDE the theme.** A chart that explicitly sets
+`categoryAxis.showAxisTitle: true` still shows its axis title ("month_date",
+"Year", `imd_decile`) even after the theme default goes false. Theme changes
+only fix visuals that *inherit*; for the rest, set the property on the visual.
+Conversely you can't assume a theme change reaches everything — spot-check.
+
+**The "half-worked deploy" tell:** if model/data changes show (shortened labels,
+merged categories, a chart-type swap) but colours/fonts/axis-titles **don't**,
+it's the theme cache — not a failed sync. Don't re-edit the visuals; bump the
+theme name.
+
+**`multiRowCard` ≠ KPI card.** Big-number KPIs are `visualType: card`. The
+text-insight/action boxes (bound to long DAX text measures) are
+`multiRowCard`, and their data labels were **18pt** → long sentences clipped to
+one line. For text insights set `dataLabels` ~**11pt + wordWrap** (theme or
+per-visual) and hide `categoryLabels` (the measure name adds nothing).
+
+**Treemap with many categories is the wrong chart.** ~50 specialties in a
+treemap = unreadable truncated tiles at any label length. Convert to a **sorted
+horizontal `barChart`** (labels move to the y-axis): roles rename
+`Group→Category`, `Values→Y`; add a `sortDefinition` (measure, Descending).
+**Mirror an existing working `barChart`'s JSON exactly** rather than hand-build
+it. No Top-N filter template existed in this repo — don't hand-roll a `TopN`
+`filterConfig` blind (a bad one fails the whole report import); prefer
+top-N-at-source bucketing if you must cap categories.
+
+**Adding a page (PBIR):** a page is a folder under `definition/pages/<name>/`
+with `page.json` + `visuals/<id>/visual.json` per visual. To add one: **clone an
+existing page's chrome** (banner/title/rule/footer textboxes + a card +
+multiRowCard) with **fresh ids where folder name == the visual.json `name`**
+(check 10), bind cards/multiRowCards to existing measures (the field-ref check
+confirms they resolve), and **register the page in `pages.json` `pageOrder`**
+(check 9) — a folder not in `pageOrder` never displays.
+
+**Board/exec content lives in report pages, not side documents.** "Make a 2-page
+exec summary" means *two report pages* (e.g. `executive` = strategic case,
+`executiveask` = the ask) bound to live measures — not a Word/PDF export. Build
+it in the PBIP.

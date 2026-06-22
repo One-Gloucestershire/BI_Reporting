@@ -12,6 +12,10 @@ Catches the import-killers we've hit repeatedly:
   6. layout: visuals pushed off the 1280x720 canvas, or two substantial
      visuals overlapping >40% (guards against re-layout/legibility mistakes;
      textbox/shape/image/button overlays are excluded)
+  7. malformed Value.NativeQuery M (dangling T-SQL / odd-quote escaping)
+  8. custom-theme resource integrity (report.json ref <-> manifest <-> file)
+  9. pages.json pageOrder <-> page-folder consistency (unregistered/dangling)
+ 10. every visual.json 'name' equals its folder name (clone/rename mistakes)
   7. malformed Value.NativeQuery M in ANY report's SemanticModel (repo-wide) —
      dangling T-SQL fragment / broken "" escaping from a bad Sql.Database ->
      Redshift conversion; Fabric import dies "M Engine error: Token ',' expected"
@@ -25,6 +29,7 @@ FIX = "--fix" in sys.argv
 ROOT = "Gloucestershire Population Health"
 MODEL = f"{ROOT}.SemanticModel/definition"
 REPORT = f"{ROOT}.Report/definition"
+RPT_ROOT = f"{ROOT}.Report"
 problems = []
 
 
@@ -179,6 +184,61 @@ for f in glob.glob("**/*.SemanticModel/definition/tables/*.tmdl", recursive=True
         nq_bad.append(f"{os.path.relpath(f)} [{why}]")
 if nq_bad:
     problems.append(f"Malformed Value.NativeQuery M in {len(nq_bad)} file(s): {nq_bad[:8]}")
+
+# 8) custom-theme resource integrity — the registered theme referenced by
+#    report.json must have a matching resourcePackages item whose file exists.
+#    A rename that updates only some of {file name, manifest path/name,
+#    customTheme.name} silently drops the custom theme back to the base theme.
+#    NB: a registered theme caches by NAME — to actually re-deploy changed theme
+#    JSON you must BUMP THE NAME in all three places (see CLAUDE.md §6).
+rjp = os.path.join(REPORT, "report.json")
+if os.path.isfile(rjp):
+    rj = json.load(open(rjp, encoding="utf-8"))
+    ct = (rj.get("themeCollection", {}) or {}).get("customTheme", {}) or {}
+    name = ct.get("name")
+    if name:
+        items = [it for pkg in rj.get("resourcePackages", [])
+                 if pkg.get("type") == "RegisteredResources"
+                 for it in pkg.get("items", []) if it.get("type") == "CustomTheme"]
+        match = [it for it in items if it.get("name") == name]
+        if not match:
+            problems.append(f"customTheme '{name}' has no matching RegisteredResources "
+                            f"CustomTheme item (theme falls back to base)")
+        else:
+            tp = os.path.join(RPT_ROOT, "StaticResources", "RegisteredResources",
+                              match[0].get("path", ""))
+            if not os.path.isfile(tp):
+                problems.append(f"customTheme '{name}' file missing on disk: "
+                                f"{match[0].get('path')}")
+
+# 9) pages.json <-> page-folder consistency. A page folder not in pageOrder never
+#    displays; a pageOrder entry with no folder is a dangling reference.
+pagesdir = os.path.join(REPORT, "pages")
+pjp = os.path.join(pagesdir, "pages.json")
+if os.path.isfile(pjp):
+    order = json.load(open(pjp, encoding="utf-8")).get("pageOrder", [])
+    folders = {d for d in os.listdir(pagesdir)
+               if os.path.isfile(os.path.join(pagesdir, d, "page.json"))}
+    not_listed = sorted(folders - set(order))
+    no_folder = sorted(set(order) - folders)
+    if not_listed:
+        problems.append(f"page folders missing from pages.json pageOrder "
+                        f"(won't display): {not_listed}")
+    if no_folder:
+        problems.append(f"pages.json pageOrder entries with no folder: {no_folder}")
+
+# 10) every visual.json 'name' must equal its folder name (clone/rename mistake).
+namemismatch = []
+for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.json")):
+    folder = os.path.basename(os.path.dirname(vf))
+    try:
+        nm = json.load(open(vf, encoding="utf-8")).get("name")
+    except Exception:
+        continue
+    if nm != folder:
+        namemismatch.append(f"{folder} (name='{nm}')")
+if namemismatch:
+    problems.append(f"visual.json 'name' != folder: {namemismatch[:8]}")
 
 if problems:
     print("PHM VALIDATION FAILED:")
