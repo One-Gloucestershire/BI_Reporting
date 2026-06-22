@@ -1,0 +1,59 @@
+table Amb999Trend
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000451
+
+	measure '999 Encounters' = SUM ( Amb999Trend[encounters] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000452
+
+	measure '999 Conveyed' = CALCULATE ( SUM ( Amb999Trend[encounters] ), Amb999Trend[conveyed] = 1 )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000453
+
+	measure '999 Conveyance Rate (trend)' = DIVIDE ( [999 Conveyed], [999 Encounters] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000454
+
+	column month_start
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000455
+		summarizeBy: none
+		sourceColumn: month_start
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_band
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000456
+		summarizeBy: none
+		sourceColumn: age_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column conveyed
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000457
+		summarizeBy: none
+		sourceColumn: conveyed
+
+		annotation SummarizationSetBy = Automatic
+
+	column encounters
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000458
+		summarizeBy: sum
+		sourceColumn: encounters
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Amb999Trend = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select month_start, age_band, case when is_conveyed then 1 else 0 end as conveyed, encounters from db03_pid.data_mart_l050_phm_rpt.amb_999_monthly", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
