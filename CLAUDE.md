@@ -203,6 +203,23 @@ excluded). Run it after any re-layout.
    best fix for long category labels, because it changes the **values**, not the
    column name, so **no visual.json edit is needed** (e.g. ICD cause-of-death
    chapters → "Circulatory"; bind stays on `cause_chapter`).
+   - **Always sample the distinct source values before trusting a bar.** Three
+     traps we keep hitting, all fixed at source (lever 3), all verified by a
+     `select <col>, count(*) … group by 1` first:
+     - **Raw codes masquerading as truncation** — `bnf_chapter` was 2-letter
+       codes (`Ca`,`Ce`,`En`), not clipped words; expand with an explicit `CASE`.
+     - **One entity, multiple encodings in the same column** — `diagnostic_tests`
+       held both `NON_OBSTETRIC_ULTRASOUND` (UPPER_SNAKE, bulk) **and**
+       `Non-obstetric ultrasound` (proper name) for the same DM01 test. Normalise
+       with an **ILIKE-keyword `CASE`** (`when … ilike '%ultrasound%' then …`) so
+       both forms collapse to one readable bar; the `group by` then merges them.
+       Add an `else initcap(replace(lower(col),'_',' '))` net for unseen codes.
+     - **Bare ordinal codes** — ACG `rub` was `0`–`5`; map to
+       `'3 Moderate morbidity'` etc. **with a leading sort digit** so the axis
+       still orders correctly (matches the `efi_band` `'1 Fit'` house style).
+   - Values already carrying a leading sort prefix (`03 Low Need Adult`) or
+     already readable (`incident_colour` = `Category 1`–`5`) are **not** code
+     problems — leave them; their truncation is a width/title issue (lever 1).
 4. **Model column display rename** (raw `snake_case` headers → friendly) — medium:
    ripples into measures *and* visual `queryRef`/`nativeQueryRef`. Keep
    `sourceColumn` unchanged; update every `Table[col]` DAX ref and every visual
