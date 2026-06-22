@@ -1,0 +1,55 @@
+table CrimeIMD
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000471
+
+	measure 'Crimes per 1,000' = SUM ( CrimeIMD[crimes_per_1000] )
+		formatString: #,0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000472
+
+	measure 'Total Crimes (12m)' = SUM ( CrimeIMD[crimes_12m] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000473
+
+	column imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000474
+		summarizeBy: none
+		sourceColumn: imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column crimes_12m
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000475
+		summarizeBy: sum
+		sourceColumn: crimes_12m
+
+		annotation SummarizationSetBy = Automatic
+
+	column resident_pop
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000476
+		summarizeBy: sum
+		sourceColumn: resident_pop
+
+		annotation SummarizationSetBy = Automatic
+
+	column crimes_per_1000
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000477
+		summarizeBy: none
+		sourceColumn: crimes_per_1000
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CrimeIMD = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select imd_decile, crimes_12m, resident_pop, crimes_per_1000 from db03_pid.data_mart_l050_phm_rpt.crime_imd", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
