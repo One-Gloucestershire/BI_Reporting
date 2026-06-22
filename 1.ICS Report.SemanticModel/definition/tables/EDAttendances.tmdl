@@ -1,0 +1,59 @@
+table EDAttendances
+	lineageTag: 1f9c0a00-0000-4b00-9c00-201382811091806
+
+	measure 'ED Attendances' = SUM ( EDAttendances[attendances] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-111324121375080
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column lsoa
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-219960589315107
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-71868209778705
+		summarizeBy: none
+		sourceColumn: imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column age_group
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-126251399429944
+		summarizeBy: none
+		sourceColumn: age_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column attendances
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-57684469212873
+		summarizeBy: sum
+		sourceColumn: attendances
+
+		annotation SummarizationSetBy = Automatic
+
+	partition EDAttendances = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "with imd as (#(lf)    select lsoa_code, max(imd_decile_england) as imd#(lf)    from data_mart_powerbi_phm.tbl02_demographicsoverview#(lf)    where lsoa_code is not null group by lsoa_code)#(lf)select date_trunc('month', e.record_date)::date as month_date,#(lf)    e.lsoa_11 as lsoa, coalesce(i.imd, 0) as imd_decile,#(lf)    case when e.age_at_arrival is null then 'Unknown' when e.age_at_arrival < 18 then '0-17'#(lf)         when e.age_at_arrival < 65 then '18-64' else '65+' end as age_group,#(lf)    count(*) as attendances#(lf)from data_mart_n019_csu_urgentcare.vw_ecds e#(lf)join imd i on i.lsoa_code = e.lsoa_11#(lf)where e.record_date >= '2023-01-01'#(lf)group by 1,2,3,4", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

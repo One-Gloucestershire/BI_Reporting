@@ -1,0 +1,124 @@
+table LTCTrend
+	lineageTag: 1f9c0a00-0000-4b00-9c00-29155077590522
+
+	measure 'Condition Patients (Latest Month)' = CALCULATE ( [Condition Patients], LTCTrend[month_date] = MAX ( LTCTrend[month_date] ) )
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000096
+	measure 'LTC Prev Month' = VAR l = MAX ( LTCTrend[month_date] ) RETURN CALCULATE ( [Condition Patients], LTCTrend[month_date] = EDATE ( l, -1 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000097
+	measure 'LTC Prev Year' = VAR l = MAX ( LTCTrend[month_date] ) RETURN CALCULATE ( [Condition Patients], LTCTrend[month_date] = EDATE ( l, -12 ) )
+		formatString: #,0
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000098
+	measure 'LTC MoM Δ' = [Condition Patients (Latest Month)] - [LTC Prev Month]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000099
+	measure 'LTC MoM Δ%' = DIVIDE ( [LTC MoM Δ], [LTC Prev Month] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000100
+	measure 'LTC YoY Δ' = [Condition Patients (Latest Month)] - [LTC Prev Year]
+		formatString: #,0
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000101
+	measure 'LTC YoY Δ%' = DIVIDE ( [LTC YoY Δ], [LTC Prev Year] )
+		formatString: 0.0%
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000102
+	measure 'LTC MoM' = VAR d = [LTC MoM Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000103
+	measure 'LTC YoY' = VAR d = [LTC YoY Δ%] RETURN IF ( ISBLANK ( d ), "—", IF ( d > 0.0005, "▲ ", IF ( d < -0.0005, "▼ ", "▬ " ) ) & FORMAT ( d, "+0.0%;-0.0%;0.0%" ) )
+		displayFolder: Direction
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000104
+	measure 'LTC MoM Colour' = VAR d = [LTC MoM Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000105
+	measure 'LTC YoY Colour' = VAR d = [LTC YoY Δ%] RETURN IF ( ISBLANK ( d ) || ABS ( d ) <= 0.0005, "#666666", IF ( d > 0, "#C00000", "#107C10" ) )
+		displayFolder: Direction
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000106
+	measure 'LTC Mean' = AVERAGEX ( SUMMARIZE ( ALLSELECTED ( LTCTrend[month_date] ), LTCTrend[month_date] ), CALCULATE ( [Condition Patients] ) )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000107
+	measure 'LTC MeanMR' = VAR _b = ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( LTCTrend[month_date] ), LTCTrend[month_date] ), "@v", CALCULATE ( [Condition Patients] ) ) VAR _r = ADDCOLUMNS ( _b, "@i", RANKX ( _b, LTCTrend[month_date],, ASC, DENSE ) ) VAR _mr = FILTER ( ADDCOLUMNS ( _r, "@d", VAR _ci = [@i] RETURN IF ( _ci > 1, ABS ( [@v] - MAXX ( FILTER ( _r, [@i] = _ci - 1 ), [@v] ) ) ) ), NOT ISBLANK ( [@d] ) ) RETURN AVERAGEX ( _mr, [@d] )
+		formatString: #,0
+		displayFolder: SPC
+		isHidden
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000108
+	measure 'LTC UCL' = [LTC Mean] + 2.66 * [LTC MeanMR]
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000109
+	measure 'LTC LCL' = MAX ( 0, [LTC Mean] - 2.66 * [LTC MeanMR] )
+		formatString: #,0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000110
+	measure 'LTC Months Out of Control' = COUNTROWS ( FILTER ( ADDCOLUMNS ( SUMMARIZE ( ALLSELECTED ( LTCTrend[month_date] ), LTCTrend[month_date] ), "@v", CALCULATE ( [Condition Patients] ) ), [@v] > [LTC UCL] || [@v] < [LTC LCL] ) )
+		formatString: 0
+		displayFolder: SPC
+		lineageTag: 1f9c0a00-0a01-4d00-9e00-000000000111
+
+	measure 'Condition Patients' = SUM ( LTCTrend[patient_count] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-159543426645453
+
+	measure 'Patients (latest)' =
+			VAR m = CALCULATE ( MAX ( LTCTrend[month_date] ), ALL ( LTCTrend[month_date] ) )
+			RETURN CALCULATE ( SUM ( LTCTrend[patient_count] ), LTCTrend[month_date] = m )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-212596095328803
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Condition'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-235948368711280
+		summarizeBy: none
+		sourceColumn: ltcname
+
+		annotation SummarizationSetBy = Automatic
+
+	column england_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-85450681175177
+		summarizeBy: none
+		sourceColumn: england_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_count
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-206166340368235
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition LTCTrend = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select month_date, ltcname, england_imd_decile,#(lf)    count(distinct pseudonhsnumber) as patients#(lf)from data_mart_powerbi_phm.tbl07_ltc_population_monthly#(lf)group by 1,2,3", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

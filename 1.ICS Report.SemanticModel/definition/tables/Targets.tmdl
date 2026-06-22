@@ -1,0 +1,70 @@
+table Targets
+	lineageTag: 1f9c0a00-0000-4b00-9c00-160506624480040
+
+	measure Achievement = AVERAGE ( Targets[value_pct] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-118444876258596
+
+	measure 'National Target' = AVERAGE ( Targets[target_pct] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-27400533054941
+
+	measure 'Gap to Target' = [Achievement] - [National Target]
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-39945105190470
+
+	measure 'Achievement (% of Target)' = AVERAGEX ( VALUES ( Targets[indicator] ), DIVIDE ( CALCULATE ( AVERAGE ( Targets[value_pct] ) ), CALCULATE ( AVERAGE ( Targets[target_pct] ) ) ) )
+		formatString: 0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-39945105190471
+
+	measure 'Indicators Met' = COUNTROWS ( FILTER ( Targets, Targets[value_pct] >= Targets[target_pct] ) )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-141460656895410
+
+	measure 'Indicators Total' = COUNTROWS ( Targets )
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-237868493979168
+
+	column indicator
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-90854662464379
+		summarizeBy: none
+		sourceColumn: indicator
+
+		annotation SummarizationSetBy = Automatic
+
+	column value_pct
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-62360979890538
+		summarizeBy: average
+		sourceColumn: value_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_pct
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-238798123151477
+		summarizeBy: average
+		sourceColumn: target_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column period
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-90047983660483
+		summarizeBy: none
+		sourceColumn: period
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Targets = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select 'Screening: ' || screening_type ||#(lf)        case when nullif(age_band,'') is not null then ' (' || age_band || ')' else '' end as indicator,#(lf)    coverage_pct as value_pct, target_pct, period#(lf)from data_mart_l050_phm_rpt.kpi_screening#(lf)union all#(lf)select 'Cancer: ' || replace(replace(replace(replace(label,' screening',''),' coverage',''),' rate (% USC refs diagnosed)',''),' rate (% new cases via USC)','') as indicator, value_pct, target_pct, period#(lf)from data_mart_l050_phm_rpt.kpi_cancer", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

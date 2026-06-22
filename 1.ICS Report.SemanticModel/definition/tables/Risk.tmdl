@@ -1,0 +1,383 @@
+table Risk
+	lineageTag: 1f9c0a00-0000-4b00-9c00-98726416199912
+
+	measure Patients = COUNTROWS ( Risk )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-171670012869591
+
+	measure 'Avg CMS (mortality)' = AVERAGE ( Risk[cms_mortality_score] )
+		formatString: 0.00
+		lineageTag: 1f9c0a00-0000-4b00-9c00-191545727922940
+
+	measure 'Avg eFI' = AVERAGE ( Risk[efi_score] )
+		formatString: 0.000
+		lineageTag: 1f9c0a00-0000-4b00-9c00-111134178443748
+
+	measure 'Avg Charlson' = AVERAGE ( Risk[charlson_cci_score] )
+		formatString: 0.00
+		lineageTag: 1f9c0a00-0000-4b00-9c00-72615514476435
+
+	measure 'Avg ACG Risk %' = AVERAGE ( Risk[risk_pct] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-91722678355313
+
+	measure '% Multimorbid (2+ conditions)' = DIVIDE ( CALCULATE ( COUNTROWS ( Risk ), Risk[multimorbidity_count] >= 2 ), [Patients] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-41072916849894
+
+	measure '% Frail (eFI mod/severe)' = DIVIDE ( CALCULATE ( COUNTROWS ( Risk ), Risk[efi_band] IN { "3 Moderate", "4 Severe" } ), [Patients] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-272120431884371
+
+	measure 'High Risk (CMS Q5)' = CALCULATE ( COUNTROWS ( Risk ), Risk[cms_quintile] = 5 )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-278497288854018
+
+	measure '% High ACG (RUB 4-5)' = DIVIDE ( CALCULATE ( COUNTROWS ( Risk ), Risk[rub] IN { "4", "5" } ), [Patients] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-5236112904597
+
+	measure 'Anticoag Gap' = CALCULATE ( COUNTROWS ( Risk ), Risk[anticoag_candidate] = TRUE (), Risk[bleed_risk_concern] = FALSE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-50711956287820
+
+	measure 'Patients (Diabetes)' = CALCULATE ( COUNTROWS ( Risk ), Risk[has_diabetes] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-99934201316841
+
+	measure 'Patients (COPD)' = CALCULATE ( COUNTROWS ( Risk ), Risk[has_copd] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-141260770436449
+
+	measure 'Patients (CHD)' = CALCULATE ( COUNTROWS ( Risk ), Risk[has_chd] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-12061936115102
+
+	measure 'Patients (CKD)' = CALCULATE ( COUNTROWS ( Risk ), Risk[has_ckd] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-277932815820903
+
+	measure 'Patients (Dementia)' = CALCULATE ( COUNTROWS ( Risk ), Risk[has_dementia] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-153989129572540
+
+	measure 'Patients (SMI)' = CALCULATE ( COUNTROWS ( Risk ), Risk[has_smi] = TRUE () )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-143344398732309
+
+	column 'Patient ID'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-114696879055766
+		summarizeBy: none
+		sourceColumn: patient_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column multimorbidity_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-274564430969801
+		summarizeBy: sum
+		sourceColumn: multimorbidity_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Conditions (count)'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-135389998909505
+		summarizeBy: none
+		sourceColumn: mm_group
+		sortByColumn: mm_group_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column mm_group_sort
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-205480447849842
+		summarizeBy: none
+		sourceColumn: mm_group_sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column cms_mortality_score
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-257784258736142
+		summarizeBy: average
+		sourceColumn: cms_mortality_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column cms_admissions_score
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-76109003067097
+		summarizeBy: average
+		sourceColumn: cms_admissions_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column cms_consultations_score
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-49750534798199
+		summarizeBy: average
+		sourceColumn: cms_consultations_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column cms_quintile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-208884298506549
+		summarizeBy: none
+		sourceColumn: cms_quintile
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CMS quintile band'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-201709184429946
+		summarizeBy: none
+		sourceColumn: cms_band
+		sortByColumn: cms_quintile
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_score
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-185192125368429
+		summarizeBy: average
+		sourceColumn: efi_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_deficit_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-131511320735413
+		summarizeBy: average
+		sourceColumn: efi_deficit_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column efi_band
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-4844126846850
+		summarizeBy: none
+		sourceColumn: efi_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column charlson_cci_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-185040496422770
+		summarizeBy: average
+		sourceColumn: charlson_cci_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column charlson_cci_age_adjusted
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-194974428472602
+		summarizeBy: average
+		sourceColumn: charlson_cci_age_adjusted
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Charlson band'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-80103498670850
+		summarizeBy: none
+		sourceColumn: charlson_band
+
+		annotation SummarizationSetBy = Automatic
+
+	column cvd_risk_proxy_score
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-137678074452822
+		summarizeBy: average
+		sourceColumn: cvd_risk_proxy_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column cha2ds2_vasc_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-209273589170261
+		summarizeBy: average
+		sourceColumn: cha2ds2_vasc_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column anticoag_candidate
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-163968598793192
+		summarizeBy: none
+		sourceColumn: anticoag_candidate
+
+		annotation SummarizationSetBy = Automatic
+
+	column bleed_risk_concern
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-152870024273681
+		summarizeBy: none
+		sourceColumn: bleed_risk_concern
+
+		annotation SummarizationSetBy = Automatic
+
+	column rub
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-279632382844093
+		summarizeBy: none
+		sourceColumn: rub
+
+		annotation SummarizationSetBy = Automatic
+
+	column risk_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-117180349193678
+		summarizeBy: average
+		sourceColumn: risk_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column risk_level
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-262141781628257
+		summarizeBy: none
+		sourceColumn: risk_level
+
+		annotation SummarizationSetBy = Automatic
+
+	column patient_need_group
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-98854707582907
+		summarizeBy: none
+		sourceColumn: patient_need_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_frailty
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-13451375023364
+		summarizeBy: none
+		sourceColumn: is_frailty
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-177580610354773
+		summarizeBy: none
+		sourceColumn: practice_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column pcn_code
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-050471614819
+		summarizeBy: none
+		sourceColumn: pcn_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column practice_imd_decile
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-62856259007879
+		summarizeBy: none
+		sourceColumn: practice_imd_decile
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_diabetes
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-226375011668342
+		summarizeBy: none
+		sourceColumn: has_diabetes
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_copd
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-152458502567430
+		summarizeBy: none
+		sourceColumn: has_copd
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_chd
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-29011899996056
+		summarizeBy: none
+		sourceColumn: has_chd
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_ckd
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-172155135094571
+		summarizeBy: none
+		sourceColumn: has_ckd
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_dementia
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-267236132860612
+		summarizeBy: none
+		sourceColumn: has_dementia
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_smi
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-6957461032941
+		summarizeBy: none
+		sourceColumn: has_smi
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_cancer
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-175882754788145
+		summarizeBy: none
+		sourceColumn: has_cancer
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_asthma
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-49170809213886
+		summarizeBy: none
+		sourceColumn: has_asthma
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_depression
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-162780362554808
+		summarizeBy: none
+		sourceColumn: has_depression
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_palliative
+		dataType: boolean
+		lineageTag: 1f9c0a00-0000-4b00-9c00-137099508708414
+		summarizeBy: none
+		sourceColumn: has_palliative
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Risk = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select r.patient_id,#(lf)    r.multimorbidity_count,#(lf)    case when r.multimorbidity_count >= 4 then '4+' else r.multimorbidity_count::varchar end as mm_group,#(lf)    least(r.multimorbidity_count, 4) as mm_group_sort,#(lf)    r.cms_mortality_score, r.cms_admissions_score, r.cms_consultations_score,#(lf)    ntile(5) over (order by r.cms_mortality_score) as cms_quintile,#(lf)    'Q' || ntile(5) over (order by r.cms_mortality_score)::varchar as cms_band,#(lf)    r.efi_score, r.efi_deficit_count,#(lf)    case when r.efi_score < 0.12 then '1 Fit' when r.efi_score < 0.24 then '2 Mild'#(lf)         when r.efi_score < 0.36 then '3 Moderate' else '4 Severe' end as efi_band,#(lf)    r.charlson_cci_score, r.charlson_cci_age_adjusted,#(lf)    case when r.charlson_cci_score = 0 then '0' when r.charlson_cci_score <= 2 then '1-2'#(lf)         when r.charlson_cci_score <= 4 then '3-4' else '5+' end as charlson_band,#(lf)    r.cvd_risk_proxy_score, r.cha2ds2_vasc_score, r.anticoag_candidate, r.bleed_risk_concern,#(lf)    case a.rub::varchar when '0' then '0 Non-user' when '1' then '1 Healthy' when '2' then '2 Low morbidity' when '3' then '3 Moderate morbidity' when '4' then '4 High morbidity' when '5' then '5 Very high morbidity' else a.rub::varchar end as rub, a.risk_pct, a.risk_level, a.patient_need_group, a.is_frailty,#(lf)    p.practice_code, p.pcn_code,#(lf)    coalesce(la.imd_decile, 0) as practice_imd_decile,#(lf)    f.has_diabetes, f.has_copd, f.has_chd, f.has_ckd, f.has_dementia, f.has_smi,#(lf)    f.has_cancer, f.has_asthma, f.has_depression, f.has_palliative#(lf)from data_mart_l050_phm_rpt.patient_risk_scores r#(lf)left join data_mart_l050_phm_rpt.acg_snapshot a on a.patient_id = r.patient_id#(lf)left join data_mart_l050_phm_rpt.patient_practice p on p.patient_id = r.patient_id#(lf)left join data_mart_l050_phm_rpt.patient_cohort_flags f on f.patient_id = r.patient_id#(lf)left join data_mart_l050_phm_rpt.practice_locations pl on pl.practice_code = p.practice_code#(lf)left join data_mart_l050_phm_rpt.lsoa_aggregates la on la.lsoa11cd = pl.lsoa11cd", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

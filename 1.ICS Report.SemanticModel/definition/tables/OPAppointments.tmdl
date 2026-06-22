@@ -1,0 +1,59 @@
+table OPAppointments
+	lineageTag: 1f9c0a00-0000-4b00-9c00-183604102674963
+
+	measure 'OP Attended' = SUM ( OPAppointments[attended] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-221587262982955
+
+	measure 'OP DNAs' = SUM ( OPAppointments[dna] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-267407261524522
+
+	measure 'OP DNA Rate' = DIVIDE ( [OP DNAs], [OP Attended] + [OP DNAs] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-171977070727988
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column specialty
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-228193213002850
+		summarizeBy: none
+		sourceColumn: specialty
+
+		annotation SummarizationSetBy = Automatic
+
+	column attended
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-156038182613815
+		summarizeBy: sum
+		sourceColumn: attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column dna
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-211036741559734
+		summarizeBy: sum
+		sourceColumn: dna
+
+		annotation SummarizationSetBy = Automatic
+
+	partition OPAppointments = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', appointment_datetime::timestamp)::date as month_date,#(lf)    replace(replace(replace(replace(local_treatment_function,'Paediatric','Paeds'),' and ',' & '),'Anaesthetics-Pre Admission Clinics','Anaesthetics (Pre-Admit)'),'-Chemotherapy',' (Chemo)') as specialty,#(lf)    sum(case when attended_or_did_not_attend_code in ('5','6') then 1 else 0 end) as attended,#(lf)    sum(case when attended_or_did_not_attend_code = '3' then 1 else 0 end) as dna#(lf)from data_mart_l018_ghft_acute.tbl_opappointment_201_load#(lf)where appointment_datetime is not null and appointment_datetime <> ''#(lf)group by 1,2", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,100 @@
+table Education
+	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000495
+
+	measure 'Attainment 8' = SUM ( Education[attainment8_average] )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000496
+
+	measure 'Persistent Absence %' = SUM ( Education[persistent_absence_pct] )
+		formatString: 0.0\%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000497
+
+	measure 'Severe Absence %' = SUM ( Education[severe_absence_pct] )
+		formatString: 0.0\%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000498
+
+	measure 'Attainment 8 (Glos)' = CALCULATE ( SUM ( Education[attainment8_average] ), Education[area] = "Gloucestershire" )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000505
+
+	measure 'Attainment 8 (England)' = CALCULATE ( SUM ( Education[attainment8_average] ), Education[area] = "England" )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000506
+
+	measure 'Persistent Absence % (Glos)' = CALCULATE ( SUM ( Education[persistent_absence_pct] ), Education[area] = "Gloucestershire" )
+		formatString: 0.0\%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000507
+
+	measure 'Persistent Absence % (England)' = CALCULATE ( SUM ( Education[persistent_absence_pct] ), Education[area] = "England" )
+		formatString: 0.0\%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000508
+
+	measure 'Glos Attainment 8 (latest)' =
+			VAR lp = CALCULATE ( MAX ( Education[time_period] ), ALL ( Education ) )
+			RETURN CALCULATE ( SUM ( Education[attainment8_average] ), Education[area] = "Gloucestershire", Education[time_period] = lp )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000509
+
+	measure 'England Attainment 8 (latest)' =
+			VAR lp = CALCULATE ( MAX ( Education[time_period] ), ALL ( Education ) )
+			RETURN CALCULATE ( SUM ( Education[attainment8_average] ), Education[area] = "England", Education[time_period] = lp )
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000510
+
+	column area
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000499
+		summarizeBy: none
+		sourceColumn: area
+
+		annotation SummarizationSetBy = Automatic
+
+	column geographic_level
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000500
+		summarizeBy: none
+		sourceColumn: geographic_level
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_period
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000501
+		summarizeBy: none
+		sourceColumn: time_period
+
+		annotation SummarizationSetBy = Automatic
+
+	column attainment8_average
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000502
+		summarizeBy: none
+		sourceColumn: attainment8_average
+
+		annotation SummarizationSetBy = Automatic
+
+	column persistent_absence_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000503
+		summarizeBy: none
+		sourceColumn: persistent_absence_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column severe_absence_pct
+		dataType: double
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000504
+		summarizeBy: none
+		sourceColumn: severe_absence_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Education = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select area, geographic_level, time_period, attainment8_average, persistent_absence_pct, severe_absence_pct from db03_pid.data_mart_l050_phm_rpt.education_la", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

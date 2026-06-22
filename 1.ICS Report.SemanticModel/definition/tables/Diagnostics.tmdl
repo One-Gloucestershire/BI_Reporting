@@ -1,0 +1,73 @@
+table Diagnostics
+	lineageTag: 1f9c0a00-0000-4b00-9c00-60156564834854
+
+	measure 'Diagnostic Waiting' = SUM ( Diagnostics[waiting] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-52534830141330
+
+	measure 'Diagnostic (current)' = ```
+			VAR m = CALCULATE ( MAX ( Diagnostics[month_date] ), ALL ( Diagnostics[month_date] ) )
+			RETURN CALCULATE ( SUM ( Diagnostics[waiting] ), Diagnostics[month_date] = m )
+			```
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-65459637244848
+
+	measure '6+ Week Diagnostics' = SUM ( Diagnostics[wait_6plus] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-213628202886073
+
+	measure '6+ (current)' = ```
+			VAR m = CALCULATE ( MAX ( Diagnostics[month_date] ), ALL ( Diagnostics[month_date] ) )
+			RETURN CALCULATE ( SUM ( Diagnostics[wait_6plus] ), Diagnostics[month_date] = m )
+			```
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-121604682727339
+
+	measure 'Diag Breach Rate' = DIVIDE ( [6+ (current)], [Diagnostic (current)] )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-230050745830556
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column test
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-191308041897905
+		summarizeBy: none
+		sourceColumn: test
+
+		annotation SummarizationSetBy = Automatic
+
+	column waiting
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-49773219534554
+		summarizeBy: sum
+		sourceColumn: waiting
+
+		annotation SummarizationSetBy = Automatic
+
+	column wait_6plus
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-85241817704050
+		summarizeBy: sum
+		sourceColumn: wait_6plus
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Diagnostics = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select to_date(left(report_date,10),'DD/MM/YYYY') as month_date,#(lf)    case when diagnostic_tests ilike '%audiology%' then 'Audiology' when diagnostic_tests ilike '%barium%' then 'Barium enema' when diagnostic_tests ilike '%flexi%sigmoid%' then 'Flexi sigmoidoscopy' when diagnostic_tests ilike '%colonoscopy%' then 'Colonoscopy' when diagnostic_tests ilike '%cystoscopy%' then 'Cystoscopy' when diagnostic_tests ilike '%gastroscopy%' then 'Gastroscopy' when diagnostic_tests = 'CT' or diagnostic_tests ilike '%computed tomography%' then 'CT' when diagnostic_tests = 'MRI' or diagnostic_tests ilike '%magnetic resonance%' then 'MRI' when diagnostic_tests ilike '%ultrasound%' then 'Non-obstetric ultrasound' when diagnostic_tests ilike '%dexa%' then 'DEXA scan' when diagnostic_tests ilike '%echocardiograph%' then 'Echocardiography' when diagnostic_tests ilike '%electrophysiology%' then 'Electrophysiology' when diagnostic_tests ilike '%neurophys%' then 'Peripheral neurophysiology' when diagnostic_tests ilike '%sleep%' then 'Sleep studies' when diagnostic_tests ilike '%urodynamic%' then 'Urodynamics' else initcap(replace(lower(diagnostic_tests),'_',' ')) end as test,#(lf)    sum(nullif(total_waiting_list_activity,'')::numeric) as waiting,#(lf)    sum(nullif(cal_6_plus_week_waits,'')::numeric) as wait_6plus#(lf)from data_mart_n012_csu_performance.tbl_diagnostic#(lf)where report_date is not null#(lf)    and upper(trim(diagnostic_tests)) <> 'TOTAL'#(lf)group by 1,2", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

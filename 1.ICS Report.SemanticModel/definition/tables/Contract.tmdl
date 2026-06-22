@@ -1,0 +1,75 @@
+table Contract
+	lineageTag: 1f9c0a00-0000-4b00-9c00-268919043799956
+
+	measure 'Contract Spend' = SUM ( Contract[cost] )
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-261733376240381
+
+	measure 'Contract Activity' = SUM ( Contract[activity] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-109179501323966
+
+	measure 'Cost per Activity' = DIVIDE ( SUM ( Contract[cost] ), SUM ( Contract[activity] ) )
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-54263506246181
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 1f9c0a00-0000-4b00-9c00-215323527866570
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column pod
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-200979680238167
+		summarizeBy: none
+		sourceColumn: pod
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_type
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-152226979423686
+		summarizeBy: none
+		sourceColumn: provider_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column specialty
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-228193213002850
+		summarizeBy: none
+		sourceColumn: specialty
+
+		annotation SummarizationSetBy = Automatic
+
+	column cost
+		dataType: double
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-81037563967483
+		summarizeBy: sum
+		sourceColumn: cost
+
+		annotation SummarizationSetBy = Automatic
+
+	column activity
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-112907946490679
+		summarizeBy: sum
+		sourceColumn: activity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Contract = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select date_trunc('month', activity_start_date_contract_monitoring)::date as month_date,#(lf)    coalesce(nullif(point_of_delivery_further_detail_description,''),'Unknown') as pod,#(lf)    coalesce(nullif(derived_providertype,''),'Unknown') as provider_type,#(lf)    coalesce(nullif(derived_treatmentfunctiondescription,''),'Unknown') as specialty,#(lf)    sum(total_cost) as cost,#(lf)    sum(nullif(activity_count_point_of_delivery,'')::numeric) as activity#(lf)from data_mart_l030_csu_plcm.tbl_plcm_201_load#(lf)where activity_start_date_contract_monitoring >= '2023-01-01'#(lf)    and activity_start_date_contract_monitoring < current_date + interval '1 month'#(lf)group by 1,2,3,4", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

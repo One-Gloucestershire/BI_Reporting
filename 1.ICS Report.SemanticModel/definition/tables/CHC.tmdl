@@ -1,0 +1,87 @@
+table CHC
+	lineageTag: cc12273a-262a-909a-8f51-1efbc3378a7b
+
+	measure 'CHC Clients' = SUM ( CHC[clients] )
+		formatString: #,0
+		lineageTag: 42909f0c-76d1-32f5-ae61-43177cde94ca
+
+	measure 'CHC Fast Track' = SUM ( CHC[fasttrack_clients] )
+		formatString: #,0
+		lineageTag: 55a95aff-5ab3-23a4-8d68-5320eb657c4a
+
+	measure 'CHC % Fast Track' = DIVIDE ( SUM ( CHC[fasttrack_clients] ), SUM ( CHC[clients] ) )
+		formatString: 0.0%
+		lineageTag: d9d582ab-197d-f6f9-d0ae-0cf87ca339db
+
+	measure 'CHC Localities' = DISTINCTCOUNT ( CHC[locality] )
+		formatString: 0
+		lineageTag: dd4ffbb7-bf83-3c60-3bf0-9632ee03feb3
+
+	column month_date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 6f5633db-4fc5-0bd4-a7f5-1b9ae5fc19d2
+		summarizeBy: none
+		sourceColumn: month_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column locality
+		dataType: string
+		lineageTag: aa8bf916-75a9-a90c-73f9-63df4cf5f8ec
+		summarizeBy: none
+		sourceColumn: locality
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Care category'
+		dataType: string
+		lineageTag: 52e9b4e3-e54f-d1ee-faef-dae5144b93dd
+		summarizeBy: none
+		sourceColumn: care_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Status'
+		dataType: string
+		lineageTag: 77b71046-c7ed-2687-c0b7-b6051f6633c6
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column pathway
+		dataType: string
+		lineageTag: 9a9f5b44-31a8-081a-ca25-f1a154fd8ec6
+		summarizeBy: none
+		sourceColumn: pathway
+
+		annotation SummarizationSetBy = Automatic
+
+	column clients
+		dataType: int64
+		formatString: #,0
+		lineageTag: e895bc5d-1102-f954-0589-55be0f30a409
+		summarizeBy: sum
+		sourceColumn: clients
+
+		annotation SummarizationSetBy = Automatic
+
+	column fasttrack_clients
+		dataType: int64
+		formatString: #,0
+		lineageTag: a53463e5-23b2-fd91-5065-9859a576536f
+		summarizeBy: sum
+		sourceColumn: fasttrack_clients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CHC = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select case when f.referraldate>='2012-01-01' then date_trunc('month', f.referraldate)::date end as month_date, coalesce(g.locality,'Unknown') as locality, coalesce(f.carecategory,'Unknown') as care_category, coalesce(f.status,'Unknown') as status, case when f.fasttrack='Y' then 'Fast Track' else 'Standard' end as pathway, count(distinct f.clientid) as clients, count(distinct case when f.fasttrack='Y' then f.clientid end) as fasttrack_clients from data_mart_l011_chs_continuinghealthcare.tbl_patientfrontpage_201_load f left join db01_reference.icb_data_reference.vw_gppractice g on f.currentgppracticecode=g.organisationcode where lower(coalesce(f.status,'')) <> 'delete' group by 1,2,3,4,5", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
