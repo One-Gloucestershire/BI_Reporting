@@ -468,7 +468,7 @@ table 'Patient Carer services SP'
 		mode: import
 		source =
 				let
-				    Source = Sql.Database("grh-ccg-sql", "PowerBI_Reporting", [Query="#(lf)#(lf)SELECT *#(lf)FROM [PowerBI_Reporting].[AgeingWell].[tbl14_Hospice_PatientCarerServices]"]),
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select provider, local_patient_identifier, nhs_number, referral_date, referral_date_yearmonth, referral_date_financialyear, registration_date, discharge_date, source_of_referral, referral_accepted, reason_for_not_accepting, gp_practice, practice_code, practice, age_at_referral, age_band, ethnicity, gender, ""religious/personal_belief"", support_provided_to, type_of_support_provided, location_of_course, total_booked_appointments, total_attended_appointments, total_dna_appointments, filename, processeddate from data_mart_powerbi_ageingwell.tbl14_hospice_patientcarerservices", null, [EnableFolding=true]),
 				    #"Added patient_id column" = Table.AddColumn(Source, "patient_id", each if [nhs_number] = "" then [local_patient_identifier] else [nhs_number]),
 				    #"Added age_band_order Column" = Table.AddColumn(#"Added patient_id column", "age_band_order", each if [age_band] = "<40" then 1 else if [age_band] = "40-49" then 2 else if [age_band] = "50-59" then 3 else if [age_band] = "60-69" then 4 else if [age_band] = "70-79" then 5 else if [age_band] = "80-89" then 6 else if [age_band] = "90-99" then 7 else if [age_band] = "100+" then 8 else null),
 				    #"Capitalized Each Word (source of referral)" = Table.TransformColumns(#"Added age_band_order Column",{{"source_of_referral", Text.Proper, type text}}),
