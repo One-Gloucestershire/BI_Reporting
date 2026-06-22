@@ -4,7 +4,9 @@
 Catches the import-killers we've hit repeatedly:
   1. UTF-8 BOM in any .tmdl/.json/.pbir file  (auto-stripped with --fix)
   2. Duplicate measure names across the model  (blocks import)
-  3. A measure whose name matches a column in the same table (case-insensitive)
+  3. A measure whose name matches ANY column anywhere in the model
+     (case-insensitive, model-wide) — Power BI Desktop rejects this on open
+     even though the Fabric Service import tolerates it.
   4. customTheme in report.json missing reportVersionAtImport
   5. visual field refs that don't resolve to a model column/measure
 
@@ -46,24 +48,33 @@ def cols_meas(s):
     meas = {(a or b) for a, b in re.findall(r"^\tmeasure (?:'([^']+)'|(\S+))", s, re.M)}
     return cols, meas
 
-model, seen, clash = {}, collections.defaultdict(list), []
+model, seen = {}, collections.defaultdict(list)
+all_cols = {}                       # lower(colname) -> (colname, table)  model-wide
 for f in glob.glob(os.path.join(MODEL, "tables", "*.tmdl")):
     t = os.path.splitext(os.path.basename(f))[0]
     c, m = cols_meas(open(f, encoding="utf-8").read())
     model[t] = c | m
-    low = {x.lower() for x in c}
+    for cn in c:
+        all_cols.setdefault(cn.lower(), (cn, t))
     for mm in m:
         seen[mm].append(t)
-        if mm.lower() in low:
-            clash.append((t, mm))
 
 # 2) duplicate measures
 dups = {n: ts for n, ts in seen.items() if len(ts) > 1}
 if dups:
     problems.append(f"Duplicate measure names (model-wide): {dups}")
-# 3) measure==column clash
+# 3) measure name == column name ANYWHERE in the model (case-insensitive).
+#    Power BI Desktop's AS engine refuses to create such a measure
+#    (PFE_XL_MEASURE_COLUMN_ALREADY_EXIST) even when the column is in a
+#    different table; the Service import does not, so this stays latent.
+clash = []
+for mm, ts in seen.items():
+    if mm.lower() in all_cols:
+        cn, ct = all_cols[mm.lower()]
+        clash.append(f"measure '{mm}' ({ts[0]}) <-> column '{cn}' ({ct})")
 if clash:
-    problems.append(f"Measure/column name clashes: {clash}")
+    problems.append("Measure/column name clashes (model-wide, Desktop-blocking): "
+                    + "; ".join(sorted(clash)))
 
 # 4) customTheme reportVersionAtImport
 rj = os.path.join(REPORT, "report.json")
