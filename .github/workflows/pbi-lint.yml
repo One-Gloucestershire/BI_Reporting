@@ -1,0 +1,31 @@
+name: Power BI repo lint
+
+# Runs the Power BI structural guards on every PR and on pushes to cloud, so the
+# hard-won lessons in tools/validate_phm_repo.py gate EVERY contributor — not just
+# whoever remembers to run it locally. Repo-wide checks that block any report:
+#   - duplicate item logicalId across .platform files  (the PR #76 "1.ICS Report"
+#     copy-without-dedup that jammed Fabric git sync)
+#   - malformed Value.NativeQuery M  (the dangling-T-SQL import killer)
+#   - UTF-8 BOM in source files
+# Plus the Gloucestershire Population Health model/report integrity checks.
+# See tools/validate_phm_repo.py for the full list and the rationale per check.
+
+on:
+  pull_request:
+  push:
+    branches: [cloud]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Power BI structural lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Power BI lint (tools/validate_phm_repo.py)
+        run: python "tools/validate_phm_repo.py"
