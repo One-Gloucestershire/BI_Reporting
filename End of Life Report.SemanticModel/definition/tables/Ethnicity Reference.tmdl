@@ -29,7 +29,7 @@ table 'Ethnicity Reference'
 		mode: import
 		source =
 				let
-				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="  SELECT [Ethnic_Code] = [NationalCode]#(lf)        ,[Ethnic_Category_Detailed] = [Description]#(lf)#(tab)#(tab),[Ethnicity] = CASE WHEN [NationalCode] IN ('L', 'K', 'H', 'J') THEN 'Asian or Asian British'#(lf)#(tab)#(tab)                    WHEN [NationalCode] IN ('N', 'P', 'M') THEN 'Black or Black British'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [NationalCode] IN ('G', 'F', 'E', 'D') THEN 'Mixed'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [NationalCode] IN ('S', 'R') THEN 'Other Ethnic Groups'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)WHEN [NationalCode] IN ('C', 'A', 'B') THEN 'White'#(lf)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)#(tab)ELSE NULL END#(lf)#(lf)  FROM [CCG_Reference].[Reference].[vw_EthnicCategory]"])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db01_reference"), "select nationalcode as ""Ethnic_Code"", description as ""Ethnic_Category_Detailed"", case when nationalcode in ('L','K','H','J') then 'Asian or Asian British' when nationalcode in ('N','P','M') then 'Black or Black British' when nationalcode in ('G','F','E','D') then 'Mixed' when nationalcode in ('S','R') then 'Other Ethnic Groups' when nationalcode in ('C','A','B') then 'White' else null end as ""Ethnicity"" from ccg_reference.vw_ethniccategory", null, [EnableFolding=true])
 				in
 				    Source
 
