@@ -297,10 +297,10 @@ table 'BM fp10 data'
 		annotation SummarizationSetBy = Automatic
 
 	partition 'BM fp10 data' = m
-		mode: directQuery
+		mode: import
 		source =
 				let
-				    Source = Sql.Database("grh-ccg-sql", "icb_benchmarking", [Query="SELECT [Commissioner_Provider_ICB_Level]#(lf)      ,[BNF_Chapter]#(lf)#(tab)  ,[BNF_Section]#(lf)#(tab)  ,[BNF_Paragraph]#(lf)#(tab)  ,[BNF_Chemical_Substance]#(lf)      ,[BNF_Chemical_Substance_Code]#(lf)      ,[Year_Month]#(lf)      ,[Patient_Count] = [Sum_of_Identified_Patient_Count_1_of_2]#(lf)      ,[Quantity_x_Items] = [Sum_of_Quantity_X_Items]#(lf)#(tab)  ,[Items] = [Sum_of_Items]#(lf)      ,[Cost] = [Sum_of_Actual_Cost]#(lf)#(tab)  ,[Record_Date]#(lf) #(lf)FROM [ICB_Benchmarking].[epact].[tbl_Benchmark_YTD]#(lf) #(lf)WHERE [Year_Month] >= '202104' /* Benchmarking Activity from Apr-2021 onwards */"])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select commissioner_provider_icb_level as ""Commissioner_Provider_ICB_Level"", bnf_chemical_substance_code as ""BNF_Chemical_Substance_Code"", year_month as ""Year_Month"", sum_of_identified_patient_count_1_of_2 as ""Patient_Count"", sum_of_quantity_x_items as ""Quantity_x_Items"", sum_of_items as ""Items"", sum_of_actual_cost as ""Cost"", record_date as ""Record_Date"", bnf_chapter as ""BNF_Chapter"", bnf_section as ""BNF_Section"", bnf_paragraph as ""BNF_Paragraph"", bnf_chemical_substance as ""BNF_Chemical_Substance"" from data_mart_benchmarking_epact.tbl_benchmark_ytd where year_month >= '202104'", null, [EnableFolding=true])
 				in
 				    Source
 
