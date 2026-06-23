@@ -17,7 +17,7 @@ Catches the import-killers we've hit repeatedly:
   9. pages.json pageOrder <-> page-folder consistency (unregistered/dangling)
  10. every visual.json 'name' equals its folder name (clone/rename mistakes)
  11. no duplicate item logicalId across .platform files (copy-without-dedup)
- 12. no malformed TMDL relationships (unindented fromColumn/toColumn; inline braces)
+ 12. no malformed TMDL (child property at column 0; inline-brace relationships)
   7. malformed Value.NativeQuery M in ANY report's SemanticModel (repo-wide) —
      dangling T-SQL fragment / broken "" escaping from a bad Sql.Database ->
      Redshift conversion; Fabric import dies "M Engine error: Token ',' expected"
@@ -275,9 +275,14 @@ for f in glob.glob("**/*.tmdl", recursive=True):
     except Exception:
         continue
     for i, ln in enumerate(lines, 1):
-        if re.match(r"^(fromColumn|toColumn)\s*:", ln):
+        # child-only TMDL properties are ALWAYS indented under a table/column/
+        # measure/relationship — at column 0 they are an "Invalid indentation"
+        # import error (Grok's whole 1.ICS table batch was written this way).
+        if re.match(r"^(lineageTag|fromColumn|toColumn|sourceColumn|summarizeBy|"
+                    r"dataType|formatString|sortByColumn|displayFolder|isHidden|"
+                    r"isKey|isNameInferred|isDataTypeInferred)\b", ln):
             tmdl_bad.append(f"{os.path.relpath(f)}:{i} unindented "
-                            f"'{ln.strip()[:36]}' (must nest under a relationship)")
+                            f"'{ln.strip()[:36]}' (TMDL child property at column 0)")
         elif re.match(r"^\s*relationship\b.*\{", ln):
             tmdl_bad.append(f"{os.path.relpath(f)}:{i} inline-brace relationship "
                             f"syntax (TMDL is indentation-based)")
