@@ -18,6 +18,7 @@ Catches the import-killers we've hit repeatedly:
  10. every visual.json 'name' equals its folder name (clone/rename mistakes)
  11. no duplicate item logicalId across .platform files (copy-without-dedup)
  12. no malformed TMDL (child property at column 0; inline-brace relationships)
+ 13. WARNING: reports still on on-prem Sql.Database (unbound in cloud workspace)
   7. malformed Value.NativeQuery M in ANY report's SemanticModel (repo-wide) —
      dangling T-SQL fragment / broken "" escaping from a bad Sql.Database ->
      Redshift conversion; Fabric import dies "M Engine error: Token ',' expected"
@@ -288,6 +289,24 @@ for f in glob.glob("**/*.tmdl", recursive=True):
                             f"syntax (TMDL is indentation-based)")
 if tmdl_bad:
     problems.append(f"Malformed TMDL relationships ({len(tmdl_bad)}): {tmdl_bad[:6]}")
+
+# 13) (WARNING, non-fatal) reports still bound to on-prem Sql.Database sources.
+#     These fail Service import with DMTS_MonikerWithUnboundDataSources (the
+#     'grh-ccg-sql / powerbi_reporting' moniker can't bind in the cloud
+#     workspace) and jam Update-all — e.g. the half-migrated Prescribing Report.
+#     Non-fatal on purpose: the on-prem -> Redshift migration is incremental, so
+#     a hard gate would red-CI every in-flight report; surfaced so you know which
+#     reports will jam a sync until their partitions are migrated.
+onprem = collections.defaultdict(list)
+for f in glob.glob("**/*.SemanticModel/definition/tables/*.tmdl", recursive=True):
+    if re.search(r"Sql\.Database\s*\(", open(f, encoding="utf-8").read()):
+        rpt = f.split(".SemanticModel")[0].rsplit(os.sep, 1)[-1]
+        onprem[rpt].append(os.path.basename(f)[:-5])
+if onprem:
+    print(f"WARNING — {len(onprem)} report(s) still on on-prem Sql.Database "
+          f"(will fail Service import until migrated to Redshift):")
+    for rpt, tbls in sorted(onprem.items()):
+        print(f"    - {rpt}: {len(tbls)} table(s) e.g. {sorted(tbls)[:3]}")
 
 if problems:
     print("PHM VALIDATION FAILED:")
