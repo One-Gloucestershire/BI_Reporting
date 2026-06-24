@@ -241,19 +241,24 @@ excluded). Run it after any re-layout.
   ~78–100); too short → text cut with "…". Grow height and cascade the rows
   below down so nothing collides.
 
-**Textbox sizing — a textbox must be ≥ one line of its largest font (check 14).**
-A `textbox` whose `position.height` is smaller than one rendered line clips the
-text top/bottom — the recurring "Biggest opportunity / Biggest risk" and Trends
-metric-label crops. Power BI's line-box + padding needs roughly:
-- **~1.6 × font(px)** when the text contains descenders (`g j p q y`)
-- **~1.35 × font(px)** for caps-only text (e.g. the corner `NHS` badge)
+**Textbox sizing — height must fit the WRAPPED text, not just one line (check 14).**
+A `textbox` clips its text two ways, and check 14 now guards both:
+- **Vertical:** `height` < one rendered line. Line height ≈ **1.6 × font(px)** for
+  text with descenders (`g j p q y`), **1.35 ×** for caps-only (the `NHS` badge).
+  So a 16px header needs `height ≥ 26`; a 24px title needs `≥ 39`.
+- **Horizontal wrap:** the text is too long for the `width`, so it wraps to N lines
+  but the box is only tall enough for fewer — the 2nd+ line clips. Glyph width ≈
+  **0.52 × font(px)** (Arial), so lines ≈ `ceil(len(text) × 0.52 × font ÷ width)`,
+  and the box needs `height ≥ lines × line-height`. This is the trap insight
+  **captions** keep hitting: ~110 chars of 13px text in a 600px-wide, 22px box
+  wraps to 2 lines and clips. A full-page-width caption (`w 1232`) fits ~180 chars
+  on one line; a half-width one only ~90.
 
-So a 16px header needs `height ≥ 26`; a 24px title needs `≥ 39`. `validate_phm_repo.py`
-**check 14** enforces this (descender-aware, so all-caps labels aren't false-flagged)
-and **fails the commit** if any textbox is too short. When you trip it, raise
-`position.height` and, if growing downward would overlap the visual below, nudge
-`y` **up** into the gap above (mirror the spacing — leave a few px top and bottom).
-Don't shrink the font to dodge it; headers carry the page's information scent.
+Fixes, in order of preference: **widen** the box (fewer lines), **grow height** for
+the wrapped line count (nudge `y` up if growing down would overlap below), or
+**shorten** the text. Don't shrink the font to dodge it — headers/insights carry
+the page's information scent. Check 14 is descender-aware (caps labels aren't
+false-flagged) and **fails the commit** if any textbox can't fit its text.
 
 **Colouring bars by a category (e.g. deprivation decile) — two traps, both cost a deploy:**
 - A `dataPoint` conditional `fill` whose `Conditional.Cases[].Left` is a **raw

@@ -308,14 +308,19 @@ if onprem:
     for rpt, tbls in sorted(onprem.items()):
         print(f"    - {rpt}: {len(tbls)} table(s) e.g. {sorted(tbls)[:3]}")
 
-# 14) Textbox clipping guard. A textbox shorter than one line of its largest
-#     font clips the top/bottom of the text — e.g. the 16px "Biggest opportunity"
-#     header in a 24px-high box, or the Trends metric labels. Power BI's line-box
-#     + padding needs ~1.6x the font for text containing descenders (g/j/p/q/y)
-#     and ~1.35x for caps-only text. The rule is descender-aware so all-caps
-#     labels (the corner "NHS" badge) are NOT false-flagged. If you trip this,
-#     raise the textbox `position.height` (and nudge `y` up if growing it would
-#     overlap the visual below). See CLAUDE.md "Textbox sizing".
+# 14) Textbox clipping guard (vertical AND horizontal-wrap). A textbox shorter
+#     than the text it must render clips it. Two ways this happens:
+#       (a) shorter than ONE line of the font — e.g. the 16px "Biggest opportunity"
+#           header in a 24px box, or the Trends metric labels; and
+#       (b) the text is too LONG for the box width, so it wraps to N lines but the
+#           box is only tall enough for fewer — e.g. a ~110-char insight caption in
+#           a 600px-wide, 22px-tall box (wraps to 2 lines, 2nd line clips).
+#     Power BI's line-box + padding needs ~1.6x the font for text with descenders
+#     (g/j/p/q/y) and ~1.35x for caps-only; width per glyph ~0.52x font (Arial).
+#     Descender-aware so all-caps labels (the corner "NHS" badge) aren't flagged.
+#     If you trip this: raise `position.height` for the wrapped line count, OR
+#     WIDEN the box so the text fits fewer lines, OR shorten the text. Nudge `y`
+#     up if growing height would overlap the visual below. See CLAUDE.md.
 _DESC = set("gjpqy")
 def _fontpx(fs):
     try:
@@ -339,11 +344,19 @@ for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.j
         continue
     maxf = max(sizes)
     text = "".join((r.get("value") or "") for r in runs)
-    required = math.ceil(maxf * (1.6 if any(c in _DESC for c in text) else 1.35))
+    # Wrap-aware: long text in a narrow box wraps to N lines and needs N x the
+    # line height. Estimate rendered width (Arial avg glyph ~0.52 x font px) and
+    # the number of wrapped lines, then require height >= lines x line-height.
+    # (lines==1 reduces to the original "one line of the font" check.)
+    w = v.get("position", {}).get("width", 0)
+    usable = max(1, w - 10)
+    lines = max(1, math.ceil(len(text) * 0.52 * maxf / usable))
+    line_h = math.ceil(maxf * (1.6 if any(c in _DESC for c in text) else 1.35))
+    required = lines * line_h + (4 if lines > 1 else 0)
     h = v.get("position", {}).get("height", 0)
     if h < required:
         page = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(vf))))
-        clipped.append(f"{page}/{v.get('name')} h{h}<{required}px ('{text[:24]}')")
+        clipped.append(f"{page}/{v.get('name')} h{h}<{required}px ({lines}ln '{text[:24]}')")
 if clipped:
     problems.append(f"Textbox(es) too short for their font, text will clip "
                     f"({len(clipped)}): {clipped[:8]}")
