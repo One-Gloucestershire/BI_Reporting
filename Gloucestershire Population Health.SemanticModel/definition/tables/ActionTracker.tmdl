@@ -1,11 +1,23 @@
 table ActionTracker
 	lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000301
 
+	measure 'Total impact (£/yr)' = SUM ( ActionTracker[ImpactGBP] )
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000320
+
 	column Action
 		dataType: string
 		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000302
 		summarizeBy: none
 		sourceColumn: [Action]
+
+		annotation SummarizationSetBy = Automatic
+
+	column RAG
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000308
+		summarizeBy: none
+		sourceColumn: [RAG]
 
 		annotation SummarizationSetBy = Automatic
 
@@ -33,6 +45,31 @@ table ActionTracker
 
 		annotation SummarizationSetBy = Automatic
 
+	column ImpactGBP
+		dataType: int64
+		formatString: \£#,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000309
+		summarizeBy: sum
+		sourceColumn: [ImpactGBP]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Depends on'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000310
+		summarizeBy: none
+		sourceColumn: [Depends on]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Timeline
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000311
+		summarizeBy: none
+		sourceColumn: [Timeline]
+
+		annotation SummarizationSetBy = Automatic
+
 	column Milestone
 		dataType: string
 		lineageTag: 1f9c0a00-0000-4b00-9c00-9000000000306
@@ -55,11 +92,11 @@ table ActionTracker
 		mode: import
 		source = ```
 				DATATABLE (
-				    "Action", STRING, "Status", STRING, "Owner", STRING, "Impact", STRING, "Milestone", STRING, "SortOrder", INTEGER,
+				    "Action", STRING, "RAG", STRING, "Status", STRING, "Owner", STRING, "Impact", STRING, "ImpactGBP", INTEGER, "Depends on", STRING, "Timeline", STRING, "Milestone", STRING, "SortOrder", INTEGER,
 				    {
-				    {"Case-manage high-risk patients in the most-deprived neighbourhoods", "In progress", "PHM team + PCNs", "Cut avoidable emergency demand in the top-risk cohort", "Cohort lists issued to PCNs - Q2", 1},
-				    {"Close clinical gaps in deprived practices (untreated AF, missed national targets)", "Scoping", "Primary Care", "Anticoagulation + screening uplift; fewer strokes and avoidable spend", "Practice-level gap packs - Q3", 2},
-				    {"Rebalance GP provision toward highest-need practices (inverse care law)", "Planned", "Commissioning", "Improve access where need is greatest", "Workforce review - Q4", 3}
+				    {"Case-manage high-risk patients in the most-deprived neighbourhoods", "🟢 On track", "In progress", "PHM team + PCNs", "Cut avoidable emergency demand in the top-risk cohort", 800000, "—  (foundational)", "Q2 2026 → Q3 2026", "Cohort lists issued to PCNs — Q2", 1},
+				    {"Close clinical gaps in deprived practices (untreated AF, missed national targets)", "🟠 At risk", "Scoping", "Primary Care", "Anticoagulation + screening uplift; fewer strokes and avoidable spend", 450000, "Risk cohort lists (Action 1)", "Q3 2026 → Q4 2026", "Practice-level gap packs — Q3", 2},
+				    {"Rebalance GP provision toward highest-need practices (inverse care law)", "🔴 Not started", "Planned", "Commissioning", "Improve access where need is greatest", 300000, "Gap packs (Action 2); workforce review", "Q4 2026 → Q1 2027", "Workforce review — Q4", 3}
 				    }
 				)
 				```
