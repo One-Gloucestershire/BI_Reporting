@@ -3,6 +3,68 @@
 Generated during the CCG_Reference/DSCRO/ICB_Products reference-conversion pass on the `cloud` branch.
 Of 109 target partitions, **42 were converted** to Redshift `Value.NativeQuery` and validated live; the **67 below were flagged** (RS table genuinely missing, source unpopulated/gated, source on a non-migrated DB, or a complex multi-statement/derived query needing semantic sign-off — per the task's convert-single-step / flag-complex rule).
 
+---
+## UPDATE 2026-06-24 — second reference-DB pass (53 of the flagged-67 now CONVERTED)
+
+A follow-up pass cleared the tractable date-dimension (cat G), GP-reference (cat F), and small
+B/C/H buckets. **53 partitions converted, live-tested on `ics-glos-reporting`, validate_phm_repo OK,
+pushed to `cloud`** (commits `8a38b07` Frailty + `590541d` the 24-report batch):
+
+- **Cat C (ED Department Type) ×2** — no RS `dd_emergency_care_department_type`; reconstructed as a
+  static `UNION ALL` of the 5 on-prem rows (Main_Description pulled from on-prem). Frailty + MH. EXACT.
+- **Cat G date dims ×30** — repointed to `dscro_national_lookups.ref_dates` / `ccg_reference.vw_date`
+  / `vw_datelookup`; @vars/#TEMP inlined as scalar subqueries (EOMONTH→last_day, GETDATE→current_date,
+  CONVERT(,103)→to_char DD/MM/YYYY, DENSE_RANK 1:1). Frailty REF_Date, Cancer, Dementia ×2, EoL ×5,
+  Hospice ×3, Contract Monitoring, Creative Health ×2, Demographic, Diabetes, Health Inequalities, INT,
+  Primary Care, Rockwood, Urgent Care, Virtual Wards, WM ×2, Community, GP SMS, MH, Whiteboard, Planned Care.
+  All row-count == on-prem EXACT (one exception: Community REF_Date_Ref 1491 vs 1522 = fact-table
+  freshness lag in `data_mart_powerbi_community.tbl02_csds_referrals`, logic faithful).
+  GOTCHAS propagated: on-prem `@@DATEFIRST=1` Monday-based weekday → RS `((extract(dow)+6)%7)+1`;
+  `vw_datelookup.financialmonth` is VARCHAR (must `cast(... as int)` for `<=`); `vw_date.financial_month`
+  is INT.
+- **Cat F GP refs ×15** — single CTE on `icb_data_reference.vw_gppractice` (`commissioner ilike '11m%'`),
+  relabel CASEs reproduced, coords via LEFT JOIN `data_mart_powerbi_phm.tbl02_demographicsoverview`.
+  Counts == on-prem (standard 87 / Cancer 86 / Respiratory 86). Cancer/Dementia/EoL/PrimaryCare/WM/
+  PopIns(Primary+Secondary)/HI/INT/Demographic/Prescribing/Rockwood/Respiratory-FeNO/CreativeHealth×2.
+- **Cat B (IMD county decile) ×2** — Population Insights PLS_Geography Primary+Secondary: repointed
+  `data_mart_pls.vw_imd_and_geography` + LEFT JOIN `ccg_reference.vw_lsoa_imd` for the absent
+  IMD_Gloucester_Decile (`derived_imdgloucestershiredecile`). 720,794 rows, 90% with Glos decile.
+- **Cat H (LSOA) ×2 + Diabetes Ref.Age + HI Ethnicity** — Frailty/Whiteboard REF_LSOA = vw_lsoa_imd +
+  vw_geographymapping (32,844 / 373 Glos); Diabetes Ref.Age = `ccg_reference.vw_ageband` (131 rows);
+  HI Ethnicity = `data_mart_pls.vw_ethnicity.derivedethnicitygroup` (6 == on-prem).
+
+### KNOWN NEW FLAG — GP-reference map coordinates are NULL (dw backfill needed)
+The cat-F GP-ref conversions LEFT JOIN `data_mart_powerbi_phm.tbl02_demographicsoverview` for
+GPLatitude/GPLongitude, but **that table's gplatitude/gplongitude are 100% NULL in RS** (0/720,794).
+On-prem had ~698k non-null. So GP-ref **maps render blank** until dw back-fills those columns. The
+join key (gp_practice_code) and all other columns are correct, so coords auto-heal on backfill — no
+report edit needed. (Alternative source `data_mart_primarycare.tbl01_gp_practice_populations` has
+`gp_latitude`/`gp_longitude` populated but only 64 practices AND the two columns appear swapped — not
+used, to avoid a lat/long landmine.) **dw action:** populate demographicsoverview coords.
+
+### STILL FLAGGED after this pass (genuine blockers)
+- **Cat A ACG/PLS ×~12 — STILL GATED.** Re-verified `data_mart_pls.vw_summary.acgpatientneedsgroup`
+  = 100% NULL (0/720,794). REF_PNG/DAT_ADG/DAT_Activity/DAT_PLS_Summary (ACG ×2 reports), PHM-Diabetes
+  Patient_Summary, PopIns PLS_Activity/PLS_Summary/Dat_Bed_Days/Dat_Patient_Weighting. Needs ACG product
+  populated (licence + dw). Dat_Bed_Days/Dat_Patient_Weighting are also multi-stage #TEMP (sign-off).
+- **Whiteboard `GP Practice Populations`** — on-prem `CCG_Reference.Reference.vw_GPPracticePopulation`
+  (CENSUSDATE 'MMM-YY', AgeGroupType, SELECT *) has NO RS equivalent of that shape. FLAG (dw build).
+- **Diabetes `8CP & 3TT (National)`** — on-prem `CCG_Reference.Diabetes.vw_NDA_CP_TT` (national NDA
+  care-processes audit) has NO RS home (`svv_redshift_tables` empty for nda_cp_tt). FLAG (dw ingest).
+- **WM `Ref - Source Table` / `Population` / `Refresh Date`** — translate cleanly against
+  `data_mart_pls.vw_summary` (logic verified, queries run), BUT the RS PLS mart is **Glos-11M only (no
+  QR1) and ~14% fewer distinct 11M demographic combos than on-prem** (39,105 vs 45,358). Held back to
+  avoid shipping a ~86%-parity demographic slicer. Convert once `data_mart_pls` reaches on-prem parity.
+- **Out-of-lane (primary FROM a non-target fact DB; belong to other migration lanes):** Contract
+  Monitoring PLCM family (BIReports/PowerBI), Circulatory Hypertension/Heart Failure, Primary Care
+  appointments (BIReports/CCG_Current), Creative Health "working on" #TEMP draft, EoL/HI Census
+  Population, Hospice hospice_at_home_quarterly, UC LSOA Populations, VW 08 Readmissions, etc.
+
+**Net repo state after this pass: 72 `Sql.Database` partitions remain (down from 149).** The original
+67-flagged list below is superseded for the converted rows; the remaining blockers are summarised above.
+
+---
+
 ## A. ACG / PLS analytical layer — gated (acgpatientneedsgroup unpopulated in RS)  (10)
 
 RS `data_mart_pls.vw_summary.acgpatientneedsgroup` is entirely NULL (ACG / Johns Hopkins is licence-gated and not populated on the cluster). `REF_PNG` returns 0 rows; ACG aggregates group on a null dimension. **Remediation:** populate the ACG product in `data_mart_pls` (dw + licence), then convert as simple `vw_summary` aliases.
