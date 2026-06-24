@@ -220,6 +220,19 @@ excluded). Run it after any re-layout.
    - Values already carrying a leading sort prefix (`03 Low Need Adult`) or
      already readable (`incident_colour` = `Category 1`–`5`) are **not** code
      problems — leave them; their truncation is a width/title issue (lever 1).
+   - **Already shortened at source (don't revert these).** A data-aware audit
+     (max label length vs ~0.037×chart-width) found 13 bar-category columns
+     truncating; each now carries a `REPLACE`/`CASE` shortener inside its model
+     NativeQuery (alias unchanged, positional `GROUP BY` auto-merges): `Contract`
+     specialty(50→22) & pod(109→22), `WaitingList` specialty(33→11),
+     `OPAppointments` specialty(46→17), `Demographics` ethnicity(40→10),
+     `CVDPrevent` area(67→20), `LTCTrend` Condition(35→22), `Practice`
+     practice_name(38→22), `Crime` crime_type(28→21), `Targets` indicator(28→22,
+     age-range `(60-74)` stripped — use char-class `[(]` not `\(`, Redshift),
+     `Maternity` delivery_method(28→17), `Diagnostics` test(26→17), `Prescribing`
+     bnf_chapter(→18), `EndOfLife` place_of_death(18→14). Re-run the audit
+     (probe each bar chart's category column `max(len(...))` against its width)
+     after adding any new bar chart with a free-text category.
 4. **Model column display rename** (raw `snake_case` headers → friendly) — medium:
    ripples into measures *and* visual `queryRef`/`nativeQueryRef`. Keep
    `sourceColumn` unchanged; update every `Table[col]` DAX ref and every visual

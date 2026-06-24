@@ -63,7 +63,7 @@ table Targets
 		mode: import
 		source =
 				let
-				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select 'Screening: ' || screening_type ||#(lf)        case when nullif(age_band,'') is not null then ' (' || age_band || ')' else '' end as indicator,#(lf)    coverage_pct as value_pct, target_pct, period#(lf)from data_mart_l050_phm_rpt.kpi_screening#(lf)union all#(lf)select 'Cancer: ' || replace(replace(replace(replace(label,' screening',''),' coverage',''),' rate (% USC refs diagnosed)',''),' rate (% new cases via USC)','') as indicator, value_pct, target_pct, period#(lf)from data_mart_l050_phm_rpt.kpi_cancer", null, [EnableFolding=true])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db03_pid_reporting"), "select trim(regexp_replace('Screening: ' || screening_type ||#(lf)        case when nullif(age_band,'') is not null then ' (' || age_band || ')' else '' end,' *[(][0-9<>-]+[)]$','')) as indicator,#(lf)    coverage_pct as value_pct, target_pct, period#(lf)from data_mart_l050_phm_rpt.kpi_screening#(lf)union all#(lf)select trim(regexp_replace('Cancer: ' || replace(replace(replace(replace(label,' screening',''),' coverage',''),' rate (% USC refs diagnosed)',''),' rate (% new cases via USC)',''),' *[(][0-9<>-]+[)]$','')) as indicator, value_pct, target_pct, period#(lf)from data_mart_l050_phm_rpt.kpi_cancer", null, [EnableFolding=true])
 				in
 				    Source
 
