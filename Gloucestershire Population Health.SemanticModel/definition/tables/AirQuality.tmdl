@@ -1,0 +1,148 @@
+table AirQuality
+	lineageTag: 4a17b900-0000-4d00-aq00-100000000001
+
+	measure 'Mean concentration' = AVERAGE ( AirQuality[mean_value] )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000002
+
+	measure 'WHO guideline' = MAX ( AirQuality[who_annual_guideline] )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000003
+
+	measure 'Latest 12m mean' =
+			VAR maxm = CALCULATE ( MAX ( AirQuality[month_start] ), ALL ( AirQuality[month_start] ) )
+			RETURN
+			    CALCULATE ( AVERAGE ( AirQuality[mean_value] ), AirQuality[month_start] > EDATE ( maxm, -12 ) )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000004
+
+	measure 'vs WHO guideline' = DIVIDE ( [Latest 12m mean], [WHO guideline] )
+		formatString: 0.0"x"
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000005
+
+	measure 'Glos PM2.5 (12m)' = CALCULATE ( [Latest 12m mean], AirQuality[pollutant_code] = "PM2.5", AirQuality[is_glos] = TRUE )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000006
+
+	measure 'Glos PM10 (12m)' = CALCULATE ( [Latest 12m mean], AirQuality[pollutant_code] = "PM10", AirQuality[is_glos] = TRUE )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000007
+
+	measure 'NO2 ref (12m)' = CALCULATE ( [Latest 12m mean], AirQuality[pollutant_code] = "NO2" )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000008
+
+	measure 'PM2.5 mean' = CALCULATE ( AVERAGE ( AirQuality[mean_value] ), AirQuality[pollutant_code] = "PM2.5" )
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000009
+
+	column station_code
+		dataType: string
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000010
+		summarizeBy: none
+		sourceColumn: station_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column station_name
+		dataType: string
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000011
+		summarizeBy: none
+		sourceColumn: station_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column site_type
+		dataType: string
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000012
+		summarizeBy: none
+		sourceColumn: site_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_glos
+		dataType: boolean
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000013
+		summarizeBy: none
+		sourceColumn: is_glos
+
+		annotation SummarizationSetBy = Automatic
+
+	column pollutant_code
+		dataType: string
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000014
+		summarizeBy: none
+		sourceColumn: pollutant_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column pollutant_label
+		dataType: string
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000015
+		summarizeBy: none
+		sourceColumn: pollutant_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column units
+		dataType: string
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000016
+		summarizeBy: none
+		sourceColumn: units
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_start
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000017
+		summarizeBy: none
+		sourceColumn: month_start
+
+		annotation SummarizationSetBy = Automatic
+
+	column mean_value
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000018
+		summarizeBy: none
+		sourceColumn: mean_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_hourly
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000019
+		summarizeBy: none
+		sourceColumn: max_hourly
+
+		annotation SummarizationSetBy = Automatic
+
+	column hours_measured
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000020
+		summarizeBy: sum
+		sourceColumn: hours_measured
+
+		annotation SummarizationSetBy = Automatic
+
+	column who_annual_guideline
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 4a17b900-0000-4d00-aq00-100000000021
+		summarizeBy: none
+		sourceColumn: who_annual_guideline
+
+		annotation SummarizationSetBy = Automatic
+
+	partition AirQuality = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select station_code, station_name, site_type, is_glos, pollutant_code, pollutant_label, units, month_start, mean_value, max_hourly, hours_measured, who_annual_guideline from db03_pid.data_mart_l050_phm_rpt.air_quality_station", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
