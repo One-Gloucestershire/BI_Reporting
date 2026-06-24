@@ -241,6 +241,20 @@ excluded). Run it after any re-layout.
   ~78–100); too short → text cut with "…". Grow height and cascade the rows
   below down so nothing collides.
 
+**Textbox sizing — a textbox must be ≥ one line of its largest font (check 14).**
+A `textbox` whose `position.height` is smaller than one rendered line clips the
+text top/bottom — the recurring "Biggest opportunity / Biggest risk" and Trends
+metric-label crops. Power BI's line-box + padding needs roughly:
+- **~1.6 × font(px)** when the text contains descenders (`g j p q y`)
+- **~1.35 × font(px)** for caps-only text (e.g. the corner `NHS` badge)
+
+So a 16px header needs `height ≥ 26`; a 24px title needs `≥ 39`. `validate_phm_repo.py`
+**check 14** enforces this (descender-aware, so all-caps labels aren't false-flagged)
+and **fails the commit** if any textbox is too short. When you trip it, raise
+`position.height` and, if growing downward would overlap the visual below, nudge
+`y` **up** into the gap above (mirror the spacing — leave a few px top and bottom).
+Don't shrink the font to dodge it; headers carry the page's information scent.
+
 **Fan-out re-layout (multi-agent):** give each agent a **distinct set of pages**
 (distinct files) → they never touch the same `visual.json`, so no worktree
 isolation is needed and there's nothing to merge. Constrain agents to

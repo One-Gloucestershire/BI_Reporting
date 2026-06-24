@@ -26,7 +26,7 @@ Catches the import-killers we've hit repeatedly:
 Usage:  python validate_phm_repo.py [--fix]   (run from the BI_Reporting repo root)
 Exit code 0 = clean, 1 = problems remain.
 """
-import sys, os, re, json, glob, collections
+import sys, os, re, json, glob, collections, math
 
 FIX = "--fix" in sys.argv
 ROOT = "Gloucestershire Population Health"
@@ -307,6 +307,46 @@ if onprem:
           f"(will fail Service import until migrated to Redshift):")
     for rpt, tbls in sorted(onprem.items()):
         print(f"    - {rpt}: {len(tbls)} table(s) e.g. {sorted(tbls)[:3]}")
+
+# 14) Textbox clipping guard. A textbox shorter than one line of its largest
+#     font clips the top/bottom of the text — e.g. the 16px "Biggest opportunity"
+#     header in a 24px-high box, or the Trends metric labels. Power BI's line-box
+#     + padding needs ~1.6x the font for text containing descenders (g/j/p/q/y)
+#     and ~1.35x for caps-only text. The rule is descender-aware so all-caps
+#     labels (the corner "NHS" badge) are NOT false-flagged. If you trip this,
+#     raise the textbox `position.height` (and nudge `y` up if growing it would
+#     overlap the visual below). See CLAUDE.md "Textbox sizing".
+_DESC = set("gjpqy")
+def _fontpx(fs):
+    try:
+        return float(str(fs).replace("px", "").strip())
+    except Exception:
+        return None
+clipped = []
+for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.json")):
+    try:
+        v = json.load(open(vf, encoding="utf-8"))
+    except Exception:
+        continue
+    vis = v.get("visual", {})
+    if vis.get("visualType") != "textbox":
+        continue
+    gen = (vis.get("objects", {}).get("general") or [{}])[0].get("properties", {})
+    runs = [r for p in (gen.get("paragraphs") or []) for r in p.get("textRuns", [])
+            if (r.get("value") or "").strip()]
+    sizes = [s for s in (_fontpx(r.get("textStyle", {}).get("fontSize")) for r in runs) if s]
+    if not sizes:
+        continue
+    maxf = max(sizes)
+    text = "".join((r.get("value") or "") for r in runs)
+    required = math.ceil(maxf * (1.6 if any(c in _DESC for c in text) else 1.35))
+    h = v.get("position", {}).get("height", 0)
+    if h < required:
+        page = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(vf))))
+        clipped.append(f"{page}/{v.get('name')} h{h}<{required}px ('{text[:24]}')")
+if clipped:
+    problems.append(f"Textbox(es) too short for their font, text will clip "
+                    f"({len(clipped)}): {clipped[:8]}")
 
 if problems:
     print("PHM VALIDATION FAILED:")
