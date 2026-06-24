@@ -256,9 +256,13 @@ excluded). Run it after any re-layout.
 
 **Textbox sizing — height must fit the WRAPPED text, not just one line (check 14).**
 A `textbox` clips its text two ways, and check 14 now guards both:
-- **Vertical:** `height` < one rendered line. Line height ≈ **1.6 × font(px)** for
-  text with descenders (`g j p q y`), **1.35 ×** for caps-only (the `NHS` badge).
-  So a 16px header needs `height ≥ 26`; a 24px title needs `≥ 39`.
+- **Vertical:** `height` < one rendered line. Line height ≈ **1.75 × font(px)** for
+  text with descenders (`g j p q y`), **1.4 ×** for caps-only (the `NHS` badge).
+  So a 16px header needs `height ≥ 28`; a **24px page title needs `≥ 42`** — and
+  the standard page-title boxes are `h46–48`. **A 24px title clips its descenders
+  in `h40`** (ratio 1.67) — this bit the six detail-page / credibility titles and
+  an earlier-too-lenient 1.6× factor let it through. Don't size any 24px title
+  below h44.
 - **Horizontal wrap:** the text is too long for the `width`, so it wraps to N lines
   but the box is only tall enough for fewer — the 2nd+ line clips. Glyph width ≈
   **0.52 × font(px)** (Arial), so lines ≈ `ceil(len(text) × 0.52 × font ÷ width)`,

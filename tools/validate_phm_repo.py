@@ -351,7 +351,9 @@ for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.j
     w = v.get("position", {}).get("width", 0)
     usable = max(1, w - 10)
     lines = max(1, math.ceil(len(text) * 0.52 * maxf / usable))
-    line_h = math.ceil(maxf * (1.6 if any(c in _DESC for c in text) else 1.35))
+    # line height incl. padding: ~1.75x font for text with descenders, ~1.4x for
+    # caps-only. (Calibrated: a 24px title clips in h40 (=1.67x) but fits in h46.)
+    line_h = math.ceil(maxf * (1.75 if any(c in _DESC for c in text) else 1.4))
     required = lines * line_h + (4 if lines > 1 else 0)
     h = v.get("position", {}).get("height", 0)
     if h < required:
