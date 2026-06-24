@@ -30,7 +30,7 @@ table REF_ED_Department_Type
 		queryGroup: 'Reference Tables'
 		source =
 				let
-				    Source = Sql.Database("grh-ccg-sql", "DSCRO_NATIONAL_LOOKUPS", [Query="SELECT [Department_type_code] = RIGHT(Main_Code_Text,1) #(lf)#(lf),[Department_type_description] = Main_Description#(lf),[Department_type_group] = #(lf)case when Main_Code_Text in ('01','02') then 'A&E Department'#(lf)when Main_Code_Text in ('03') then 'Minor Injury Unit'#(lf)when Main_Code_Text in ('04') then 'NHS Walk In Centre'#(lf)when Main_Code_Text in ('05') then Main_Description END #(lf)  FROM [DSCRO_NATIONAL_LOOKUPS].[Data_Dictionary].[Emergency_Care_Department_Type_SCD]#(lf)  where Is_Latest = 1#(lf)#(lf)  order by RIGHT(Main_Code_Text,1)  asc"])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db01_reference"), "select dt.code as ""Department_type_code"", dt.descr as ""Department_type_description"", case when dt.mct in ('01','02') then 'A&E Department' when dt.mct='03' then 'Minor Injury Unit' when dt.mct='04' then 'NHS Walk In Centre' when dt.mct='05' then dt.descr end as ""Department_type_group"" from (select '01' mct,'1' code,'Emergency Care Attendance at an Emergency Care Department Type ''Major Emergency Care Department''' descr union all select '02','2','Emergency Care Attendance at an Emergency Care Department Type ''Mono-specialty Emergency Care Department''' union all select '03','3','Emergency Care Attendance at an Emergency Care Department Type ''Urgent Treatment Centre''' union all select '04','4','NHS walk in centres' union all select '05','5','Same Day Emergency Care.') dt order by dt.code asc", null, [EnableFolding=true])
 				in
 				    Source
 
