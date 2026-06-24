@@ -4,6 +4,46 @@ Generated during the CCG_Reference/DSCRO/ICB_Products reference-conversion pass 
 Of 109 target partitions, **42 were converted** to Redshift `Value.NativeQuery` and validated live; the **67 below were flagged** (RS table genuinely missing, source unpopulated/gated, source on a non-migrated DB, or a complex multi-statement/derived query needing semantic sign-off — per the task's convert-single-step / flag-complex rule).
 
 ---
+## UPDATE 2026-06-24c — CCG_Current / leftover-target-DB pass (3 converted, 7 flagged)
+
+A targeted pass over the remaining Population Insights (ICB_Products), Circulatory/Diabetes/Whiteboard
+(CCG_Reference), and EoL/Primary Care/Virtual Wards/Creative-Health-working-on (CCG_Current) partitions.
+**3 converted (live-tested, validate_phm_repo OK), 7 flagged.** (WM's CCG_Current partition already 0 left.)
+
+CONVERTED:
+- **End of Life / ReSPECT Plans Coded** — on-prem `CCG_Current.PrimaryCare.vw_Events` is an LBV that
+  FAILS on the consumer (cross-db ref). Sourced the **non-LBV base table**
+  `data_mart_primarycare.tbl_event_201_load` instead (pseudonhsnumber/eventdate/snomedcode present).
+  43,926 rows / 23,234 patients vs on-prem 44,457 / 23,449 (98.8% — base-table is the only viable path).
+- **Virtual Wards / 08 Readmissions** — the partition is a **commented-out stub** (`SELECT [Readmission_date_only]=''`
+  only; the real `CCG_Current.GHFT.vw_IPVirtualWard` logic is all `--`). Faithfully reproduced as
+  `select cast('' as varchar) as "Readmission_date_only"` (1 row). No table needed.
+- **Circulatory / 4. Hypertension** — fact `select * + [Latest YearEnd]` from
+  `data_mart_powerbi_circulatory.tbl04_hypertensioncohorts`; all 57 model cols present (RS +1 imdnationaldecile),
+  `[Latest YearEnd]` already precomputed in the RS mart so no subquery. **EXACT**: 6,475,001 rows /
+  Latest-YearEnd 382,885 == on-prem.
+
+FLAGGED (genuine blockers — no RS home / LBV / gated):
+- **PopIns PLS_Activity / Dat_Bed_Days / Dat_Patient_Weighting** — read `ICB_Products.Patient.vw_Activity`;
+  **no `data_mart_pls.vw_activity` in RS** (`Relation vw_activity does not exist`). dw must migrate the PLS
+  activity feed. (Dat_* are also multi-stage #TEMP.)
+- **PopIns PLS_Summary** — selects `[PLS].[ACGPatientNeedsGroup]` + ACG product fields; `acgpatientneedsgroup`
+  100% NULL. ACG-gated (licence + dw).
+- **Diabetes / 8CP & 3TT (National)** — `CCG_Reference.Diabetes.vw_NDA_CP_TT` has no RS home.
+- **Whiteboard / GP Practice Populations** — `CCG_Reference.Reference.vw_GPPracticePopulation` has no RS home.
+- **Primary Care / Gloucestershire Patients** — spine is `CCG_Reference.Population.vw_PDS_Current` (no
+  RS PDS-current home — only data_mart_n011_csu_pds MPI tables, different shape) AND the appointments leg
+  uses the `vw_appointments` LBV (same cross-db failure). Needs a PDS-current mart in RS.
+- **Creative Health Report - working on / Outcome measures** — 305-line `#TEMP_CH_Fixed` ISNUMERIC cleaning
+  over `CCG_Current.CreativeHealth.vw_CreativeHealthConsortium` (uncertain RS home; no RS `ISNUMERIC`).
+  Bespoke — defer (the *live* Creative Health report's Outcome measures already sources the community mart).
+
+NOTE — the `vw_events` / `vw_appointments` LBVs in `data_mart_primarycare` both throw
+`cross-database reference to db01_reference.icb_data_reference.vw_gppractice ... while analyzing an LBV on
+producer`. Where a base `tbl_*_201_load` exists (events), source that directly; where the spine itself is
+the LBV/absent (appointments cohort), it stays blocked.
+
+---
 ## UPDATE 2026-06-24 — second reference-DB pass (53 of the flagged-67 now CONVERTED)
 
 A follow-up pass cleared the tractable date-dimension (cat G), GP-reference (cat F), and small
