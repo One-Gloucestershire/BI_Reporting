@@ -255,6 +255,23 @@ and **fails the commit** if any textbox is too short. When you trip it, raise
 `y` **up** into the gap above (mirror the spacing — leave a few px top and bottom).
 Don't shrink the font to dodge it; headers carry the page's information scent.
 
+**Colouring bars by a category (e.g. deprivation decile) — two traps, both cost a deploy:**
+- A `dataPoint` conditional `fill` whose `Conditional.Cases[].Left` is a **raw
+  `Column`** fails at query time with **`UnsupportedProjectionIndexInSemanticQuery`
+  — "the Projection at index N must be a valid measure or aggregation expression"**
+  ("Error fetching data for this visual"). Raw columns can't be top-level
+  projections. Wrap in an aggregation (`Min`) or reference a **measure**.
+- A measure-based `fill` (`expr.Measure` → a measure returning a hex, e.g.
+  `SWITCH(TRUE(), MIN(T[imd_decile])<=2,"#CA0020", …)`) **imports and renders**
+  but the measure evaluates in the **whole-visual context, not per bar** — so
+  every bar gets the same colour (the global `MIN`). Measure-driven data colours
+  do **not** flow the category filter on a basic column chart.
+- Net: a true per-bar diverging gradient (deprivation deep-red→deep-blue) is **not
+  reliably expressible in raw PBIR** — author it in Power BI Desktop's
+  conditional-formatting UI (which emits the correct rule) and commit that. As a
+  safe fallback, a **solid** `dataPoint.defaultColor` (no field ref, no projection)
+  recolours a whole series with zero query risk.
+
 **Fan-out re-layout (multi-agent):** give each agent a **distinct set of pages**
 (distinct files) → they never touch the same `visual.json`, so no worktree
 isolation is needed and there's nothing to merge. Constrain agents to
