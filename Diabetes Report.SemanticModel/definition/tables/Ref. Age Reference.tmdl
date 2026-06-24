@@ -38,7 +38,7 @@ table 'Ref. Age Reference'
 		mode: import
 		source =
 				let
-				    Source = Sql.Database("grh-ccg-sql", "CCG_Reference", [Query="/****** Script for SelectTopNRows command from SSMS  ******/#(lf)SELECT [Age]#(lf)#(tab)   , CASE WHEN [Age] BETWEEN '0' AND '17' THEN '0-17'#(lf)#(tab)#(tab)#(tab)  WHEN [AGE] >= '18' THEN '18+'#(lf)#(tab)#(tab)#(tab)  END AS [Adult/Paeds]#(lf)#(tab)#(tab),[10YR_Age_Band]#(lf)#(tab)#(tab),CASE #(lf)#(tab)#(tab)WHEN [Age] <= 17 then 'Children (0-17)'#(lf)#(tab)#(tab)WHEN [Age] <= 39 then 'Early Onset (18-39)'#(lf)#(tab)#(tab)else 'Other (40+)' end as [Early Onset Bands]#(lf)  FROM [CCG_Reference].[Reference].[vw_AgeBand]#(lf)  where [Age] between '0' and '130'"]),
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db01_reference"), "select age as ""Age"", case when age between '0' and '17' then '0-17' when age>='18' then '18+' end as ""Adult/Paeds"", ""10yr_age_band"" as ""10YR_Age_Band"", case when age<=17 then 'Children (0-17)' when age<=39 then 'Early Onset (18-39)' else 'Other (40+)' end as ""Early Onset Bands"" from ccg_reference.vw_ageband where age between '0' and '130'", null, [EnableFolding=true]),
 				    #"Renamed Columns" = Table.RenameColumns(Source,{{"Adult/Paeds", "Adult/Child"}})
 				in
 				    #"Renamed Columns"
