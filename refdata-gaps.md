@@ -33,20 +33,33 @@ pushed to `cloud`** (commits `8a38b07` Frailty + `590541d` the 24-report batch):
   vw_geographymapping (32,844 / 373 Glos); Diabetes Ref.Age = `ccg_reference.vw_ageband` (131 rows);
   HI Ethnicity = `data_mart_pls.vw_ethnicity.derivedethnicitygroup` (6 == on-prem).
 
-### KNOWN NEW FLAG — GP-reference map coordinates are NULL (dw backfill needed)
-The cat-F GP-ref conversions LEFT JOIN `data_mart_powerbi_phm.tbl02_demographicsoverview` for
-GPLatitude/GPLongitude, but **that table's gplatitude/gplongitude are 100% NULL in RS** (0/720,794).
-On-prem had ~698k non-null. So GP-ref **maps render blank** until dw back-fills those columns. The
-join key (gp_practice_code) and all other columns are correct, so coords auto-heal on backfill — no
-report edit needed. (Alternative source `data_mart_primarycare.tbl01_gp_practice_populations` has
-`gp_latitude`/`gp_longitude` populated but only 64 practices AND the two columns appear swapped — not
-used, to avoid a lat/long landmine.) **dw action:** populate demographicsoverview coords.
+### GP-reference map coordinates — FIXED (repointed off the NULL demographicsoverview)
+The cat-F coord join originally targeted `data_mart_powerbi_phm.tbl02_demographicsoverview`, but
+**that table's gplatitude/gplongitude are 100% NULL in RS** (0/720,794). **Fixed** (commits up to
+`e249f2e`): repointed the inner coord subquery in all 14 coord-joining GP-refs to
+`data_mart_primarycare.tbl01_gp_practice_populations`, with a **de-swap** — that table's columns are
+transposed (`gp_latitude` holds the longitude value, `gp_longitude` holds the latitude value),
+verified vs on-prem L84003 (51.901639 / -2.0893682). Mapping: `gp_longitude → GPLatitude`,
+`gp_latitude → GPLongitude`. Live-validated: GPLatitude 51.6–52.1, GPLongitude −1.7 to −2.5, 85/87
+practices populated (63 distinct Glos practices have coords; closed/historic don't, faithfully). Maps
+now render. (If dw later back-fills demographicsoverview coords, either source is fine.)
+The 14: Dementia, Demographic, EoL, Health Inequalities, INT, PopIns Ref_GP_Primary+Secondary,
+Prescribing, Primary Care, Rockwood, Respiratory-FeNO, Creative Health ×2, WM R.GP Ref.
 
 ### STILL FLAGGED after this pass (genuine blockers)
-- **Cat A ACG/PLS ×~12 — STILL GATED.** Re-verified `data_mart_pls.vw_summary.acgpatientneedsgroup`
-  = 100% NULL (0/720,794). REF_PNG/DAT_ADG/DAT_Activity/DAT_PLS_Summary (ACG ×2 reports), PHM-Diabetes
-  Patient_Summary, PopIns PLS_Activity/PLS_Summary/Dat_Bed_Days/Dat_Patient_Weighting. Needs ACG product
-  populated (licence + dw). Dat_Bed_Days/Dat_Patient_Weighting are also multi-stage #TEMP (sign-off).
+- **Cat A ACG/PNG — STILL GATED (×7).** Re-verified `data_mart_pls.vw_summary.acgpatientneedsgroup`
+  = 100% NULL (0/720,794). REF_PNG / DAT_ADG / DAT_PLS_Summary (ACG ×2 reports), PHM-Diabetes
+  Patient_Summary, PopIns PLS_Summary (selects `[PLS].[ACGPatientNeedsGroup]` + `[ACG].chronic_condition_*`).
+  Needs ACG product populated (licence + dw).
+- **PLS *activity* mart absent (×3+).** PopIns PLS_Activity / Dat_Bed_Days / Dat_Patient_Weighting and
+  the ACG reports' DAT_Activity all read `ICB_Products.Patient.vw_Activity` (+ vw_Activity_Summary) —
+  there is **no `data_mart_pls.vw_activity` in RS** (`Relation vw_activity does not exist`). Needs the
+  PLS activity feed migrated (dw). (Dat_Bed_Days/Dat_Patient_Weighting are also multi-stage #TEMP.)
+- **WM `Ref - Source Table` / `Population` / `Refresh Date` — NOW CONVERTED** (commit `2aa6150`).
+  Sourced `data_mart_pls.vw_summary` (+vw_imd_and_geography). Patient parity is exact (RS 11M 698,100
+  vs on-prem 697,892); Population 675,878 vs 675,592 (100.04%, 393 LSOA×district groups identical). The
+  earlier ~86% distinct-combo figure was column-cardinality cosmetic, not missing patients. Glos-11M
+  only (on-prem also reads QR1, absent in RS — negligible for a Glos report).
 - **Whiteboard `GP Practice Populations`** — on-prem `CCG_Reference.Reference.vw_GPPracticePopulation`
   (CENSUSDATE 'MMM-YY', AgeGroupType, SELECT *) has NO RS equivalent of that shape. FLAG (dw build).
 - **Diabetes `8CP & 3TT (National)`** — on-prem `CCG_Reference.Diabetes.vw_NDA_CP_TT` (national NDA
