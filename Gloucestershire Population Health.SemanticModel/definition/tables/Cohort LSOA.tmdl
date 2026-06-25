@@ -1,0 +1,53 @@
+table 'Cohort LSOA'
+	lineageTag: 1f9c0a00-0000-4b00-9c00-920000000001
+
+	measure 'Cohort patients' = SUM ( 'Cohort LSOA'[Cohort n] )
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000002
+
+	measure 'Cohort prevalence %' = DIVIDE ( [Cohort patients], SUM ( Geography[patient_count] ) )
+		formatString: 0.0%
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000003
+
+	column lsoa
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000010
+		summarizeBy: none
+		sourceColumn: lsoa
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cohort dimension'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000011
+		summarizeBy: none
+		sourceColumn: cohort_dimension
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cohort group'
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000012
+		summarizeBy: none
+		sourceColumn: cohort_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cohort n'
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-920000000013
+		summarizeBy: sum
+		sourceColumn: patients
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Cohort LSOA' = m
+		mode: import
+		source =
+				let
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select lsoa11cd as lsoa, case dimension when 'png' then 'ACG-PNG category' when 'rub' then 'Resource band (RUB)' when 'risk_level' then 'Risk level' when 'care_flag' then 'Care flag' when 'condition' then 'Condition' else dimension end as cohort_dimension, case when dimension='png' then 'PNG '||value when dimension='rub' then 'RUB '||value when dimension='care_flag' then initcap(replace(replace(value,'is_',''),'_',' ')) else value end as cohort_group, patients from db03_pid.data_mart_l050_phm_rpt.cohort_lsoa where dimension <> 'total'", null, [EnableFolding=true])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
