@@ -140,7 +140,7 @@ table 'GP Practice Populations'
 		queryGroup: 'Reference Tables'
 		source =
 				let
-				    Source = Sql.Database("GRH-CCG-SQL", "CCG_Reference", [Query="#(lf)#(lf)SELECT *#(lf),[Census_Date] = CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE)#(lf)FROM CCG_Reference.Reference.vw_GPPracticePopulation#(lf)where left(age,2) >60#(lf)and AgeGroupType = 'Group 1'#(lf)and CAST('01-'+LEFT(CENSUSDATE,3)+'-20'+RIGHT(CENSUSDATE,2)AS DATE) between '20210701' and '20230801'#(lf)order by left(age,2) #(lf)"])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select organisationcode as ""OrganisationCode"", organisationname as ""OrganisationName"", primarycarenetwork as ""PrimaryCareNetwork"", place as ""Place"", locality as ""Locality"", censusdate as ""CensusDate"", sex as ""Sex"", age as ""Age"", agegroup as ""AgeGroup"", agegrouptype as ""AgeGroupType"", total as ""Total"", to_date('01-'||left(censusdate,3)||'-20'||right(censusdate,2),'DD-Mon-YYYY') as ""Census_Date"" from data_mart_primarycare.vw_gppracticepopulation where agegrouptype = 'Group 1' and case when left(age,2) ~ '^[0-9]+$' then cast(left(age,2) as int) else 0 end > 60 and to_date('01-'||left(censusdate,3)||'-20'||right(censusdate,2),'DD-Mon-YYYY') between '2021-07-01' and '2023-08-01'", null, [EnableFolding=true])
 				in
 				    Source
 
