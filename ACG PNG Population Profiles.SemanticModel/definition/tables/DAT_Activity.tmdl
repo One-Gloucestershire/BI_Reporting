@@ -45,7 +45,7 @@ table DAT_Activity
 		mode: import
 		source =
 				let
-				    Source = Sql.Database("grh-ccg-sql", "ICB_Products", [Query="SELECT sum(DerivedActivityCost) as [DerivedCost],#(lf)sum([Counter]) as [Activity],#(lf) b.ACGPatientNeedsGroup,#(lf) a.ActivityType#(lf)FROM ICB_Products.Patient.vw_Activity [a]#(lf)LEFT JOIN ICB_Products.Patient.vw_Summary [b] on [a].PseudoNHSNumber = [b].PseudoNHSNumber#(lf)group by #(lf) b.ACGPatientNeedsGroup,#(lf) a.ActivityType"])
+				    Source = Value.NativeQuery(AmazonRedshift.Database("ics-glos-reporting.cw0unw24a7tv.eu-west-2.redshift.amazonaws.com:5444","db02_nopid"), "select sum(a.derivedactivitycost) as ""DerivedCost"", sum(a.counter) as ""Activity"", b.patient_need_group as ""ACGPatientNeedsGroup"", a.activitytype as ""ActivityType"" from data_mart_pls.vw_activity a left join (select pseudonhsnumber, patient_need_group from data_mart_acg.vw_acgresults_full where islatest=1) b on a.pseudonhsnumber=b.pseudonhsnumber group by b.patient_need_group, a.activitytype", null, [EnableFolding=true])
 				in
 				    Source
 
