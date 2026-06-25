@@ -1,0 +1,59 @@
+table 'Metric Choice'
+	lineageTag: 1f9c0a00-0000-4b00-9c00-7e0000000000
+
+	measure 'Selected metric' = ```
+			SWITCH (
+			    SELECTEDVALUE ( 'Metric Choice'[Metric], "Mean risk %" ),
+			    "Mean risk %", [Mean Risk %],
+			    "IMD decile (1=most deprived)", [Avg IMD Decile],
+			    "Polypharmacy %", [Polypharmacy rate] * 100,
+			    "Diabetes %", [Diabetes rate] * 100,
+			    "Hypertension %", [Hypertension rate] * 100,
+			    "Frailty %", [Frailty rate] * 100,
+			    "High-risk %", [High-risk rate] * 100,
+			    [Mean Risk %]
+			)
+			```
+		formatString: 0.0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-7e0000000001
+
+	measure 'Selected metric label' = SELECTEDVALUE ( 'Metric Choice'[Metric], "Mean risk %" )
+		lineageTag: 1f9c0a00-0000-4b00-9c00-7e0000000002
+
+	column Metric
+		dataType: string
+		lineageTag: 1f9c0a00-0000-4b00-9c00-7e0000000010
+		summarizeBy: none
+		sourceColumn: [Metric]
+		sortByColumn: Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sort
+		isHidden
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f9c0a00-0000-4b00-9c00-7e0000000011
+		summarizeBy: none
+		sourceColumn: [Sort]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Metric Choice' = calculated
+		mode: import
+		source = ```
+				DATATABLE (
+				    "Metric", STRING, "Sort", INTEGER,
+				    {
+				    {"Mean risk %", 1},
+				    {"IMD decile (1=most deprived)", 2},
+				    {"Polypharmacy %", 3},
+				    {"Diabetes %", 4},
+				    {"Hypertension %", 5},
+				    {"Frailty %", 6},
+				    {"High-risk %", 7}
+				    }
+				)
+				```
+
+	annotation PBI_ResultType = Table
