@@ -254,28 +254,36 @@ excluded). Run it after any re-layout.
   ~78–100); too short → text cut with "…". Grow height and cascade the rows
   below down so nothing collides.
 
-**Textbox sizing — height must fit the WRAPPED text, not just one line (check 14).**
-A `textbox` clips its text two ways, and check 14 now guards both:
-- **Vertical:** `height` < one rendered line. Line height ≈ **1.75 × font(px)** for
-  text with descenders (`g j p q y`), **1.4 ×** for caps-only (the `NHS` badge).
-  So a 16px header needs `height ≥ 28`; a **24px page title needs `≥ 42`** — and
-  the standard page-title boxes are `h46–48`. **A 24px title clips its descenders
-  in `h40`** (ratio 1.67) — this bit the six detail-page / credibility titles and
-  an earlier-too-lenient 1.6× factor let it through. Don't size any 24px title
-  below h44.
-- **Horizontal wrap:** the text is too long for the `width`, so it wraps to N lines
-  but the box is only tall enough for fewer — the 2nd+ line clips. Glyph width ≈
-  **0.52 × font(px)** (Arial), so lines ≈ `ceil(len(text) × 0.52 × font ÷ width)`,
-  and the box needs `height ≥ lines × line-height`. This is the trap insight
-  **captions** keep hitting: ~110 chars of 13px text in a 600px-wide, 22px box
-  wraps to 2 lines and clips. A full-page-width caption (`w 1232`) fits ~180 chars
-  on one line; a half-width one only ~90.
+**Textbox sizing — ONE rule, enforced by check 14 + CI (`pbi-lint.yml`).** A
+`textbox` clips its text when it's shorter than the text needs. The required
+height follows a single physically-grounded formula — memorise it:
 
-Fixes, in order of preference: **widen** the box (fewer lines), **grow height** for
-the wrapped line count (nudge `y` up if growing down would overlap below), or
-**shorten** the text. Don't shrink the font to dodge it — headers/insights carry
-the page's information scent. Check 14 is descender-aware (caps labels aren't
-false-flagged) and **fails the commit** if any textbox can't fit its text.
+> **`required_height = lines × ceil(font_px × ratio) + 8`**
+> where `ratio = 1.40` if the text has descenders (`g j p q y`) else `1.15`
+> (caps-only, e.g. the `NHS` badge), and `lines = ceil(len(text) × 0.52 × font_px ÷ (width − 10))`.
+
+The **`+ 8` is Power BI's fixed internal vertical padding** and is the whole reason
+captions kept clipping: a 12px caption needs `1×ceil(16.8)+8 = 25`, so the old
+`h22` boxes clipped the descenders by ~3px even though `12×1.4=17 < 22` looked fine.
+That fixed padding **dominates at small font sizes** — never drop it. Quick refs:
+
+| font | 1 line needs | typical box |
+|------|-------------|-------------|
+| 12px caption (descenders) | **h26** | insight captions, `y≈50`, full-width `w1232` |
+| 16px header | **h31** | "Biggest opportunity/risk" cards |
+| 17px caps (`NHS`) | **h28** | corner badge |
+| 24px title (descenders) | **h42** | page titles live at **h46–48** |
+
+**Wrap** is the other half: a long caption in a narrow box wraps to N lines and the
+2nd+ line clips. A full-page-width caption (`w1232`) fits ~180 chars on one line; a
+half-width (`w600`) only ~90. Glyph width ≈ `0.52 × font_px` (Arial).
+
+Fixes, in order: **widen** (fewer lines) → **grow height** to `required_height`
+(if growing down would push past the `720` canvas or overlap below, **grow upward**
+— drop `y` by the delta) → **shorten** text. Never shrink the font to dodge it —
+headers/insights carry the page's information scent. Check 14 is descender-aware,
+canvas-aware, and **fails the build in CI** if any textbox can't fit its text, so a
+clipping box can't reach `cloud`.
 
 **Colouring bars by a category (e.g. deprivation decile) — two traps, both cost a deploy:**
 - A `dataPoint` conditional `fill` whose `Conditional.Cases[].Left` is a **raw

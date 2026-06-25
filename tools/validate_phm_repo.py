@@ -315,9 +315,12 @@ if onprem:
 #       (b) the text is too LONG for the box width, so it wraps to N lines but the
 #           box is only tall enough for fewer — e.g. a ~110-char insight caption in
 #           a 600px-wide, 22px-tall box (wraps to 2 lines, 2nd line clips).
-#     Power BI's line-box + padding needs ~1.6x the font for text with descenders
-#     (g/j/p/q/y) and ~1.35x for caps-only; width per glyph ~0.52x font (Arial).
-#     Descender-aware so all-caps labels (the corner "NHS" badge) aren't flagged.
+#     MODEL: required_height = lines x ceil(font x ratio) + 8px padding, where
+#     ratio = 1.40 (text has descenders g/j/p/q/y) or 1.15 (caps-only), and the
+#     +8px is Power BI's fixed internal textbox padding (dominates at small fonts).
+#     Width per glyph ~0.52x font (Arial). Descender-aware so all-caps labels
+#     (the corner "NHS" badge) aren't over-flagged. THE 8px PADDING IS THE FIX for
+#     the recurring "caption clips at h22" bug — keep it.
 #     If you trip this: raise `position.height` for the wrapped line count, OR
 #     WIDEN the box so the text fits fewer lines, OR shorten the text. Nudge `y`
 #     up if growing height would overlap the visual below. See CLAUDE.md.
@@ -351,10 +354,15 @@ for vf in glob.glob(os.path.join(REPORT, "pages", "*", "visuals", "*", "visual.j
     w = v.get("position", {}).get("width", 0)
     usable = max(1, w - 10)
     lines = max(1, math.ceil(len(text) * 0.52 * maxf / usable))
-    # line height incl. padding: ~1.75x font for text with descenders, ~1.4x for
-    # caps-only. (Calibrated: a 24px title clips in h40 (=1.67x) but fits in h46.)
-    line_h = math.ceil(maxf * (1.75 if any(c in _DESC for c in text) else 1.4))
-    required = lines * line_h + (4 if lines > 1 else 0)
+    # Power BI renders each line at ~1.40x font (text with descenders g/j/p/q/y)
+    # or ~1.15x (caps-only), PLUS a fixed ~8px internal vertical padding that
+    # DOMINATES at small font sizes (this is why h22 clips a 12px caption even
+    # though 12*1.4=17 < 22 — the padding pushes the real need to 25).
+    # Calibrated against: 24px title clips at h40/h42 but fits h46; 12px caption
+    # needs h25 (clips at h22); 17px "NHS" badge fits exactly at h28.
+    PAD = 8
+    line_h = math.ceil(maxf * (1.40 if any(c in _DESC for c in text) else 1.15))
+    required = lines * line_h + PAD
     h = v.get("position", {}).get("height", 0)
     if h < required:
         page = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(vf))))
